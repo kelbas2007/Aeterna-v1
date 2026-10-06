@@ -582,6 +582,17 @@ impl EvoPhase {
         self.hierarchy_memory.as_ref()?.select_sequence(&trace)
     }
 
+    pub fn apply_macro_id_permutation(&mut self, mapping: &[(u64, u64)]) {
+        self.macro_memory
+            .as_mut()
+            .expect("macro memory must exist before id permutation")
+            .apply_id_permutation(mapping);
+
+        if let Some(hierarchy) = self.hierarchy_memory.as_mut() {
+            hierarchy.remap_child_ids(mapping);
+        }
+    }
+
     pub fn observe_initial_real(&mut self, sensory: &[f32], need: bool) {
         self.assert_sensory(sensory);
         self.tick += 1;
