@@ -1,6 +1,7 @@
 use crate::authority::Authority;
 use crate::epistemic::{EvoEpistemicState, WorldHypothesis};
 use crate::hdc::PhaseVector;
+use crate::hierarchy::{EvoHierarchyMemory, HierarchyConfig, ParentMacro};
 use crate::macro_memory::{EvoMacroMemory, MacroAssembly, MacroConfig};
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
 use crate::raster::{EvoRasterField, RasterFieldConfig};
@@ -109,6 +110,7 @@ pub struct EvoPhase {
     raster_field: Option<EvoRasterField>,
     epistemic_state: Option<EvoEpistemicState>,
     macro_memory: Option<EvoMacroMemory>,
+    hierarchy_memory: Option<EvoHierarchyMemory>,
 }
 
 impl EvoPhase {
@@ -152,6 +154,7 @@ impl EvoPhase {
             raster_field: None,
             epistemic_state: None,
             macro_memory: None,
+            hierarchy_memory: None,
         }
     }
 
@@ -434,6 +437,70 @@ impl EvoPhase {
         self.macro_memory
             .as_mut()?
             .continue_after_factual_post(&trace)
+    }
+
+    pub fn begin_macro_by_id(
+        &mut self,
+        macro_id: u64,
+        pre_sensory: &[f32],
+    ) -> Option<usize> {
+        let trace = self
+            .raster_field
+            .as_ref()?
+            .encode_relational_trace(pre_sensory)?;
+
+        self.macro_memory.as_mut()?.begin_by_id(&trace, macro_id)
+    }
+
+    pub fn enable_hierarchy_memory(&mut self, config: HierarchyConfig) {
+        self.hierarchy_memory = Some(EvoHierarchyMemory::new(config));
+    }
+
+    pub fn set_hierarchy_readout_enabled(&mut self, enabled: bool) {
+        if let Some(memory) = self.hierarchy_memory.as_mut() {
+            memory.set_readout_enabled(enabled);
+        }
+    }
+
+    pub fn set_hierarchy_learning_enabled(&mut self, enabled: bool) {
+        if let Some(memory) = self.hierarchy_memory.as_mut() {
+            memory.set_learning_enabled(enabled);
+        }
+    }
+
+    pub fn parent_macros(&self) -> &[ParentMacro] {
+        self.hierarchy_memory
+            .as_ref()
+            .map(EvoHierarchyMemory::parents)
+            .unwrap_or(&[])
+    }
+
+    pub fn observe_successful_parent_sequence(
+        &mut self,
+        outer_cue: &[f32],
+        child_sequence: Vec<u64>,
+        need: bool,
+    ) {
+        let trace = self
+            .raster_field
+            .as_ref()
+            .expect("hierarchy learning requires an attached raw raster field")
+            .encode_relational_trace(outer_cue)
+            .expect("hierarchy learning requires a relational outer cue");
+
+        self.hierarchy_memory
+            .as_mut()
+            .expect("enable_hierarchy_memory must be called first")
+            .observe_successful_sequence(trace, child_sequence, need);
+    }
+
+    pub fn select_parent_sequence(&self, outer_cue: &[f32]) -> Option<Vec<u64>> {
+        let trace = self
+            .raster_field
+            .as_ref()?
+            .encode_relational_trace(outer_cue)?;
+
+        self.hierarchy_memory.as_ref()?.select_sequence(&trace)
     }
 
     pub fn observe_initial_real(&mut self, sensory: &[f32], need: bool) {
