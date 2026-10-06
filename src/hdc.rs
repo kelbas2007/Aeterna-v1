@@ -36,6 +36,16 @@ impl PhaseVector {
         Self { phases }
     }
 
+    pub fn powi(&self, power: i32) -> Self {
+        let scale = power as f32;
+        let phases = self
+            .phases
+            .iter()
+            .map(|phase| wrap_phase(*phase * scale))
+            .collect();
+        Self { phases }
+    }
+
     pub fn unbind(&self, role: &Self) -> Self {
         assert_eq!(self.dim(), role.dim());
         let phases = self
@@ -98,6 +108,21 @@ mod tests {
         let b = PhaseVector::from_seed(128, 2);
         let recovered = a.bind(&b).unbind(&a);
         assert!(recovered.similarity(&b) > 0.999);
+    }
+
+    #[test]
+    fn translated_group_relation_cancels_common_phase_role() {
+        let x = PhaseVector::from_seed(128, 101);
+        let y = PhaseVector::from_seed(128, 202);
+
+        let p1 = x.powi(2).bind(&y.powi(3));
+        let p2 = x.powi(4).bind(&y.powi(3));
+        let q1 = x.powi(7).bind(&y.powi(8));
+        let q2 = x.powi(9).bind(&y.powi(8));
+
+        let r1 = p2.unbind(&p1);
+        let r2 = q2.unbind(&q1);
+        assert!(r1.similarity(&r2) > 0.999);
     }
 
     #[test]
