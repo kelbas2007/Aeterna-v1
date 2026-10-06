@@ -9,7 +9,8 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G0 | CI-2 | TECHNICAL_FAIL_COMPILE | Rust borrow-check error E0502 in factual state load; fixed without changing gate semantics |
 | G0 | CI-3 | FAIL_HELDOUT_CONTEXT_TRANSFER | Code compiled; 3/4 ownership tests passed, but GENUINE solved only 1/2 held-out surfaces |
 | G0 | REVISION-1 | PASS_MINIMAL_EVO_OWNERSHIP_PRECURSOR | Generic epistemic pressure was raised so unsupported motor hypotheses remain testable. Final CI: 7/7 tests PASS and release build PASS at commit `1002ae2310ce84cfac847ad941f641a659ac292f`; workflow run 37479430355 |
-| G1 | — | NOT_STARTED | Raw raster autonomous distinction |
+| G1-A | local-shared-field | FAIL_TRANSLATION_REUSE | CI run 37493255258: raw-raster code compiled, but the learned local motif set grew beyond the preregistered reuse bound on an unseen translation. The local-window representation was still too tied to patch alignment; no G1 capability PASS. |
+| G1-B | relational-phase | PRE_REGISTERED | Replace local-window alignment with generic HDC/FHRR relation formation by pairwise phase unbinding of retinotopic carrier roles. No orientation labels or dx/dy classifier. |
 | G2 | — | NOT_STARTED | Carrier-owned informative experiment selection |
 | G3 | — | NOT_STARTED | Acquired reusable EvoPhase macro/program |
 | G4 | — | NOT_STARTED | Revision of the same acquired macro |
