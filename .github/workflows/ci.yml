@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary P5 deterministic preflight trigger; route diagnostic rerun, no fresh authority pack.
+# Temporary P5 deterministic preflight trigger; synapse diagnostic rerun, no fresh authority pack.
 
 on:
   workflow_dispatch:
@@ -46,6 +46,8 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --exit-code
+      - name: P5 fast continual diagnostic
+        run: cargo test --release --test phase_native_continual -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
