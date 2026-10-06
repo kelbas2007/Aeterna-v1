@@ -22,12 +22,9 @@ Two carrier-owned rival world hypotheses coexist. On held-out hidden-law worlds,
 
 ## G3 — Motif consolidation / first acquired program
 
-Repeated successful internal dynamics are consolidated into a parameterized EvoPhase macro-assembly.
+Status: PASS.
 
-The developer may define substrate operations. The developer may not supply the body of the acquired strategy.
-
-Acceptance:
-experience -> acquired child motifs -> new macro -> invocation on new binding -> changed action -> factual success.
+Repeated successful relational carrier trajectories consolidate into one learned two-step branching macro. The macro is absent before tuition, transfers to unseen spatial bindings, changes held-out action and succeeds where matched no-consolidation/readout controls lose the full advantage.
 
 ## G4 — Program revision
 
