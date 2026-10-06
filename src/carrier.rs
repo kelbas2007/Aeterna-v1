@@ -278,6 +278,13 @@ impl EvoPhase {
         self.imagination_planner.as_mut()?.plan(&trace)
     }
 
+    pub fn choose_immediate_model(&mut self, sensory: &[f32]) -> Option<PlanDecision> {
+        let trace = self.encode_high_level_trace(sensory)?;
+        self.imagination_planner
+            .as_mut()?
+            .choose_immediate_model(&trace)
+    }
+
     pub fn plan_imagined_depth(
         &mut self,
         sensory: &[f32],
