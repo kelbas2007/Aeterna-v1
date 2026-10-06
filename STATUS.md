@@ -14,7 +14,8 @@ Date: 2026-10-06
 **G7 FRESH-1 — FAIL: robust perception/representation boundary.**  
 **R1 / G1-C MECHANISM PASS — robust carrier-owned relational perception.**  
 **G7 FRESH-2 PASS — whole-organism fresh open-world qualification.**  
-**G8 MECHANISM PASS — carrier-owned imagined delayed-reward planning.**
+**G8 MECHANISM PASS — carrier-owned imagined delayed-reward planning.**  
+**G8-FRESH-1 FAIL — fresh depth/model-integrity witness failed; pack burned.**
 
 No AGI claim. No production promotion.
 
@@ -288,10 +289,18 @@ The first G8 attempt using the robust containment trace failed the depth witness
 
 This is a bounded mechanism witness. Fresh statistical planning qualification remains pending.
 
+## G8-FRESH-1 failure
+
+Run `37515610684` opened the first 80-world fresh planning pack (digest `5537015d542c2d4b`) on source `750a09cdca5afb7927a99e954498262131ab8985`.
+
+The first clean depth-2 and depth-3 worlds behaved as intended: FULL succeeded while DEPTH1, immediate MODEL and SHUFFLED_MODEL failed. The first depth-4 world then violated the preregistered depth witness: FULL chose the delayed-route motor without its first selected imagined trajectory reaching the evaluator's true depth 4.
+
+That pack is permanently burned and counts as FAIL. The working diagnosis is transition/state aliasing or equivalent model-binding depth collapse, not lack of delayed-reward preference.
+
 ## Next gate
 
-**G8-FRESH: one-use statistical qualification of imagined planning.**
+**G8-FRESH-2: fresh planning qualification with an explicit perceptual/transition observability seal.**
 
-Freeze source/spec, generate >=80 delayed-reward worlds over >=10 sub-seeds with opaque motor permutations and route depths 2-4, then compare FULL_IMAGINATION with DEPTH1, NO_IMAGINATION/immediate-value, and SHUFFLED_MODEL controls.
+The revised protocol must prevent physically distinct route states that are observationally equivalent under the inherited nuisance invariances from being treated as a fully observable planning world. It must still use a new external seed, 80 worlds / 10 sub-seeds, route depths 2-4, opaque motor permutations and the same planning controls.
 
 CI is manual-only between qualification checkpoints.
