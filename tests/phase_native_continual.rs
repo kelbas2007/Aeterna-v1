@@ -290,6 +290,38 @@ fn exploit_domain(
     Outcome { success: false, interactions: world.length + 1 }
 }
 
+fn trace_frozen_route(
+    mature: &EvoPhase,
+    domain: usize,
+    world: &World,
+    revised: bool,
+    x: usize,
+    y: usize,
+) -> Vec<(usize, usize, usize, f32, Vec<f32>)> {
+    let mut evo = mature.clone();
+    evo.set_planning_learning_enabled(false);
+    let mut state = 0usize;
+    evo.observe_initial_real(&domain_raster(domain, state, x, y), false);
+    let mut trace = Vec::new();
+    for _ in 0..(world.length + 1) {
+        let Some((decision, prediction)) = evo.choose_phase_native_action_with_prediction() else {
+            trace.push((state, usize::MAX, world.advance.get(state).copied().unwrap_or(usize::MAX), 0.0, evo.phase_native_motor_potentials().to_vec()));
+            break;
+        };
+        let expected = world.advance.get(state).copied().unwrap_or(usize::MAX);
+        let potentials = evo.phase_native_motor_potentials().to_vec();
+        trace.push((state, decision.first_action, expected, decision.predicted_value, potentials));
+        let (next, value) = world.step(state, decision.first_action, revised);
+        state = next;
+        evo.observe_initial_real(&domain_raster(domain, state, x, y), value >= 1.0);
+        if value >= 1.0 {
+            break;
+        }
+        let _ = prediction;
+    }
+    trace
+}
+
 fn restore_full(checkpoint: PhaseNativeCheckpoint) -> EvoPhase {
     let mut evo = carrier(true);
     assert!(evo.restore_phase_native_checkpoint(checkpoint));
@@ -344,14 +376,23 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
                 held_y,
             );
             if !retained.success {
+                let route = trace_frozen_route(
+                    &full,
+                    prior,
+                    &worlds[prior],
+                    false,
+                    held_x,
+                    held_y,
+                );
                 println!(
-                    "P5_RETENTION_FAIL learned_through={} prior={} expected_first={} decision={:?} receptors={} circuits={}",
+                    "P5_RETENTION_FAIL learned_through={} prior={} expected_first={} decision={:?} receptors={} circuits={} route={:?}",
                     domain,
                     prior,
                     worlds[prior].advance[0],
                     before_retention,
                     full.phase_native_receptor_count(),
                     full.phase_native_circuits().len(),
+                    route,
                 );
             }
             assert!(
