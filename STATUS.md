@@ -24,4 +24,14 @@ The repository now targets one mandatory architecture constraint: **full EvoPhas
 
 `EVO-OWNERSHIP-0` is the first executable scientific gate. It asks whether structural growth inside EvoPhase can create a context distinction that changes a motor choice under a matched no-growth control.
 
-The code has been written but has **not yet been compiled or qualified in this branch**. No PASS is claimed until an independent Rust build/test run succeeds and the experiment metrics are recorded.
+The G0 carrier code remains **uncompiled / unqualified** in this environment. G1 implementation work has now started on `g1/raw-raster-distinction`: the carrier learns action-local sensory consequence contrast from factual experience, supports a clean acquired-readout ablation, and a 12×12 raw-raster matched gate is implemented. No G0/G1 PASS is claimed until Rust compilation/tests and recorded experiment results succeed.
+
+
+## Current development branch
+
+`g1/raw-raster-distinction`
+
+G1 candidate files:
+- `docs/G1_RAW_RASTER_CONTRACT.md`
+- `tests/g1_raw_raster.rs`
+- carrier changes in `src/carrier.rs`
