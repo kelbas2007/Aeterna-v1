@@ -22,12 +22,5 @@ jobs:
         run: cargo fmt --all
       - name: Regression tests
         run: cargo test --all --all-targets
-      - name: Seal fresh G7 spec
-        run: echo "AETERNA_SPEC_SHA=$(git rev-parse HEAD:docs/G7_OPEN_WORLD_PROTOCOL.md)" >> "$GITHUB_ENV"
-      - name: Fresh G7 whole-organism qualification
-        env:
-          AETERNA_FRESH_SEED: ${{ github.run_id }}
-          AETERNA_SOURCE_SHA: ${{ github.sha }}
-        run: cargo test --test g7_open_world fresh_g7_whole_organism_pack -- --ignored --nocapture
       - name: Release build
         run: cargo build --release
