@@ -54,9 +54,15 @@ One-use run 37516415100 scored FULL 80/80 (Wilson95 [0.9542,1.0000]) over route 
 
 ## G9 — Belief-state planning under perceptual aliasing
 
-Status: MECHANISM PASS; fresh statistical qualification next.
+Status: FRESH PASS.
 
-The current raw corridor observation is deliberately identical across two hidden histories. A generic recurrent HDC/FHRR carrier state preserves action/observation history: FULL_BELIEF scores 8/8 versus OBSERVATION_ONLY 4/8 and RESET_HISTORY 1/8 across four opaque motor permutations.
+One-use run 37517982423 scored FULL_BELIEF 80/80 (Wilson95 [0.9542,1.0000]) versus OBSERVATION_ONLY 20/80 and RESET_HISTORY 2/80 over randomized relation codes, opaque motor permutations, held-out translations and history lengths 1-3. Belief separation and authority violations were zero.
+
+## G10 — Autonomous composite concept construction
+
+Status: ACTIVE.
+
+A new reusable concept must be formed from acquired lower-level carrier structures rather than supplied as a host feature or fixed task predicate. No individual child may solve the task alone; the acquired composite must transfer and causally change held-out behavior.
 
 ## Rule for advancing
 
