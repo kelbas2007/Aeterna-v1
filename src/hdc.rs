@@ -1,0 +1,77 @@
+use crate::phase::{phase_similarity, wrap_phase};
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PhaseVector {
+    phases: Vec<f32>,
+}
+
+impl PhaseVector {
+    pub fn from_seed(dim: usize, seed: u64) -> Self {
+        let mut x = seed ^ 0x9E37_79B9_7F4A_7C15;
+        let mut phases = Vec::with_capacity(dim);
+        for _ in 0..dim {
+            // xorshift64*: deterministic; not used for security.
+            x ^= x >> 12;
+            x ^= x << 25;
+            x ^= x >> 27;
+            let z = x.wrapping_mul(0x2545_F491_4F6C_DD1D);
+            let unit = (z as f64 / u64::MAX as f64) as f32;
+            phases.push(unit * std::f32::consts::TAU);
+        }
+        Self { phases }
+    }
+
+    pub fn dim(&self) -> usize {
+        self.phases.len()
+    }
+
+    pub fn bind(&self, other: &Self) -> Self {
+        assert_eq!(self.dim(), other.dim());
+        let phases = self
+            .phases
+            .iter()
+            .zip(&other.phases)
+            .map(|(a, b)| wrap_phase(*a + *b))
+            .collect();
+        Self { phases }
+    }
+
+    pub fn unbind(&self, role: &Self) -> Self {
+        assert_eq!(self.dim(), role.dim());
+        let phases = self
+            .phases
+            .iter()
+            .zip(&role.phases)
+            .map(|(a, b)| wrap_phase(*a - *b))
+            .collect();
+        Self { phases }
+    }
+
+    pub fn similarity(&self, other: &Self) -> f32 {
+        assert_eq!(self.dim(), other.dim());
+        let total: f32 = self
+            .phases
+            .iter()
+            .zip(&other.phases)
+            .map(|(a, b)| phase_similarity(*a, *b))
+            .sum();
+        total / self.dim() as f32
+    }
+
+    pub fn phases(&self) -> &[f32] {
+        &self.phases
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bind_unbind_round_trip() {
+        let a = PhaseVector::from_seed(128, 1);
+        let b = PhaseVector::from_seed(128, 2);
+        let recovered = a.bind(&b).unbind(&a);
+        assert!(recovered.similarity(&b) > 0.999);
+    }
+}

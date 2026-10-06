@@ -1,0 +1,20 @@
+[package]
+name = "aeterna-v1"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-AETERNA-Research"
+description = "No-LLM EvoPhase cognitive carrier research runtime"
+
+[lib]
+name = "aeterna_v1"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aeterna-v1"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"

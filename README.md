@@ -1,11 +1,52 @@
-# AETERNA v1
+# Aeterna-v1 — EvoPhase Genesis
 
-New CPU-first, non-LLM research line, started 2026-10-06 at the owner's request.
+A fresh no-LLM intelligence research line built around **full EvoPhase cognitive ownership**.
 
-The objective is a persistent learner that acquires executable models and new reusable computational abstractions from experience, transfers them to new tasks, and revises them after counterexamples.
+This repository is intentionally *not* a continuation of the old AETERNA implementation architecture. Earlier results, failures, controls and invariants are treated as empirical lessons. EvoPhase is the one mandatory architectural constraint.
 
-This repository is not a claim of AGI, consciousness, or completion of the previous AETERNA project. Previous architecture is not mandatory. Existing AETERNA results and failures are evidence, not inherited implementation requirements.
+## Non-negotiable boundary
 
-Implementation, research review, tests, and measured results are being prepared in this work session. No cloud training, paid browser, API keys, or LLM inference are part of the planned runtime.
+EvoPhase is the cognitive substrate, not a planner plugin or execution backend.
 
-No automatic GitHub Actions jobs or other paid execution are enabled.
+Rust implements substrate physics and the trusted shell. It may perform I/O, persistence, serialization, bounded resource accounting, provenance checks, safety gates and exact verification. It may **not** carry hidden task answers or choose representations, hypotheses, programs, experiments, plans or actions on behalf of the organism.
+
+The following adaptive state must be EvoPhase-owned:
+
+- sensory distinctions and learned representations;
+- concepts and relational structure;
+- predictive hypotheses and rival models;
+- reusable skills/programs and their composition;
+- experiment selection;
+- imagined rollouts and planning state;
+- action policy;
+- revision after factual counterexamples;
+- structural growth, retirement and reuse.
+
+No LLM is used by the runtime.
+
+## Acceptance rule
+
+A capability is accepted only through a causal chain:
+
+```text
+experience
+  -> EvoPhase state change
+  -> new prediction / concept / program / experiment / plan
+  -> changed action
+  -> factual external result
+  -> revision of the same EvoPhase-owned structure
+```
+
+Matched controls must preserve the same observations, primitive substrate, resource limits and factual outcomes while removing only the formation/readout being tested.
+
+## Current status
+
+**GENESIS / carrier-kernel implementation. Not AGI.**
+
+The first executable target is deliberately lower than ARC: prove that a phase-coded, locally plastic, structurally growing carrier can own prediction and recruit new internal structure from raw sensorimotor events without a symbolic solver taking over cognition.
+
+See:
+
+- `docs/ARCHITECTURE_RU.md`
+- `docs/RESEARCH_2026.md`
+- `docs/FIRST_EXPERIMENT.md`

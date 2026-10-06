@@ -1,0 +1,17 @@
+name: manual-ci
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Test
+        run: cargo test --all --all-targets
+      - name: Release build
+        run: cargo build --release
