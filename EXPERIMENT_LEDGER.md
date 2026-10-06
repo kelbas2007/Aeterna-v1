@@ -263,3 +263,21 @@ Within the preregistered delayed-reward development witness:
 - factual execution of the selected route succeeds 8/8.
 
 This is a bounded mechanism PASS, not yet fresh statistical qualification or unrestricted planning.
+
+
+## G8-FRESH-1 one-use result — FAIL_DEPTH_WITNESS
+
+Run `37515610684` opened and permanently burned the first G8 fresh pack.
+
+- source SHA: `750a09cdca5afb7927a99e954498262131ab8985`;
+- authority seed: `37515610684`;
+- protocol fingerprint (FNV64): `392f3182f21e02f1`;
+- pack digest: `5537015d542c2d4b`;
+- sealed size: N=80 / 10 sub-seeds;
+- world 0 (depth 2, clean): FULL succeeded; DEPTH1/IMMEDIATE/SHUFFLED failed;
+- world 1 (depth 3, clean): FULL succeeded; DEPTH1/IMMEDIATE/SHUFFLED failed;
+- world 2 (depth 4, clean): the qualification stopped because FULL selected the delayed-route motor without a first-decision depth witness reaching the evaluator's true depth 4.
+
+The pack is a FAIL, not a PASS and not reusable for qualification.
+
+Interpretation: the acquired transition model exposed a shorter high-value imagined path than the evaluator's physical route. The immediate candidate cause is state/transition aliasing under the robust planning trace or an equivalent depth-accounting/model-binding defect. The next design must not tune on this pack; it must define a stronger observability/model-integrity condition and use a new external authority seed.
