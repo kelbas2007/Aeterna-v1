@@ -2,22 +2,32 @@ use crate::hdc::PhaseVector;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShapeTrace {
+    point_count: usize,
     oriented_fragments: Vec<u64>,
     invariant_fragments: Vec<u64>,
 }
 
 impl ShapeTrace {
     pub fn new(invariant_fragments: Vec<u64>) -> Self {
-        Self::from_fragments(Vec::new(), invariant_fragments)
+        Self::from_geometry(0, Vec::new(), invariant_fragments)
     }
 
     pub fn from_fragments(
+        oriented_fragments: Vec<u64>,
+        invariant_fragments: Vec<u64>,
+    ) -> Self {
+        Self::from_geometry(0, oriented_fragments, invariant_fragments)
+    }
+
+    pub fn from_geometry(
+        point_count: usize,
         mut oriented_fragments: Vec<u64>,
         mut invariant_fragments: Vec<u64>,
     ) -> Self {
         oriented_fragments.sort_unstable();
         invariant_fragments.sort_unstable();
         Self {
+            point_count,
             oriented_fragments,
             invariant_fragments,
         }
@@ -32,18 +42,32 @@ impl ShapeTrace {
     }
 
     pub fn similarity(&self, other: &Self) -> f32 {
-        // Two generic views coexist:
-        // 1) translation-equivariant oriented pair fragments, which are strong
-        //    under dropout/distractors;
-        // 2) normalized triangle-shape fragments, which survive rotation/scale.
-        //
-        // No task label chooses individual fragments. The carrier accepts the
-        // strongest factual geometric correspondence available.
-        Self::containment(&self.oriented_fragments, &other.oriented_fragments)
-            .max(Self::containment(
-                &self.invariant_fragments,
-                &other.invariant_fragments,
-            ))
+        let oriented =
+            Self::containment(&self.oriented_fragments, &other.oriented_fragments);
+        let invariant =
+            Self::containment(&self.invariant_fragments, &other.invariant_fragments);
+
+        // The number of observed active points is factual sensor information,
+        // not an evaluator label. When cardinality changed, prefer the oriented
+        // surviving substructure: this distinguishes dropout/distractor matches
+        // that an invariant one-triangle view would over-generalize. When the
+        // cardinality is unchanged, exact oriented agreement wins; otherwise
+        // the normalized shape view can express rotation/scale equivalence.
+        if self.point_count > 0 && other.point_count > 0 {
+            if self.point_count != other.point_count {
+                if oriented > 0.0 {
+                    oriented
+                } else {
+                    invariant
+                }
+            } else if oriented >= 0.999 {
+                oriented
+            } else {
+                invariant
+            }
+        } else {
+            oriented.max(invariant)
+        }
     }
 
     fn containment(a: &[u64], b: &[u64]) -> f32 {
