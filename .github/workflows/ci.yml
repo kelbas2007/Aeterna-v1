@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary deterministic P4 preflight trigger; fresh qualification inputs remain off.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -24,17 +24,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p4: execute frozen learned-drive qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -80,7 +74,7 @@ jobs:
           set -o pipefail
           cargo test --release --test phase_native_autonomy p3_fresh_autonomous_acquisition_pack -- --ignored --nocapture | tee p3-evidence.log
       - name: Explicit one-use fresh P4 learned-drive qualification
-        if: github.event_name == 'push' || inputs.qualify_p4
+        if: ${{ inputs.qualify_p4 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
