@@ -46,6 +46,18 @@ impl PhaseVector {
         Self { phases }
     }
 
+    pub fn permute_dims(&self, shift: usize) -> Self {
+        if self.phases.is_empty() {
+            return self.clone();
+        }
+        let shift = shift % self.phases.len();
+        let mut phases = vec![0.0; self.phases.len()];
+        for (idx, phase) in self.phases.iter().copied().enumerate() {
+            phases[(idx + shift) % self.phases.len()] = phase;
+        }
+        Self { phases }
+    }
+
     pub fn unbind(&self, role: &Self) -> Self {
         assert_eq!(self.dim(), role.dim());
         let phases = self
@@ -132,5 +144,18 @@ mod tests {
         let first = PhaseVector::bundle(&[&a, &b]);
         let second = PhaseVector::bundle(&[&a, &b]);
         assert!(first.similarity(&second) > 0.999);
+    }
+
+    #[test]
+    fn dimension_permutation_is_deterministic_and_order_sensitive() {
+        let a = PhaseVector::from_seed(128, 31);
+        let b = PhaseVector::from_seed(128, 32);
+        let left = a.permute_dims(1).bind(&b);
+        let right = b.permute_dims(1).bind(&a);
+        assert!(left.similarity(&left) > 0.999);
+        assert!(
+            left.similarity(&right) < 0.95,
+            "sequence permutation must distinguish reversed histories"
+        );
     }
 }
