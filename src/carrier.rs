@@ -1,4 +1,5 @@
 use crate::authority::Authority;
+use crate::belief::{BeliefConfig, EvoBeliefState};
 use crate::epistemic::{EvoEpistemicState, WorldHypothesis};
 use crate::exploration::{EvoExplorationStrategy, ExplorationConfig, ProbeFeatures};
 use crate::hdc::PhaseVector;
@@ -117,6 +118,7 @@ pub struct EvoPhase {
     exploration_strategy: Option<EvoExplorationStrategy>,
     robust_high_level_perception: bool,
     imagination_planner: Option<EvoImaginationPlanner>,
+    belief_state: Option<EvoBeliefState>,
 }
 
 impl EvoPhase {
@@ -164,6 +166,7 @@ impl EvoPhase {
             exploration_strategy: None,
             robust_high_level_perception: false,
             imagination_planner: None,
+            belief_state: None,
         }
     }
 
@@ -223,6 +226,78 @@ impl EvoPhase {
 
     pub fn set_robust_high_level_perception(&mut self, enabled: bool) {
         self.robust_high_level_perception = enabled;
+    }
+
+    pub fn enable_belief_state(&mut self, config: BeliefConfig) {
+        assert_eq!(
+            config.motor_cells, self.config.motor_cells,
+            "belief state and carrier must share motor count"
+        );
+        assert_eq!(
+            config.hdc_dim, self.config.hdc_dim,
+            "belief state and carrier must share HDC dimension"
+        );
+        self.belief_state = Some(EvoBeliefState::new(config));
+    }
+
+    pub fn reset_belief(&mut self, sensory: &[f32]) -> Option<CarrierTrace> {
+        let observation = self
+            .raster_field
+            .as_ref()?
+            .encode_relational_trace(sensory)?;
+        Some(self.belief_state.as_mut()?.reset(observation))
+    }
+
+    pub fn advance_belief(
+        &mut self,
+        action: usize,
+        sensory: &[f32],
+    ) -> Option<CarrierTrace> {
+        let observation = self
+            .raster_field
+            .as_ref()?
+            .encode_relational_trace(sensory)?;
+        Some(self.belief_state.as_mut()?.advance(action, observation))
+    }
+
+    pub fn current_belief_trace(&self) -> Option<CarrierTrace> {
+        self.belief_state.as_ref()?.current_trace()
+    }
+
+    pub fn belief_steps(&self) -> u64 {
+        self.belief_state
+            .as_ref()
+            .map(EvoBeliefState::steps)
+            .unwrap_or(0)
+    }
+
+    pub fn observe_belief_planning_transition(
+        &mut self,
+        action: usize,
+        post_sensory: &[f32],
+        factual_value: f32,
+    ) -> Option<CarrierTrace> {
+        let from = self.belief_state.as_ref()?.current_trace()?;
+        let to = self.advance_belief(action, post_sensory)?;
+
+        self.imagination_planner
+            .as_mut()
+            .expect("enable_imagination_planner must be called first")
+            .observe_factual_transition(from, action, to.clone(), factual_value);
+
+        Some(to)
+    }
+
+    pub fn plan_from_belief(&mut self) -> Option<PlanDecision> {
+        let trace = self.belief_state.as_ref()?.current_trace()?;
+        self.imagination_planner.as_mut()?.plan(&trace)
+    }
+
+    pub fn plan_from_belief_depth(&mut self, depth: usize) -> Option<PlanDecision> {
+        let trace = self.belief_state.as_ref()?.current_trace()?;
+        self.imagination_planner
+            .as_mut()?
+            .plan_with_depth(&trace, depth)
     }
 
     pub fn enable_imagination_planner(&mut self, config: PlanningConfig) {
