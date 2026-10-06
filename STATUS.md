@@ -18,11 +18,14 @@ Date: 2026-10-06
 **G8-FRESH-1 FAIL — fresh depth/model-integrity witness failed; pack burned.**  
 **G8-FRESH-2 PASS — fresh delayed-reward planning under an explicit carrier-observability contract.**  
 **G9 MECHANISM PASS — recurrent carrier belief resolves deliberately aliased current observations.**  
-**G9-FRESH PASS — statistical history-conditioned planning under deliberate observation aliasing.**
+**G9-FRESH PASS — statistical history-conditioned planning under deliberate observation aliasing.**  
+**P1 FRESH PASS — phase-dependent value propagation through acquired physical synapses.**  
+**P2 FRESH PASS — phase-native forward sensory prediction and factual revision.**  
+**P3 FRESH PASS — cold autonomous phase-native acquisition, checkpoint persistence and changed-law repair.**
 
 No AGI claim. No production promotion.
 
-G0-G5 are **bounded mechanism PASSes**. G1 translation transfer additionally has a one-use fresh statistical qualification. The remaining gates require the same validation hardening before broader claims.
+The P-series repairs the architectural execution gap identified by the phase-execution audit. P3 removes the prepared transition curriculum for the tested deterministic reset-chain family. Full cognitive ownership across every subsystem is still not established, and broader claims require separate fresh qualification.
 
 The mandatory boundary remains **full EvoPhase cognitive ownership**. Rust implements carrier physics and the trusted shell; task-level adaptive state must live in EvoPhase-owned structures.
 
@@ -352,6 +355,46 @@ Run `37517982423` PASSed on source `b218668436b5baf29f2e3a479991c233a255bc4a`.
 - only 3 candidate code sets were rejected before sealing for unintended representation collisions.
 
 The pack is burned. This qualifies bounded history-conditioned carrier belief under deliberate observation aliasing, not general POMDP solving.
+
+## P3 phase-native autonomous acquisition
+
+Deterministic mechanism preflight:
+- protocol frozen before implementation at commit `47d325790068e4b43a9f242a71c57b26ef807b91`;
+- workflow `37528040155`, source `b2dade26db1a7d83a5c16f05fe2c70f39d27a33c`;
+- FULL cold autonomous acquisition: 12/12;
+- DIRECT_ONLY: 0/12;
+- seeded RANDOM_ACTION: 4/12;
+- mean interactions to first reward: 24.667;
+- mean changed-law repair cost: 9.083;
+- new-EvoPhase checkpoint restore, frozen exploitation, changed-law repair, source guard, regressions and Release build PASS.
+
+Two earlier P3 preflight runs are preserved as technical failures: one exposed transient REAL charge inside the old learned fingerprint, and one exposed an observer that demanded bit-level decoder identity rather than retained factual capability. Neither changed the frozen autonomy mechanism, world or budgets.
+
+FRESH-P3 first authority run `37528857872` PASSed on source `52bbbc2654894bbaf8501e6834757dff25f1e242`:
+
+- spec blob SHA: `b561a3af878c89531ed8df27b338959fd4d868f5`;
+- authority seed: `37528857872`;
+- pack digest: `c9a3d25d6f64c483`;
+- N=80 / 10 sub-seeds;
+- FULL initial autonomous acquisition: 80/80;
+- Wilson95: [0.954182,1.000000];
+- every sub-seed: 8/8;
+- frozen translated exploitation: 80/80;
+- checkpoint-restored exploitation in newly constructed EvoPhase: 80/80;
+- DIRECT_ONLY: 9/80;
+- seeded RANDOM_ACTION: 35/80;
+- NO_LEARNING / NO_GROWTH / ZERO_PHASE / ZERO_WEIGHT: [0,0,9,2]/80;
+- mean acquisition cost: 20.075 physical interactions, SD 9.957;
+- changed-law autonomous detour repair: 78/80;
+- repair per seed: [8,7,8,8,8,7,8,8,8,8];
+- revised frozen exploitation: 78/78;
+- revised checkpoint restore: 78/78;
+- frozen stale changed-law copies: 0/80;
+- mean changed-law repair cost: 16.462, SD 8.847;
+- legacy graph transition table non-zero cases: 0;
+- full optimized regressions and Release build PASS.
+
+The fresh pack is permanently burned. P3 establishes bounded autonomous acquisition in a deterministic fully observed reset-chain family. The exploration drive is still hand-specified frontier novelty; stochastic/POMDP continual learning, learned intrinsic motivation, arbitrary goals/domains and AGI remain open.
 
 ## Next gate
 
