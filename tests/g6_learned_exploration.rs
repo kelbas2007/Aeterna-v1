@@ -102,6 +102,18 @@ fn g6_learns_exploration_strategy_and_transfers_to_three_rival_family() {
     let learned_mean = learned_probe_sum as f64 / 8.0;
     let random_mean = random_probe_sum as f64 / random_cases as f64;
 
+    println!(
+        "G6 tuition_probes={} weights={:?} learned_first={}/8 zero_first={}/8 oracle_first={}/8 learned_mean_probes={:.4} random_order_mean_probes={:.4} random_cases={}",
+        tuition_cost,
+        weights,
+        learned_first_correct,
+        zero_first_correct,
+        oracle_first_correct,
+        learned_mean,
+        random_mean,
+        random_cases
+    );
+
     assert!(
         learned_first_correct >= 7,
         "learned strategy must choose the maximally informative probe first in >=7/8"
