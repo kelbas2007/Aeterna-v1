@@ -17,7 +17,7 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G4 | CI-1 | PASS_SAME_IDENTITY_MACRO_REVISION | CI run 37499873532 at commit `9dcf13c67fd44a52dac9a825b93c908b7b535bb8`: all 18 Rust tests PASS and release build PASS. After a world-law change, the same acquired macro ID is retained, contradiction evidence is preserved, obsolete branch action accumulates failures, a newly supported action takes over for the changed branch, the unchanged branch remains correct, and NO_REVISION fails the changed held-out context. Revision cost: 24 physical actions. |
 | G5 | CI-1 | TECHNICAL_FAIL_EVALUATOR_BOUNDS | First G5 CI run reached the hierarchy test but one evaluator-only held-out translation exceeded the 12x12 raster boundary. No cognitive verdict; runtime mechanism unchanged. |
 | G5 | CI-2 | PASS_HIERARCHICAL_REUSE | CI run 37503517616 at commit `c1292adc5c230c0616ce8c18a3829bd1f53947db`: all 22 Rust tests PASS and release build PASS. Two independently acquired child macros are reused by newly acquired parent macros that store child carrier IDs, not flattened primitive scripts. Parent readout transfers to unseen outer-cue translations and reduces held-out candidate-sequence evaluations from 5 to 2 and primitive search actions from 16 to 8 across two tasks. Reversing child acquisition order permutes opaque child IDs while preserving the hierarchy advantage. Parent tuition cost: 72 primitive actions per arm. |
-| G6 | — | NOT_STARTED | Learned exploration strategy |
+| G6 | CI-1 | PASS_LEARNED_EXPLORATION_STRATEGY | CI run 37505474193 at commit `cd8330aed18d5d375aa6998420108faefe5042ef`: regressions and release build PASS. Strategy starts with zero weights, receives 32 factual tuition probes across eight 2-rival families with informative opaque probe identity rotated over all four IDs, and learns weights [0.6917086, 0.109836645, 0.109836645]. With strategy learning frozen, transfer to eight 3-rival worlds selects the maximally informative probe first in 7/8 versus ZERO_STRATEGY 2/8; direct disagreement oracle is also 7/8. Learned mean identification cost is 1.0000 probe versus 2.3958 for the all-24-random-orders baseline. |
 | G7 | — | NOT_STARTED | Open-world qualification |
 
 ## What G0 PASS establishes
@@ -175,3 +175,24 @@ Stress diagnostics on the same burned pack:
 - doubled spacing: 42/80.
 
 These stress outcomes are diagnostic failures/limitations, not tuned-away results. This pack is burned. Any design change motivated by them must be evaluated on a new fresh authority seed.
+
+
+## What G6 PASS establishes
+
+Within the preregistered cross-family exploration world:
+
+- exploration strategy weights begin at [0,0,0];
+- 32 physical tuition probes provide factual rival-reduction credit;
+- informative opaque probe identity rotates across all four action IDs;
+- learned state has no probe-index-specific table;
+- learned weights after tuition are [0.6917086, 0.109836645, 0.109836645] over [disagreement, coverage, novelty];
+- strategy learning is frozen before held-out evaluation;
+- held-out family changes from two rivals to three and adds a partial discriminator;
+- learned strategy picks the maximally informative probe first in 7/8 held-out worlds;
+- ZERO_STRATEGY with identical world models achieves 2/8;
+- direct-disagreement oracle achieves 7/8;
+- learned mean physical identification cost is 1.0000 probe;
+- exhaustive random-order baseline over 24 permutations has mean 2.3958 probes;
+- G0-G5 and ownership regressions remain PASS.
+
+This is a bounded learned exploration strategy over inherited epistemic features. It does not show self-invention of the disagreement feature, autonomous curriculum generation, or open-world scientific reasoning.
