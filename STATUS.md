@@ -125,3 +125,28 @@ Workflow: `37499873532`
 An already acquired macro must become a child building block of a newly acquired higher-level macro. The hierarchy must be acquired from experience, transfer to held-out bindings, and reduce physical/search cost relative to a matched organism that cannot reuse acquired macros as children.
 
 CI remains manual-only between qualification checkpoints to avoid unnecessary runner usage.
+
+
+## Fresh statistical qualification
+
+### FRESH-G1 — translation transfer
+
+Run `37504043614`, source `a73342a35dcf4b5c08162f3508ecaabbdc6ae261`.
+
+- 80/80 fresh held-out translation worlds correct;
+- 10/10 sub-seeds each scored 8/8;
+- 95% Wilson interval: [0.9542, 1.0000];
+- raw-template NN: 35%;
+- linear perceptron: 45%;
+- opaque motor labels randomized per sub-seed;
+- one-use pack digest: `8e09c44e887c2ba0`.
+
+This upgrades G1 translation transfer from a 2/2 mechanism witness to a statistically qualified narrow capability under the inherited translation-cancelling FHRR/HDC prior.
+
+Stress diagnostics expose the next representational ceiling:
+- distractor: 42/80;
+- dropout: 42/80;
+- rotation: 0/80;
+- doubled spacing: 42/80.
+
+No robustness claim is made for those transformations. The pack is permanently burned for future qualification.
