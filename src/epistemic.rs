@@ -1,16 +1,17 @@
 use crate::exploration::ProbeFeatures;
 use crate::hdc::PhaseVector;
+use crate::trace::CarrierTrace;
 
 #[derive(Debug, Clone)]
 pub struct HypothesisPrediction {
     pub action: usize,
-    pub post: PhaseVector,
+    pub post: CarrierTrace,
 }
 
 #[derive(Debug, Clone)]
 pub struct WorldHypothesis {
     pub id: u64,
-    pub pre: PhaseVector,
+    pub pre: CarrierTrace,
     pub predictions: Vec<Option<HypothesisPrediction>>,
     pub support: u32,
     pub revision: u64,
@@ -18,7 +19,7 @@ pub struct WorldHypothesis {
 
 #[derive(Debug, Clone)]
 struct TuitionBuilder {
-    pre: PhaseVector,
+    pre: CarrierTrace,
     predictions: Vec<Option<HypothesisPrediction>>,
 }
 
@@ -83,6 +84,10 @@ impl EvoEpistemicState {
     }
 
     pub fn begin_tuition_episode(&mut self, pre: PhaseVector) {
+        self.begin_tuition_trace(CarrierTrace::exact(pre));
+    }
+
+    pub fn begin_tuition_trace(&mut self, pre: CarrierTrace) {
         assert!(self.tuition.is_none(), "finish previous tuition episode first");
         self.tuition = Some(TuitionBuilder {
             pre,
@@ -91,6 +96,10 @@ impl EvoEpistemicState {
     }
 
     pub fn record_tuition_transition(&mut self, action: usize, post: PhaseVector) {
+        self.record_tuition_transition_trace(action, CarrierTrace::exact(post));
+    }
+
+    pub fn record_tuition_transition_trace(&mut self, action: usize, post: CarrierTrace) {
         assert!(action < self.motor_cells);
         let builder = self
             .tuition
@@ -139,6 +148,10 @@ impl EvoEpistemicState {
     }
 
     pub fn begin_unknown_episode(&mut self, pre: &PhaseVector) -> usize {
+        self.begin_unknown_episode_trace(&CarrierTrace::exact(pre.clone()))
+    }
+
+    pub fn begin_unknown_episode_trace(&mut self, pre: &CarrierTrace) -> usize {
         let active_ids = self
             .hypotheses
             .iter()
@@ -197,6 +210,10 @@ impl EvoEpistemicState {
     }
 
     pub fn observe_probe_result(&mut self, action: usize, post: &PhaseVector) -> usize {
+        self.observe_probe_result_trace(action, &CarrierTrace::exact(post.clone()))
+    }
+
+    pub fn observe_probe_result_trace(&mut self, action: usize, post: &CarrierTrace) -> usize {
         assert!(action < self.motor_cells);
         let active = self
             .episode
@@ -231,6 +248,12 @@ impl EvoEpistemicState {
     }
 
     pub fn predicted_post(&self, action: usize) -> Option<PhaseVector> {
+        self.predicted_trace(action)?
+            .exact_vector()
+            .cloned()
+    }
+
+    pub fn predicted_trace(&self, action: usize) -> Option<CarrierTrace> {
         assert!(action < self.motor_cells);
         let episode = self.episode.as_ref()?;
         if episode.active_ids.len() != 1 {
