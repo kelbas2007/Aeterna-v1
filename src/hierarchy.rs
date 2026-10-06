@@ -71,6 +71,26 @@ impl EvoHierarchyMemory {
         &self.parents
     }
 
+    pub fn remap_child_ids(&mut self, mapping: &[(u64, u64)]) {
+        let remap = |id: &mut u64| {
+            if let Some((_, new_id)) = mapping.iter().find(|(old_id, _)| *old_id == *id) {
+                *id = *new_id;
+            }
+        };
+
+        for candidate in &mut self.candidates {
+            for id in &mut candidate.child_sequence {
+                remap(id);
+            }
+        }
+
+        for parent in &mut self.parents {
+            for id in &mut parent.child_sequence {
+                remap(id);
+            }
+        }
+    }
+
     pub fn observe_successful_sequence(
         &mut self,
         cue: PhaseVector,
