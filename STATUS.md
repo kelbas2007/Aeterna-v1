@@ -9,7 +9,8 @@ Date: 2026-10-06
 **G2 PASS — carrier-owned informative experiment selection.**  
 **G3 PASS — first acquired reusable EvoPhase macro/program.**  
 **G4 PASS — factual revision of the same acquired macro identity.**  
-**G5 PASS — hierarchical reuse of acquired macros.**
+**G5 PASS — hierarchical reuse of acquired macros.**  
+**G6 PASS — learned exploration strategy transfers across rival-count families.**
 
 No AGI claim. No production promotion.
 
@@ -187,10 +188,28 @@ Before broad generalization claims:
 
 See `docs/FRESH_QUALIFICATION_PROTOCOL.md` and `docs/VALIDATION_HARDENING.md`.
 
+### G6 — learned exploration strategy
+
+Qualified commit: `cd8330aed18d5d375aa6998420108faefe5042ef`  
+Workflow: `37505474193`
+
+- strategy starts at zero weights;
+- 32 factual tuition probes over 8 two-rival families;
+- informative opaque probe index rotates across all 4 motor IDs;
+- learned weights: [0.6917086, 0.109836645, 0.109836645] over [disagreement, coverage, novelty];
+- learning frozen before held-out transfer to 8 three-rival worlds;
+- LEARNED_STRATEGY first-probe success: 7/8;
+- ZERO_STRATEGY: 2/8;
+- direct-disagreement ORACLE ceiling: 7/8;
+- mean identification cost: 1.0000 physical probe;
+- exhaustive 24-order random baseline: 2.3958 probes.
+
+This removes the fixed G2 disagreement coefficient from the G6 tested path: probe scoring is now acquired from factual information-gain credit. The epistemic features themselves remain inherited substrate quantities.
+
 ## Next gate
 
-**G6: learned exploration strategy.**
+**G7: whole-organism fresh open-world qualification.**
 
-The G2 disagreement argmax is still an inherited substrate policy. G6 must acquire a reusable way of choosing informative experience from previous worlds and transfer that exploration strategy to a new family, while a matched control has the same learned world models but cannot reuse the acquired exploration strategy.
+G7 must combine perception, rival models, learned exploration, acquired/revised macros and hierarchical reuse in one ordinary organism under a one-use fresh authority pack, with randomized opaque labels, multiple seeds, confidence intervals and matched baselines.
 
 CI is manual-only between qualification checkpoints to avoid unnecessary runner usage.
