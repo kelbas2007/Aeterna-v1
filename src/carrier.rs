@@ -14,6 +14,7 @@ pub struct EvoConfig {
     pub residual_recruit_threshold: f32,
     pub min_recruit_support: u32,
     pub structural_growth_enabled: bool,
+    pub acquired_readout_enabled: bool,
 }
 
 impl Default for EvoConfig {
@@ -29,6 +30,7 @@ impl Default for EvoConfig {
             residual_recruit_threshold: 0.30,
             min_recruit_support: 2,
             structural_growth_enabled: true,
+            acquired_readout_enabled: true,
         }
     }
 }
@@ -64,6 +66,46 @@ pub struct DendriticBranch {
     pub support: u32,
     pub utility: f32,
     pub revision: u64,
+}
+
+#[derive(Debug, Clone)]
+struct ContextEvidence {
+    on_count: u32,
+    off_count: u32,
+    on_need_mean: f32,
+    off_need_mean: f32,
+}
+
+impl Default for ContextEvidence {
+    fn default() -> Self {
+        Self {
+            on_count: 0,
+            off_count: 0,
+            on_need_mean: 0.5,
+            off_need_mean: 0.5,
+        }
+    }
+}
+
+impl ContextEvidence {
+    fn observe(&mut self, active: bool, target_need: f32) {
+        if active {
+            self.on_count = self.on_count.saturating_add(1);
+            self.on_need_mean += (target_need - self.on_need_mean) / self.on_count as f32;
+        } else {
+            self.off_count = self.off_count.saturating_add(1);
+            self.off_need_mean += (target_need - self.off_need_mean) / self.off_count as f32;
+        }
+    }
+
+    fn contrast(&self) -> f32 {
+        let support = self.on_count.min(self.off_count);
+        if support == 0 {
+            return 0.0;
+        }
+        let confidence = (support as f32 / 4.0).clamp(0.0, 1.0);
+        (self.on_need_mean - self.off_need_mean).abs() * confidence
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -103,6 +145,7 @@ pub struct EvoPhase {
     residual_support: Vec<u32>,
     sensory_roles: Vec<PhaseVector>,
     motor_roles: Vec<PhaseVector>,
+    context_evidence: Vec<Vec<ContextEvidence>>,
 }
 
 impl EvoPhase {
@@ -131,6 +174,10 @@ impl EvoPhase {
         let motor_roles = (0..config.motor_cells)
             .map(|i| PhaseVector::from_seed(config.hdc_dim, 0xBEEF_0000 + i as u64))
             .collect();
+        let context_evidence = vec![
+            vec![ContextEvidence::default(); config.sensory_cells];
+            config.motor_cells
+        ];
 
         Self {
             action_usage: vec![0; config.motor_cells],
@@ -143,6 +190,7 @@ impl EvoPhase {
             tick: 0,
             sensory_roles,
             motor_roles,
+            context_evidence,
         }
     }
 
@@ -152,6 +200,10 @@ impl EvoPhase {
 
     pub fn current_real(&self) -> Option<&FactualFrame> {
         self.current_real.as_ref()
+    }
+
+    pub fn set_acquired_readout_enabled(&mut self, enabled: bool) {
+        self.config.acquired_readout_enabled = enabled;
     }
 
     pub fn branches(&self) -> &[DendriticBranch] {
@@ -184,14 +236,16 @@ impl EvoPhase {
             need_mass += c;
         }
 
-        for branch in &self.branches {
-            if branch.motor != action || !self.branch_matches(branch, &pre.sensory) {
-                continue;
-            }
-            if let Some(s) = self.relay_need_synapse(branch.relay_cell) {
-                let c = (s.confidence * (0.5 + 0.5 * branch.utility.max(0.0))).max(0.05);
-                need_sum += s.weight.clamp(0.0, 1.0) * c;
-                need_mass += c;
+        if self.config.acquired_readout_enabled {
+            for branch in &self.branches {
+                if branch.motor != action || !self.branch_matches(branch, &pre.sensory) {
+                    continue;
+                }
+                if let Some(s) = self.relay_need_synapse(branch.relay_cell) {
+                    let c = (s.confidence * (0.5 + 0.5 * branch.utility.max(0.0))).max(0.05);
+                    need_sum += s.weight.clamp(0.0, 1.0) * c;
+                    need_mass += c;
+                }
             }
         }
 
@@ -228,16 +282,20 @@ impl EvoPhase {
                 coherence /= terms;
             }
 
-            let branch_utility: f32 = self.branches.iter()
-                .filter(|b| b.motor == action && self.branch_matches(b, &pre.sensory))
-                .map(|b| b.utility.max(0.0))
-                .sum();
+            let branch_utility: f32 = if self.config.acquired_readout_enabled {
+                self.branches.iter()
+                    .filter(|b| b.motor == action && self.branch_matches(b, &pre.sensory))
+                    .map(|b| b.utility.max(0.0))
+                    .sum()
+            } else {
+                0.0
+            };
 
             // Goal value, epistemic pressure, generic exploration and carrier coherence.
             // No task label, coordinate, map or correct action is available here.
             let score =
                 2.0 * p.need
-                + 0.30 * uncertainty
+                + 1.00 * uncertainty
                 + 0.80 * novelty
                 + 0.20 * branch_utility
                 + 0.05 * coherence;
@@ -271,6 +329,7 @@ impl EvoPhase {
             .sum::<f32>() / self.config.sensory_cells as f32;
         let residual = 0.65 * need_residual + 0.35 * sensory_residual;
 
+        self.update_context_evidence(action, &pre.sensory, target_need);
         self.update_direct_need(action, target_need);
 
         let matching: Vec<usize> = self.branches.iter().enumerate()
@@ -385,7 +444,7 @@ impl EvoPhase {
             weight: target,
             phase_offset: 0.0,
             eligibility: 1.0,
-            confidence: 0.35,
+            confidence: 0.60,
             plastic: true,
         });
 
@@ -402,6 +461,12 @@ impl EvoPhase {
         Some(relay)
     }
 
+    fn update_context_evidence(&mut self, action: usize, sensory: &[f32], target_need: f32) {
+        for (idx, value) in sensory.iter().copied().enumerate() {
+            self.context_evidence[action][idx].observe(value >= 0.5, target_need);
+        }
+    }
+
     fn select_context_inputs(&self, action: usize, sensory: &[f32]) -> Option<Vec<usize>> {
         let active: Vec<usize> = sensory.iter().enumerate()
             .filter(|(_, x)| **x >= 0.5)
@@ -411,8 +476,24 @@ impl EvoPhase {
             return None;
         }
 
-        // Generic role-binding criterion: keep the always-active anchor plus the
-        // active feature least redundant with the action role. No world semantics.
+        // First use only carrier-owned local evidence: a sensory cell is valuable
+        // when the same action has produced different factual Need outcomes when
+        // that cell was present versus absent. No world label or coordinate enters.
+        let mut ranked = active.iter().copied()
+            .map(|idx| (self.context_evidence[action][idx].contrast(), idx))
+            .collect::<Vec<_>>();
+        ranked.sort_by(|a, b| b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
+        let evidence_inputs = ranked.iter()
+            .filter(|(score, _)| *score >= 0.05)
+            .map(|(_, idx)| *idx)
+            .take(2)
+            .collect::<Vec<_>>();
+        if evidence_inputs.len() == 2 {
+            return Some(evidence_inputs);
+        }
+
+        // Developmental fallback before enough positive/negative contrast exists:
+        // use phase-role diversity, still without task semantics.
         let anchor = active[0];
         let motor_role = &self.motor_roles[action];
         let mut second = active[1];
