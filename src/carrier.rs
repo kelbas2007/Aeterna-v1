@@ -5,6 +5,7 @@ use crate::hdc::PhaseVector;
 use crate::hierarchy::{EvoHierarchyMemory, HierarchyConfig, ParentMacro};
 use crate::macro_memory::{EvoMacroMemory, MacroAssembly, MacroConfig};
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
+use crate::planning::{EvoImaginationPlanner, PlanDecision, PlanningConfig};
 use crate::raster::{EvoRasterField, RasterFieldConfig};
 use crate::trace::CarrierTrace;
 
@@ -115,6 +116,7 @@ pub struct EvoPhase {
     hierarchy_memory: Option<EvoHierarchyMemory>,
     exploration_strategy: Option<EvoExplorationStrategy>,
     robust_high_level_perception: bool,
+    imagination_planner: Option<EvoImaginationPlanner>,
 }
 
 impl EvoPhase {
@@ -161,6 +163,7 @@ impl EvoPhase {
             hierarchy_memory: None,
             exploration_strategy: None,
             robust_high_level_perception: false,
+            imagination_planner: None,
         }
     }
 
@@ -220,6 +223,76 @@ impl EvoPhase {
 
     pub fn set_robust_high_level_perception(&mut self, enabled: bool) {
         self.robust_high_level_perception = enabled;
+    }
+
+    pub fn enable_imagination_planner(&mut self, config: PlanningConfig) {
+        assert_eq!(
+            config.motor_cells, self.config.motor_cells,
+            "planner and carrier must share motor count"
+        );
+        self.imagination_planner = Some(EvoImaginationPlanner::new(config));
+    }
+
+    pub fn set_planning_learning_enabled(&mut self, enabled: bool) {
+        if let Some(planner) = self.imagination_planner.as_mut() {
+            planner.set_learning_enabled(enabled);
+        }
+    }
+
+    pub fn planning_transition_count(&self) -> usize {
+        self.imagination_planner
+            .as_ref()
+            .map(|planner| planner.transitions().len())
+            .unwrap_or(0)
+    }
+
+    pub fn imagined_rollout_nodes(&self) -> usize {
+        self.imagination_planner
+            .as_ref()
+            .map(|planner| planner.last_rollout().len())
+            .unwrap_or(0)
+    }
+
+    pub fn observe_planning_transition(
+        &mut self,
+        pre_sensory: &[f32],
+        action: usize,
+        post_sensory: &[f32],
+        factual_value: f32,
+    ) {
+        let pre = self
+            .encode_high_level_trace(pre_sensory)
+            .expect("planning transition requires PRE carrier trace");
+        let post = self
+            .encode_high_level_trace(post_sensory)
+            .expect("planning transition requires POST carrier trace");
+
+        self.imagination_planner
+            .as_mut()
+            .expect("enable_imagination_planner must be called first")
+            .observe_factual_transition(pre, action, post, factual_value);
+    }
+
+    pub fn plan_imagined(&mut self, sensory: &[f32]) -> Option<PlanDecision> {
+        let trace = self.encode_high_level_trace(sensory)?;
+        self.imagination_planner.as_mut()?.plan(&trace)
+    }
+
+    pub fn plan_imagined_depth(
+        &mut self,
+        sensory: &[f32],
+        depth: usize,
+    ) -> Option<PlanDecision> {
+        let trace = self.encode_high_level_trace(sensory)?;
+        self.imagination_planner
+            .as_mut()?
+            .plan_with_depth(&trace, depth)
+    }
+
+    pub fn permute_planning_successors_for_control(&mut self) {
+        if let Some(planner) = self.imagination_planner.as_mut() {
+            planner.permute_successors_for_control();
+        }
     }
 
     pub fn enable_epistemic_state(&mut self, match_threshold: f32) {
