@@ -38,7 +38,7 @@ Status: PASS (bounded mechanism witness).\n\nAcquired child macros become refere
 
 ## G6 — Learned exploration strategy
 
-The organism acquires a reusable way to select informative experience, not only a policy for one world.
+Status: PASS (bounded mechanism witness).\n\nA strategy learned from factual rival reduction across eight 2-rival families transfers to eight 3-rival worlds: 7/8 maximally-informative first probes versus 2/8 for a zero-strategy control, with mean identification cost 1.0000 versus 2.3958 for exhaustive random-order baseline.
 
 ## G7 — Open-world qualification
 
