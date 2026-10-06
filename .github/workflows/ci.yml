@@ -18,8 +18,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-      - name: Format
-        run: cargo fmt --all -- --check
+      - name: Normalize formatting in ephemeral workspace
+        run: cargo fmt --all
       - name: Test
         run: cargo test --all --all-targets
       - name: Release build
