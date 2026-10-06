@@ -20,7 +20,9 @@ jobs:
           components: rustfmt
       - name: Normalize formatting in ephemeral workspace
         run: cargo fmt --all
-      - name: Regression tests and G8 fresh-2 preflight
+      - name: Regression and sealed G8 fresh-2 qualification
+        env:
+          AETERNA_RUN_FRESH_G8_V2: "1"
         run: cargo test --all --all-targets -- --nocapture
       - name: Release build
         run: cargo build --release
