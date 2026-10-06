@@ -11,7 +11,8 @@ Date: 2026-10-06
 **G4 PASS — factual revision of the same acquired macro identity.**  
 **G5 PASS — hierarchical reuse of acquired macros.**  
 **G6 PASS — learned exploration strategy transfers across rival-count families.**  
-**G7 FRESH-1 — FAIL: robust perception/representation boundary.**
+**G7 FRESH-1 — FAIL: robust perception/representation boundary.**  
+**R1 / G1-C MECHANISM PASS — robust carrier-owned relational perception.**
 
 No AGI claim. No production promotion.
 
@@ -228,10 +229,25 @@ Downstream causal advantages remain visible among survivable cases: matched prob
 
 This fresh pack is permanently burned for qualification.
 
+## R1 / G1-C mechanism result
+
+Workflow `37512561691` on `main` completed PASS.
+
+- R1 robust-perception mechanism test PASSed its preregistered thresholds;
+- clean held-out accuracy remained >=90%;
+- every nuisance class had non-zero success;
+- aggregate nuisance accuracy met the >=80% gate;
+- ROBUST_CARRIER strictly beat DIRECTED_ONLY on nuisance cases;
+- NO_ROBUST_FORMATION and NO_READOUT lost a material part of the advantage;
+- the whole-organism nuisance preflight passed 8/8 single-nuisance end-to-end cases;
+- G0-G6 regressions, ownership audit and optimized release build all remained PASS.
+
+This is a deterministic mechanism witness, not fresh statistical evidence.
+
 ## Next gate
 
-**R1 / G1-C: robust carrier-owned relational perception.**
+**G7 FRESH-2: one-use whole-organism retry with the R1 perceptual substrate frozen.**
 
-Before another G7 fresh run, the representation must survive distractors, partial dropout, rotation and scale without evaluator-specific detectors or host-side normalization. Development uses non-fresh diagnostic packs only; after source/spec freeze, G7 will receive a new one-use authority seed.
+The source and G7 spec are frozen before scoring. The GitHub Actions run ID supplies the new one-use authority seed. The previous G7 packs remain burned.
 
 CI is manual-only between qualification checkpoints.
