@@ -1,11 +1,46 @@
 # AETERNA v1
 
-New CPU-first, non-LLM research line, started 2026-10-06 at the owner's request.
+A clean no-LLM intelligence research line with **full EvoPhase cognitive ownership**.
 
-The objective is a persistent learner that acquires executable models and new reusable computational abstractions from experience, transfers them to new tasks, and revises them after counterexamples.
+## Non-negotiable rule
 
-This repository is not a claim of AGI, consciousness, or completion of the previous AETERNA project. Previous architecture is not mandatory. Existing AETERNA results and failures are evidence, not inherited implementation requirements.
+EvoPhase is the cognitive substrate, not a planner plugin.
 
-Implementation, research review, tests, and measured results are being prepared in this work session. No cloud training, paid browser, API keys, or LLM inference are part of the planned runtime.
+Rust may implement substrate physics and the trusted shell (I/O, persistence, serialization, provenance, safety and exact verification), but Rust must not contain hidden task answers or perform task-level cognition on behalf of the organism.
 
-No automatic GitHub Actions jobs or other paid execution are enabled.
+The following adaptive state must be EvoPhase-owned:
+
+- learned sensory distinctions and representations;
+- concepts and relations;
+- predictive hypotheses and rival models;
+- reusable skills / programs and their composition;
+- experiment selection;
+- imagined rollouts and planning state;
+- action policy;
+- revision after factual counterexamples;
+- structural growth, retirement and reuse.
+
+No LLM is used by the runtime.
+
+## Acceptance chain
+
+A capability is accepted only when the same ordinary organism demonstrates:
+
+```text
+raw experience
+  -> EvoPhase-owned state change
+  -> new prediction / program / experiment / plan
+  -> changed physical action
+  -> factual external result
+  -> revision of the same EvoPhase-owned structure
+```
+
+Matched controls must preserve raw observations, primitive substrate, factual outcomes and resource limits while disabling only the mechanism under test.
+
+## Current branch
+
+Development starts on `genesis/full-evophase`.
+
+First target: **EVO-OWNERSHIP-0** — prove that residual-driven structural growth inside EvoPhase changes held-out prediction and action, and that a factual counterexample revises the same carrier-owned structure.
+
+Status: **GENESIS / research implementation, not AGI claim**.
