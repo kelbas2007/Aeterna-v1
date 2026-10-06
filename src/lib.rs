@@ -6,6 +6,7 @@ pub mod hdc;
 pub mod hierarchy;
 pub mod macro_memory;
 pub mod phase;
+pub mod planning;
 pub mod raster;
 pub mod trace;
 
@@ -22,3 +23,5 @@ pub use macro_memory::{
 pub use raster::{EvoRasterField, OutcomeStat, PhaseFieldUnit, RasterFieldConfig};
 
 pub use trace::{CarrierTrace, ShapeTrace};
+
+pub use planning::{EvoImaginationPlanner, ImaginedNode, LearnedTransition, PlanDecision, PlanningConfig};
