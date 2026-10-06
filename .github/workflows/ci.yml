@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary P5 deterministic preflight trigger; no fresh authority pack.
+# Temporary P5 deterministic preflight trigger; diagnostic rerun, no fresh authority pack.
 
 on:
   workflow_dispatch:
