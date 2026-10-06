@@ -1,6 +1,7 @@
 use crate::authority::Authority;
 use crate::hdc::PhaseVector;
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
+use crate::raster::{EvoRasterField, RasterFieldConfig};
 
 #[derive(Debug, Clone)]
 pub struct EvoConfig {
@@ -103,6 +104,7 @@ pub struct EvoPhase {
     residual_support: Vec<u32>,
     sensory_roles: Vec<PhaseVector>,
     motor_roles: Vec<PhaseVector>,
+    raster_field: Option<EvoRasterField>,
 }
 
 impl EvoPhase {
@@ -143,6 +145,7 @@ impl EvoPhase {
             tick: 0,
             sensory_roles,
             motor_roles,
+            raster_field: None,
         }
     }
 
@@ -162,6 +165,42 @@ impl EvoPhase {
         self.dormant_range()
             .filter(|idx| self.cells[*idx].recruited)
             .count()
+    }
+
+    pub fn attach_raster_field(&mut self, config: RasterFieldConfig) {
+        assert_eq!(
+            config.width * config.height,
+            self.config.sensory_cells,
+            "raw raster must map losslessly onto sensory cells"
+        );
+        assert_eq!(
+            config.motor_cells, self.config.motor_cells,
+            "raster field and carrier must share motor count"
+        );
+        self.raster_field = Some(EvoRasterField::new(config, self.config.hdc_dim));
+    }
+
+    pub fn set_raster_readout_enabled(&mut self, enabled: bool) {
+        if let Some(field) = self.raster_field.as_mut() {
+            field.set_readout_enabled(enabled);
+        }
+    }
+
+    pub fn set_raster_learning_enabled(&mut self, enabled: bool) {
+        if let Some(field) = self.raster_field.as_mut() {
+            field.set_learning_enabled(enabled);
+        }
+    }
+
+    pub fn raster_units(&self) -> usize {
+        self.raster_field
+            .as_ref()
+            .map(|field| field.units().len())
+            .unwrap_or(0)
+    }
+
+    pub fn raster_field(&self) -> Option<&EvoRasterField> {
+        self.raster_field.as_ref()
     }
 
     pub fn observe_initial_real(&mut self, sensory: &[f32], need: bool) {
@@ -208,6 +247,11 @@ impl EvoPhase {
 
     pub fn choose_motor(&mut self) -> usize {
         let pre = self.current_real.as_ref().expect("choose_motor requires factual PRE").clone();
+        let raster_evidence = self
+            .raster_field
+            .as_ref()
+            .map(|field| field.motor_evidence(&pre.sensory))
+            .unwrap_or_else(|| vec![0.0; self.config.motor_cells]);
         let mut best: Option<(usize, f32)> = None;
 
         for action in 0..self.config.motor_cells {
@@ -242,7 +286,8 @@ impl EvoPhase {
                 + 0.60 * uncertainty
                 + 0.80 * novelty
                 + 0.20 * branch_utility
-                + 0.05 * coherence;
+                + 0.05 * coherence
+                + 2.50 * raster_evidence[action];
 
             if best.map(|(_, s)| score > s).unwrap_or(true) {
                 best = Some((action, score));
@@ -282,6 +327,10 @@ impl EvoPhase {
 
         for idx in matching.iter().copied() {
             self.revise_branch(idx, target_need, residual);
+        }
+
+        if let Some(field) = self.raster_field.as_mut() {
+            field.observe_factual(&pre.sensory, action, post_need);
         }
 
         let mut recruited_relay = None;
