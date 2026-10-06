@@ -114,7 +114,8 @@ impl EvoPhase {
 
     pub fn phase_native_synapse(&self, index: usize) -> Option<PhaseSynapse> {
         let state = self.phase_native.as_ref()?;
-        if !state.circuits.iter().any(|c| c.indices().contains(&index)) {
+        if !state.circuits.iter().any(|c| c.indices().contains(&index))
+            && !self.is_native_decoder_synapse(index) {
             return None;
         }
         self.synapses.get(index).cloned()
@@ -325,3 +326,5 @@ impl EvoPhase {
         })
     }
 }
+
+include!("phase_forward.rs");
