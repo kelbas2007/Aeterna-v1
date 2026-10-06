@@ -21,11 +21,12 @@ Date: 2026-10-06
 **G9-FRESH PASS — statistical history-conditioned planning under deliberate observation aliasing.**  
 **P1 FRESH PASS — phase-dependent value propagation through acquired physical synapses.**  
 **P2 FRESH PASS — phase-native forward sensory prediction and factual revision.**  
-**P3 FRESH PASS — cold autonomous phase-native acquisition, checkpoint persistence and changed-law repair.**
+**P3 FRESH PASS — cold autonomous phase-native acquisition, checkpoint persistence and changed-law repair.**  
+**P4 FRESH PASS — learned phase-native exploration drive transfers by itself to cold longer worlds.**
 
 No AGI claim. No production promotion.
 
-The P-series repairs the architectural execution gap identified by the phase-execution audit. P3 removes the prepared transition curriculum for the tested deterministic reset-chain family. Full cognitive ownership across every subsystem is still not established, and broader claims require separate fresh qualification.
+The P-series repairs the architectural execution gap identified by the phase-execution audit. P3 removes the prepared transition curriculum for the tested deterministic reset-chain family. P4 then removes the fixed P3 frontier valuation from qualified target acquisition: the behavioral weight of generic epistemic features is learned from factual model gain and transferred through physical drive synapses. Full cognitive ownership across every subsystem is still not established, and broader claims require separate fresh qualification.
 
 The mandatory boundary remains **full EvoPhase cognitive ownership**. Rust implements carrier physics and the trusted shell; task-level adaptive state must live in EvoPhase-owned structures.
 
@@ -396,10 +397,53 @@ FRESH-P3 first authority run `37528857872` PASSed on source `52bbbc2654894bbaf85
 
 The fresh pack is permanently burned. P3 establishes bounded autonomous acquisition in a deterministic fully observed reset-chain family. The exploration drive is still hand-specified frontier novelty; stochastic/POMDP continual learning, learned intrinsic motivation, arbitrary goals/domains and AGI remain open.
 
+
+## P4 phase-native learned exploration drive
+
+Deterministic mechanism workflow `37530869041` PASSed on source `9aa725a443ac7f975896c4e20f689cef90dae334`:
+
+- learned drive weights `[0.99999994,1.0]` from 61 factual model-gain observations;
+- LEARNED_DRIVE 12/12, mean 25.000 interactions;
+- ZERO_DRIVE 0/12;
+- FRONTIER_WEIGHT_LESION 0/12, mean 60.000;
+- ZERO_PHASE_DRIVE 0/12, mean 60.000;
+- seeded RANDOM_ACTION 6/12, mean 47.917;
+- P3 teacher ceiling 12/12;
+- source guard, regressions and Release build PASS.
+
+Run `37531623310` is preserved as `TECHNICAL_FAIL_WORKFLOW_PARSE`: GitHub created no job, so no authority-derived P4 world pack was generated or exposed.
+
+The first valid FRESH-P4 authority run `37531676452` PASSed on source `3795f3865f90dbff1942ffbc7d450aba24b2b66d`:
+
+- spec blob SHA: `2069b8269944cb65ff5967e9580bd3c152640fdb`;
+- authority seed: `37531676452`;
+- pack digest: `47b2a86ebe50dc8f`;
+- N=80 target worlds / 10 sub-seeds;
+- FULL_LEARNED_DRIVE: **80/80**;
+- Wilson95: **[0.954182,1.000000]**;
+- per-sub-seed FULL: **[8,8,8,8,8,8,8,8,8,8]**;
+- ZERO_DRIVE: **0/80**;
+- FRONTIER_LESION: **7/80**;
+- ZERO_PHASE_DRIVE: **0/80**;
+- RANDOM_ACTION: **18/80**;
+- P3 teacher ceiling: **80/80**;
+- FULL mean acquisition cost **24.087**, SD **8.243**;
+- lesion mean **55.700**, SD **14.031**;
+- zero-phase mean **60.000**;
+- random mean **52.062**, SD **16.311**;
+- total source meta-tuition cost across sub-seeds: **646** physical interactions;
+- every target carrier started with receptors=0, circuits=0, legacy graph transitions=0;
+- target drive learning was frozen and restored drive weights remained unchanged;
+- full optimized regressions and Release build PASSed.
+
+The fresh pack is permanently burned. P4 establishes bounded transfer of a **learned physical exploration drive** in deterministic reset-chain worlds. The feature vocabulary (DIRECT_UNMODELLED / REACHABLE_FRONTIER) is still inherited; stochastic/POMDP exploration, continual retention under interference, arbitrary domains and AGI remain open.
+
+See `docs/PHASE_NATIVE_P4_PROTOCOL.md`, `docs/PHASE_NATIVE_P4_FRESH_PROTOCOL.md` and `docs/PHASE_NATIVE_P4_RESULT.md`.
+
 ## Next gate
 
-**G10: autonomous composite concept construction.**
+**P5: continual self-directed learning under interference**, with G10 composite-concept construction retained as a separate preregistered capability target.
 
-The next measured bottleneck is no longer simple memory/planning. EvoPhase must create a new reusable concept from already acquired lower-level carrier structures, where no individual child feature is sufficient. The composite must be absent before experience, transfer to unseen bindings, causally change prediction/action, and lose that advantage under a matched NO_CONSTRUCTION control.
+P5 must use one persistent organism across multiple sequentially changing worlds rather than constructing a cold target carrier each time. It must preserve useful old models/skills, selectively revise contradicted structure, retain the learned exploration drive, and recover earlier capabilities after later learning without evaluator task-identity labels. G10 still requires formation of a genuinely new reusable composite concept from already acquired lower-level carrier structures.
 
 CI is manual-only between qualification checkpoints.
