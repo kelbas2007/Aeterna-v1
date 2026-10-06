@@ -1,5 +1,5 @@
 name: evo-ci
-# FRESH-P3 first authority run for frozen autonomous checkpoint
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -19,17 +19,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p3: execute frozen autonomous checkpoint'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -64,8 +58,8 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P2_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test phase_forward_execution p2_fresh_forward_and_integrated_pack -- --ignored --nocapture | tee p2-evidence.log
-      - name: One-use fresh P3 autonomous qualification
-        if: github.event_name == 'push' || inputs.qualify_p3
+      - name: Explicit one-use fresh P3 autonomous qualification
+        if: ${{ inputs.qualify_p3 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
