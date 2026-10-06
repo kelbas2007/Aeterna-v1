@@ -35,6 +35,9 @@ pub struct Score {
     pub probes: usize,
     pub candidate_evals: usize,
     pub primitive_actions: usize,
+    /// 0=start/rival activation, 1=epistemic loop, 2=identified law,
+    /// 3=parent/sequence selected, 4=child execution completed.
+    pub stage: u8,
 }
 
 #[derive(Clone)]
@@ -597,6 +600,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
         return Score::default();
     }
 
+    let mut stage = 1u8;
     let mut probes = 0usize;
     let mut last_post = None;
 
@@ -604,6 +608,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
         let Some(action) = evo.choose_learned_exploration_probe() else {
             return Score {
                 probes,
+                stage,
                 ..Score::default()
             };
         };
@@ -623,6 +628,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
         if rivals == 0 {
             return Score {
                 probes,
+                stage,
                 ..Score::default()
             };
         }
@@ -631,10 +637,12 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
     if rivals != 1 {
         return Score {
             probes,
+            stage,
             ..Score::default()
         };
     }
 
+    stage = 2;
     let cue = last_post.expect("at least one factual probe POST");
 
     if matches!(arm, Arm::NoHierarchy) {
@@ -660,6 +668,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
                     probes,
                     candidate_evals,
                     primitive_actions,
+                    stage: 4,
                 };
             }
         }
@@ -668,6 +677,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
             probes,
             candidate_evals,
             primitive_actions,
+            stage: 3,
             ..Score::default()
         };
     }
@@ -675,10 +685,12 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
     let Some(sequence) = evo.select_parent_sequence(&cue) else {
         return Score {
             probes,
+            stage,
             ..Score::default()
         };
     };
 
+    stage = 3;
     let (success, primitive_actions) = evaluate_sequence(
         &mut evo,
         world.law,
@@ -693,6 +705,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
         probes,
         candidate_evals: 1,
         primitive_actions,
+        stage: 4,
     }
 }
 
