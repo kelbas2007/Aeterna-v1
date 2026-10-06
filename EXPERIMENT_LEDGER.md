@@ -5,7 +5,7 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | Gate | Attempt | Status | What it means |
 |---|---|---|---|
 | G0 | design | READY_FOR_COMPILE | Carrier kernel and matched tests written; no Rust execution yet |
-| G1 | — | NOT_STARTED | Raw raster autonomous distinction |
+| G1 | candidate-1 | IMPLEMENTED_UNCOMPILED | 12×12 raw raster, matched NO_FORMATION + same-state NO_READOUT; no PASS claimed |
 | G2 | — | NOT_STARTED | Carrier-owned informative experiment selection |
 | G3 | — | NOT_STARTED | Acquired reusable EvoPhase macro/program |
 | G4 | — | NOT_STARTED | Revision of the same acquired macro |
