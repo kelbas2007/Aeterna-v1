@@ -17,7 +17,8 @@ Date: 2026-10-06
 **G8 MECHANISM PASS — carrier-owned imagined delayed-reward planning.**  
 **G8-FRESH-1 FAIL — fresh depth/model-integrity witness failed; pack burned.**  
 **G8-FRESH-2 PASS — fresh delayed-reward planning under an explicit carrier-observability contract.**  
-**G9 MECHANISM PASS — recurrent carrier belief resolves deliberately aliased current observations.**
+**G9 MECHANISM PASS — recurrent carrier belief resolves deliberately aliased current observations.**  
+**G9-FRESH PASS — statistical history-conditioned planning under deliberate observation aliasing.**
 
 No AGI claim. No production promotion.
 
@@ -332,10 +333,30 @@ Workflow `37517251841` PASSed on source `20c2599b6a5c0a68b44eed9537df443aa9c80e9
 
 This is a mechanism witness, not yet statistical POMDP qualification.
 
+## G9-FRESH result
+
+Run `37517982423` PASSed on source `b218668436b5baf29f2e3a479991c233a255bc4a`.
+
+- authority seed: `37517982423`;
+- one-use pack digest: `bc2608fd9a60e0df`;
+- N=80 / 10 sub-seeds;
+- FULL_BELIEF: 80/80, Wilson95 [0.9542,1.0000];
+- OBSERVATION_ONLY: 20/80;
+- RESET_HISTORY: 2/80;
+- history length 1: 30/30;
+- history length 2: 30/30;
+- history length 3: 20/20;
+- belief separation violations: 0;
+- authority/REAL-firewall violations: 0;
+- successful terminal action IDs span {0,1,2,3};
+- only 3 candidate code sets were rejected before sealing for unintended representation collisions.
+
+The pack is burned. This qualifies bounded history-conditioned carrier belief under deliberate observation aliasing, not general POMDP solving.
+
 ## Next gate
 
-**G9-FRESH: one-use statistical qualification of history-conditioned planning.**
+**G10: autonomous composite concept construction.**
 
-Freeze source/spec, then evaluate >=80 fresh partially observable episodes across >=10 sub-seeds, randomized cue/corridor relations, opaque motor permutations, held-out translations and more than one history length. Compare FULL_BELIEF with OBSERVATION_ONLY and RESET_HISTORY, report Wilson 95% CI and physical action cost, and burn the pack after first observation.
+The next measured bottleneck is no longer simple memory/planning. EvoPhase must create a new reusable concept from already acquired lower-level carrier structures, where no individual child feature is sufficient. The composite must be absent before experience, transfer to unseen bindings, causally change prediction/action, and lose that advantage under a matched NO_CONSTRUCTION control.
 
 CI is manual-only between qualification checkpoints.
