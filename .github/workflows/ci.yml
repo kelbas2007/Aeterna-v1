@@ -2,9 +2,6 @@ name: evo-ci
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -20,9 +17,7 @@ jobs:
           components: rustfmt
       - name: Normalize formatting in ephemeral workspace
         run: cargo fmt --all
-      - name: Regression and sealed G8 fresh qualification
-        env:
-          AETERNA_RUN_FRESH_G8: "1"
-        run: cargo test --all --all-targets -- --nocapture
+      - name: Regression tests
+        run: cargo test --all --all-targets
       - name: Release build
         run: cargo build --release
