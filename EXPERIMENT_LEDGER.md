@@ -317,3 +317,30 @@ Observed:
 - mean FULL rollout nodes: 23.700.
 
 This statistically qualifies the bounded claim of delayed-reward carrier-owned planning **conditional on an identifiable carrier observation state and an acquired local transition model**. It does not qualify planning under perceptual aliasing/POMDP uncertainty. G8-FRESH-1 remains the preserved evidence that this observability boundary matters.
+
+
+## What G9 mechanism PASS establishes
+
+Workflow `37517251841` completed PASS on source `20c2599b6a5c0a68b44eed9537df443aa9c80e9c`.
+
+Development witness:
+- four opaque motor permutations;
+- two hidden contexts per permutation;
+- held-out absolute translations;
+- the current corridor raw observation is context-independent;
+- FULL_BELIEF: 8/8;
+- OBSERVATION_ONLY: 4/8;
+- RESET_HISTORY: 1/8;
+- successful terminal motor IDs covered {0,1,2,3};
+- the recurrent belief traces for the two hidden histories remain below the carrier match threshold despite the identical current observation;
+- G0-G8 regressions, ownership audits and optimized release build remained PASS.
+
+Mechanism:
+```text
+belief_0 = encode(current observation)
+belief_t+1 = permute(belief_t) ⊗ action_role ⊗ encode(next observation)
+```
+
+The dimension permutation makes the recurrent HDC/FHRR state order-sensitive. The evaluator does not pass latent-context IDs to production cognition.
+
+This is a bounded mechanism witness for history-conditioned carrier state under deliberate observation aliasing. Fresh statistical qualification remains required.
