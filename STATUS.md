@@ -8,7 +8,8 @@ Date: 2026-10-06
 **G1-B PASS — raw-raster relational distinction with held-out translation transfer.**  
 **G2 PASS — carrier-owned informative experiment selection.**  
 **G3 PASS — first acquired reusable EvoPhase macro/program.**  
-**G4 PASS — factual revision of the same acquired macro identity.**
+**G4 PASS — factual revision of the same acquired macro identity.**  
+**G5 PASS — hierarchical reuse of acquired macros.**
 
 No AGI claim. No production promotion.\n\n**Validation note:** G0-G4 are now classified as preregistered **mechanism PASSes**, not broad statistical generalization claims. Fresh statistical qualification is pending under `docs/FRESH_QUALIFICATION_PROTOCOL.md`.
 
