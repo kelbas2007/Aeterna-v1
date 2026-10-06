@@ -130,6 +130,11 @@ impl EvoRasterField {
         &self.units
     }
 
+    pub fn encode_relational_trace(&self, raster: &[f32]) -> Option<PhaseVector> {
+        self.assert_raster(raster);
+        self.relational_trace(raster)
+    }
+
     pub fn active_unit_ids(&self, raster: &[f32]) -> Vec<u64> {
         self.assert_raster(raster);
         let Some(trace) = self.relational_trace(raster) else {
