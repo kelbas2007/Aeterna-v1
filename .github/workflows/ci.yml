@@ -2,6 +2,9 @@ name: evo-ci
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - genesis/full-evophase
 
 permissions:
   contents: read
@@ -17,6 +20,10 @@ jobs:
           components: rustfmt
       - name: Normalize formatting in ephemeral workspace
         run: cargo fmt --all
+      - name: R1 mechanism metrics
+        run: cargo test --test r1_robust_perception -- --nocapture
+      - name: R1 whole-chain development metrics
+        run: cargo test --test g7_open_world r1_ -- --nocapture
       - name: Regression tests
         run: cargo test --all --all-targets
       - name: Release build
