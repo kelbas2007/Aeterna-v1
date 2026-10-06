@@ -61,6 +61,7 @@ pub(super) struct PhaseNativeState {
     pub(super) config: PhaseNativeConfig,
     receptors: Vec<Receptor>,
     circuits: Vec<PhaseCircuitInfo>,
+    drive: Option<PhaseDriveState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -103,6 +104,7 @@ impl EvoPhase {
             config,
             receptors: Vec::new(),
             circuits: Vec::new(),
+            drive: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -123,7 +125,11 @@ impl EvoPhase {
 
     pub fn phase_native_synapse(&self, index: usize) -> Option<PhaseSynapse> {
         let state = self.phase_native.as_ref()?;
+        let drive_synapse = state.drive.as_ref()
+            .map(|drive| drive.weight_synapses.contains(&index))
+            .unwrap_or(false);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
+            && !drive_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -219,7 +225,9 @@ impl EvoPhase {
     /// propagated backward through the same acquired phase-native successor
     /// synapses used by P1/P2. No host graph/frontier is constructed.
     pub fn choose_phase_native_autonomous_action(&mut self) -> Option<usize> {
-        self.phase_native_exploration_action(true)
+        let action = self.phase_native_exploration_action(true)?;
+        self.phase_native_stage_drive_action(action);
+        Some(action)
     }
 
     /// Matched diagnostic control: it can try an unknown action only at the
@@ -531,4 +539,5 @@ impl EvoPhase {
     }
 }
 
+include!("phase_drive.rs");
 include!("phase_forward.rs");
