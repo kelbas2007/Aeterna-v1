@@ -78,6 +78,11 @@ fn g7_preflight_composes_perception_exploration_revision_and_hierarchy() {
         full_candidates += full.candidate_evals;
         no_hierarchy_candidates += no_hierarchy.candidate_evals;
 
+        println!(
+            "G7_PREFLIGHT_WORLD world={:?} full={:?} zero={:?} no_hierarchy={:?} unrevised={:?}",
+            world, full, zero, no_hierarchy, unrevised
+        );
+
         assert!(
             full.success,
             "clean held-out preflight world must traverse the complete acquired chain"
