@@ -6,4 +6,4 @@ pub mod raster;
 
 pub use authority::Authority;
 pub use carrier::{DendriticBranch, EvoConfig, EvoPhase, FactualFrame, LearningReport, Prediction};
-pub use raster::{OffsetCount, RelationalMotif};
+pub use raster::{EvoRasterField, OutcomeStat, PhaseFieldUnit, RasterFieldConfig};
