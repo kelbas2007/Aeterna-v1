@@ -22,11 +22,12 @@ Date: 2026-10-06
 **P1 FRESH PASS — phase-dependent value propagation through acquired physical synapses.**  
 **P2 FRESH PASS — phase-native forward sensory prediction and factual revision.**  
 **P3 FRESH PASS — cold autonomous phase-native acquisition, checkpoint persistence and changed-law repair.**  
-**P4 FRESH PASS — learned phase-native exploration drive transfers by itself to cold longer worlds.**
+**P4 FRESH PASS — learned phase-native exploration drive transfers by itself to cold longer worlds.**  
+**P5 MECHANISM PASS — one persistent organism retains multiple worlds and selectively repairs one changed world.**
 
 No AGI claim. No production promotion.
 
-The P-series repairs the architectural execution gap identified by the phase-execution audit. P3 removes the prepared transition curriculum for the tested deterministic reset-chain family. P4 then removes the fixed P3 frontier valuation from qualified target acquisition: the behavioral weight of generic epistemic features is learned from factual model gain and transferred through physical drive synapses. Full cognitive ownership across every subsystem is still not established, and broader claims require separate fresh qualification.
+The P-series repairs the architectural execution gap identified by the phase-execution audit. P3 removes the prepared transition curriculum for the tested deterministic reset-chain family. P4 then removes the fixed P3 frontier valuation from qualified target acquisition: the behavioral weight of generic epistemic features is learned from factual model gain and transferred through physical drive synapses. P5 adds bounded continual retention in one persistent organism and exposed/fixed a phase-native sensory-reference drift that broke old P2 decoders without overwriting their synapses. Full cognitive ownership across every subsystem is still not established, and P5 still requires fresh statistical qualification.
 
 The mandatory boundary remains **full EvoPhase cognitive ownership**. Rust implements carrier physics and the trusted shell; task-level adaptive state must live in EvoPhase-owned structures.
 
@@ -440,10 +441,44 @@ The fresh pack is permanently burned. P4 establishes bounded transfer of a **lea
 
 See `docs/PHASE_NATIVE_P4_PROTOCOL.md`, `docs/PHASE_NATIVE_P4_FRESH_PROTOCOL.md` and `docs/PHASE_NATIVE_P4_RESULT.md`.
 
+
+## P5 persistent continual-learning mechanism result
+
+Protocol preregistered before implementation at commit `4d8902cba98fa377ec62ad4dda3e2b5bf026db59`.
+
+The first P5 preflight exposed a real continual-readout failure: after learning world B, world A's P1 plan remained correct but the P2 forward path could no longer produce a prediction. Diagnostics established:
+
+- cross-domain carrier-trace maximum similarity: **0.077763** at threshold 0.97;
+- pre-existing A/drive/decoder synapses modified by B learning: **0 / 606**;
+- correct A start plan remained motor 1 with predicted value 0.9025;
+- therefore the failure was readout interference, not representation aliasing or destructive synaptic overwrite.
+
+Root cause: `load_real` historically shifted every active raw sensory cell's persistent phase by +0.01 on every observation, while P2 decoder offsets were learned against those shared sensory phases. Later worlds therefore moved the physical decoder reference frame even when old learned synapses were unchanged.
+
+Production commit `797e366d64a186bc7c36d283f84fff3dfe57e8f7` keeps phase-native sensory-cell intrinsic phase stable; factual input changes charge, while long-term adaptation remains in synaptic weights/phase offsets. Legacy non-native behavior is unchanged.
+
+Passing workflow `37534699260` on source `de2f931b5a6b03995f62f8723011cfca89581be0`:
+
+- P5 fast mechanism test PASS;
+- full optimized regression suite PASS;
+- Release build PASS;
+- meta-drive source cost: 61;
+- persistent A/B/C/D acquisition costs: **[9,24,12,20]**, total **65**;
+- frozen retention revisit actions: **34**;
+- changed-B autonomous repair: **9** interactions;
+- receptors after A/B/C/D: **[4,9,13,18]**;
+- circuits after A/B/C/D: **[7,19,27,38]**;
+- ZERO_DRIVE_PERSISTENT: **0/4**, budget spent 240;
+- NO_GROWTH_PERSISTENT: **0/4**;
+- checkpoint/restart after the full lifetime retained A/revised-B/C/D;
+- legacy graph transition count remained zero.
+
+This is a deterministic mechanism PASS only. See `docs/PHASE_NATIVE_P5_PROTOCOL.md` and `docs/PHASE_NATIVE_P5_RESULT.md`.
+
 ## Next gate
 
-**P5: continual self-directed learning under interference**, with G10 composite-concept construction retained as a separate preregistered capability target.
+**FRESH-P5: statistical continual-retention/revision qualification**, with G10 composite-concept construction retained as a separate preregistered capability target.
 
-P5 must use one persistent organism across multiple sequentially changing worlds rather than constructing a cold target carrier each time. It must preserve useful old models/skills, selectively revise contradicted structure, retain the learned exploration drive, and recover earlier capabilities after later learning without evaluator task-identity labels. G10 still requires formation of a genuinely new reusable composite concept from already acquired lower-level carrier structures.
+The deterministic P5 mechanism now passes. The next valid P5 claim requires a one-use external-authority pack with randomized world laws/order and at least 80 scored retention/revision episodes. G10 still separately requires formation of a genuinely new reusable composite concept from already acquired lower-level carrier structures.
 
 CI is manual-only between qualification checkpoints.
