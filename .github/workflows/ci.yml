@@ -2,6 +2,9 @@ name: evo-ci
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - genesis/full-evophase
 
 permissions:
   contents: read
@@ -9,7 +12,7 @@ permissions:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -17,7 +20,14 @@ jobs:
           components: rustfmt
       - name: Normalize formatting in ephemeral workspace
         run: cargo fmt --all
-      - name: Test
+      - name: Regression tests
         run: cargo test --all --all-targets
+      - name: Seal fresh G1 spec
+        run: echo "AETERNA_SPEC_SHA=$(git rev-parse HEAD:docs/FRESH_G1_TRANSLATION_QUALIFICATION.md)" >> "$GITHUB_ENV"
+      - name: Fresh G1 statistical qualification
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: cargo test --test fresh_g1_translation fresh_g1_translation_pack -- --ignored --nocapture
       - name: Release build
         run: cargo build --release
