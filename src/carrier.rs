@@ -1,4 +1,5 @@
 use crate::authority::Authority;
+use crate::epistemic::{EvoEpistemicState, WorldHypothesis};
 use crate::hdc::PhaseVector;
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
 use crate::raster::{EvoRasterField, RasterFieldConfig};
@@ -105,6 +106,7 @@ pub struct EvoPhase {
     sensory_roles: Vec<PhaseVector>,
     motor_roles: Vec<PhaseVector>,
     raster_field: Option<EvoRasterField>,
+    epistemic_state: Option<EvoEpistemicState>,
 }
 
 impl EvoPhase {
@@ -146,6 +148,7 @@ impl EvoPhase {
             sensory_roles,
             motor_roles,
             raster_field: None,
+            epistemic_state: None,
         }
     }
 
@@ -201,6 +204,128 @@ impl EvoPhase {
 
     pub fn raster_field(&self) -> Option<&EvoRasterField> {
         self.raster_field.as_ref()
+    }
+
+    pub fn enable_epistemic_state(&mut self, match_threshold: f32) {
+        self.epistemic_state = Some(EvoEpistemicState::new(
+            self.config.motor_cells,
+            match_threshold,
+        ));
+    }
+
+    pub fn epistemic_hypotheses(&self) -> &[WorldHypothesis] {
+        self.epistemic_state
+            .as_ref()
+            .map(EvoEpistemicState::hypotheses)
+            .unwrap_or(&[])
+    }
+
+    pub fn begin_epistemic_tuition(&mut self, pre_sensory: &[f32]) {
+        let trace = self
+            .raster_field
+            .as_ref()
+            .expect("epistemic tuition requires an attached raw raster field")
+            .encode_relational_trace(pre_sensory)
+            .expect("epistemic tuition requires a relational PRE trace");
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .begin_tuition_episode(trace);
+    }
+
+    pub fn record_epistemic_tuition_transition(
+        &mut self,
+        action: usize,
+        post_sensory: &[f32],
+    ) {
+        let trace = self
+            .raster_field
+            .as_ref()
+            .expect("epistemic tuition requires an attached raw raster field")
+            .encode_relational_trace(post_sensory)
+            .expect("epistemic tuition requires a relational POST trace");
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .record_tuition_transition(action, trace);
+    }
+
+    pub fn commit_epistemic_tuition(&mut self) -> u64 {
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .commit_tuition_episode()
+    }
+
+    pub fn begin_epistemic_episode(&mut self, pre_sensory: &[f32]) -> usize {
+        let trace = self
+            .raster_field
+            .as_ref()
+            .expect("epistemic episode requires an attached raw raster field")
+            .encode_relational_trace(pre_sensory)
+            .expect("epistemic episode requires a relational PRE trace");
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .begin_unknown_episode(&trace)
+    }
+
+    pub fn choose_epistemic_probe(&mut self, disagreement_enabled: bool) -> usize {
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .choose_probe(disagreement_enabled)
+    }
+
+    pub fn observe_epistemic_probe(
+        &mut self,
+        action: usize,
+        post_sensory: &[f32],
+    ) -> usize {
+        let trace = self
+            .raster_field
+            .as_ref()
+            .expect("epistemic episode requires an attached raw raster field")
+            .encode_relational_trace(post_sensory)
+            .expect("epistemic probe requires a relational POST trace");
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .observe_probe_result(action, &trace)
+    }
+
+    pub fn active_epistemic_rivals(&self) -> usize {
+        self.epistemic_state
+            .as_ref()
+            .map(EvoEpistemicState::active_rivals)
+            .unwrap_or(0)
+    }
+
+    pub fn epistemic_physical_probes(&self) -> u32 {
+        self.epistemic_state
+            .as_ref()
+            .map(EvoEpistemicState::physical_probes)
+            .unwrap_or(0)
+    }
+
+    pub fn epistemic_disagreement(&self, action: usize) -> f32 {
+        self.epistemic_state
+            .as_ref()
+            .map(|state| state.disagreement_for(action))
+            .unwrap_or(0.0)
+    }
+
+    pub fn epistemic_prediction_similarity(
+        &self,
+        action: usize,
+        actual_post_sensory: &[f32],
+    ) -> Option<f32> {
+        let predicted = self.epistemic_state.as_ref()?.predicted_post(action)?;
+        let actual = self
+            .raster_field
+            .as_ref()?
+            .encode_relational_trace(actual_post_sensory)?;
+        Some(predicted.similarity(&actual))
     }
 
     pub fn observe_initial_real(&mut self, sensory: &[f32], need: bool) {
