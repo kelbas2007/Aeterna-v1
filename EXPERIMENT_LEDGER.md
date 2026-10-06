@@ -20,6 +20,7 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G6 | CI-1 | PASS_LEARNED_EXPLORATION_STRATEGY | CI run 37505474193 at commit `cd8330aed18d5d375aa6998420108faefe5042ef`: regressions and release build PASS. Strategy starts with zero weights, receives 32 factual tuition probes across eight 2-rival families with informative opaque probe identity rotated over all four IDs, and learns weights [0.6917086, 0.109836645, 0.109836645]. With strategy learning frozen, transfer to eight 3-rival worlds selects the maximally informative probe first in 7/8 versus ZERO_STRATEGY 2/8; direct disagreement oracle is also 7/8. Learned mean identification cost is 1.0000 probe versus 2.3958 for the all-24-random-orders baseline. |
 | G7 | FRESH-1 | FAIL_ROBUST_PERCEPTION_BOUNDARY | One-use fresh run 37508620132 at source `7f6f0ed70cd808d7d4fe64c3c28d0b2c2245d65f`, spec `a36fef13b97e0a83141c25dac5b7850f2281f582`, pack digest `8aee63cd272b8536`: FULL 20/80 = 25.0%, Wilson95 [0.1681,0.3548]. Every sub-seed was 2/8. Distractor/dropout/rotation/scale were each 0/20. ZERO_EXPLORATION and NO_HIERARCHY were also 20/80; UNREVISED was 6/80. Completed cognitive FAIL; pack permanently burned for qualification. |
 | R1 / G1-C | MECHANISM-1 | PASS_ROBUST_RELATIONAL_PERCEPTION | Workflow 37512561691 on `main`: preregistered robust-perception mechanism gate PASS. Robust carrier meets clean/nuisance thresholds, strictly exceeds directed-only nuisance performance, formation/readout ablations lose material advantage, whole-organism single-nuisance preflight passes 8/8, and G0-G6/ownership/release regressions remain PASS. Deterministic mechanism witness only; not fresh statistical qualification. |
+| G7 | FRESH-2 | PASS_WHOLE_ORGANISM_OPEN_WORLD | One-use fresh run 37512861361 at source `80be115ce28b53d4668b75c9eab7105ada6780b6`, spec `a36fef13b97e0a83141c25dac5b7850f2281f582`, pack digest `982ea2a9d8512fa9`: FULL 79/80=98.75%, Wilson95 [0.9325,0.9978], per-seed [8,8,8,8,8,8,8,8,8,7]. Nuisance: distractor 20/20, dropout 19/20, rotation 20/20, scale 19/20. ZERO_EXPLORATION 78/80 but matched probes 2.3590 vs FULL 1.1667; NO_HIERARCHY 80/80 but matched parent candidates 2.5823 vs FULL 1.0000; UNREVISED 22/80 and 0/58 on revision-required worlds vs FULL 57/58. Release build PASS. Pack permanently burned. |
 
 ## What G0 PASS establishes
 
@@ -228,3 +229,18 @@ Downstream mechanisms still show causal value on cases that reach them:
 - revision-required worlds: FULL 14/57 vs UNREVISED_CHILD 0/57.
 
 No G7 PASS is claimed. This pack is burned and may be used only for diagnosis/regression, never as fresh evidence after redesign.
+
+
+## What G7 FRESH-2 PASS establishes
+
+Under the frozen G7 protocol and one-use authority pack:
+
+- the ordinary organism combines robust raw-raster perception, acquired rival hypotheses, learned exploration, acquired/revised child macros and acquired hierarchy;
+- 79/80 fresh worlds succeed across 10 sub-seeds;
+- every nuisance class has high non-zero success;
+- learned exploration retains a causal probe-cost advantage even though ZERO_EXPLORATION can often recover by extra probing;
+- hierarchy retains a causal candidate-search advantage even though NO_HIERARCHY can often recover by enumeration;
+- same-identity macro revision is strongly causal on changed-law worlds;
+- all source/spec/seed/digest values were fixed/logged before scoring.
+
+This is a bounded fresh whole-organism qualification, not AGI or unrestricted open-world competence.

@@ -12,7 +12,8 @@ Date: 2026-10-06
 **G5 PASS — hierarchical reuse of acquired macros.**  
 **G6 PASS — learned exploration strategy transfers across rival-count families.**  
 **G7 FRESH-1 — FAIL: robust perception/representation boundary.**  
-**R1 / G1-C MECHANISM PASS — robust carrier-owned relational perception.**
+**R1 / G1-C MECHANISM PASS — robust carrier-owned relational perception.**  
+**G7 FRESH-2 PASS — whole-organism fresh open-world qualification.**
 
 No AGI claim. No production promotion.
 
@@ -168,12 +169,11 @@ raw raster
 ## Still not demonstrated
 
 - arbitrary object formation;
-- robustness to distractors/occlusion/rotation/scale;
 - unrestricted concept invention;
 - arbitrary-length/recursive program induction;
 - multi-step internal imagination/planning;
 - learned cross-domain exploration strategy;
-- broad open-world competence;
+- broad open-world competence outside the qualified G7 family;
 - ARC/AGI.
 
 ## Validation policy now active
@@ -244,10 +244,36 @@ Workflow `37512561691` on `main` completed PASS.
 
 This is a deterministic mechanism witness, not fresh statistical evidence.
 
+## G7 FRESH-2 whole-organism result
+
+Run `37512861361` completed PASS on source `80be115ce28b53d4668b75c9eab7105ada6780b6`.
+
+- protocol/spec SHA: `a36fef13b97e0a83141c25dac5b7850f2281f582`;
+- authority seed: `37512861361`;
+- one-use pack digest: `982ea2a9d8512fa9`;
+- N=80 across 10 fresh sub-seeds;
+- FULL: 79/80 = 98.75%;
+- Wilson 95% CI: [0.9325, 0.9978];
+- per-sub-seed: [8,8,8,8,8,8,8,8,8,7];
+- ZERO_EXPLORATION: 78/80, but matched probe cost is 2.3590 vs FULL 1.1667;
+- NO_HIERARCHY: 80/80, but matched parent-candidate cost is 2.5823 vs FULL 1.0000;
+- UNREVISED_CHILD: 22/80;
+- nuisance: distractor 20/20, dropout 19/20, rotation 20/20, scale 19/20;
+- revision-required worlds: FULL 57/58 vs UNREVISED 0/58;
+- optimized release build PASS.
+
+The pack is now burned. This qualifies the bounded G7 claim under the frozen protocol; it does not establish unrestricted open-world intelligence.
+
+R1 mechanism witness on the same frozen source logged:
+- ROBUST=[4,4,4,4,4]/20;
+- DIRECTED_ONLY=[4,0,0,0,0]/20;
+- NO_FORMATION=0/20;
+- NO_READOUT=0/20.
+
 ## Next gate
 
-**G7 FRESH-2: one-use whole-organism retry with the R1 perceptual substrate frozen.**
+**G8: carrier-owned internal imagination and multi-step planning.**
 
-The source and G7 spec are frozen before scoring. The GitHub Actions run ID supplies the new one-use authority seed. The previous G7 packs remain burned.
+The organism must evaluate alternative future action/macro trajectories in IMAGINED authority before physical execution, select a delayed-reward plan, and then survive factual verification. No host-side BFS/solver may choose the plan.
 
 CI is manual-only between qualification checkpoints.

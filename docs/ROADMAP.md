@@ -42,7 +42,15 @@ Status: PASS (bounded mechanism witness).\n\nA strategy learned from factual riv
 
 ## G7 — Open-world qualification
 
-Only after G0–G6: broader unknown interactive worlds and ARC-like tasks. No benchmark-specific solver enters cognition.
+Status: PASS on FRESH-2 after R1 robust-perception repair.
+
+One-use fresh run 37512861361 scored 79/80 (98.75%, Wilson95 [0.9325,0.9978]) across 10 sub-seeds with distractor, dropout, rotation and scale nuisance factors. Downstream learned exploration, hierarchy and same-identity revision retain matched causal cost/success advantages.
+
+## G8 — Internal imagination / planning
+
+Active.
+
+The carrier must compare multi-step future trajectories under IMAGINED authority before physical action, use acquired world/macro structures to choose a delayed-reward plan, and then verify that plan factually. A host-side BFS/search solver is forbidden.
 
 ## Rule for advancing
 

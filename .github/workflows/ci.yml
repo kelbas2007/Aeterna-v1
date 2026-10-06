@@ -2,9 +2,6 @@ name: evo-ci
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -12,7 +9,7 @@ permissions:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -22,13 +19,5 @@ jobs:
         run: cargo fmt --all
       - name: Regression tests
         run: cargo test --all --all-targets
-      - name: R1 mechanism witness
-        run: cargo test --test r1_robust_perception -- --nocapture
-      - name: Fresh G7 whole-organism qualification
-        env:
-          AETERNA_FRESH_SEED: ${{ github.run_id }}
-          AETERNA_SOURCE_SHA: ${{ github.sha }}
-          AETERNA_SPEC_SHA: a36fef13b97e0a83141c25dac5b7850f2281f582
-        run: cargo test --test g7_open_world fresh_g7_whole_organism_pack -- --ignored --nocapture
       - name: Release build
         run: cargo build --release
