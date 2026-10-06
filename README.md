@@ -53,6 +53,31 @@ This is the first bounded result in this line where the tested transition experi
 
 It is still not general intelligence: the intrinsic frontier-novelty rule is hand-specified, worlds are deterministic and fully observed, and the tested family is narrow. See [P3 protocol](docs/PHASE_NATIVE_P3_PROTOCOL.md), [fresh protocol](docs/PHASE_NATIVE_P3_FRESH_PROTOCOL.md), and [P3 result](docs/PHASE_NATIVE_P3_RESULT.md). The authority pack `c9a3d25d6f64c483` is permanently burned.
 
+
+### P4: learned exploration drive instead of fixed target curiosity
+
+P4 learns the behavioral value of two generic epistemic substrate features — DIRECT_UNMODELLED and REACHABLE_FRONTIER — from factual changes in AETERNA's own phase-native model. Only the learned drive checkpoint transfers between cold organisms; source-world receptors, circuits and sensory patterns do not.
+
+The deterministic mechanism preflight (`37530869041`) produced LEARNED_DRIVE 12/12 versus ZERO_DRIVE 0/12, frontier-lesion 0/12, zero-phase-drive 0/12 and seeded random 6/12.
+
+The first valid one-use FRESH-P4 run `37531676452` at source `3795f3865f90dbff1942ffbc7d450aba24b2b66d` passed the frozen contract:
+
+- FULL_LEARNED_DRIVE **80/80**, Wilson95 [0.954182,1.000000];
+- every sub-seed **8/8**;
+- ZERO_DRIVE **0/80**;
+- FRONTIER_LESION **7/80**;
+- ZERO_PHASE_DRIVE **0/80**;
+- RANDOM_ACTION **18/80**;
+- P3 teacher ceiling **80/80**;
+- FULL mean acquisition cost **24.087** vs lesion **55.700**, zero-phase **60.000**, random **52.062**;
+- pack digest `47b2a86ebe50dc8f`;
+- target drive weights were frozen;
+- every target began with zero world receptors/circuits and zero legacy graph transitions.
+
+The drive therefore transfers as a learned way of valuing experience rather than a memorized route. The epistemic feature vocabulary itself is still inherited. This is not general curiosity or general intelligence.
+
+See [P4 protocol](docs/PHASE_NATIVE_P4_PROTOCOL.md), [fresh P4 protocol](docs/PHASE_NATIVE_P4_FRESH_PROTOCOL.md), and [P4 result](docs/PHASE_NATIVE_P4_RESULT.md).
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
@@ -92,8 +117,8 @@ Matched controls must preserve raw observations, primitive substrate, factual ou
 
 Development is on **`main`**, following the owner's merge of `genesis/full-evophase`.
 
-Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1, P2 and P3 result records document bounded phase-native checkpoints without rewriting that history.
+Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1–P4 result records document bounded phase-native checkpoints without rewriting that history.
 
-P3 closes the prepared-transition-curriculum gap for one deterministic family. The next architectural bottleneck is no longer “can it collect its own transitions?” but whether exploration itself can become **learned and history-dependent** rather than a hand-written unknown-action novelty rule, while retaining old knowledge across multiple changing worlds. G10 composite-concept construction remains a separate preregistered capability target.
+P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap for that family: exploration value is learned from factual model gain and transferred through phase-native synapses. The next architectural bottleneck is **continual self-directed learning in one persistent organism**: retain and selectively revise knowledge across multiple changing worlds without evaluator task labels or catastrophic overwrite. G10 composite-concept construction remains a separate preregistered capability target.
 
 Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Any future fresh qualification requires a newly frozen source/spec and a new first-attempt authority run.
