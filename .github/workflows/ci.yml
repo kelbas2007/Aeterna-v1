@@ -12,7 +12,11 @@ permissions:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
+    env:
+      AETERNA_FRESH_SEED: ${{ github.run_id }}
+      AETERNA_SOURCE_SHA: ${{ github.sha }}
+      AETERNA_SPEC_SHA: a36fef13b97e0a83141c25dac5b7850f2281f582
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -24,3 +28,5 @@ jobs:
         run: cargo test --all --all-targets
       - name: Release build
         run: cargo build --release
+      - name: One-use fresh G7 qualification
+        run: cargo test --test g7_open_world fresh_g7_whole_organism_pack -- --ignored --nocapture
