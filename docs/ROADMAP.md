@@ -34,7 +34,7 @@ A world-law change revises the same acquired macro identity. Counterexamples are
 
 ## G5 — Hierarchical reuse
 
-Acquired macros become building blocks of new macros. Measure whether depth of reusable hierarchy reduces search/interaction cost across a held-out task family.
+Status: PASS (bounded mechanism witness).\n\nAcquired child macros become referenced building blocks of acquired parent macros. On the preregistered held-out pair, hierarchy halves primitive search actions (16 -> 8) and reduces child-sequence evaluations (5 -> 2), including under an opaque child-ID permutation.
 
 ## G6 — Learned exploration strategy
 
