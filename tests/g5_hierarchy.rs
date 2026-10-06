@@ -323,7 +323,8 @@ fn qualify(reverse_child_ids: bool) -> (usize, usize) {
     }
 
     let heldout = [
-        (CueKind::First, 8usize, 3usize),
+        // These absolute translations are absent from parent tuition.
+        (CueKind::First, 8usize, 4usize),
         (CueKind::Second, 4usize, 7usize),
     ];
 
@@ -354,6 +355,22 @@ fn qualify(reverse_child_ids: bool) -> (usize, usize) {
         parent_actions < control_actions,
         "acquired hierarchy must reduce primitive physical actions spent searching"
     );
+
+    // Stronger opacity check: swap the two already-acquired macro IDs *after*
+    // parent acquisition and remap parent references atomically. No skill
+    // semantics may depend on numeric IDs.
+    let mut permuted = genuine.clone();
+    permuted.apply_macro_id_permutation(&[(child_a, child_b), (child_b, child_a)]);
+
+    for (kind, ox, oy) in [
+        (CueKind::First, 7usize, 4usize),
+        (CueKind::Second, 3usize, 7usize),
+    ] {
+        let (need, evaluations, _actions) =
+            heldout_with_parent(&permuted, kind, ox, oy);
+        assert!(need, "consistent opaque child-id permutation must preserve capability");
+        assert_eq!(evaluations, 1);
+    }
 
     (parent_evals, control_evals)
 }
