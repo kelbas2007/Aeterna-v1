@@ -446,22 +446,17 @@ impl EvoPhase {
         second_action: usize,
         need: bool,
     ) {
-        let field = self
-            .raster_field
-            .as_ref()
-            .expect("macro learning requires an attached raw raster field");
-
-        let pre = field
-            .encode_relational_trace(pre_sensory)
+        let pre = self
+            .encode_high_level_trace(pre_sensory)
             .expect("macro learning requires a relational PRE trace");
-        let mid = field
-            .encode_relational_trace(mid_sensory)
+        let mid = self
+            .encode_high_level_trace(mid_sensory)
             .expect("macro learning requires a relational MID trace");
 
         self.macro_memory
             .as_mut()
             .expect("enable_macro_memory must be called first")
-            .observe_successful_episode(pre, first_action, mid, second_action, need);
+            .observe_successful_trace(pre, first_action, mid, second_action, need);
     }
 
     pub fn observe_factual_macro_episode(
@@ -472,42 +467,29 @@ impl EvoPhase {
         second_action: usize,
         need: bool,
     ) {
-        let field = self
-            .raster_field
-            .as_ref()
-            .expect("macro revision requires an attached raw raster field");
-
-        let pre = field
-            .encode_relational_trace(pre_sensory)
+        let pre = self
+            .encode_high_level_trace(pre_sensory)
             .expect("macro revision requires a relational PRE trace");
-        let mid = field
-            .encode_relational_trace(mid_sensory)
+        let mid = self
+            .encode_high_level_trace(mid_sensory)
             .expect("macro revision requires a relational MID trace");
 
         self.macro_memory
             .as_mut()
             .expect("enable_macro_memory must be called first")
-            .observe_factual_episode(pre, first_action, mid, second_action, need);
+            .observe_factual_trace(pre, first_action, mid, second_action, need);
     }
 
     pub fn begin_macro_invocation(&mut self, pre_sensory: &[f32]) -> Option<usize> {
-        let trace = self
-            .raster_field
-            .as_ref()?
-            .encode_relational_trace(pre_sensory)?;
-
-        self.macro_memory.as_mut()?.begin(&trace)
+        let trace = self.encode_high_level_trace(pre_sensory)?;
+        self.macro_memory.as_mut()?.begin_trace(&trace)
     }
 
     pub fn continue_macro_invocation(&mut self, mid_sensory: &[f32]) -> Option<usize> {
-        let trace = self
-            .raster_field
-            .as_ref()?
-            .encode_relational_trace(mid_sensory)?;
-
+        let trace = self.encode_high_level_trace(mid_sensory)?;
         self.macro_memory
             .as_mut()?
-            .continue_after_factual_post(&trace)
+            .continue_after_factual_trace(&trace)
     }
 
     pub fn begin_macro_by_id(
@@ -515,12 +497,10 @@ impl EvoPhase {
         macro_id: u64,
         pre_sensory: &[f32],
     ) -> Option<usize> {
-        let trace = self
-            .raster_field
-            .as_ref()?
-            .encode_relational_trace(pre_sensory)?;
-
-        self.macro_memory.as_mut()?.begin_by_id(&trace, macro_id)
+        let trace = self.encode_high_level_trace(pre_sensory)?;
+        self.macro_memory
+            .as_mut()?
+            .begin_by_id_trace(&trace, macro_id)
     }
 
     pub fn enable_hierarchy_memory(&mut self, config: HierarchyConfig) {
