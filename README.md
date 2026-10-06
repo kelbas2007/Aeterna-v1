@@ -8,7 +8,7 @@ A clean no-LLM intelligence research line targeting **full EvoPhase cognitive ow
 
 The 2026-10-06 [phase-execution audit](docs/PHASE_EXECUTION_AUDIT_RESULT.md) reproduced a specific gap: the legacy G8 planning path gave identical decisions in 18/18 deterministic matched cases with phase plasticity and structural recruitment disabled and no dormant cells. Its learned transition table remained present; removing that table removed the plan. A standalone version of the same production planner also worked without constructing an EvoPhase instance.
 
-This is a negative architectural witness, not an all-learning ablation and not an invalidation of every earlier result. The original audit and its tests are preserved. The strong ownership requirement below remains unchanged. G10 is preregistered; neither the audit nor P1 implements or qualifies it.
+This is a negative architectural witness, not an all-learning ablation and not an invalidation of every earlier result. The original audit and its tests are preserved. The strong ownership requirement below remains unchanged. G10 is preregistered; neither the audit, P1 nor P2 implements or qualifies it.
 
 ### P1: acquired shared-synapse execution now tested
 
@@ -19,6 +19,18 @@ The preregistered P1 run passed 24 deterministic intervention cases and 80/80 fr
 This is **phase-dependent local value propagation**, not forward generated sensory imagination or a complete neural migration of all cognition. The recurrence and winner-take-all competition are inherited; P1 inference uses learned phase calibration rather than evolving oscillator trajectories. Primary tuition averaged 854 factual transition presentations per arm and instance. No data-efficiency, competitive-performance or general-intelligence claim follows.
 
 See the [P1 protocol](docs/PHASE_NATIVE_P1_PROTOCOL.md) and [verified P1 result, costs, evidence and limits](docs/PHASE_NATIVE_P1_RESULT.md). The tested pack is burned. Old G8/G9 results are not relabeled as phase-native results.
+
+### P2: acquired forward sensory model and ordinary action/fact loop
+
+P2 adds shared-synapse forward continuation and learned sensory decoding in `src/phase_forward.rs`. Tested source: `f6503b234f51a11d1a8d930e61a665bae557b7fd`; workflow `37524647331`. The full regression suite and Release build passed; an initial workflow YAML failure is preserved separately in the result record.
+
+All 24 deterministic causal cases and 80/80 one-use generated instances passed the implemented bounded contract. The carrier forecasts 2–5-step sequences by continuing internal membrane activity, without being given intermediate future observations. In the ordinary interaction test, native P1 chooses an action, P2 predicts BEFORE the external world executes it, and factual POST is compared with the prior forecast. All 80 instances reached delayed factual Need with correct relational forecasts.
+
+Necessary internal connection lesions, pi phase shifts and decoder-only phase perturbations each removed the full forecast in 80/80 cases. Exact restoration recovered it, and unrelated lesions preserved it. Separate zero-phase-learning, zero-weight-learning and no-capacity controls each produced 0/80 full forecasts. Factual changed-successor learning corrected the new transition forecast in 80/80 while frozen copies retained obsolete forecasts and unchanged alternative transitions stayed correct.
+
+The result is **a learned associative forward model with physical causal dependence**, not full intelligence. P1 still chooses actions; P2 has not independently demonstrated better decision selection. The decoder reconstructs learned sensory patterns in their tuition coordinate frame, evaluated through relational HDC comparison, not observer-aligned novel image generation. The synchronous phasor update and recognition machinery are inherited. All small transition sets are taught: mean 904 tuple presentations per arm and instance, with 128 additional factual presentations for the revision test. There is no autonomous exploration or data-efficiency claim. The fresh instances share one narrow generator, not 80 independent domains.
+
+See the [P2 protocol](docs/PHASE_NATIVE_P2_PROTOCOL.md), [executed P2 result and limitations](docs/PHASE_NATIVE_P2_RESULT.md), and [ordinary API usage and coordinate-frame limits](docs/PHASE_NATIVE_P2_USAGE.md). P2's observed pack is burned for subsequent design revisions.
 
 ## Non-negotiable rule
 
@@ -59,8 +71,8 @@ Matched controls must preserve raw observations, primitive substrate, factual ou
 
 Development is on **`main`**, following the owner's merge of `genesis/full-evophase`.
 
-Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate [P1 result record](docs/PHASE_NATIVE_P1_RESULT.md) records the subsequent shared-synapse execution checkpoint without rewriting that history.
+Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate [P1 result](docs/PHASE_NATIVE_P1_RESULT.md) and [P2 result](docs/PHASE_NATIVE_P2_RESULT.md) record subsequent bounded shared-synapse checkpoints without rewriting that history.
 
-Next architectural requirement: forward, phase-dependent prediction and continuation through the acquired carrier, followed by ordinary whole-organism validation. P1 establishes a bounded necessary physical connection/phase path for value-based decisions, not completion of this requirement. The existing graph planner remains a reference implementation.
+Next capability requirement: remove the supplied transition curriculum. One cold-start organism must select its own informative physical interactions, learn the needed distinctions and world dynamics, use experience for goals not supplied as route scripts, retain useful knowledge under factual revision, and preserve acquired state across restart. P2 supplies a tested forward-model component, not completion of that intelligence objective. The existing graph planner remains a reference implementation.
 
-Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Fresh P1 qualification is disabled by default and requires explicit selection of a new first-attempt workflow run.
+Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Fresh P1 and P2 qualifications are disabled by default and require explicit selection of a new first-attempt workflow run.
