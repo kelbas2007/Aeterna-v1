@@ -146,6 +146,38 @@ fn domain_raster(domain: usize, state: usize, x: usize, y: usize) -> Vec<f32> {
     raster
 }
 
+fn synapse_signature(evo: &EvoPhase, indices: &[usize]) -> Vec<(usize, usize, u32, u32, u32, bool)> {
+    indices
+        .iter()
+        .filter_map(|index| evo.phase_native_synapse(*index))
+        .map(|syn| (
+            syn.from,
+            syn.to,
+            syn.weight.to_bits(),
+            syn.phase_offset.to_bits(),
+            syn.confidence.to_bits(),
+            syn.plastic,
+        ))
+        .collect()
+}
+
+fn current_native_indices(evo: &EvoPhase) -> Vec<usize> {
+    let mut indices = std::collections::BTreeSet::new();
+    for circuit in evo.phase_native_circuits() {
+        indices.insert(circuit.afferent_synapse);
+        indices.insert(circuit.successor_synapse);
+        indices.insert(circuit.outcome_synapse);
+        indices.insert(circuit.motor_synapse);
+    }
+    for index in evo.phase_native_decoder_synapses() {
+        indices.insert(index);
+    }
+    if let Some(drive) = evo.phase_native_drive_synapses() {
+        indices.extend(drive);
+    }
+    indices.into_iter().collect()
+}
+
 fn max_cross_domain_trace_similarity(evo: &EvoPhase, worlds: &[World]) -> f32 {
     let field = evo.raster_field().expect("raster field");
     let mut best = -1.0_f32;
@@ -346,6 +378,8 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
     let mut retention_actions = 0usize;
     let mut receptor_counts = Vec::new();
     let mut circuit_counts = Vec::new();
+    let mut a_native_indices: Option<Vec<usize>> = None;
+    let mut a_native_signature: Option<Vec<(usize, usize, u32, u32, u32, bool)>> = None;
 
     for domain in 0..worlds.len() {
         full.set_planning_learning_enabled(true);
@@ -361,6 +395,29 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
         acquisition_costs.push(outcome.interactions);
         receptor_counts.push(full.phase_native_receptor_count());
         circuit_counts.push(full.phase_native_circuits().len());
+
+        if domain == 0 {
+            let indices = current_native_indices(&full);
+            a_native_signature = Some(synapse_signature(&full, &indices));
+            a_native_indices = Some(indices);
+        } else if domain == 1 {
+            let indices = a_native_indices.as_ref().expect("A native indices");
+            let before = a_native_signature.as_ref().expect("A native signature");
+            let after = synapse_signature(&full, indices);
+            let changed = before
+                .iter()
+                .zip(&after)
+                .enumerate()
+                .filter(|(_, (a, b))| a != b)
+                .map(|(i, _)| indices[i])
+                .collect::<Vec<_>>();
+            println!(
+                "P5_A_SYNAPSE_MUTATION after_B changed_count={} changed_indices={:?} tracked_A_indices={}",
+                changed.len(),
+                changed,
+                indices.len(),
+            );
+        }
 
         full.set_planning_learning_enabled(false);
         for prior in 0..=domain {
