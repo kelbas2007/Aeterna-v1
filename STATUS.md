@@ -4,9 +4,10 @@ Date: 2026-10-06
 
 ## Current state
 
-GENESIS. No AGI claim. No production promotion.
+**G0 PASS: minimal EvoPhase ownership precursor.**
+No AGI claim. No production promotion.
 
-The repository now targets one mandatory architecture constraint: **full EvoPhase cognitive ownership**. Rust is the implementation language of the carrier and trusted shell; Rust code is not allowed to hide task-level cognition outside the carrier state.
+The repository targets one mandatory architecture constraint: **full EvoPhase cognitive ownership**. Rust is the implementation language of the carrier and trusted shell; Rust code is not allowed to hide task-level cognition outside the carrier state.
 
 ## Implemented carrier primitives
 
@@ -20,8 +21,37 @@ The repository now targets one mandatory architecture constraint: **full EvoPhas
 - carrier-owned motor selection using prediction, uncertainty, phase coherence, branch utility and generic exploration pressure;
 - revision of the same recruited branch after factual contradiction.
 
-## First gate
+## G0 qualification
 
-`EVO-OWNERSHIP-0` is the first executable scientific gate. It asks whether structural growth inside EvoPhase can create a context distinction that changes a motor choice under a matched no-growth control.
+Final qualified source commit: `1002ae2310ce84cfac847ad941f641a659ac292f`.
 
-The code has been written but has **not yet been compiled or qualified in this branch**. No PASS is claimed until an independent Rust build/test run succeeds and the experiment metrics are recorded.
+GitHub Actions workflow run: `37479430355`.
+
+Observed result:
+- 7/7 Rust tests PASS;
+- optimized release build PASS;
+- structural recruitment only in GENUINE;
+- GENUINE correct on 2/2 held-out surfaces;
+- matched NO_STRUCTURAL_GROWTH loses contextual advantage;
+- factual counterexample revises the same EvoPhase-owned branch;
+- REAL/MODEL/IMAGINED firewall test PASS.
+
+Earlier failures remain recorded in `EXPERIMENT_LEDGER.md`; the final PASS does not rewrite them.
+
+## Scope boundary
+
+G0 uses 8 binary sensory channels and 2 opaque motors. It does **not** prove:
+- autonomous object/feature formation from raw raster;
+- general relation transfer;
+- acquired reusable programs;
+- planning;
+- learned exploration strategy;
+- ARC/AGI.
+
+## Next gate
+
+**G1: raw raster autonomous distinction.**
+
+The next experiment must replace hand-separated binary channels with a raw numeric raster and require EvoPhase itself to form the distinction that supports prediction/action. The host may transport pixels and factual outcomes, but may not label objects, coordinates, relevant features or correct actions.
+
+CI is manual-only after qualification to avoid unnecessary runner usage.
