@@ -54,9 +54,9 @@ One-use run 37516415100 scored FULL 80/80 (Wilson95 [0.9542,1.0000]) over route 
 
 ## G9 — Belief-state planning under perceptual aliasing
 
-Status: ACTIVE.
+Status: MECHANISM PASS; fresh statistical qualification next.
 
-Deliberately remove the G8 observability assumption. Distinct physical states may share the same current carrier observation. The organism must maintain a carrier-owned history/belief state and use it for planning; matched observation-only/memoryless controls must lose the advantage.
+The current raw corridor observation is deliberately identical across two hidden histories. A generic recurrent HDC/FHRR carrier state preserves action/observation history: FULL_BELIEF scores 8/8 versus OBSERVATION_ONLY 4/8 and RESET_HISTORY 1/8 across four opaque motor permutations.
 
 ## Rule for advancing
 
