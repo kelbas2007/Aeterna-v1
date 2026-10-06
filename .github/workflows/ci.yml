@@ -4,16 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       qualify_p1:
-        description: 'Consume a new one-use P1 qualification pack; not a regression replay'
+        description: 'Consume a new one-use P1 qualification pack'
         required: false
         default: false
         type: boolean
+      qualify_p2:
+        description: 'Consume a new one-use P2 qualification pack'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ci.yml']
 
 permissions:
   contents: read
 
 jobs:
   rust:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p2: execute frozen forward checkpoint'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -21,13 +30,12 @@ jobs:
         with:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
-      - name: Verify exact source and seal P1 protocol without workspace rewrites
+      - name: Verify exact source without workspace rewrites
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --exit-code
-          echo "AETERNA_SPEC_SHA=$(git rev-parse HEAD:docs/PHASE_NATIVE_P1_PROTOCOL.md)" >> "$GITHUB_ENV"
-      - name: Regression tests including physical causal interventions
-        run: cargo test --all --all-targets -- --nocapture
+      - name: Full optimized regression suite including P1 and P2 interventions
+        run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
         run: cargo build --release
       - name: Explicit one-use fresh P1 bounded qualification
@@ -37,7 +45,26 @@ jobs:
           AETERNA_SOURCE_SHA: ${{ github.sha }}
         run: |
           test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P1_PROTOCOL.md)"
           cargo test --release --test phase_native_execution p1_fresh_bounded_shared_cell_pack -- --ignored --nocapture
+      - name: One-use fresh P2 qualification after regression success
+        if: github.event_name == 'push' || inputs.qualify_p2
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P2_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test phase_forward_execution p2_fresh_forward_and_integrated_pack -- --ignored --nocapture | tee p2-evidence.log
+      - name: Preserve P2 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p2-execution-evidence
+          path: p2-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Verify tested tracked source was not rewritten
         if: always()
         run: git diff --exit-code
