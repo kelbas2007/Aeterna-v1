@@ -10,7 +10,8 @@ Date: 2026-10-06
 **G3 PASS — first acquired reusable EvoPhase macro/program.**  
 **G4 PASS — factual revision of the same acquired macro identity.**  
 **G5 PASS — hierarchical reuse of acquired macros.**  
-**G6 PASS — learned exploration strategy transfers across rival-count families.**
+**G6 PASS — learned exploration strategy transfers across rival-count families.**  
+**G7 FRESH-1 — FAIL: robust perception/representation boundary.**
 
 No AGI claim. No production promotion.
 
@@ -206,10 +207,31 @@ Workflow: `37505474193`
 
 This removes the fixed G2 disagreement coefficient from the G6 tested path: probe scoring is now acquired from factual information-gain credit. The epistemic features themselves remain inherited substrate quantities.
 
+## G7 fresh open-world result
+
+Run `37508620132` is a completed **cognitive FAIL**, not a technical failure.
+
+- source: `7f6f0ed70cd808d7d4fe64c3c28d0b2c2245d65f`;
+- protocol: `a36fef13b97e0a83141c25dac5b7850f2281f582`;
+- pack digest: `8aee63cd272b8536`;
+- N=80 / 10 fresh sub-seeds;
+- FULL: 20/80 = 25.0%, Wilson95 [0.1681,0.3548];
+- every sub-seed: 2/8;
+- distractor/dropout/rotation/scale: each 0/20;
+- ZERO_EXPLORATION: 20/80;
+- NO_HIERARCHY: 20/80;
+- UNREVISED_CHILD: 6/80.
+
+The exact 2/8 pattern matches the two clean worlds in each 8-world block while every nuisance category scored zero. The measured bottleneck is therefore upstream robust relational perception, not hierarchy or experiment selection.
+
+Downstream causal advantages remain visible among survivable cases: matched probe cost 1.05 vs 2.70 for ZERO_EXPLORATION, matched parent-candidate cost 1.00 vs 2.65 for NO_HIERARCHY, and revision-required success 14/57 vs 0/57 for UNREVISED_CHILD.
+
+This fresh pack is permanently burned for qualification.
+
 ## Next gate
 
-**G7: whole-organism fresh open-world qualification.**
+**R1 / G1-C: robust carrier-owned relational perception.**
 
-G7 must combine perception, rival models, learned exploration, acquired/revised macros and hierarchical reuse in one ordinary organism under a one-use fresh authority pack, with randomized opaque labels, multiple seeds, confidence intervals and matched baselines.
+Before another G7 fresh run, the representation must survive distractors, partial dropout, rotation and scale without evaluator-specific detectors or host-side normalization. Development uses non-fresh diagnostic packs only; after source/spec freeze, G7 will receive a new one-use authority seed.
 
-CI is manual-only between qualification checkpoints to avoid unnecessary runner usage.
+CI is manual-only between qualification checkpoints.
