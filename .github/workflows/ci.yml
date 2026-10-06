@@ -1,5 +1,5 @@
 name: evo-ci
-# P3 deterministic preflight rerun after factual-retention observer fix
+# FRESH-P3 first authority run for frozen autonomous checkpoint
 
 on:
   workflow_dispatch:
@@ -14,6 +14,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_p3:
+        description: 'Consume a new one-use P3 autonomous qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -24,7 +29,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p3: run deterministic autonomous preflight'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p3: execute frozen autonomous checkpoint'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -59,6 +64,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P2_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test phase_forward_execution p2_fresh_forward_and_integrated_pack -- --ignored --nocapture | tee p2-evidence.log
+      - name: One-use fresh P3 autonomous qualification
+        if: github.event_name == 'push' || inputs.qualify_p3
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P3_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test phase_native_autonomy p3_fresh_autonomous_acquisition_pack -- --ignored --nocapture | tee p3-evidence.log
+      - name: Preserve P3 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p3-execution-evidence
+          path: p3-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve P2 execution log
         if: always()
         uses: actions/upload-artifact@v4
