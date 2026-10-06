@@ -323,8 +323,8 @@ fn qualify(reverse_child_ids: bool) -> (usize, usize) {
     }
 
     let heldout = [
-        (CueKind::First, 9usize, 4usize),
-        (CueKind::Second, 4usize, 9usize),
+        (CueKind::First, 8usize, 3usize),
+        (CueKind::Second, 4usize, 7usize),
     ];
 
     let mut parent_evals = 0usize;
