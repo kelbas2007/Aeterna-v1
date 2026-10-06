@@ -146,6 +146,38 @@ fn domain_raster(domain: usize, state: usize, x: usize, y: usize) -> Vec<f32> {
     raster
 }
 
+fn max_cross_domain_trace_similarity(evo: &EvoPhase, worlds: &[World]) -> f32 {
+    let field = evo.raster_field().expect("raster field");
+    let mut best = -1.0_f32;
+    for a_domain in 0..worlds.len() {
+        for b_domain in (a_domain + 1)..worlds.len() {
+            for a_state in 0..=worlds[a_domain].length {
+                for b_state in 0..=worlds[b_domain].length {
+                    let a = field
+                        .encode_relational_trace(&domain_raster(a_domain, a_state, 0, 0))
+                        .expect("A trace");
+                    let b = field
+                        .encode_relational_trace(&domain_raster(b_domain, b_state, 0, 0))
+                        .expect("B trace");
+                    best = best.max(a.similarity(&b));
+                }
+            }
+        }
+    }
+    best
+}
+
+fn diagnostic_decision(evo: &mut EvoPhase, domain: usize, world: &World) -> Option<(usize, f32, Vec<f32>)> {
+    let sensory = domain_raster(domain, 0, 3, 3);
+    evo.observe_initial_real(&sensory, false);
+    let decision = evo.plan_imagined(&sensory)?;
+    Some((
+        decision.first_action,
+        decision.predicted_value,
+        evo.phase_native_motor_potentials().to_vec(),
+    ))
+}
+
 #[derive(Debug, Clone, Copy)]
 struct Outcome {
     success: bool,
@@ -269,6 +301,12 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
     let worlds = target_worlds();
     let (drive_checkpoint, meta_cost) = train_drive();
     let mut full = persistent_with_drive(drive_checkpoint.clone(), true);
+    let max_cross_similarity = max_cross_domain_trace_similarity(&full, &worlds);
+    println!("P5_REPRESENTATION max_cross_domain_similarity={:.6}", max_cross_similarity);
+    assert!(
+        max_cross_similarity < 0.97,
+        "P5 evaluator target families alias at the carrier trace threshold: {max_cross_similarity}"
+    );
     let frozen_drive = full.phase_native_drive_weights().unwrap();
     assert!(frozen_drive[0] > 0.05 && frozen_drive[1] > 0.05);
 
@@ -296,6 +334,7 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
         for prior in 0..=domain {
             let held_x = 3 + (prior % 2);
             let held_y = 3 + ((domain + prior) % 2);
+            let before_retention = diagnostic_decision(&mut full, prior, &worlds[prior]);
             let retained = exploit_domain(
                 &mut full,
                 prior,
@@ -304,6 +343,17 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
                 held_x,
                 held_y,
             );
+            if !retained.success {
+                println!(
+                    "P5_RETENTION_FAIL learned_through={} prior={} expected_first={} decision={:?} receptors={} circuits={}",
+                    domain,
+                    prior,
+                    worlds[prior].advance[0],
+                    before_retention,
+                    full.phase_native_receptor_count(),
+                    full.phase_native_circuits().len(),
+                );
+            }
             assert!(
                 retained.success,
                 "domain {prior} forgotten after learning domain {domain}"
@@ -488,7 +538,12 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
 
 #[test]
 fn p5_source_guard_has_no_world_identity_channel() {
-    let source = include_str!("phase_native_continual.rs");
+    let production = [
+        include_str!("../src/phase_native.rs"),
+        include_str!("../src/phase_drive.rs"),
+        include_str!("../src/phase_forward.rs"),
+    ]
+    .join("\n");
     for forbidden in [
         "set_world_id",
         "task_id",
@@ -498,8 +553,8 @@ fn p5_source_guard_has_no_world_identity_channel() {
         "load_world_checkpoint",
     ] {
         assert!(
-            !source.contains(forbidden),
-            "P5 evaluator introduced forbidden cognition channel token {forbidden}"
+            !production.contains(forbidden),
+            "P5 production path contains forbidden cognition channel token {forbidden}"
         );
     }
 }
