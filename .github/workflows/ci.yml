@@ -2,9 +2,12 @@ name: evo-ci
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
+    inputs:
+      qualify_p1:
+        description: 'Consume a new one-use P1 qualification pack; not a regression replay'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -18,21 +21,23 @@ jobs:
         with:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
-      - name: Seal exact source and P1 protocol without workspace rewrites
+      - name: Verify exact source and seal P1 protocol without workspace rewrites
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --exit-code
           echo "AETERNA_SPEC_SHA=$(git rev-parse HEAD:docs/PHASE_NATIVE_P1_PROTOCOL.md)" >> "$GITHUB_ENV"
-          echo "P1_SOURCE_SHA=$GITHUB_SHA"
-      - name: All regression tests including physical causal interventions
+      - name: Regression tests including physical causal interventions
         run: cargo test --all --all-targets -- --nocapture
       - name: Release build
         run: cargo build --release
-      - name: One-use fresh P1 bounded qualification
+      - name: Explicit one-use fresh P1 bounded qualification
+        if: ${{ inputs.qualify_p1 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
-        run: cargo test --release --test phase_native_execution p1_fresh_bounded_shared_cell_pack -- --ignored --nocapture
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          cargo test --release --test phase_native_execution p1_fresh_bounded_shared_cell_pack -- --ignored --nocapture
       - name: Verify tested tracked source was not rewritten
         if: always()
         run: git diff --exit-code
