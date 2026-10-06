@@ -118,6 +118,33 @@ impl EvoMacroMemory {
         self.active_macro
     }
 
+    pub fn apply_id_permutation(&mut self, mapping: &[(u64, u64)]) {
+        if mapping.is_empty() {
+            return;
+        }
+
+        let existing = self.macros.iter().map(|m| m.id).collect::<std::collections::BTreeSet<_>>();
+        let from = mapping.iter().map(|(a, _)| *a).collect::<std::collections::BTreeSet<_>>();
+        let to = mapping.iter().map(|(_, b)| *b).collect::<std::collections::BTreeSet<_>>();
+
+        assert_eq!(from.len(), mapping.len(), "macro id permutation source ids must be unique");
+        assert_eq!(to.len(), mapping.len(), "macro id permutation target ids must be unique");
+        assert!(from.is_subset(&existing), "macro id permutation references unknown source id");
+        assert_eq!(from, to, "macro id permutation must be a bijection over the same acquired ids");
+
+        for macro_assembly in &mut self.macros {
+            if let Some((_, new_id)) = mapping.iter().find(|(old_id, _)| *old_id == macro_assembly.id) {
+                macro_assembly.id = *new_id;
+            }
+        }
+
+        if let Some(active) = self.active_macro {
+            if let Some((_, new_id)) = mapping.iter().find(|(old_id, _)| *old_id == active) {
+                self.active_macro = Some(*new_id);
+            }
+        }
+    }
+
     // G3 compatibility path: failed exploratory episodes do not revise a
     // freshly acquired macro. G4 uses observe_factual_episode explicitly.
     pub fn observe_successful_episode(
