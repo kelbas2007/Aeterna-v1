@@ -179,6 +179,7 @@ fn carrier() -> EvoPhase {
     raster_cfg.learning_enabled = false;
     raster_cfg.readout_enabled = false;
     evo.attach_raster_field(raster_cfg);
+    evo.set_robust_high_level_perception(true);
 
     evo.enable_epistemic_state(0.97);
     evo.enable_exploration_strategy(ExplorationConfig::default());
