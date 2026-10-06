@@ -28,6 +28,9 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | P3 | PREFLIGHT-2 | TECHNICAL_FAIL_OVERSTRICT_RETENTION_OBSERVER | Workflow 37527565396 at source `bc955c4db07fd2ba6cb1fbd7cfe2b52648d8d933`: autonomous acquisition, restart and changed-law repair executed; final observer rejected decoder drift 3.4711426e-5 against a bit-identity <1e-6 criterion not required by the preregistered capability contract. Observer was changed to test the correct factual successor; production cognition, budgets and PASS thresholds were unchanged. |
 | P3 | PREFLIGHT-3 | PASS_AUTONOMOUS_PHASE_NATIVE_ACQUISITION | Workflow 37528040155 at source `b2dade26db1a7d83a5c16f05fe2c70f39d27a33c`: 12/12 cold hidden reset-chain worlds acquired autonomously, DIRECT_ONLY 0/12, seeded RANDOM 4/12, mean acquisition 24.667 actions, mean changed-law repair 9.083. Checkpoint into a newly constructed EvoPhase, frozen held-out exploitation, detour repair, source guard, regressions and Release build PASS. |
 | P3 | FRESH-1 | PASS_FRESH_AUTONOMOUS_ACQUISITION_AND_REVISION | First one-use authority run 37528857872 at source `52bbbc2654894bbaf8501e6834757dff25f1e242`, spec `b561a3af878c89531ed8df27b338959fd4d868f5`, pack `c9a3d25d6f64c483`: FULL 80/80, Wilson95 [0.954182,1.000000], every seed 8/8; frozen exploitation 80/80; checkpoint-restored exploitation 80/80; DIRECT_ONLY 9/80; RANDOM 35/80; controls [0,0,9,2]/80. Changed-law repair 78/80, per-seed [8,7,8,8,8,7,8,8,8,8], revised exploitation/restore 78/78, frozen stale 0/80. Mean acquisition 20.075, mean repair 16.462, legacy graph table 0. All frozen thresholds PASS; pack permanently burned. |
+| P4 | PREFLIGHT-1 | PASS_LEARNED_PHASE_NATIVE_EXPLORATION_DRIVE | Workflow 37530869041 at source `9aa725a443ac7f975896c4e20f689cef90dae334`: learned drive weights [0.99999994,1.0], LEARNED_DRIVE 12/12 mean 25.000, ZERO_DRIVE 0/12, FRONTIER_WEIGHT_LESION 0/12 mean 60.000, ZERO_PHASE_DRIVE 0/12 mean 60.000, RANDOM 6/12 mean 47.917, P3 ceiling 12/12. Source guard, regressions and Release PASS. |
+| P4 | FRESH-TECH-1 | TECHNICAL_FAIL_WORKFLOW_PARSE | Run 37531623310 created zero jobs because the first trigger expression was invalid. The evaluator never executed and no authority-derived world pack was generated/printed; no cognitive verdict. |
+| P4 | FRESH-1 | PASS_FRESH_LEARNED_DRIVE_TRANSFER | First valid one-use authority run 37531676452 at source `3795f3865f90dbff1942ffbc7d450aba24b2b66d`, spec `2069b8269944cb65ff5967e9580bd3c152640fdb`, pack `47b2a86ebe50dc8f`: FULL 80/80, Wilson95 [0.954182,1.000000], all seeds 8/8; ZERO_DRIVE 0/80; FRONTIER_LESION 7/80; ZERO_PHASE_DRIVE 0/80; RANDOM 18/80; P3 ceiling 80/80. Mean FULL cost 24.087 vs lesion 55.700, zero-phase 60.000, random 52.062. Source meta-tuition 646 interactions. Target drive frozen; target carriers started with zero receptors/circuits/legacy graph transitions. Full regressions and Release PASS; pack permanently burned. |
 
 ## What G0 PASS establishes
 
@@ -379,3 +382,14 @@ Observed:
 The lower physical-action counts of controls reflect early failure, not greater efficiency.
 
 This statistically qualifies the bounded claim that recurrent carrier history resolves deliberate current-observation aliasing across fresh randomized episodes and history lengths up to three. It does not establish arbitrary POMDP solving or learned memory architecture.
+
+
+## P4 learned exploration result
+
+P4 changes the architectural interpretation of autonomous exploration in the tested reset-chain family.
+
+P3 proved that a cold organism could gather its own transition experience, but the behavioral value of unknown/reachable-frontier states was still hard-coded. P4 begins the drive weights at zero and learns them only from factual structural gain in AETERNA's own P2 model.
+
+The fresh P4 result shows that this learned drive can be transferred **without** source-world receptors or transition circuits into new cold carriers and still solve 80/80 longer target worlds. Removing the learned frontier synapse drops success to 7/80; disabling drive phase learning drops it to 0/80; a zero drive scores 0/80; seeded random scores 18/80.
+
+This qualifies learned weighting of inherited epistemic features, not invention of the feature vocabulary. Continual learning under interference, stochastic/POMDP exploration, arbitrary concepts/domains and AGI remain open.
