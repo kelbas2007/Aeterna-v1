@@ -1,5 +1,6 @@
 use crate::authority::Authority;
 use crate::epistemic::{EvoEpistemicState, WorldHypothesis};
+use crate::exploration::{EvoExplorationStrategy, ExplorationConfig, ProbeFeatures};
 use crate::hdc::PhaseVector;
 use crate::hierarchy::{EvoHierarchyMemory, HierarchyConfig, ParentMacro};
 use crate::macro_memory::{EvoMacroMemory, MacroAssembly, MacroConfig};
@@ -111,6 +112,7 @@ pub struct EvoPhase {
     epistemic_state: Option<EvoEpistemicState>,
     macro_memory: Option<EvoMacroMemory>,
     hierarchy_memory: Option<EvoHierarchyMemory>,
+    exploration_strategy: Option<EvoExplorationStrategy>,
 }
 
 impl EvoPhase {
@@ -155,6 +157,7 @@ impl EvoPhase {
             epistemic_state: None,
             macro_memory: None,
             hierarchy_memory: None,
+            exploration_strategy: None,
         }
     }
 
@@ -332,6 +335,82 @@ impl EvoPhase {
             .as_ref()?
             .encode_relational_trace(actual_post_sensory)?;
         Some(predicted.similarity(&actual))
+    }
+
+    pub fn enable_exploration_strategy(&mut self, config: ExplorationConfig) {
+        self.exploration_strategy = Some(EvoExplorationStrategy::new(config));
+    }
+
+    pub fn set_exploration_learning_enabled(&mut self, enabled: bool) {
+        if let Some(strategy) = self.exploration_strategy.as_mut() {
+            strategy.set_learning_enabled(enabled);
+        }
+    }
+
+    pub fn set_exploration_readout_enabled(&mut self, enabled: bool) {
+        if let Some(strategy) = self.exploration_strategy.as_mut() {
+            strategy.set_readout_enabled(enabled);
+        }
+    }
+
+    pub fn exploration_weights(&self) -> Option<[f32; 3]> {
+        self.exploration_strategy
+            .as_ref()
+            .map(EvoExplorationStrategy::weights)
+    }
+
+    pub fn exploration_observations(&self) -> u32 {
+        self.exploration_strategy
+            .as_ref()
+            .map(EvoExplorationStrategy::observations)
+            .unwrap_or(0)
+    }
+
+    pub fn epistemic_probe_features(&self, action: usize) -> ProbeFeatures {
+        self.epistemic_state
+            .as_ref()
+            .expect("enable_epistemic_state must be called first")
+            .probe_features(action)
+    }
+
+    pub fn choose_learned_exploration_probe(&mut self) -> Option<usize> {
+        let features = self
+            .epistemic_state
+            .as_ref()
+            .expect("enable_epistemic_state must be called first")
+            .all_probe_features();
+
+        let action = self
+            .exploration_strategy
+            .as_ref()
+            .expect("enable_exploration_strategy must be called first")
+            .choose(&features)?;
+
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .mark_probe_selected(action);
+
+        Some(action)
+    }
+
+    pub fn mark_epistemic_probe_selected(&mut self, action: usize) {
+        self.epistemic_state
+            .as_mut()
+            .expect("enable_epistemic_state must be called first")
+            .mark_probe_selected(action);
+    }
+
+    pub fn train_exploration_from_factual_gain(
+        &mut self,
+        features: ProbeFeatures,
+        rivals_before: usize,
+        rivals_after: usize,
+    ) {
+        self.exploration_strategy
+            .as_mut()
+            .expect("enable_exploration_strategy must be called first")
+            .observe_information_gain(features, rivals_before, rivals_after);
     }
 
     pub fn enable_macro_memory(&mut self, config: MacroConfig) {
