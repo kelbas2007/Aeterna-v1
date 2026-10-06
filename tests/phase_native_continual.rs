@@ -178,6 +178,21 @@ fn current_native_indices(evo: &EvoPhase) -> Vec<usize> {
     indices.into_iter().collect()
 }
 
+fn prediction_probe(evo: &EvoPhase, domain: usize, world: &World) -> Option<usize> {
+    let mut clone = evo.clone();
+    clone.set_planning_learning_enabled(false);
+    clone.observe_initial_real(&domain_raster(domain, 0, 3, 3), false);
+    clone
+        .choose_phase_native_action_with_prediction()
+        .map(|(decision, _)| decision.first_action)
+}
+
+fn zero_native_indices(evo: &mut EvoPhase, indices: &[usize]) {
+    for index in indices {
+        let _ = evo.perturb_phase_native_synapse_for_control(*index, 0.0, 0.0);
+    }
+}
+
 fn max_cross_domain_trace_similarity(evo: &EvoPhase, worlds: &[World]) -> f32 {
     let field = evo.raster_field().expect("raster field");
     let mut best = -1.0_f32;
@@ -380,6 +395,8 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
     let mut circuit_counts = Vec::new();
     let mut a_native_indices: Option<Vec<usize>> = None;
     let mut a_native_signature: Option<Vec<(usize, usize, u32, u32, u32, bool)>> = None;
+    let mut a_decoder_indices: Option<Vec<usize>> = None;
+    let mut a_circuit_count: Option<usize> = None;
 
     for domain in 0..worlds.len() {
         full.set_planning_learning_enabled(true);
@@ -399,6 +416,8 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
         if domain == 0 {
             let indices = current_native_indices(&full);
             a_native_signature = Some(synapse_signature(&full, &indices));
+            a_decoder_indices = Some(full.phase_native_decoder_synapses());
+            a_circuit_count = Some(full.phase_native_circuits().len());
             a_native_indices = Some(indices);
         } else if domain == 1 {
             let indices = a_native_indices.as_ref().expect("A native indices");
@@ -411,11 +430,63 @@ fn p5_one_persistent_organism_retains_and_selectively_revises_multiple_worlds() 
                 .filter(|(_, (a, b))| a != b)
                 .map(|(i, _)| indices[i])
                 .collect::<Vec<_>>();
+            let all_after = current_native_indices(&full);
+            let old_set = indices.iter().copied().collect::<std::collections::BTreeSet<_>>();
+            let new_all = all_after
+                .iter()
+                .copied()
+                .filter(|index| !old_set.contains(index))
+                .collect::<Vec<_>>();
+
+            let old_decoders = a_decoder_indices
+                .as_ref()
+                .expect("A decoder indices")
+                .iter()
+                .copied()
+                .collect::<std::collections::BTreeSet<_>>();
+            let new_decoders = full
+                .phase_native_decoder_synapses()
+                .into_iter()
+                .filter(|index| !old_decoders.contains(index))
+                .collect::<Vec<_>>();
+
+            let old_circuits = a_circuit_count.expect("A circuit count");
+            let new_circuit_indices = full.phase_native_circuits()[old_circuits..]
+                .iter()
+                .flat_map(|circuit| [
+                    circuit.afferent_synapse,
+                    circuit.successor_synapse,
+                    circuit.outcome_synapse,
+                    circuit.motor_synapse,
+                ])
+                .collect::<Vec<_>>();
+
+            let baseline_forward = prediction_probe(&full, 0, &worlds[0]);
+
+            let mut no_new_all = full.clone();
+            zero_native_indices(&mut no_new_all, &new_all);
+            let no_new_all_forward = prediction_probe(&no_new_all, 0, &worlds[0]);
+
+            let mut no_new_decoders = full.clone();
+            zero_native_indices(&mut no_new_decoders, &new_decoders);
+            let no_new_decoder_forward = prediction_probe(&no_new_decoders, 0, &worlds[0]);
+
+            let mut no_new_circuits = full.clone();
+            zero_native_indices(&mut no_new_circuits, &new_circuit_indices);
+            let no_new_circuit_forward = prediction_probe(&no_new_circuits, 0, &worlds[0]);
+
             println!(
-                "P5_A_SYNAPSE_MUTATION after_B changed_count={} changed_indices={:?} tracked_A_indices={}",
+                "P5_A_SYNAPSE_MUTATION after_B changed_count={} changed_indices={:?} tracked_A_indices={} new_all={} new_decoders={} new_circuit_synapses={} forward_baseline={:?} forward_without_new_all={:?} forward_without_new_decoders={:?} forward_without_new_circuits={:?}",
                 changed.len(),
                 changed,
                 indices.len(),
+                new_all.len(),
+                new_decoders.len(),
+                new_circuit_indices.len(),
+                baseline_forward,
+                no_new_all_forward,
+                no_new_decoder_forward,
+                no_new_circuit_forward,
             );
         }
 
