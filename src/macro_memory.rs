@@ -6,6 +6,7 @@ pub struct MacroConfig {
     pub match_threshold: f32,
     pub min_promotion_support: u32,
     pub formation_enabled: bool,
+    pub revision_enabled: bool,
     pub readout_enabled: bool,
     pub learning_enabled: bool,
 }
@@ -17,6 +18,7 @@ impl MacroConfig {
             match_threshold: 0.97,
             min_promotion_support: 4,
             formation_enabled: true,
+            revision_enabled: true,
             readout_enabled: false,
             learning_enabled: true,
         }
@@ -28,6 +30,25 @@ pub struct MacroBranch {
     pub post: PhaseVector,
     pub next_action: usize,
     pub support: u32,
+    pub failures: u32,
+    pub revision: u64,
+}
+
+impl MacroBranch {
+    fn value(&self) -> f32 {
+        let success = self.support as f32;
+        let failure = self.failures as f32;
+        // Smoothed factual success estimate. Counterexamples remain in state
+        // rather than deleting the obsolete action evidence.
+        (success + 1.0) / (success + failure + 2.0)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MacroCounterexample {
+    pub post: PhaseVector,
+    pub action: usize,
+    pub observed_need: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -36,6 +57,7 @@ pub struct MacroAssembly {
     pub entry: PhaseVector,
     pub first_action: usize,
     pub branches: Vec<MacroBranch>,
+    pub counterexamples: Vec<MacroCounterexample>,
     pub support: u32,
     pub utility: f32,
     pub revision: u64,
@@ -84,6 +106,10 @@ impl EvoMacroMemory {
         self.config.learning_enabled = enabled;
     }
 
+    pub fn set_revision_enabled(&mut self, enabled: bool) {
+        self.config.revision_enabled = enabled;
+    }
+
     pub fn macros(&self) -> &[MacroAssembly] {
         &self.macros
     }
@@ -92,7 +118,23 @@ impl EvoMacroMemory {
         self.active_macro
     }
 
+    // G3 compatibility path: failed exploratory episodes do not revise a
+    // freshly acquired macro. G4 uses observe_factual_episode explicitly.
     pub fn observe_successful_episode(
+        &mut self,
+        pre: PhaseVector,
+        first_action: usize,
+        mid: PhaseVector,
+        second_action: usize,
+        need: bool,
+    ) {
+        if !need {
+            return;
+        }
+        self.observe_positive_episode(pre, first_action, mid, second_action);
+    }
+
+    pub fn observe_factual_episode(
         &mut self,
         pre: PhaseVector,
         first_action: usize,
@@ -103,61 +145,41 @@ impl EvoMacroMemory {
         assert!(first_action < self.config.motor_cells);
         assert!(second_action < self.config.motor_cells);
 
-        if !need || !self.config.learning_enabled || !self.config.formation_enabled {
+        if !self.config.learning_enabled {
             return;
         }
 
-        if let Some(idx) = self.matching_macro_index(&pre, first_action) {
-            self.update_promoted(idx, &mid, second_action);
+        if need {
+            self.observe_positive_episode(pre, first_action, mid, second_action);
             return;
         }
 
-        let candidate_idx = self
-            .candidates
-            .iter()
-            .position(|candidate| {
-                candidate.first_action == first_action
-                    && candidate.entry.similarity(&pre) >= self.config.match_threshold
-            })
-            .unwrap_or_else(|| {
-                self.candidates.push(MacroCandidate {
-                    entry: pre.clone(),
-                    first_action,
-                    branches: Vec::new(),
-                    support: 0,
-                });
-                self.candidates.len() - 1
-            });
-
-        let candidate = &mut self.candidates[candidate_idx];
-        candidate.support = candidate.support.saturating_add(1);
-        Self::merge_branch(
-            &mut candidate.branches,
-            &mid,
-            second_action,
-            self.config.match_threshold,
-        );
-
-        let branch_support: u32 = candidate.branches.iter().map(|branch| branch.support).sum();
-        let has_branching = candidate.branches.len() >= 2;
-        let ready = candidate.support >= self.config.min_promotion_support
-            && branch_support >= self.config.min_promotion_support
-            && has_branching;
-
-        if ready {
-            let candidate = self.candidates.remove(candidate_idx);
-            let id = self.next_id;
-            self.next_id = self.next_id.saturating_add(1);
-            self.macros.push(MacroAssembly {
-                id,
-                entry: candidate.entry,
-                first_action: candidate.first_action,
-                branches: candidate.branches,
-                support: candidate.support,
-                utility: 0.10,
-                revision: 0,
-            });
+        if !self.config.revision_enabled {
+            return;
         }
+
+        let Some(idx) = self.matching_macro_index(&pre, first_action) else {
+            return;
+        };
+
+        let match_threshold = self.config.match_threshold;
+        let macro_assembly = &mut self.macros[idx];
+        macro_assembly.counterexamples.push(MacroCounterexample {
+            post: mid.clone(),
+            action: second_action,
+            observed_need: false,
+        });
+
+        if let Some(branch) = macro_assembly.branches.iter_mut().find(|branch| {
+            branch.next_action == second_action
+                && branch.post.similarity(&mid) >= match_threshold
+        }) {
+            branch.failures = branch.failures.saturating_add(1);
+            branch.revision = branch.revision.saturating_add(1);
+        }
+
+        macro_assembly.revision = macro_assembly.revision.saturating_add(1);
+        macro_assembly.utility = (macro_assembly.utility - 0.03).clamp(-1.0, 1.0);
     }
 
     pub fn begin(&mut self, pre: &PhaseVector) -> Option<usize> {
@@ -196,18 +218,91 @@ impl EvoMacroMemory {
             .iter()
             .filter_map(|branch| {
                 let similarity = branch.post.similarity(mid);
-                (similarity >= self.config.match_threshold)
-                    .then_some((branch.next_action, similarity, branch.support))
+                (similarity >= self.config.match_threshold).then_some((
+                    branch.next_action,
+                    similarity,
+                    branch.value(),
+                    branch.support,
+                ))
             })
             .max_by(|a, b| {
                 a.1.partial_cmp(&b.1)
                     .unwrap()
-                    .then_with(|| a.2.cmp(&b.2))
+                    .then_with(|| a.2.partial_cmp(&b.2).unwrap())
+                    .then_with(|| a.3.cmp(&b.3))
             })
-            .map(|(action, _, _)| action);
+            .map(|(action, _, _, _)| action);
 
         self.active_macro = None;
         action
+    }
+
+    fn observe_positive_episode(
+        &mut self,
+        pre: PhaseVector,
+        first_action: usize,
+        mid: PhaseVector,
+        second_action: usize,
+    ) {
+        assert!(first_action < self.config.motor_cells);
+        assert!(second_action < self.config.motor_cells);
+
+        if !self.config.learning_enabled || !self.config.formation_enabled {
+            return;
+        }
+
+        if let Some(idx) = self.matching_macro_index(&pre, first_action) {
+            self.update_promoted(idx, &mid, second_action);
+            return;
+        }
+
+        let candidate_idx = self
+            .candidates
+            .iter()
+            .position(|candidate| {
+                candidate.first_action == first_action
+                    && candidate.entry.similarity(&pre) >= self.config.match_threshold
+            })
+            .unwrap_or_else(|| {
+                self.candidates.push(MacroCandidate {
+                    entry: pre.clone(),
+                    first_action,
+                    branches: Vec::new(),
+                    support: 0,
+                });
+                self.candidates.len() - 1
+            });
+
+        let candidate = &mut self.candidates[candidate_idx];
+        candidate.support = candidate.support.saturating_add(1);
+        Self::merge_positive_branch(
+            &mut candidate.branches,
+            &mid,
+            second_action,
+            self.config.match_threshold,
+        );
+
+        let branch_support: u32 = candidate.branches.iter().map(|branch| branch.support).sum();
+        let has_branching = candidate.branches.len() >= 2;
+        let ready = candidate.support >= self.config.min_promotion_support
+            && branch_support >= self.config.min_promotion_support
+            && has_branching;
+
+        if ready {
+            let candidate = self.candidates.remove(candidate_idx);
+            let id = self.next_id;
+            self.next_id = self.next_id.saturating_add(1);
+            self.macros.push(MacroAssembly {
+                id,
+                entry: candidate.entry,
+                first_action: candidate.first_action,
+                branches: candidate.branches,
+                counterexamples: Vec::new(),
+                support: candidate.support,
+                utility: 0.10,
+                revision: 0,
+            });
+        }
     }
 
     fn matching_macro_index(&self, pre: &PhaseVector, first_action: usize) -> Option<usize> {
@@ -220,17 +315,16 @@ impl EvoMacroMemory {
     fn update_promoted(&mut self, idx: usize, mid: &PhaseVector, second_action: usize) {
         let macro_assembly = &mut self.macros[idx];
         macro_assembly.support = macro_assembly.support.saturating_add(1);
-        Self::merge_branch(
+        Self::merge_positive_branch(
             &mut macro_assembly.branches,
             mid,
             second_action,
             self.config.match_threshold,
         );
-        macro_assembly.utility =
-            (macro_assembly.utility + 0.02).clamp(-1.0, 1.0);
+        macro_assembly.utility = (macro_assembly.utility + 0.02).clamp(-1.0, 1.0);
     }
 
-    fn merge_branch(
+    fn merge_positive_branch(
         branches: &mut Vec<MacroBranch>,
         mid: &PhaseVector,
         second_action: usize,
@@ -248,6 +342,8 @@ impl EvoMacroMemory {
             post: mid.clone(),
             next_action: second_action,
             support: 1,
+            failures: 0,
+            revision: 0,
         });
     }
 }
@@ -282,5 +378,51 @@ mod tests {
         assert_eq!(memory.macros().len(), 1);
         assert_eq!(memory.macros()[0].first_action, 1);
         assert_eq!(memory.macros()[0].branches.len(), 2);
+    }
+
+    #[test]
+    fn factual_counterexample_revises_same_macro_without_erasing_old_evidence() {
+        let mut memory = EvoMacroMemory::new(MacroConfig {
+            motor_cells: 3,
+            min_promotion_support: 4,
+            readout_enabled: true,
+            ..MacroConfig::new(3)
+        });
+
+        let pre = PhaseVector::from_seed(64, 11);
+        let a = PhaseVector::from_seed(64, 12);
+        let b = PhaseVector::from_seed(64, 13);
+
+        for mid in [&a, &b, &a, &b] {
+            let terminal = if mid.similarity(&a) > 0.99 { 2 } else { 0 };
+            memory.observe_successful_episode(
+                pre.clone(),
+                1,
+                mid.clone(),
+                terminal,
+                true,
+            );
+        }
+
+        let id = memory.macros()[0].id;
+        for _ in 0..4 {
+            memory.observe_factual_episode(pre.clone(), 1, a.clone(), 2, false);
+            memory.observe_factual_episode(pre.clone(), 1, a.clone(), 1, true);
+        }
+
+        assert_eq!(memory.macros().len(), 1);
+        assert_eq!(memory.macros()[0].id, id);
+        assert!(memory.macros()[0].revision >= 4);
+        assert!(memory.macros()[0].counterexamples.len() >= 4);
+
+        assert_eq!(memory.begin(&pre), Some(1));
+        assert_eq!(memory.continue_after_factual_post(&a), Some(1));
+
+        let old = memory.macros()[0]
+            .branches
+            .iter()
+            .find(|branch| branch.next_action == 2)
+            .unwrap();
+        assert!(old.failures >= 4);
     }
 }
