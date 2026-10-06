@@ -597,6 +597,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
     );
 
     let mut rivals = evo.begin_epistemic_episode(&pre);
+    let rivals_at_start = rivals;
     // Open-world memory may legitimately activate extra compatible hypotheses
     // from earlier families. G7 tests whether active experimentation can reduce
     // that carrier-owned ambiguity, so >3 rivals is not itself a failure.
