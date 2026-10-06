@@ -11,5 +11,7 @@ pub use carrier::{DendriticBranch, EvoConfig, EvoPhase, FactualFrame, LearningRe
 pub use epistemic::{
     EpistemicEpisode, EvoEpistemicState, HypothesisPrediction, WorldHypothesis,
 };
-pub use macro_memory::{EvoMacroMemory, MacroAssembly, MacroBranch, MacroConfig};
+pub use macro_memory::{
+    EvoMacroMemory, MacroAssembly, MacroBranch, MacroConfig, MacroCounterexample,
+};
 pub use raster::{EvoRasterField, OutcomeStat, PhaseFieldUnit, RasterFieldConfig};
