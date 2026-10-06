@@ -47,6 +47,31 @@ impl PhaseVector {
         Self { phases }
     }
 
+    pub fn bundle(vectors: &[&Self]) -> Self {
+        assert!(!vectors.is_empty());
+        let dim = vectors[0].dim();
+        assert!(vectors.iter().all(|v| v.dim() == dim));
+
+        let mut phases = Vec::with_capacity(dim);
+        for d in 0..dim {
+            let mut x = 0.0f32;
+            let mut y = 0.0f32;
+            for vector in vectors {
+                x += vector.phases[d].cos();
+                y += vector.phases[d].sin();
+            }
+
+            let phase = if x.abs() + y.abs() <= 1.0e-8 {
+                0.0
+            } else {
+                wrap_phase(y.atan2(x))
+            };
+            phases.push(phase);
+        }
+
+        Self { phases }
+    }
+
     pub fn similarity(&self, other: &Self) -> f32 {
         assert_eq!(self.dim(), other.dim());
         let total: f32 = self
@@ -73,5 +98,14 @@ mod tests {
         let b = PhaseVector::from_seed(128, 2);
         let recovered = a.bind(&b).unbind(&a);
         assert!(recovered.similarity(&b) > 0.999);
+    }
+
+    #[test]
+    fn identical_bundles_are_stable() {
+        let a = PhaseVector::from_seed(128, 11);
+        let b = PhaseVector::from_seed(128, 22);
+        let first = PhaseVector::bundle(&[&a, &b]);
+        let second = PhaseVector::bundle(&[&a, &b]);
+        assert!(first.similarity(&second) > 0.999);
     }
 }
