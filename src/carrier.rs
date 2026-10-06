@@ -6,6 +6,7 @@ use crate::hierarchy::{EvoHierarchyMemory, HierarchyConfig, ParentMacro};
 use crate::macro_memory::{EvoMacroMemory, MacroAssembly, MacroConfig};
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
 use crate::raster::{EvoRasterField, RasterFieldConfig};
+use crate::trace::CarrierTrace;
 
 #[derive(Debug, Clone)]
 pub struct EvoConfig {
@@ -113,6 +114,7 @@ pub struct EvoPhase {
     macro_memory: Option<EvoMacroMemory>,
     hierarchy_memory: Option<EvoHierarchyMemory>,
     exploration_strategy: Option<EvoExplorationStrategy>,
+    robust_high_level_perception: bool,
 }
 
 impl EvoPhase {
@@ -158,6 +160,7 @@ impl EvoPhase {
             macro_memory: None,
             hierarchy_memory: None,
             exploration_strategy: None,
+            robust_high_level_perception: false,
         }
     }
 
@@ -215,6 +218,10 @@ impl EvoPhase {
         self.raster_field.as_ref()
     }
 
+    pub fn set_robust_high_level_perception(&mut self, enabled: bool) {
+        self.robust_high_level_perception = enabled;
+    }
+
     pub fn enable_epistemic_state(&mut self, match_threshold: f32) {
         self.epistemic_state = Some(EvoEpistemicState::new(
             self.config.motor_cells,
@@ -231,15 +238,12 @@ impl EvoPhase {
 
     pub fn begin_epistemic_tuition(&mut self, pre_sensory: &[f32]) {
         let trace = self
-            .raster_field
-            .as_ref()
-            .expect("epistemic tuition requires an attached raw raster field")
-            .encode_relational_trace(pre_sensory)
+            .encode_high_level_trace(pre_sensory)
             .expect("epistemic tuition requires a relational PRE trace");
         self.epistemic_state
             .as_mut()
             .expect("enable_epistemic_state must be called first")
-            .begin_tuition_episode(trace);
+            .begin_tuition_trace(trace);
     }
 
     pub fn record_epistemic_tuition_transition(
@@ -248,15 +252,12 @@ impl EvoPhase {
         post_sensory: &[f32],
     ) {
         let trace = self
-            .raster_field
-            .as_ref()
-            .expect("epistemic tuition requires an attached raw raster field")
-            .encode_relational_trace(post_sensory)
+            .encode_high_level_trace(post_sensory)
             .expect("epistemic tuition requires a relational POST trace");
         self.epistemic_state
             .as_mut()
             .expect("enable_epistemic_state must be called first")
-            .record_tuition_transition(action, trace);
+            .record_tuition_transition_trace(action, trace);
     }
 
     pub fn commit_epistemic_tuition(&mut self) -> u64 {
@@ -268,15 +269,12 @@ impl EvoPhase {
 
     pub fn begin_epistemic_episode(&mut self, pre_sensory: &[f32]) -> usize {
         let trace = self
-            .raster_field
-            .as_ref()
-            .expect("epistemic episode requires an attached raw raster field")
-            .encode_relational_trace(pre_sensory)
+            .encode_high_level_trace(pre_sensory)
             .expect("epistemic episode requires a relational PRE trace");
         self.epistemic_state
             .as_mut()
             .expect("enable_epistemic_state must be called first")
-            .begin_unknown_episode(&trace)
+            .begin_unknown_episode_trace(&trace)
     }
 
     pub fn choose_epistemic_probe(&mut self, disagreement_enabled: bool) -> usize {
@@ -292,15 +290,12 @@ impl EvoPhase {
         post_sensory: &[f32],
     ) -> usize {
         let trace = self
-            .raster_field
-            .as_ref()
-            .expect("epistemic episode requires an attached raw raster field")
-            .encode_relational_trace(post_sensory)
+            .encode_high_level_trace(post_sensory)
             .expect("epistemic probe requires a relational POST trace");
         self.epistemic_state
             .as_mut()
             .expect("enable_epistemic_state must be called first")
-            .observe_probe_result(action, &trace)
+            .observe_probe_result_trace(action, &trace)
     }
 
     pub fn active_epistemic_rivals(&self) -> usize {
@@ -329,11 +324,8 @@ impl EvoPhase {
         action: usize,
         actual_post_sensory: &[f32],
     ) -> Option<f32> {
-        let predicted = self.epistemic_state.as_ref()?.predicted_post(action)?;
-        let actual = self
-            .raster_field
-            .as_ref()?
-            .encode_relational_trace(actual_post_sensory)?;
+        let predicted = self.epistemic_state.as_ref()?.predicted_trace(action)?;
+        let actual = self.encode_high_level_trace(actual_post_sensory)?;
         Some(predicted.similarity(&actual))
     }
 
@@ -561,25 +553,19 @@ impl EvoPhase {
         need: bool,
     ) {
         let trace = self
-            .raster_field
-            .as_ref()
-            .expect("hierarchy learning requires an attached raw raster field")
-            .encode_relational_trace(outer_cue)
+            .encode_high_level_trace(outer_cue)
             .expect("hierarchy learning requires a relational outer cue");
 
         self.hierarchy_memory
             .as_mut()
             .expect("enable_hierarchy_memory must be called first")
-            .observe_successful_sequence(trace, child_sequence, need);
+            .observe_successful_trace(trace, child_sequence, need);
     }
 
     pub fn select_parent_sequence(&self, outer_cue: &[f32]) -> Option<Vec<u64>> {
-        let trace = self
-            .raster_field
-            .as_ref()?
-            .encode_relational_trace(outer_cue)?;
+        let trace = self.encode_high_level_trace(outer_cue)?;
 
-        self.hierarchy_memory.as_ref()?.select_sequence(&trace)
+        self.hierarchy_memory.as_ref()?.select_sequence_trace(&trace)
     }
 
     pub fn apply_macro_id_permutation(&mut self, mapping: &[(u64, u64)]) {
@@ -900,6 +886,19 @@ impl EvoPhase {
             need,
             tick: self.tick,
         });
+    }
+
+    fn encode_high_level_trace(&self, sensory: &[f32]) -> Option<CarrierTrace> {
+        let field = self.raster_field.as_ref()?;
+        if self.robust_high_level_perception {
+            field
+                .encode_robust_shape_trace(sensory)
+                .map(CarrierTrace::robust_shape)
+        } else {
+            field
+                .encode_relational_trace(sensory)
+                .map(CarrierTrace::exact)
+        }
     }
 
     fn direct_need_synapse(&self, action: usize) -> Option<&PhaseSynapse> {
