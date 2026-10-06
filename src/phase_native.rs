@@ -65,6 +65,15 @@ pub(super) struct PhaseNativeState {
     last_local_updates: usize,
 }
 
+#[derive(Debug, Clone)]
+pub struct PhaseNativeCheckpoint {
+    sensory_cells: usize,
+    motor_cells: usize,
+    cells: Vec<PhaseCell>,
+    synapses: Vec<PhaseSynapse>,
+    state: PhaseNativeState,
+}
+
 fn coherence(cells: &[PhaseCell], syn: &PhaseSynapse, floor: f32) -> f32 {
     if !cells[syn.from].recruited || !cells[syn.to].recruited {
         return 0.0;
@@ -155,6 +164,193 @@ impl EvoPhase {
             h = h.wrapping_mul(1_099_511_628_211);
         }
         h
+    }
+
+
+    pub fn phase_native_receptor_count(&self) -> usize {
+        self.phase_native.as_ref().map(|s| s.receptors.len()).unwrap_or(0)
+    }
+
+    /// Opaque persistence witness for acquired phase-native physical state.
+    /// REAL observation is intentionally excluded: a restored organism must
+    /// receive a fresh factual observation before acting.
+    pub fn phase_native_checkpoint(&self) -> Option<PhaseNativeCheckpoint> {
+        let state = self.phase_native.as_ref()?.clone();
+        let mut cells = self.cells.clone();
+        for cell in &mut cells {
+            cell.charge = 0.0;
+        }
+        Some(PhaseNativeCheckpoint {
+            sensory_cells: self.config.sensory_cells,
+            motor_cells: self.config.motor_cells,
+            cells,
+            synapses: self.synapses.clone(),
+            state,
+        })
+    }
+
+    pub fn restore_phase_native_checkpoint(
+        &mut self,
+        checkpoint: PhaseNativeCheckpoint,
+    ) -> bool {
+        if checkpoint.sensory_cells != self.config.sensory_cells
+            || checkpoint.motor_cells != self.config.motor_cells
+            || checkpoint.cells.len() != self.cells.len()
+        {
+            return false;
+        }
+        self.cells = checkpoint.cells;
+        self.synapses = checkpoint.synapses;
+        self.phase_native = Some(checkpoint.state);
+        self.imagination_planner = None;
+        self.current_real = None;
+        self.tick = 0;
+        true
+    }
+
+    /// P3 active acquisition. Unknown local actions are sampled first. Once
+    /// the current receptor is modelled, intrinsic frontier activity is
+    /// propagated backward through the same acquired phase-native successor
+    /// synapses used by P1/P2. No host graph/frontier is constructed.
+    pub fn choose_phase_native_autonomous_action(&mut self) -> Option<usize> {
+        self.phase_native_exploration_action(true)
+    }
+
+    /// Matched diagnostic control: it can try an unknown action only at the
+    /// current receptor and cannot propagate deeper frontier novelty backward.
+    pub fn choose_phase_native_direct_exploration_action(&mut self) -> Option<usize> {
+        self.phase_native_exploration_action(false)
+    }
+
+    fn phase_native_exploration_action(&mut self, propagate_frontier: bool) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let trace = self.encode_high_level_trace(&sensory)?;
+        let mut state = self.phase_native.take()?;
+
+        if !state.config.learning_enabled {
+            self.phase_native = Some(state);
+            return None;
+        }
+
+        let entry = match self.native_receptor(&mut state, trace.clone()) {
+            Some(cell) => cell,
+            None => {
+                self.phase_native = Some(state);
+                return None;
+            }
+        };
+        let min_support = u64::from(self.config.min_recruit_support);
+        let floor = state.config.coherence_floor;
+
+        let action_known = |cell: usize, action: usize, state: &PhaseNativeState, synapses: &[PhaseSynapse]| {
+            let motor = self.config.sensory_cells + action;
+            state.circuits.iter().any(|c| {
+                c.support >= min_support
+                    && synapses[c.afferent_synapse].from == cell
+                    && synapses[c.motor_synapse].to == motor
+                    && synapses[c.afferent_synapse].weight > 0.25
+                    && synapses[c.successor_synapse].weight > 0.25
+            })
+        };
+
+        // Direct local novelty is strongest: every opaque action must earn its
+        // factual model before it stops being epistemically valuable.
+        for action in 0..self.config.motor_cells {
+            if !action_known(entry, action, &state, &self.synapses) {
+                self.phase_native = Some(state);
+                return Some(action);
+            }
+        }
+
+        if !propagate_frontier {
+            self.phase_native = Some(state);
+            return None;
+        }
+
+        // Mode-isolated curiosity membranes use the SAME physical cell IDs.
+        // Intrinsic charge exists only on acquired receptors with unmodelled
+        // outgoing opaque actions.
+        let mut membranes = self.cells.clone();
+        for cell in &mut membranes {
+            cell.charge = 0.0;
+        }
+        let mut intrinsic = vec![0.0_f32; membranes.len()];
+        for receptor in &state.receptors {
+            let unknown = (0..self.config.motor_cells)
+                .filter(|action| !action_known(receptor.cell, *action, &state, &self.synapses))
+                .count();
+            intrinsic[receptor.cell] = unknown as f32 / self.config.motor_cells as f32;
+            membranes[receptor.cell].charge = intrinsic[receptor.cell];
+        }
+
+        for _ in 0..state.config.horizon {
+            let old = membranes.clone();
+            for (idx, cell) in membranes.iter_mut().enumerate() {
+                cell.charge = intrinsic[idx];
+            }
+            for circuit in &state.circuits {
+                if circuit.support < min_support {
+                    continue;
+                }
+                let afferent = &self.synapses[circuit.afferent_synapse];
+                let successor = &self.synapses[circuit.successor_synapse];
+                if afferent.weight <= 0.25 || successor.weight <= 0.25 {
+                    continue;
+                }
+                let propagated = state.config.discount
+                    * conductance(&self.cells, afferent, floor)
+                    * conductance(&self.cells, successor, floor)
+                    * old[successor.to].charge;
+                if propagated > membranes[afferent.from].charge {
+                    membranes[afferent.from].charge = propagated;
+                }
+            }
+        }
+
+        let mut best: Option<(usize, f32)> = None;
+        for circuit in &state.circuits {
+            if circuit.support < min_support
+                || self.synapses[circuit.afferent_synapse].from != entry
+            {
+                continue;
+            }
+            let output = &self.synapses[circuit.motor_synapse];
+            let Some(action) = output.to.checked_sub(self.config.sensory_cells) else {
+                continue;
+            };
+            if action >= self.config.motor_cells {
+                continue;
+            }
+            let afferent = &self.synapses[circuit.afferent_synapse];
+            let successor = &self.synapses[circuit.successor_synapse];
+            if afferent.weight <= 0.25 || successor.weight <= 0.25 {
+                continue;
+            }
+            let score = conductance(&self.cells, afferent, floor)
+                * conductance(&self.cells, successor, floor)
+                * membranes[successor.to].charge;
+            match best {
+                None => best = Some((action, score)),
+                Some((best_action, best_score)) => {
+                    if score > best_score + 1.0e-6
+                        || ((score - best_score).abs() <= 1.0e-6 && action < best_action)
+                    {
+                        best = Some((action, score));
+                    }
+                }
+            }
+        }
+
+        self.phase_native = Some(state);
+        if let Some((action, score)) = best {
+            if score > 1.0e-8 {
+                return Some(action);
+            }
+        }
+
+        // Once no reachable epistemic frontier remains, exploitation may use
+        // the ordinary P1 physical value propagation over the acquired model.
+        self.phase_native_decision(&trace, None).map(|d| d.first_action)
     }
 
     fn native_receptor(&mut self, state: &mut PhaseNativeState, trace: CarrierTrace) -> Option<usize> {
