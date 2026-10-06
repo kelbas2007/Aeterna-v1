@@ -44,6 +44,9 @@ pub struct Mature {
     pub perm: [usize; 4],
     pub children: [u64; 2],
     pub tuition_probes: u32,
+    pub child_tuition_actions: usize,
+    pub parent_tuition_actions: usize,
+    pub revision_actions: usize,
     pub revised_child_id: u64,
     pub pre_revision_counter: u64,
 }
@@ -280,7 +283,12 @@ fn changed_terminal(perm: [usize; 4], child: usize, branch: usize) -> usize {
     }
 }
 
-fn train_child(evo: &mut EvoPhase, perm: [usize; 4], child: usize, origins: &[(usize, usize)]) {
+fn train_child(
+    evo: &mut EvoPhase,
+    perm: [usize; 4],
+    child: usize,
+    origins: &[(usize, usize)],
+) -> usize {
     let first_action = if child == 0 { perm[0] } else { perm[2] };
     for (i, (ox, oy)) in origins.iter().copied().enumerate() {
         let branch = i % 2;
@@ -293,19 +301,22 @@ fn train_child(evo: &mut EvoPhase, perm: [usize; 4], child: usize, origins: &[(u
         let second = old_terminal(perm, child, branch);
         evo.observe_successful_macro_episode(&pre, first_action, &mid, second, true);
     }
+    origins.len() * 2
 }
 
-fn acquire_children(evo: &mut EvoPhase, perm: [usize; 4], reverse: bool) -> [u64; 2] {
+fn acquire_children(
+    evo: &mut EvoPhase,
+    perm: [usize; 4],
+    reverse: bool,
+) -> ([u64; 2], usize) {
     let origins_a = [(0usize, 0usize), (4, 0), (0, 4), (4, 4)];
     let origins_b = [(1usize, 0usize), (5, 0), (1, 4), (5, 4)];
 
-    if reverse {
-        train_child(evo, perm, 1, &origins_b);
-        train_child(evo, perm, 0, &origins_a);
+    let child_tuition_actions = if reverse {
+        train_child(evo, perm, 1, &origins_b) + train_child(evo, perm, 0, &origins_a)
     } else {
-        train_child(evo, perm, 0, &origins_a);
-        train_child(evo, perm, 1, &origins_b);
-    }
+        train_child(evo, perm, 0, &origins_a) + train_child(evo, perm, 1, &origins_b)
+    };
 
     assert_eq!(evo.macros().len(), 2, "G7 requires two acquired child macros");
 
@@ -322,7 +333,7 @@ fn acquire_children(evo: &mut EvoPhase, perm: [usize; 4], reverse: bool) -> [u64
         .expect("child 1 macro")
         .id;
 
-    [child0, child1]
+    ([child0, child1], child_tuition_actions)
 }
 
 fn required_children(law: usize, children: [u64; 2]) -> [u64; 2] {
@@ -425,16 +436,18 @@ fn all_child_sequences(children: [u64; 2]) -> Vec<Vec<u64>> {
     out
 }
 
-fn train_parents(evo: &mut EvoPhase, children: [u64; 2], perm: [usize; 4]) {
+fn train_parents(evo: &mut EvoPhase, children: [u64; 2], perm: [usize; 4]) -> usize {
     let candidates = all_child_sequences(children);
     let origins = [(0usize, 0usize), (4, 0), (0, 4)];
+
+    let mut primitive_actions = 0usize;
 
     for law in 0..3usize {
         for (ox, oy) in origins {
             let cue = relation(CUE_BASE + law as u64, ox, oy);
             for sequence in &candidates {
                 let mut trial = evo.clone();
-                let (need, _) = evaluate_sequence(
+                let (need, actions) = evaluate_sequence(
                     &mut trial,
                     law,
                     sequence,
@@ -442,6 +455,7 @@ fn train_parents(evo: &mut EvoPhase, children: [u64; 2], perm: [usize; 4]) {
                     perm,
                     false,
                 );
+                primitive_actions += actions;
                 evo.observe_successful_parent_sequence(&cue, sequence.clone(), need);
             }
         }
@@ -452,9 +466,14 @@ fn train_parents(evo: &mut EvoPhase, children: [u64; 2], perm: [usize; 4]) {
         3,
         "three law-specific acquired parents must exist before child revision"
     );
+    primitive_actions
 }
 
-fn revise_child0(evo: &mut EvoPhase, perm: [usize; 4], child0_id: u64) -> (u64, u64) {
+fn revise_child0(
+    evo: &mut EvoPhase,
+    perm: [usize; 4],
+    child0_id: u64,
+) -> (u64, u64, usize) {
     let before = evo
         .macros()
         .iter()
@@ -487,7 +506,7 @@ fn revise_child0(evo: &mut EvoPhase, perm: [usize; 4], child0_id: u64) -> (u64, 
         revised.revision > before,
         "same acquired child identity must accumulate factual revision"
     );
-    (before, revised.revision)
+    (before, revised.revision, 4 * 4 * 2)
 }
 
 pub fn build_mature(seed: u64) -> Mature {
@@ -499,11 +518,12 @@ pub fn build_mature(seed: u64) -> Mature {
     let tuition_probes = train_strategy(&mut evo, perm);
     assert_eq!(tuition_probes, 32);
 
-    let children = acquire_children(&mut evo, perm, reverse);
-    train_parents(&mut evo, children, perm);
+    let (children, child_tuition_actions) = acquire_children(&mut evo, perm, reverse);
+    let parent_tuition_actions = train_parents(&mut evo, children, perm);
 
     let unrevised = evo.clone();
-    let (pre_revision_counter, _) = revise_child0(&mut evo, perm, children[0]);
+    let (pre_revision_counter, _, revision_actions) =
+        revise_child0(&mut evo, perm, children[0]);
 
     assert_eq!(evo.macros().len(), 2);
     assert_eq!(evo.parent_macros().len(), 3);
@@ -514,6 +534,9 @@ pub fn build_mature(seed: u64) -> Mature {
         perm,
         children,
         tuition_probes,
+        child_tuition_actions,
+        parent_tuition_actions,
+        revision_actions,
         revised_child_id: children[0],
         pre_revision_counter,
     }
