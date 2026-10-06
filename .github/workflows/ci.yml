@@ -13,17 +13,12 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
 
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p2: execute frozen forward checkpoint'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -48,8 +43,8 @@ jobs:
           test "$GITHUB_RUN_ATTEMPT" = "1"
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P1_PROTOCOL.md)"
           cargo test --release --test phase_native_execution p1_fresh_bounded_shared_cell_pack -- --ignored --nocapture
-      - name: One-use fresh P2 qualification after regression success
-        if: github.event_name == 'push' || inputs.qualify_p2
+      - name: Explicit one-use fresh P2 qualification
+        if: ${{ inputs.qualify_p2 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
