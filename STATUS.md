@@ -11,11 +11,13 @@ Date: 2026-10-06
 **G4 PASS — factual revision of the same acquired macro identity.**  
 **G5 PASS — hierarchical reuse of acquired macros.**
 
-No AGI claim. No production promotion.\n\n**Validation note:** G0-G4 are now classified as preregistered **mechanism PASSes**, not broad statistical generalization claims. Fresh statistical qualification is pending under `docs/FRESH_QUALIFICATION_PROTOCOL.md`.
+No AGI claim. No production promotion.
+
+G0-G5 are **bounded mechanism PASSes**. G1 translation transfer additionally has a one-use fresh statistical qualification. The remaining gates require the same validation hardening before broader claims.
 
 The mandatory boundary remains **full EvoPhase cognitive ownership**. Rust implements carrier physics and the trusted shell; task-level adaptive state must live in EvoPhase-owned structures.
 
-## Qualified results
+## Qualified mechanism results
 
 ### G0 — ownership precursor
 
@@ -36,117 +38,159 @@ Workflow: `37493664700`
 - raw 12x12 raster + opaque motors + factual Need only;
 - no orientation/object labels and no host-side dx/dy classifier enter cognition;
 - carrier forms relational traces by generic retinotopic phase roles and HDC/FHRR unbinding;
-- same acquired carrier unit reactivates on an unseen translation;
+- the same acquired carrier unit reactivates on an unseen translation;
 - frozen readout gives 2/2 correct held-out motor choices;
 - matched no-formation/readout controls lose the full advantage.
+
+Important interpretation: the algebraic cancellation of absolute translation is an inherited FHRR/HDC inductive bias. The learned part is which relational trace is retained and how it is factually associated with outcome/action.
 
 ### G2 — active epistemic learning
 
 Qualified commit: `4bbf08ead05d85c5a30363971e756e7e01615abb`  
 Workflow: `37495559913`
 
-- 14/14 Rust tests PASS;
-- optimized release build PASS;
-- 18 factual tuition probes acquire two incompatible world hypotheses without hidden law labels;
+- two incompatible predictive world hypotheses are acquired without hidden law labels;
 - both rivals coexist at held-out start;
 - GENUINE chooses the opaque probe with maximal acquired prediction disagreement;
-- one factual probe collapses the rival set to one on each of two held-out laws;
-- matched generic exploration starts with the non-discriminating probe and requires more probes;
-- the surviving hypothesis predicts an additional withheld consequence before reveal;
-- previous G0/G1-B tests remain PASS.
-
-## Preserved failures
-
-- G0 initial held-out contextual transfer failed 1/2 before generic epistemic pressure was corrected.
-- G1-A local 3x3 motif formation failed translation reuse.
-- G2 CI-1 had an observer-only metric wiring bug: it mixed withheld prediction accuracy with another disagreement metric. The algorithm and world were unchanged before the corrected G2 qualification. All failures remain in `EXPERIMENT_LEDGER.md`.
-
-## What is now actually demonstrated
-
-A narrow but continuous causal chain exists:
-
-```text
-raw raster
-  -> EvoPhase-owned relational representation
-  -> multiple acquired predictive hypotheses
-  -> carrier-computed disagreement
-  -> self-selected informative physical probe
-  -> factual POST
-  -> suppression of incompatible rival
-  -> correct withheld prediction
-```
-
-## Scope boundary
-
-Still not demonstrated:
-- arbitrary object formation;
-- unrestricted concept invention;
-- acquired reusable program/macro;
-- multi-step internal planning;
-- learned cross-domain exploration strategy;
-- ARC/AGI.
+- one factual probe collapses the rival set to one on each held-out law;
+- matched generic exploration requires more probes;
+- the surviving hypothesis predicts an additional withheld consequence before reveal.
 
 ### G3 — acquired reusable macro
 
 Qualified commit: `da5711f7c2d9491ba38336f0b1154d6e8781ee34`  
 Workflow: `37497610519`
 
-- 16/16 Rust tests PASS;
-- optimized release build PASS;
-- 108 matched factual tuition actions;
 - macro absent before tuition;
 - GENUINE consolidates one two-step branching macro from successful carrier trajectories;
 - NO_CONSOLIDATION acquires zero macros from the same factual episodes;
-- learned body contains opaque first motor + two relational post-trace branches with different terminal motors;
-- same macro transfers to 2 unseen absolute raster bindings;
-- macro readout causally changes held-out action;
-- G_READOUT reaches factual Need on 2/2 held-out contexts inside the fixed two-action budget;
-- disabling macro readout/consolidation removes the complete held-out advantage.
+- acquired body contains an opaque first motor and two learned relational branches;
+- the same macro transfers to unseen absolute raster bindings;
+- macro readout causally changes held-out action.
 
 ### G4 — same-identity macro revision
 
 Qualified commit: `9dcf13c67fd44a52dac9a825b93c908b7b535bb8`  
 Workflow: `37499873532`
 
-- 18/18 Rust tests PASS;
-- optimized release build PASS;
-- revision arms receive identical factual evidence;
-- revision cost: 24 physical actions;
 - macro count stays 1 and macro ID is unchanged;
 - contradictory factual outcomes are retained explicitly;
-- obsolete action evidence is preserved and accumulates failures;
-- newly supported terminal action replaces it in readout for the changed branch;
+- obsolete action evidence remains represented and accumulates failures;
+- newly supported terminal action takes over for the changed branch;
 - unchanged branch remains correct;
-- REVISION succeeds 2/2 on held-out translations;
 - NO_REVISION fails the changed context.
 
-## Validation hardening now active\n\nBefore using G0-G4 as evidence of broad generalization, the project now requires >=64 one-use fresh held-out worlds, >=10 sub-seeds, confidence intervals, randomized opaque-action relabeling where applicable, stronger external/simple baselines, and a mechanical ownership audit. G1-B is explicitly reworded: translation cancellation is an inherited FHRR/HDC inductive bias; the learned part is the carrier unit/outcome association.\n\n## Next gate\n\n**G5: hierarchical reuse of acquired macros.**
+### G5 — hierarchical reuse
 
-An already acquired macro must become a child building block of a newly acquired higher-level macro. The hierarchy must be acquired from experience, transfer to held-out bindings, and reduce physical/search cost relative to a matched organism that cannot reuse acquired macros as children.
+Qualified commit: `c1292adc5c230c0616ce8c18a3829bd1f53947db`  
+Workflow: `37503517616`
 
-CI remains manual-only between qualification checkpoints to avoid unnecessary runner usage.
+- 22/22 Rust tests PASS;
+- optimized release build PASS;
+- two acquired child macros exist before parent tuition;
+- acquired parent macros store child carrier IDs rather than flattened primitive motor scripts;
+- matched NO_HIERARCHY receives the same child inventory and factual parent curriculum but acquires no parent;
+- parent tuition cost: 72 primitive actions per arm;
+- on two unseen outer-cue translations, hierarchy reduces candidate child-sequence evaluations from 5 to 2;
+- primitive search actions fall from 16 to 8;
+- reversing child acquisition order permutes opaque child IDs while preserving success and cost advantage;
+- mechanical ownership audits remain PASS.
 
+The first G5 CI attempt is preserved as a technical evaluator failure: one held-out translation exceeded the 12x12 raster bounds. The runtime mechanism was unchanged before the corrected qualification.
 
 ## Fresh statistical qualification
 
 ### FRESH-G1 — translation transfer
 
-Run `37504043614`, source `a73342a35dcf4b5c08162f3508ecaabbdc6ae261`.
+Run: `37504043614`  
+Source SHA: `a73342a35dcf4b5c08162f3508ecaabbdc6ae261`  
+Spec blob SHA: `e32fc861f94ad86bf93631c1ed671762e1fd3f50`  
+Authority seed: `37504043614`  
+World-pack digest: `8e09c44e887c2ba0`
 
-- 80/80 fresh held-out translation worlds correct;
-- 10/10 sub-seeds each scored 8/8;
-- 95% Wilson interval: [0.9542, 1.0000];
-- raw-template NN: 35%;
-- linear perceptron: 45%;
-- opaque motor labels randomized per sub-seed;
-- one-use pack digest: `8e09c44e887c2ba0`.
+- N = 80 one-use fresh held-out worlds;
+- 10 independent sub-seeds;
+- opaque two-motor labels randomized per sub-seed;
+- EvoPhase: 80/80 = 100%;
+- Wilson 95% CI: [0.9542, 1.0000];
+- raw-template NN: 28/80 = 35%;
+- linear perceptron: 36/80 = 45%;
+- every sub-seed: 8/8.
 
-This upgrades G1 translation transfer from a 2/2 mechanism witness to a statistically qualified narrow capability under the inherited translation-cancelling FHRR/HDC prior.
+This statistically qualifies the narrow claim of translation transfer under the inherited translation-cancelling FHRR/HDC prior.
 
-Stress diagnostics expose the next representational ceiling:
-- distractor: 42/80;
-- dropout: 42/80;
-- rotation: 0/80;
+Stress diagnostics on the same now-burned pack:
+
+- +1 distractor pixel: 42/80;
+- one task-pixel dropout: 42/80;
+- 90-degree rotation while preserving class identity: 0/80;
 - doubled spacing: 42/80.
 
-No robustness claim is made for those transformations. The pack is permanently burned for future qualification.
+These are explicit representational limitations, not PASSes and not tuning targets on the same pack.
+
+## Mechanical ownership audit
+
+Workflow `37500964091` PASSed:
+
+- production source has no evaluator hidden-law/task-label leakage covered by the audit;
+- runtime has no external model/network dependency covered by the audit;
+- all G0-G4 regressions passed at that checkpoint.
+
+This is a first mechanical guard, not a complete proof of full ownership. Stronger module isolation and permutation audits remain required.
+
+## Preserved failures
+
+- G0 initial held-out contextual transfer: 1/2 before the epistemic-pressure revision;
+- G1-A local 3x3 motif representation: failed translation reuse;
+- G2 first qualification: observer metric wiring error;
+- G5 first qualification: evaluator raster-bounds error.
+
+Failures are kept in `EXPERIMENT_LEDGER.md` and are never rewritten into PASSes.
+
+## What is now demonstrated
+
+A bounded causal chain exists:
+
+```text
+raw raster
+  -> EvoPhase-owned relational representation
+  -> competing acquired predictive hypotheses
+  -> informative experiment selection
+  -> factual belief reduction
+  -> acquired reusable macro
+  -> factual repair of the same macro
+  -> acquired parent macro reusing acquired children
+```
+
+## Still not demonstrated
+
+- arbitrary object formation;
+- robustness to distractors/occlusion/rotation/scale;
+- unrestricted concept invention;
+- arbitrary-length/recursive program induction;
+- multi-step internal imagination/planning;
+- learned cross-domain exploration strategy;
+- broad open-world competence;
+- ARC/AGI.
+
+## Validation policy now active
+
+Before broad generalization claims:
+
+- >=64 one-use fresh held-out worlds;
+- >=10 sub-seeds;
+- confidence intervals;
+- randomized opaque-label permutations where applicable;
+- stronger external/simple baselines;
+- fresh authority after every design change;
+- mechanical ownership checks.
+
+See `docs/FRESH_QUALIFICATION_PROTOCOL.md` and `docs/VALIDATION_HARDENING.md`.
+
+## Next gate
+
+**G6: learned exploration strategy.**
+
+The G2 disagreement argmax is still an inherited substrate policy. G6 must acquire a reusable way of choosing informative experience from previous worlds and transfer that exploration strategy to a new family, while a matched control has the same learned world models but cannot reuse the acquired exploration strategy.
+
+CI is manual-only between qualification checkpoints to avoid unnecessary runner usage.
