@@ -331,7 +331,7 @@ impl EvoRasterField {
         if oriented.is_empty() && invariant.is_empty() {
             None
         } else {
-            Some(ShapeTrace::from_fragments(oriented, invariant))
+            Some(ShapeTrace::from_geometry(points.len(), oriented, invariant))
         }
     }
 
