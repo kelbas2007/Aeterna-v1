@@ -12,7 +12,7 @@ permissions:
 jobs:
   rust:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -20,7 +20,9 @@ jobs:
           components: rustfmt
       - name: Normalize formatting in ephemeral workspace
         run: cargo fmt --all
-      - name: Regression tests and G9 fresh preflight
+      - name: Regression and sealed G9 fresh qualification
+        env:
+          AETERNA_RUN_FRESH_G9: "1"
         run: cargo test --all --all-targets -- --nocapture
       - name: Release build
         run: cargo build --release
