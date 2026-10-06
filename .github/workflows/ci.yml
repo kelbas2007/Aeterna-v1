@@ -22,7 +22,8 @@ permissions:
 
 jobs:
   rust:
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p2: execute frozen forward checkpoint'
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p2: execute frozen forward checkpoint'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
