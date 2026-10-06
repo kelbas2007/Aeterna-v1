@@ -150,7 +150,12 @@ impl EvoPhase {
         &mut self, action: usize, post: &[f32], value: f32,
     ) -> Option<f32> {
         let pre = self.current_real.as_ref()?.sensory.clone();
+        let before_receptors = self.phase_native_receptor_count();
+        let before_circuits = self.phase_native_circuits().len();
         let error = self.observe_phase_native_forward_transition(&pre, action, post, value)?;
+        let structural_gain = self.phase_native_receptor_count() > before_receptors
+            || self.phase_native_circuits().len() > before_circuits;
+        self.phase_native_drive_after_fact(post, structural_gain);
         self.observe_initial_real(post, value >= 1.0);
         Some(error)
     }
