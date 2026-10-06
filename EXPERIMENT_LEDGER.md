@@ -281,3 +281,39 @@ Run `37515610684` opened and permanently burned the first G8 fresh pack.
 The pack is a FAIL, not a PASS and not reusable for qualification.
 
 Interpretation: the acquired transition model exposed a shorter high-value imagined path than the evaluator's physical route. The immediate candidate cause is state/transition aliasing under the robust planning trace or an equivalent depth-accounting/model-binding defect. The next design must not tune on this pack; it must define a stronger observability/model-integrity condition and use a new external authority seed.
+
+
+## G8-FRESH-2 one-use result — PASS_OBSERVABLE_STATE_PLANNING
+
+Run `37516415100` completed PASS and permanently burned the second G8 fresh pack.
+
+Fresh authority:
+- source SHA: `9770b6d4e7b1b6f6721f8b33290d81120fd61678`;
+- authority seed: `37516415100`;
+- protocol fingerprint (FNV64): `735d8c35a5af44d2`;
+- pack digest: `270c9476d128b82a`;
+- N=80 / 10 sub-seeds;
+- 46 candidate state sets were rejected by the preregistered representation-only observability seal before the pack was sealed.
+
+Observed:
+- FULL_IMAGINATION: 80/80 = 100%;
+- Wilson 95% CI: [0.9542, 1.0000];
+- DEPTH1: 0/80;
+- NO_IMAGINATION / immediate MODEL: 0/80;
+- SHUFFLED_MODEL: 0/80;
+- model-integrity/depth violations: 0;
+- authority / REAL-firewall violations: 0;
+- per-sub-seed FULL: [8,8,8,8,8,8,8,8,8,8];
+- route depth 2: 30/30;
+- route depth 3: 29/29;
+- route depth 4: 21/21;
+- clean: 40/40;
+- distractor: 10/10;
+- dropout: 10/10;
+- rotation: 10/10;
+- scale: 10/10;
+- successful delayed-route first motors covered opaque IDs {0,2,3};
+- mean FULL physical actions: 2.888;
+- mean FULL rollout nodes: 23.700.
+
+This statistically qualifies the bounded claim of delayed-reward carrier-owned planning **conditional on an identifiable carrier observation state and an acquired local transition model**. It does not qualify planning under perceptual aliasing/POMDP uncertainty. G8-FRESH-1 remains the preserved evidence that this observability boundary matters.
