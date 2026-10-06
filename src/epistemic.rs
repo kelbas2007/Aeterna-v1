@@ -1,3 +1,4 @@
+use crate::exploration::ProbeFeatures;
 use crate::hdc::PhaseVector;
 
 #[derive(Debug, Clone)]
@@ -191,12 +192,7 @@ impl EvoEpistemicState {
         }
 
         let action = best.expect("at least one probe action").0;
-        let episode = self
-            .episode
-            .as_mut()
-            .expect("episode exists while choosing a probe");
-        episode.probe_usage[action] = episode.probe_usage[action].saturating_add(1);
-        episode.physical_probes = episode.physical_probes.saturating_add(1);
+        self.mark_probe_selected(action);
         action
     }
 
@@ -256,6 +252,59 @@ impl EvoEpistemicState {
             return 0.0;
         };
         self.action_disagreement(&episode.active_ids, action)
+    }
+
+    pub fn probe_features(&self, action: usize) -> ProbeFeatures {
+        assert!(action < self.motor_cells);
+        let Some(episode) = self.episode.as_ref() else {
+            return ProbeFeatures {
+                disagreement: 0.0,
+                coverage: 0.0,
+                novelty: 1.0,
+            };
+        };
+
+        let active = episode.active_ids.len();
+        let coverage = if active == 0 {
+            0.0
+        } else {
+            let predicted = episode
+                .active_ids
+                .iter()
+                .filter(|id| {
+                    self.hypotheses
+                        .iter()
+                        .find(|hypothesis| hypothesis.id == **id)
+                        .and_then(|hypothesis| hypothesis.predictions[action].as_ref())
+                        .is_some()
+                })
+                .count();
+            predicted as f32 / active as f32
+        };
+
+        let novelty = 1.0 / ((episode.probe_usage[action] + 1) as f32).sqrt();
+
+        ProbeFeatures {
+            disagreement: self.action_disagreement(&episode.active_ids, action),
+            coverage,
+            novelty,
+        }
+    }
+
+    pub fn all_probe_features(&self) -> Vec<ProbeFeatures> {
+        (0..self.motor_cells)
+            .map(|action| self.probe_features(action))
+            .collect()
+    }
+
+    pub fn mark_probe_selected(&mut self, action: usize) {
+        assert!(action < self.motor_cells);
+        let episode = self
+            .episode
+            .as_mut()
+            .expect("begin_unknown_episode must be called first");
+        episode.probe_usage[action] = episode.probe_usage[action].saturating_add(1);
+        episode.physical_probes = episode.physical_probes.saturating_add(1);
     }
 
     fn compatible_hypothesis(&self, builder: &TuitionBuilder) -> Option<usize> {
