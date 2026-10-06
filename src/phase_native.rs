@@ -157,8 +157,12 @@ impl EvoPhase {
     pub fn phase_native_learned_fingerprint(&self) -> u64 {
         let Some(state) = self.phase_native.as_ref() else { return 0; };
         let mut h = 14_695_981_039_346_656_037_u64;
+        let mut learned_cells = self.cells.clone();
+        for cell in &mut learned_cells {
+            cell.charge = 0.0;
+        }
         let text = format!("{:?}|{:?}|{:?}|{:?}",
-            state.receptors, state.circuits, self.cells, self.synapses);
+            state.receptors, state.circuits, learned_cells, self.synapses);
         for byte in text.bytes() {
             h ^= u64::from(byte);
             h = h.wrapping_mul(1_099_511_628_211);
@@ -175,7 +179,9 @@ impl EvoPhase {
     /// REAL observation is intentionally excluded: a restored organism must
     /// receive a fresh factual observation before acting.
     pub fn phase_native_checkpoint(&self) -> Option<PhaseNativeCheckpoint> {
-        let state = self.phase_native.as_ref()?.clone();
+        let mut state = self.phase_native.as_ref()?.clone();
+        state.last_motor_potentials.fill(0.0);
+        state.last_local_updates = 0;
         let mut cells = self.cells.clone();
         for cell in &mut cells {
             cell.charge = 0.0;
