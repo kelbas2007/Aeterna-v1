@@ -1,4 +1,5 @@
 use crate::hdc::PhaseVector;
+use crate::trace::CarrierTrace;
 
 #[derive(Debug, Clone)]
 pub struct MacroConfig {
@@ -27,7 +28,7 @@ impl MacroConfig {
 
 #[derive(Debug, Clone)]
 pub struct MacroBranch {
-    pub post: PhaseVector,
+    pub post: CarrierTrace,
     pub next_action: usize,
     pub support: u32,
     pub failures: u32,
@@ -46,7 +47,7 @@ impl MacroBranch {
 
 #[derive(Debug, Clone)]
 pub struct MacroCounterexample {
-    pub post: PhaseVector,
+    pub post: CarrierTrace,
     pub action: usize,
     pub observed_need: bool,
 }
@@ -54,7 +55,7 @@ pub struct MacroCounterexample {
 #[derive(Debug, Clone)]
 pub struct MacroAssembly {
     pub id: u64,
-    pub entry: PhaseVector,
+    pub entry: CarrierTrace,
     pub first_action: usize,
     pub branches: Vec<MacroBranch>,
     pub counterexamples: Vec<MacroCounterexample>,
@@ -65,7 +66,7 @@ pub struct MacroAssembly {
 
 #[derive(Debug, Clone)]
 struct MacroCandidate {
-    entry: PhaseVector,
+    entry: CarrierTrace,
     first_action: usize,
     branches: Vec<MacroBranch>,
     support: u32,
@@ -155,10 +156,27 @@ impl EvoMacroMemory {
         second_action: usize,
         need: bool,
     ) {
+        self.observe_successful_trace(
+            CarrierTrace::exact(pre),
+            first_action,
+            CarrierTrace::exact(mid),
+            second_action,
+            need,
+        );
+    }
+
+    pub fn observe_successful_trace(
+        &mut self,
+        pre: CarrierTrace,
+        first_action: usize,
+        mid: CarrierTrace,
+        second_action: usize,
+        need: bool,
+    ) {
         if !need {
             return;
         }
-        self.observe_positive_episode(pre, first_action, mid, second_action);
+        self.observe_positive_trace(pre, first_action, mid, second_action);
     }
 
     pub fn observe_factual_episode(
@@ -166,6 +184,23 @@ impl EvoMacroMemory {
         pre: PhaseVector,
         first_action: usize,
         mid: PhaseVector,
+        second_action: usize,
+        need: bool,
+    ) {
+        self.observe_factual_trace(
+            CarrierTrace::exact(pre),
+            first_action,
+            CarrierTrace::exact(mid),
+            second_action,
+            need,
+        );
+    }
+
+    pub fn observe_factual_trace(
+        &mut self,
+        pre: CarrierTrace,
+        first_action: usize,
+        mid: CarrierTrace,
         second_action: usize,
         need: bool,
     ) {
@@ -177,8 +212,6 @@ impl EvoMacroMemory {
         }
 
         if let Some(idx) = self.matching_macro_index(&pre, first_action) {
-            // G4 ablation: once a macro exists, disabling revision freezes that
-            // acquired program while preserving the same external factual stream.
             if !self.config.revision_enabled {
                 return;
             }
@@ -209,13 +242,16 @@ impl EvoMacroMemory {
             return;
         }
 
-        // Before a macro exists, positive factual trajectories may still form one.
         if need {
-            self.observe_positive_episode(pre, first_action, mid, second_action);
+            self.observe_positive_trace(pre, first_action, mid, second_action);
         }
     }
 
     pub fn begin(&mut self, pre: &PhaseVector) -> Option<usize> {
+        self.begin_trace(&CarrierTrace::exact(pre.clone()))
+    }
+
+    pub fn begin_trace(&mut self, pre: &CarrierTrace) -> Option<usize> {
         self.active_macro = None;
         if !self.config.readout_enabled {
             return None;
@@ -238,6 +274,14 @@ impl EvoMacroMemory {
     }
 
     pub fn begin_by_id(&mut self, pre: &PhaseVector, macro_id: u64) -> Option<usize> {
+        self.begin_by_id_trace(&CarrierTrace::exact(pre.clone()), macro_id)
+    }
+
+    pub fn begin_by_id_trace(
+        &mut self,
+        pre: &CarrierTrace,
+        macro_id: u64,
+    ) -> Option<usize> {
         self.active_macro = None;
         if !self.config.readout_enabled {
             return None;
@@ -253,6 +297,10 @@ impl EvoMacroMemory {
     }
 
     pub fn continue_after_factual_post(&mut self, mid: &PhaseVector) -> Option<usize> {
+        self.continue_after_factual_trace(&CarrierTrace::exact(mid.clone()))
+    }
+
+    pub fn continue_after_factual_trace(&mut self, mid: &CarrierTrace) -> Option<usize> {
         if !self.config.readout_enabled {
             self.active_macro = None;
             return None;
@@ -285,11 +333,11 @@ impl EvoMacroMemory {
         action
     }
 
-    fn observe_positive_episode(
+    fn observe_positive_trace(
         &mut self,
-        pre: PhaseVector,
+        pre: CarrierTrace,
         first_action: usize,
-        mid: PhaseVector,
+        mid: CarrierTrace,
         second_action: usize,
     ) {
         assert!(first_action < self.config.motor_cells);
@@ -353,14 +401,14 @@ impl EvoMacroMemory {
         }
     }
 
-    fn matching_macro_index(&self, pre: &PhaseVector, first_action: usize) -> Option<usize> {
+    fn matching_macro_index(&self, pre: &CarrierTrace, first_action: usize) -> Option<usize> {
         self.macros.iter().position(|macro_assembly| {
             macro_assembly.first_action == first_action
                 && macro_assembly.entry.similarity(pre) >= self.config.match_threshold
         })
     }
 
-    fn update_promoted(&mut self, idx: usize, mid: &PhaseVector, second_action: usize) {
+    fn update_promoted(&mut self, idx: usize, mid: &CarrierTrace, second_action: usize) {
         let macro_assembly = &mut self.macros[idx];
         macro_assembly.support = macro_assembly.support.saturating_add(1);
         Self::merge_positive_branch(
@@ -374,7 +422,7 @@ impl EvoMacroMemory {
 
     fn merge_positive_branch(
         branches: &mut Vec<MacroBranch>,
-        mid: &PhaseVector,
+        mid: &CarrierTrace,
         second_action: usize,
         match_threshold: f32,
     ) {
@@ -394,6 +442,7 @@ impl EvoMacroMemory {
             revision: 0,
         });
     }
+
 }
 
 #[cfg(test)]
