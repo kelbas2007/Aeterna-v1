@@ -15,7 +15,8 @@ Date: 2026-10-06
 **R1 / G1-C MECHANISM PASS — robust carrier-owned relational perception.**  
 **G7 FRESH-2 PASS — whole-organism fresh open-world qualification.**  
 **G8 MECHANISM PASS — carrier-owned imagined delayed-reward planning.**  
-**G8-FRESH-1 FAIL — fresh depth/model-integrity witness failed; pack burned.**
+**G8-FRESH-1 FAIL — fresh depth/model-integrity witness failed; pack burned.**  
+**G8-FRESH-2 PASS — fresh delayed-reward planning under an explicit carrier-observability contract.**
 
 No AGI claim. No production promotion.
 
@@ -173,7 +174,6 @@ raw raster
 - arbitrary object formation;
 - unrestricted concept invention;
 - arbitrary-length/recursive program induction;
-- multi-step internal imagination/planning;
 - learned cross-domain exploration strategy;
 - broad open-world competence outside the qualified G7 family;
 - ARC/AGI.
@@ -297,10 +297,29 @@ The first clean depth-2 and depth-3 worlds behaved as intended: FULL succeeded w
 
 That pack is permanently burned and counts as FAIL. The working diagnosis is transition/state aliasing or equivalent model-binding depth collapse, not lack of delayed-reward preference.
 
+## G8-FRESH-2 result
+
+Run `37516415100` PASSed on source `9770b6d4e7b1b6f6721f8b33290d81120fd61678`.
+
+- authority seed: `37516415100`;
+- one-use pack digest: `270c9476d128b82a`;
+- N=80 / 10 sub-seeds;
+- FULL_IMAGINATION: 80/80, Wilson95 [0.9542,1.0000];
+- DEPTH1: 0/80;
+- immediate MODEL / NO_IMAGINATION: 0/80;
+- SHUFFLED_MODEL: 0/80;
+- depths: 30/30 at depth 2, 29/29 at depth 3, 21/21 at depth 4;
+- nuisance: clean 40/40, distractor 10/10, dropout 10/10, rotation 10/10, scale 10/10;
+- zero model-integrity/depth violations;
+- zero authority/REAL-firewall violations;
+- 46 candidate state sets were rejected **before sealing** by the frozen representation-only observability condition.
+
+The pack is burned. The qualified claim is intentionally conditional: bounded delayed-reward planning works when the carrier observation is identifiable. This does not yet solve planning under perceptual aliasing / POMDP uncertainty.
+
 ## Next gate
 
-**G8-FRESH-2: fresh planning qualification with an explicit perceptual/transition observability seal.**
+**G9: carrier-owned belief-state / history-conditioned planning under perceptual aliasing.**
 
-The revised protocol must prevent physically distinct route states that are observationally equivalent under the inherited nuisance invariances from being treated as a fully observable planning world. It must still use a new external seed, 80 worlds / 10 sub-seeds, route depths 2-4, opaque motor permutations and the same planning controls.
+The next mechanism must deliberately allow physically different world states to produce the same current observation. EvoPhase must use its own action/observation history and acquired transition state to maintain rival hidden-state beliefs, choose actions from that belief state, and outperform a matched memoryless observation-only planner.
 
 CI is manual-only between qualification checkpoints.
