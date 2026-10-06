@@ -217,8 +217,7 @@ fn p4_learned_physical_drive_transfers_to_cold_longer_worlds() {
     let mut teacher = Vec::new();
 
     for (index, world) in worlds.iter().enumerate() {
-        let mut full = cold_with_drive(learned_checkpoint.clone());
-        let before_drive = full.phase_native_drive_weights().unwrap();
+        let mut full = cold_with_drive(learned_checkpoint.clone());        let before_drive = full.phase_native_drive_weights().unwrap();
         let outcome = learned_acquire(&mut full, world);
         assert_eq!(
             full.phase_native_drive_weights().unwrap(),
@@ -349,4 +348,322 @@ fn p4_target_selector_has_no_p3_or_host_search_fallback() {
     ] {
         assert!(selector.contains(required), "P4 selector missing {required}");
     }
+}
+
+struct FreshRng(u64);
+
+impl FreshRng {
+    fn new(seed: u64) -> Self {
+        Self(seed ^ 0x9E37_79B9_7F4A_7C15)
+    }
+
+    fn next(&mut self) -> u64 {
+        let mut x = self.0;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        self.0 = x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+
+    fn range(&mut self, upper: usize) -> usize {
+        (self.next() % upper as u64) as usize
+    }
+}
+
+#[derive(Debug, Clone)]
+struct FreshBlock {
+    source: Vec<World>,
+    target: Vec<World>,
+    random_seeds: Vec<u64>,
+}
+
+fn fresh_world(rng: &mut FreshRng, min_len: usize, max_len: usize) -> World {
+    let length = min_len + rng.range(max_len - min_len + 1);
+    let advance = (0..length).map(|_| rng.range(3)).collect::<Vec<_>>();
+    World { length, advance }
+}
+
+fn fnv_mix(mut hash: u64, value: u64) -> u64 {
+    const PRIME: u64 = 1_099_511_628_211;
+    for byte in value.to_le_bytes() {
+        hash ^= byte as u64;
+        hash = hash.wrapping_mul(PRIME);
+    }
+    hash
+}
+
+fn fresh_blocks(authority: u64) -> (Vec<FreshBlock>, u64) {
+    let mut blocks = Vec::new();
+    let mut digest = 14_695_981_039_346_656_037_u64;
+
+    for sub in 0..10u64 {
+        let derived = authority
+            ^ sub.wrapping_mul(0xD1B5_4A32_D192_ED03)
+            ^ 0xA37E_4F34_6C91_2B55;
+        let mut rng = FreshRng::new(derived);
+        let source = (0..8)
+            .map(|_| fresh_world(&mut rng, 2, 3))
+            .collect::<Vec<_>>();
+        let target = (0..8)
+            .map(|_| fresh_world(&mut rng, 4, 5))
+            .collect::<Vec<_>>();
+        let random_seeds = (0..8).map(|_| rng.next()).collect::<Vec<_>>();
+
+        digest = fnv_mix(digest, sub);
+        for (kind, worlds) in [(0u64, &source), (1u64, &target)] {
+            digest = fnv_mix(digest, kind);
+            for world in worlds {
+                digest = fnv_mix(digest, world.length as u64);
+                for action in &world.advance {
+                    digest = fnv_mix(digest, *action as u64);
+                }
+            }
+        }
+        for seed in &random_seeds {
+            digest = fnv_mix(digest, *seed);
+        }
+
+        blocks.push(FreshBlock {
+            source,
+            target,
+            random_seeds,
+        });
+    }
+
+    (blocks, digest)
+}
+
+fn train_fresh_drive(
+    source: &[World],
+    phase_learning: bool,
+) -> (PhaseDriveCheckpoint, usize) {
+    let mut checkpoint = None;
+    let mut interactions = 0usize;
+
+    for (index, world) in source.iter().enumerate() {
+        let mut evo = carrier();
+        if let Some(previous) = checkpoint.take() {
+            assert!(evo.restore_phase_native_drive_checkpoint(previous));
+        } else {
+            assert!(evo.enable_phase_native_learned_drive(PhaseDriveConfig {
+                learning_rate: 0.35,
+                discount: 0.90,
+                learning_enabled: true,
+                readout_enabled: true,
+                phase_learning_enabled: phase_learning,
+            }));
+            assert_eq!(evo.phase_native_drive_weights(), Some([0.0, 0.0]));
+        }
+
+        assert_eq!(evo.phase_native_receptor_count(), 0);
+        assert_eq!(evo.phase_native_circuits().len(), 0);
+        assert_eq!(evo.planning_transition_count(), 0);
+
+        let outcome = teacher_acquire(&mut evo, world);
+        assert!(
+            outcome.success,
+            "fresh source world {index} failed P3 bootstrap: {world:?}"
+        );
+        interactions += outcome.interactions;
+        checkpoint = evo.phase_native_drive_checkpoint();
+    }
+
+    (
+        checkpoint.expect("fresh drive checkpoint after eight source worlds"),
+        interactions,
+    )
+}
+
+fn wilson95(success: usize, n: usize) -> (f64, f64) {
+    let z = 1.959_963_984_540_054_f64;
+    let n = n as f64;
+    let p = success as f64 / n;
+    let denominator = 1.0 + z * z / n;
+    let center = (p + z * z / (2.0 * n)) / denominator;
+    let half = z
+        * (p * (1.0 - p) / n + z * z / (4.0 * n * n)).sqrt()
+        / denominator;
+    (center - half, center + half)
+}
+
+fn mean_sd(outcomes: &[Outcome]) -> (f64, f64) {
+    let mean = outcomes.iter().map(|o| o.interactions).sum::<usize>() as f64
+        / outcomes.len() as f64;
+    let variance = outcomes
+        .iter()
+        .map(|o| (o.interactions as f64 - mean).powi(2))
+        .sum::<f64>()
+        / outcomes.len().saturating_sub(1).max(1) as f64;
+    (mean, variance.sqrt())
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn p4_fresh_learned_drive_transfer_pack() {
+    let authority: u64 = std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse()
+        .expect("fresh seed must be u64");
+    let source_sha = std::env::var("AETERNA_SOURCE_SHA").unwrap_or_else(|_| "unknown".into());
+    let spec_sha = std::env::var("AETERNA_SPEC_SHA").unwrap_or_else(|_| "unknown".into());
+
+    let (blocks, digest) = fresh_blocks(authority);
+
+    println!(
+        "FRESH_P4_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha, spec_sha, authority, digest
+    );
+    for (sub, block) in blocks.iter().enumerate() {
+        println!(
+            "FRESH_P4_BLOCK sub={} source={:?} target={:?} random_seeds={:?}",
+            sub, block.source, block.target, block.random_seeds
+        );
+    }
+
+    let mut full = Vec::new();
+    let mut zero = Vec::new();
+    let mut lesion = Vec::new();
+    let mut zero_phase = Vec::new();
+    let mut random = Vec::new();
+    let mut teacher = Vec::new();
+    let mut per_seed = Vec::new();
+    let mut meta_interactions = 0usize;
+    let mut learned_weights = Vec::new();
+    let mut learned_observations = Vec::new();
+
+    for (sub, block) in blocks.iter().enumerate() {
+        let (checkpoint, source_cost) = train_fresh_drive(&block.source, true);
+        let (zero_phase_checkpoint, _) = train_fresh_drive(&block.source, false);
+        meta_interactions += source_cost;
+
+        let probe = cold_with_drive(checkpoint.clone());
+        let weights = probe.phase_native_drive_weights().expect("fresh learned drive weights");
+        assert!(
+            weights[0] > 0.05 && weights[1] > 0.05,
+            "sub-seed {sub} failed positive learned-drive weight gate: {weights:?}"
+        );
+        learned_weights.push(weights);
+        learned_observations.push(probe.phase_native_drive_observations());
+
+        let mut sub_success = 0usize;
+        for (case, world) in block.target.iter().enumerate() {
+            let mut full_evo = cold_with_drive(checkpoint.clone());
+            assert_eq!(full_evo.phase_native_receptor_count(), 0);
+            assert_eq!(full_evo.phase_native_circuits().len(), 0);
+            assert_eq!(full_evo.planning_transition_count(), 0);
+            let before = full_evo.phase_native_drive_weights().unwrap();
+            let full_outcome = learned_acquire(&mut full_evo, world);
+            assert_eq!(
+                full_evo.phase_native_drive_weights().unwrap(),
+                before,
+                "target drive learning changed on sub={sub} case={case}"
+            );
+            sub_success += usize::from(full_outcome.success);
+            full.push(full_outcome);
+
+            let mut zero_evo = carrier();
+            assert!(zero_evo.enable_phase_native_learned_drive(PhaseDriveConfig {
+                learning_enabled: false,
+                ..PhaseDriveConfig::default()
+            }));
+            zero_evo.set_phase_native_drive_learning_enabled(false);
+            zero.push(learned_acquire(&mut zero_evo, world));
+
+            let mut lesioned = cold_with_drive(checkpoint.clone());
+            let frontier_synapse = lesioned.phase_native_drive_synapses().unwrap()[1];
+            assert!(lesioned
+                .perturb_phase_native_synapse_for_control(frontier_synapse, 0.0, 0.0)
+                .is_some());
+            lesion.push(learned_acquire(&mut lesioned, world));
+
+            let mut no_phase = cold_with_drive(zero_phase_checkpoint.clone());
+            zero_phase.push(learned_acquire(&mut no_phase, world));
+
+            random.push(random_acquire(world, block.random_seeds[case]));
+
+            let mut ceiling = carrier();
+            teacher.push(teacher_acquire(&mut ceiling, world));
+        }
+        per_seed.push(sub_success);
+    }
+
+    let n = full.len();
+    assert_eq!(n, 80);
+
+    let full_success = full.iter().filter(|o| o.success).count();
+    let zero_success = zero.iter().filter(|o| o.success).count();
+    let lesion_success = lesion.iter().filter(|o| o.success).count();
+    let zero_phase_success = zero_phase.iter().filter(|o| o.success).count();
+    let random_success = random.iter().filter(|o| o.success).count();
+    let teacher_success = teacher.iter().filter(|o| o.success).count();
+
+    let (lo, hi) = wilson95(full_success, n);
+    let (full_mean, full_sd) = mean_sd(&full);
+    let (lesion_mean, lesion_sd) = mean_sd(&lesion);
+    let (zero_phase_mean, zero_phase_sd) = mean_sd(&zero_phase);
+    let (random_mean, random_sd) = mean_sd(&random);
+
+    println!(
+        "FRESH_P4_RESULT N={} full={}/{} wilson95=[{:.6},{:.6}] per_seed={:?} zero={}/{} lesion={}/{} zero_phase={}/{} random={}/{} p3_teacher={}/{}",
+        n,
+        full_success,
+        n,
+        lo,
+        hi,
+        per_seed,
+        zero_success,
+        n,
+        lesion_success,
+        n,
+        zero_phase_success,
+        n,
+        random_success,
+        n,
+        teacher_success,
+        n,
+    );
+    println!(
+        "FRESH_P4_COST full_mean={:.3} full_sd={:.3} lesion_mean={:.3} lesion_sd={:.3} zero_phase_mean={:.3} zero_phase_sd={:.3} random_mean={:.3} random_sd={:.3} source_meta_interactions={}",
+        full_mean,
+        full_sd,
+        lesion_mean,
+        lesion_sd,
+        zero_phase_mean,
+        zero_phase_sd,
+        random_mean,
+        random_sd,
+        meta_interactions,
+    );
+    println!(
+        "FRESH_P4_DRIVE weights={:?} observations={:?}",
+        learned_weights, learned_observations
+    );
+
+    let full_rate = full_success as f64 / n as f64;
+    let lesion_rate = lesion_success as f64 / n as f64;
+    let zero_phase_rate = zero_phase_success as f64 / n as f64;
+    let random_rate = random_success as f64 / n as f64;
+
+    assert!(full_success >= 76, "FULL_LEARNED_DRIVE must achieve >=76/80");
+    assert!(lo >= 0.87, "Wilson 95% lower bound must be >=0.87");
+    assert!(
+        per_seed.iter().all(|success| *success >= 6),
+        "every sub-seed must achieve >=6/8: {per_seed:?}"
+    );
+    assert!(zero_success <= 40, "ZERO_DRIVE must be <=40/80");
+    assert!(
+        full_rate - lesion_rate >= 0.20 || lesion_mean >= full_mean + 10.0,
+        "FRONTIER_LESION must have >=0.20 success loss or >=10 extra interactions"
+    );
+    assert!(
+        full_rate - zero_phase_rate >= 0.20 || zero_phase_mean >= full_mean + 10.0,
+        "ZERO_PHASE_DRIVE must have >=0.20 success loss or >=10 extra interactions"
+    );
+    assert!(
+        full_rate - random_rate >= 0.20 || random_mean > full_mean,
+        "RANDOM_ACTION must have >=0.20 success loss or higher mean cost"
+    );
+    assert!(teacher_success >= 76, "P3 teacher sanity ceiling must solve >=76/80");
+    assert!(full_mean <= 35.0, "FULL mean acquisition cost must be <=35");
 }
