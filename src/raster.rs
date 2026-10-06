@@ -1,164 +1,306 @@
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
 use crate::hdc::PhaseVector;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct OffsetCount {
-    pub dx: i16,
-    pub dy: i16,
-    pub count: u16,
-}
-
 #[derive(Debug, Clone)]
-pub struct RelationalMotif {
-    pub action: usize,
-    pub offsets: Vec<OffsetCount>,
-    pub need: f32,
-    pub confidence: f32,
-    pub utility: f32,
-    pub support: u32,
-    pub revision: u64,
+pub struct RasterFieldConfig {
+    pub width: usize,
+    pub height: usize,
+    pub motor_cells: usize,
+    pub patch_side: usize,
+    pub min_active: usize,
+    pub max_units: usize,
+    pub match_threshold: f32,
+    pub min_readout_support: u32,
+    pub formation_enabled: bool,
+    pub readout_enabled: bool,
+    pub learning_enabled: bool,
 }
 
-#[derive(Debug, Clone)]
-pub(crate) struct PendingMotif {
-    pub action: usize,
-    pub offsets: Vec<OffsetCount>,
-    pub target_need: bool,
-    pub support: u32,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct ActionContextTrace {
-    pub action: usize,
-    pub embedding: PhaseVector,
-    pub visits: u32,
-}
-
-pub(crate) fn scene_embedding(
-    sensory: &[f32],
-    roles: &[PhaseVector],
-) -> Option<PhaseVector> {
-    assert_eq!(sensory.len(), roles.len());
-    let active: Vec<&PhaseVector> = sensory
-        .iter()
-        .zip(roles)
-        .filter(|(value, _)| **value >= 0.5)
-        .map(|(_, role)| role)
-        .collect();
-
-    if active.is_empty() {
-        None
-    } else {
-        Some(PhaseVector::bundle(&active))
+impl RasterFieldConfig {
+    pub fn for_raster(width: usize, height: usize, motor_cells: usize) -> Self {
+        Self {
+            width,
+            height,
+            motor_cells,
+            patch_side: 3,
+            min_active: 2,
+            max_units: 64,
+            match_threshold: 0.97,
+            min_readout_support: 2,
+            formation_enabled: true,
+            readout_enabled: false,
+            learning_enabled: true,
+        }
     }
 }
 
-fn offset_histogram(
-    sensory: &[f32],
-    width: usize,
-    height: usize,
-    radius: i16,
-) -> BTreeMap<(i16, i16), u16> {
-    assert!(width > 0 && height > 0);
-    assert_eq!(sensory.len(), width * height);
+#[derive(Debug, Clone, Default)]
+pub struct OutcomeStat {
+    pub success: u32,
+    pub failure: u32,
+}
 
-    let points: Vec<(i16, i16)> = sensory
-        .iter()
-        .enumerate()
-        .filter(|(_, value)| **value >= 0.5)
-        .map(|(index, _)| ((index % width) as i16, (index / width) as i16))
-        .collect();
-
-    let mut histogram = BTreeMap::new();
-    for i in 0..points.len() {
-        for j in (i + 1)..points.len() {
-            let dx = points[j].0 - points[i].0;
-            let dy = points[j].1 - points[i].1;
-            if dx == 0 && dy == 0 {
-                continue;
-            }
-            if dx.abs().max(dy.abs()) > radius {
-                continue;
-            }
-            *histogram.entry((dx, dy)).or_insert(0) += 1;
+impl OutcomeStat {
+    fn observe(&mut self, need: bool) {
+        if need {
+            self.success = self.success.saturating_add(1);
+        } else {
+            self.failure = self.failure.saturating_add(1);
         }
     }
 
-    histogram
-}
-
-pub(crate) fn motif_signature(
-    sensory: &[f32],
-    width: usize,
-    height: usize,
-    radius: i16,
-    max_offsets: usize,
-) -> Vec<OffsetCount> {
-    if max_offsets == 0 {
-        return Vec::new();
+    fn support(&self) -> u32 {
+        self.success.saturating_add(self.failure)
     }
 
-    let histogram = offset_histogram(sensory, width, height, radius);
-    let mut entries: Vec<OffsetCount> = histogram
-        .into_iter()
-        .map(|((dx, dy), count)| OffsetCount { dx, dy, count })
-        .collect();
-
-    entries.sort_by(|a, b| {
-        b.count
-            .cmp(&a.count)
-            .then_with(|| a.dy.cmp(&b.dy))
-            .then_with(|| a.dx.cmp(&b.dx))
-    });
-    entries.truncate(max_offsets);
-    entries
+    fn signed_value(&self, min_support: u32) -> f32 {
+        let support = self.support();
+        if support < min_support || support == 0 {
+            return 0.0;
+        }
+        let success = self.success as f32;
+        let failure = self.failure as f32;
+        let mean = (success - failure) / support as f32;
+        let confidence = support as f32 / (support as f32 + 2.0);
+        mean * confidence
+    }
 }
 
-pub(crate) fn motif_matches(
-    motif: &RelationalMotif,
-    sensory: &[f32],
-    width: usize,
-    height: usize,
-    radius: i16,
-) -> bool {
-    if motif.offsets.is_empty() {
-        return false;
+#[derive(Debug, Clone)]
+pub struct PhaseFieldUnit {
+    pub id: u64,
+    pub prototype: PhaseVector,
+    pub support: u32,
+    pub utility: f32,
+    pub revision: u64,
+    pub outcomes: Vec<OutcomeStat>,
+}
+
+#[derive(Debug, Clone)]
+pub struct EvoRasterField {
+    config: RasterFieldConfig,
+    slot_roles: Vec<PhaseVector>,
+    units: Vec<PhaseFieldUnit>,
+    next_id: u64,
+}
+
+impl EvoRasterField {
+    pub fn new(config: RasterFieldConfig, hdc_dim: usize) -> Self {
+        assert!(config.width > 0 && config.height > 0);
+        assert!(config.motor_cells > 0);
+        assert!(config.patch_side > 0);
+        assert!(config.patch_side <= config.width && config.patch_side <= config.height);
+        assert!(config.min_active > 0);
+        assert!(config.max_units > 0);
+
+        // These are generic local receptive-field slots, shared at every raster
+        // translation. They do not encode world coordinates or task semantics.
+        let slots = config.patch_side * config.patch_side;
+        let slot_roles = (0..slots)
+            .map(|i| PhaseVector::from_seed(hdc_dim, 0xC011_AE00 + i as u64))
+            .collect();
+
+        Self {
+            config,
+            slot_roles,
+            units: Vec::new(),
+            next_id: 1,
+        }
     }
 
-    let histogram = offset_histogram(sensory, width, height, radius);
-    motif.offsets.iter().all(|required| {
-        histogram
-            .get(&(required.dx, required.dy))
-            .copied()
-            .unwrap_or(0)
-            >= required.count
-    })
+    pub fn set_readout_enabled(&mut self, enabled: bool) {
+        self.config.readout_enabled = enabled;
+    }
+
+    pub fn set_learning_enabled(&mut self, enabled: bool) {
+        self.config.learning_enabled = enabled;
+    }
+
+    pub fn formation_enabled(&self) -> bool {
+        self.config.formation_enabled
+    }
+
+    pub fn readout_enabled(&self) -> bool {
+        self.config.readout_enabled
+    }
+
+    pub fn units(&self) -> &[PhaseFieldUnit] {
+        &self.units
+    }
+
+    pub fn observe_factual(&mut self, raster: &[f32], action: usize, need: bool) {
+        assert!(action < self.config.motor_cells);
+        self.assert_raster(raster);
+
+        if !self.config.learning_enabled {
+            return;
+        }
+
+        let traces = self.patch_traces(raster);
+
+        if self.config.formation_enabled {
+            for trace in &traces {
+                self.match_or_recruit(trace);
+            }
+        }
+
+        let active = self.active_units_from_traces(&traces);
+        for idx in active {
+            let stat = &mut self.units[idx].outcomes[action];
+            let before = stat.signed_value(self.config.min_readout_support);
+            stat.observe(need);
+            let after = stat.signed_value(self.config.min_readout_support);
+
+            let unit = &mut self.units[idx];
+            unit.support = unit.support.saturating_add(1);
+            unit.utility = (unit.utility + after * 0.05).clamp(-1.0, 1.0);
+            if before.signum() != 0.0 && after.signum() != before.signum() {
+                unit.revision = unit.revision.saturating_add(1);
+            }
+        }
+    }
+
+    pub fn motor_evidence(&self, raster: &[f32]) -> Vec<f32> {
+        self.assert_raster(raster);
+        let mut evidence = vec![0.0; self.config.motor_cells];
+
+        if !self.config.readout_enabled || self.units.is_empty() {
+            return evidence;
+        }
+
+        let traces = self.patch_traces(raster);
+        let active = self.active_units_from_traces(&traces);
+
+        for idx in active {
+            let unit = &self.units[idx];
+            for (action, stat) in unit.outcomes.iter().enumerate() {
+                evidence[action] += stat.signed_value(self.config.min_readout_support)
+                    * (0.5 + 0.5 * unit.utility.max(0.0));
+            }
+        }
+
+        evidence
+    }
+
+    fn match_or_recruit(&mut self, trace: &PhaseVector) {
+        let mut best: Option<(usize, f32)> = None;
+        for (idx, unit) in self.units.iter().enumerate() {
+            let similarity = unit.prototype.similarity(trace);
+            if best.map(|(_, score)| similarity > score).unwrap_or(true) {
+                best = Some((idx, similarity));
+            }
+        }
+
+        if let Some((idx, similarity)) = best {
+            if similarity >= self.config.match_threshold {
+                self.units[idx].support = self.units[idx].support.saturating_add(1);
+                return;
+            }
+        }
+
+        if self.units.len() >= self.config.max_units {
+            return;
+        }
+
+        let id = self.next_id;
+        self.next_id = self.next_id.saturating_add(1);
+        self.units.push(PhaseFieldUnit {
+            id,
+            prototype: trace.clone(),
+            support: 1,
+            utility: 0.0,
+            revision: 0,
+            outcomes: vec![OutcomeStat::default(); self.config.motor_cells],
+        });
+    }
+
+    fn active_units_from_traces(&self, traces: &[PhaseVector]) -> Vec<usize> {
+        let mut active = BTreeSet::new();
+
+        for trace in traces {
+            let mut best: Option<(usize, f32)> = None;
+            for (idx, unit) in self.units.iter().enumerate() {
+                let similarity = unit.prototype.similarity(trace);
+                if best.map(|(_, score)| similarity > score).unwrap_or(true) {
+                    best = Some((idx, similarity));
+                }
+            }
+
+            if let Some((idx, similarity)) = best {
+                if similarity >= self.config.match_threshold {
+                    active.insert(idx);
+                }
+            }
+        }
+
+        active.into_iter().collect()
+    }
+
+    fn patch_traces(&self, raster: &[f32]) -> Vec<PhaseVector> {
+        let mut traces = Vec::new();
+        let side = self.config.patch_side;
+
+        for top in 0..=(self.config.height - side) {
+            for left in 0..=(self.config.width - side) {
+                let mut active_roles = Vec::new();
+
+                for local_y in 0..side {
+                    for local_x in 0..side {
+                        let global_x = left + local_x;
+                        let global_y = top + local_y;
+                        let value = raster[global_y * self.config.width + global_x];
+                        if value >= 0.5 {
+                            let slot = local_y * side + local_x;
+                            active_roles.push(&self.slot_roles[slot]);
+                        }
+                    }
+                }
+
+                if active_roles.len() >= self.config.min_active {
+                    traces.push(PhaseVector::bundle(&active_roles));
+                }
+            }
+        }
+
+        traces
+    }
+
+    fn assert_raster(&self, raster: &[f32]) {
+        assert_eq!(raster.len(), self.config.width * self.config.height);
+        assert!(raster
+            .iter()
+            .all(|x| x.is_finite() && *x >= 0.0 && *x <= 1.0));
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn raster(width: usize, height: usize, points: &[(usize, usize)]) -> Vec<f32> {
-        let mut values = vec![0.0; width * height];
+    fn raster(points: &[(usize, usize)]) -> Vec<f32> {
+        let mut values = vec![0.0; 12 * 12];
         for (x, y) in points {
-            values[y * width + x] = 1.0;
+            values[y * 12 + x] = 1.0;
         }
         values
     }
 
     #[test]
-    fn relative_signature_survives_translation() {
-        let a = raster(12, 12, &[(1, 1), (2, 1), (3, 1)]);
-        let b = raster(12, 12, &[(7, 8), (8, 8), (9, 8)]);
-        let c = raster(12, 12, &[(4, 2), (4, 3), (4, 4)]);
+    fn learned_local_phase_motif_reappears_after_translation() {
+        let mut field = EvoRasterField::new(RasterFieldConfig::for_raster(12, 12, 2), 128);
 
-        let sa = motif_signature(&a, 12, 12, 3, 2);
-        let sb = motif_signature(&b, 12, 12, 3, 2);
-        let sc = motif_signature(&c, 12, 12, 3, 2);
+        let first = raster(&[(1, 1), (2, 1), (3, 1)]);
+        field.observe_factual(&first, 0, true);
+        assert!(!field.units().is_empty());
 
-        assert_eq!(sa, sb);
-        assert_ne!(sa, sc);
+        let learned = field.units().len();
+        let shifted = raster(&[(7, 8), (8, 8), (9, 8)]);
+        field.observe_factual(&shifted, 0, true);
+
+        // Shared local receptive-field roles mean the translated relation reuses
+        // existing carrier motifs rather than requiring one absolute-address unit
+        // for every translation.
+        assert!(field.units().len() <= learned + 2);
     }
 }
