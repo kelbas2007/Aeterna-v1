@@ -129,6 +129,15 @@ impl EvoRasterField {
         &self.units
     }
 
+    pub fn active_unit_ids(&self, raster: &[f32]) -> Vec<u64> {
+        self.assert_raster(raster);
+        let traces = self.patch_traces(raster);
+        self.active_units_from_traces(&traces)
+            .into_iter()
+            .map(|idx| self.units[idx].id)
+            .collect()
+    }
+
     pub fn observe_factual(&mut self, raster: &[f32], action: usize, need: bool) {
         assert!(action < self.config.motor_cells);
         self.assert_raster(raster);
