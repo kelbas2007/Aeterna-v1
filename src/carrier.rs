@@ -1047,9 +1047,16 @@ impl EvoPhase {
     }
 
     fn load_real(&mut self, sensory: &[f32], need: bool) {
+        // In the legacy carrier path, active factual channels retain the historical
+        // tiny phase-adaptation step. Phase-native P1/P2 instead treats sensory
+        // cell phase as an intrinsic physical reference: REAL input changes charge,
+        // while learned synaptic offsets carry adaptation. Permanently drifting the
+        // shared sensory reference on every later observation destroys coherence of
+        // older decoder synapses even when those synapses are never modified.
+        let native_stable_sensory_phase = self.phase_native.is_some();
         for (i, x) in sensory.iter().copied().enumerate() {
             self.cells[i].charge = x.clamp(0.0, 1.0);
-            if x >= 0.5 {
+            if x >= 0.5 && !native_stable_sensory_phase {
                 self.cells[i].phase = wrap_phase(self.cells[i].phase + 0.01);
             }
         }
