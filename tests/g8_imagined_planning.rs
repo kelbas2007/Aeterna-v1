@@ -128,7 +128,8 @@ fn g8_imagination_selects_delayed_reward_plan_before_physical_action() {
             mature.observe_initial_real(&start, false);
             let before = mature.current_real().expect("REAL PRE").clone();
 
-            let decision = mature.plan_imagined(&start).expect("full imagined plan");\n            println!("G8_DECISION perm={:?} origin={:?} decision={:?}", perm, origin, decision);
+            let decision = mature.plan_imagined(&start).expect("full imagined plan");
+            println!("G8_DECISION perm={:?} origin={:?} decision={:?}", perm, origin, decision);
             assert_eq!(decision.first_action, perm[1]);
             assert!(decision.selected_depth >= 3);
             assert!(mature.imagined_rollout_nodes() >= 2);
