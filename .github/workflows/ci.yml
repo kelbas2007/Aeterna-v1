@@ -1,4 +1,5 @@
 name: evo-ci
+# P3 deterministic preflight rerun after transient-REAL fingerprint fix
 
 on:
   workflow_dispatch:
