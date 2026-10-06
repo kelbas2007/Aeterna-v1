@@ -16,7 +16,8 @@ Date: 2026-10-06
 **G7 FRESH-2 PASS — whole-organism fresh open-world qualification.**  
 **G8 MECHANISM PASS — carrier-owned imagined delayed-reward planning.**  
 **G8-FRESH-1 FAIL — fresh depth/model-integrity witness failed; pack burned.**  
-**G8-FRESH-2 PASS — fresh delayed-reward planning under an explicit carrier-observability contract.**
+**G8-FRESH-2 PASS — fresh delayed-reward planning under an explicit carrier-observability contract.**  
+**G9 MECHANISM PASS — recurrent carrier belief resolves deliberately aliased current observations.**
 
 No AGI claim. No production promotion.
 
@@ -316,10 +317,25 @@ Run `37516415100` PASSed on source `9770b6d4e7b1b6f6721f8b33290d81120fd61678`.
 
 The pack is burned. The qualified claim is intentionally conditional: bounded delayed-reward planning works when the carrier observation is identifiable. This does not yet solve planning under perceptual aliasing / POMDP uncertainty.
 
+## G9 belief-state mechanism result
+
+Workflow `37517251841` PASSed on source `20c2599b6a5c0a68b44eed9537df443aa9c80e9c`.
+
+- current ambiguous corridor raster is the same for both evaluator contexts;
+- FULL_BELIEF: 8/8;
+- OBSERVATION_ONLY: 4/8;
+- RESET_HISTORY: 1/8;
+- successful terminal actions span all four opaque motor IDs;
+- the recurrent carrier belief keeps the two histories distinct even though the current observation is aliased;
+- the recurrent state is formed from generic order-sensitive HDC/FHRR permutation + action binding + observation binding;
+- previous G0-G8 regressions and release build remain PASS.
+
+This is a mechanism witness, not yet statistical POMDP qualification.
+
 ## Next gate
 
-**G9: carrier-owned belief-state / history-conditioned planning under perceptual aliasing.**
+**G9-FRESH: one-use statistical qualification of history-conditioned planning.**
 
-The next mechanism must deliberately allow physically different world states to produce the same current observation. EvoPhase must use its own action/observation history and acquired transition state to maintain rival hidden-state beliefs, choose actions from that belief state, and outperform a matched memoryless observation-only planner.
+Freeze source/spec, then evaluate >=80 fresh partially observable episodes across >=10 sub-seeds, randomized cue/corridor relations, opaque motor permutations, held-out translations and more than one history length. Compare FULL_BELIEF with OBSERVATION_ONLY and RESET_HISTORY, report Wilson 95% CI and physical action cost, and burn the pack after first observation.
 
 CI is manual-only between qualification checkpoints.
