@@ -2,9 +2,6 @@ name: evo-ci
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - genesis/full-evophase
 
 permissions:
   contents: read
