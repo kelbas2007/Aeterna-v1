@@ -28,7 +28,9 @@ Repeated successful relational carrier trajectories consolidate into one learned
 
 ## G4 — Program revision
 
-A factual counterexample must change the same acquired macro and invalidate dependent predictions without deleting the counterexample.
+Status: PASS.
+
+A world-law change revises the same acquired macro identity. Counterexamples are preserved, obsolete action evidence accumulates failures, a newly supported action takes over for the changed branch, and the unchanged branch is retained.
 
 ## G5 — Hierarchical reuse
 
