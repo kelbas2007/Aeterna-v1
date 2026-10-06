@@ -10,7 +10,7 @@ Date: 2026-10-06
 **G3 PASS — first acquired reusable EvoPhase macro/program.**  
 **G4 PASS — factual revision of the same acquired macro identity.**
 
-No AGI claim. No production promotion.
+No AGI claim. No production promotion.\n\n**Validation note:** G0-G4 are now classified as preregistered **mechanism PASSes**, not broad statistical generalization claims. Fresh statistical qualification is pending under `docs/FRESH_QUALIFICATION_PROTOCOL.md`.
 
 The mandatory boundary remains **full EvoPhase cognitive ownership**. Rust implements carrier physics and the trusted shell; task-level adaptive state must live in EvoPhase-owned structures.
 
@@ -119,9 +119,7 @@ Workflow: `37499873532`
 - REVISION succeeds 2/2 on held-out translations;
 - NO_REVISION fails the changed context.
 
-## Next gate
-
-**G5: hierarchical reuse of acquired macros.**
+## Validation hardening now active\n\nBefore using G0-G4 as evidence of broad generalization, the project now requires >=64 one-use fresh held-out worlds, >=10 sub-seeds, confidence intervals, randomized opaque-action relabeling where applicable, stronger external/simple baselines, and a mechanical ownership audit. G1-B is explicitly reworded: translation cancellation is an inherited FHRR/HDC inductive bias; the learned part is the carrier unit/outcome association.\n\n## Next gate\n\n**G5: hierarchical reuse of acquired macros.**
 
 An already acquired macro must become a child building block of a newly acquired higher-level macro. The hierarchy must be acquired from experience, transfer to held-out bindings, and reduce physical/search cost relative to a matched organism that cannot reuse acquired macros as children.
 
