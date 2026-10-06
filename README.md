@@ -78,6 +78,26 @@ The drive therefore transfers as a learned way of valuing experience rather than
 
 See [P4 protocol](docs/PHASE_NATIVE_P4_PROTOCOL.md), [fresh P4 protocol](docs/PHASE_NATIVE_P4_FRESH_PROTOCOL.md), and [P4 result](docs/PHASE_NATIVE_P4_RESULT.md).
 
+
+### P5: one persistent organism across several changing worlds
+
+P5 keeps a single target EvoPhase alive while it acquires four distinct reset-chain worlds in sequence. No evaluator world/task ID enters cognition and no per-world checkpoint is swapped in during acquisition or retention.
+
+The first preflight exposed a genuine lifetime bug rather than a test-tuning issue. Old A synapses remained unchanged after B learning, but shared raw sensory-cell phases drifted by +0.01 on every observation, invalidating the phase coherence of long-lived P2 decoder offsets. In phase-native mode, REAL input now changes sensory charge without permanently moving the intrinsic sensory phase reference; adaptation remains in synaptic parameters.
+
+Workflow `37534699260` passed the fixed preregistered mechanism:
+
+- persistent A/B/C/D acquisition costs **[9,24,12,20]**;
+- retention revisit cost **34** actions;
+- changed-B repair **9** actions;
+- receptors grow **[4,9,13,18]**, circuits **[7,19,27,38]**;
+- ZERO_DRIVE_PERSISTENT **0/4**;
+- NO_GROWTH_PERSISTENT **0/4**;
+- a full post-lifetime checkpoint restored A/revised-B/C/D in a newly constructed EvoPhase;
+- full optimized regressions and Release build PASS.
+
+This is a mechanism result, not yet fresh statistical continual-learning qualification. See [P5 protocol](docs/PHASE_NATIVE_P5_PROTOCOL.md) and [P5 result](docs/PHASE_NATIVE_P5_RESULT.md).
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
@@ -117,8 +137,8 @@ Matched controls must preserve raw observations, primitive substrate, factual ou
 
 Development is on **`main`**, following the owner's merge of `genesis/full-evophase`.
 
-Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1–P4 result records document bounded phase-native checkpoints without rewriting that history.
+Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1–P5 result records document bounded phase-native checkpoints without rewriting that history.
 
-P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap for that family: exploration value is learned from factual model gain and transferred through phase-native synapses. The next architectural bottleneck is **continual self-directed learning in one persistent organism**: retain and selectively revise knowledge across multiple changing worlds without evaluator task labels or catastrophic overwrite. G10 composite-concept construction remains a separate preregistered capability target.
+P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now demonstrates the continual-retention mechanism in one persistent organism after fixing shared sensory-phase drift. The next evidence gate is **fresh statistical P5 qualification** across randomized sequential worlds; G10 composite-concept construction remains a separate preregistered capability target.
 
 Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Any future fresh qualification requires a newly frozen source/spec and a new first-attempt authority run.
