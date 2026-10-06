@@ -1,6 +1,7 @@
 use crate::authority::Authority;
 use crate::epistemic::{EvoEpistemicState, WorldHypothesis};
 use crate::hdc::PhaseVector;
+use crate::macro_memory::{EvoMacroMemory, MacroAssembly, MacroConfig};
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
 use crate::raster::{EvoRasterField, RasterFieldConfig};
 
@@ -107,6 +108,7 @@ pub struct EvoPhase {
     motor_roles: Vec<PhaseVector>,
     raster_field: Option<EvoRasterField>,
     epistemic_state: Option<EvoEpistemicState>,
+    macro_memory: Option<EvoMacroMemory>,
 }
 
 impl EvoPhase {
@@ -149,6 +151,7 @@ impl EvoPhase {
             motor_roles,
             raster_field: None,
             epistemic_state: None,
+            macro_memory: None,
         }
     }
 
@@ -326,6 +329,79 @@ impl EvoPhase {
             .as_ref()?
             .encode_relational_trace(actual_post_sensory)?;
         Some(predicted.similarity(&actual))
+    }
+
+    pub fn enable_macro_memory(&mut self, config: MacroConfig) {
+        assert_eq!(
+            config.motor_cells, self.config.motor_cells,
+            "macro memory and carrier must share motor count"
+        );
+        self.macro_memory = Some(EvoMacroMemory::new(config));
+    }
+
+    pub fn set_macro_readout_enabled(&mut self, enabled: bool) {
+        if let Some(memory) = self.macro_memory.as_mut() {
+            memory.set_readout_enabled(enabled);
+        }
+    }
+
+    pub fn set_macro_learning_enabled(&mut self, enabled: bool) {
+        if let Some(memory) = self.macro_memory.as_mut() {
+            memory.set_learning_enabled(enabled);
+        }
+    }
+
+    pub fn macros(&self) -> &[MacroAssembly] {
+        self.macro_memory
+            .as_ref()
+            .map(EvoMacroMemory::macros)
+            .unwrap_or(&[])
+    }
+
+    pub fn observe_successful_macro_episode(
+        &mut self,
+        pre_sensory: &[f32],
+        first_action: usize,
+        mid_sensory: &[f32],
+        second_action: usize,
+        need: bool,
+    ) {
+        let field = self
+            .raster_field
+            .as_ref()
+            .expect("macro learning requires an attached raw raster field");
+
+        let pre = field
+            .encode_relational_trace(pre_sensory)
+            .expect("macro learning requires a relational PRE trace");
+        let mid = field
+            .encode_relational_trace(mid_sensory)
+            .expect("macro learning requires a relational MID trace");
+
+        self.macro_memory
+            .as_mut()
+            .expect("enable_macro_memory must be called first")
+            .observe_successful_episode(pre, first_action, mid, second_action, need);
+    }
+
+    pub fn begin_macro_invocation(&mut self, pre_sensory: &[f32]) -> Option<usize> {
+        let trace = self
+            .raster_field
+            .as_ref()?
+            .encode_relational_trace(pre_sensory)?;
+
+        self.macro_memory.as_mut()?.begin(&trace)
+    }
+
+    pub fn continue_macro_invocation(&mut self, mid_sensory: &[f32]) -> Option<usize> {
+        let trace = self
+            .raster_field
+            .as_ref()?
+            .encode_relational_trace(mid_sensory)?;
+
+        self.macro_memory
+            .as_mut()?
+            .continue_after_factual_post(&trace)
     }
 
     pub fn observe_initial_real(&mut self, sensory: &[f32], need: bool) {
