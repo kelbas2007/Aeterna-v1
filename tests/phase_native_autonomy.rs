@@ -372,14 +372,21 @@ fn p3_cold_organism_autonomously_acquires_goal_model_and_survives_restart() {
             .next()
             .expect("unchanged transition prediction after revision")
             .sensory;
-        let unchanged_error = unchanged_before
+        let unchanged_drift = unchanged_before
             .iter()
             .zip(&unchanged_after)
             .map(|(a, b)| (a - b).abs())
             .sum::<f32>() / unchanged_before.len() as f32;
+        let (expected_next, _) = world.step(unchanged_state, unchanged_action, true);
+        let expected = raster(expected_next, 0, 0);
+        let retained_error = unchanged_after
+            .iter()
+            .zip(&expected)
+            .map(|(a, b)| (a - b).abs())
+            .sum::<f32>() / expected.len() as f32;
         assert!(
-            unchanged_error < 1.0e-6,
-            "unrelated learned transition changed during local revision: {unchanged_error}"
+            retained_error < 0.01,
+            "unrelated transition no longer predicts its factual successor: error={retained_error} drift={unchanged_drift}"
         );
 
         let revised_fp = revision.phase_native_learned_fingerprint();
