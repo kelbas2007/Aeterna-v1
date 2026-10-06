@@ -238,7 +238,7 @@ impl EvoPhase {
             let score =
                 2.0 * p.need
                 + 0.30 * uncertainty
-                + 0.35 * novelty
+                + 0.80 * novelty
                 + 0.20 * branch_utility
                 + 0.05 * coherence;
 
