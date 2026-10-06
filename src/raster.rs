@@ -272,7 +272,24 @@ impl EvoRasterField {
             return None;
         }
 
-        let mut fragments = Vec::new();
+        // Translation-equivariant oriented pair fragments. We keep *all* pair
+        // relations; Rust does not select a task-relevant offset or classifier.
+        // They are especially useful when a point is dropped or a distractor is
+        // added, because the surviving factual substructure remains present.
+        let mut oriented = Vec::new();
+        for i in 0..points.len() {
+            for j in (i + 1)..points.len() {
+                let dx = points[j].0 - points[i].0;
+                let dy = points[j].1 - points[i].1;
+                let ux = (dx + 16) as u64;
+                let uy = (dy + 16) as u64;
+                oriented.push(0x4f52_4945_4e54_0000u64 ^ (ux << 8) ^ uy);
+            }
+        }
+
+        // Normalized triangle fragments. These carry no orientation or absolute
+        // scale and therefore provide a second, generic shape-equivalence view.
+        let mut invariant = Vec::new();
         for i in 0..points.len() {
             for j in (i + 1)..points.len() {
                 for k in (j + 1)..points.len() {
@@ -287,21 +304,18 @@ impl EvoRasterField {
                         continue;
                     }
 
-                    // Two normalized side-length ratios define triangle shape up
-                    // to translation, rotation/reflection and uniform scale.
-                    // Quantization is generic substrate geometry, not a task label.
                     let q0 = ((d2[0] * 255 + max / 2) / max).min(255) as u64;
                     let q1 = ((d2[1] * 255 + max / 2) / max).min(255) as u64;
                     let token = 0x5348_4150_4500_0000u64 ^ (q0 << 8) ^ q1;
-                    fragments.push(token);
+                    invariant.push(token);
                 }
             }
         }
 
-        if fragments.is_empty() {
+        if oriented.is_empty() && invariant.is_empty() {
             None
         } else {
-            Some(ShapeTrace::new(fragments))
+            Some(ShapeTrace::from_fragments(oriented, invariant))
         }
     }
 
