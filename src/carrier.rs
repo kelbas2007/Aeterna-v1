@@ -10,6 +10,11 @@ use crate::planning::{EvoImaginationPlanner, PlanDecision, PlanningConfig};
 use crate::raster::{EvoRasterField, RasterFieldConfig};
 use crate::trace::CarrierTrace;
 
+#[path = "phase_native.rs"]
+mod phase_native;
+pub use phase_native::{PhaseCircuitInfo, PhaseNativeConfig};
+use phase_native::PhaseNativeState;
+
 #[derive(Debug, Clone)]
 pub struct EvoConfig {
     pub sensory_cells: usize,
@@ -119,6 +124,7 @@ pub struct EvoPhase {
     robust_high_level_perception: bool,
     imagination_planner: Option<EvoImaginationPlanner>,
     belief_state: Option<EvoBeliefState>,
+    phase_native: Option<PhaseNativeState>,
 }
 
 impl EvoPhase {
@@ -167,6 +173,7 @@ impl EvoPhase {
             robust_high_level_perception: false,
             imagination_planner: None,
             belief_state: None,
+            phase_native: None,
         }
     }
 
@@ -279,28 +286,38 @@ impl EvoPhase {
     ) -> Option<CarrierTrace> {
         let from = self.belief_state.as_ref()?.current_trace()?;
         let to = self.advance_belief(action, post_sensory)?;
-
-        self.imagination_planner
-            .as_mut()
-            .expect("enable_imagination_planner must be called first")
-            .observe_factual_transition(from, action, to.clone(), factual_value);
-
+        if self.phase_native.is_some() {
+            self.observe_phase_native_trace(from, action, to.clone(), factual_value);
+        } else {
+            self.imagination_planner
+                .as_mut()
+                .expect("enable a planning backend first")
+                .observe_factual_transition(from, action, to.clone(), factual_value);
+        }
         Some(to)
     }
 
     pub fn plan_from_belief(&mut self) -> Option<PlanDecision> {
         let trace = self.belief_state.as_ref()?.current_trace()?;
+        if self.phase_native.is_some() {
+            return self.phase_native_decision(&trace, None);
+        }
         self.imagination_planner.as_mut()?.plan(&trace)
     }
 
     pub fn plan_from_belief_depth(&mut self, depth: usize) -> Option<PlanDecision> {
         let trace = self.belief_state.as_ref()?.current_trace()?;
+        if self.phase_native.is_some() {
+            return self.phase_native_decision(&trace, Some(depth));
+        }
         self.imagination_planner
             .as_mut()?
             .plan_with_depth(&trace, depth)
     }
 
+    /// Legacy graph reference backend; not a claim of phase-native execution.
     pub fn enable_imagination_planner(&mut self, config: PlanningConfig) {
+        assert!(self.phase_native.is_none(), "native mode has no graph fallback");
         assert_eq!(
             config.motor_cells, self.config.motor_cells,
             "planner and carrier must share motor count"
@@ -309,11 +326,15 @@ impl EvoPhase {
     }
 
     pub fn set_planning_learning_enabled(&mut self, enabled: bool) {
+        if let Some(native) = self.phase_native.as_mut() {
+            native.config.learning_enabled = enabled;
+        }
         if let Some(planner) = self.imagination_planner.as_mut() {
             planner.set_learning_enabled(enabled);
         }
     }
 
+    /// Number of legacy reference-table entries. Zero in native mode.
     pub fn planning_transition_count(&self) -> usize {
         self.imagination_planner
             .as_ref()
@@ -341,20 +362,31 @@ impl EvoPhase {
         let post = self
             .encode_high_level_trace(post_sensory)
             .expect("planning transition requires POST carrier trace");
-
+        if self.phase_native.is_some() {
+            self.observe_phase_native_trace(pre, action, post, factual_value);
+            return;
+        }
         self.imagination_planner
             .as_mut()
-            .expect("enable_imagination_planner must be called first")
+            .expect("enable a planning backend first")
             .observe_factual_transition(pre, action, post, factual_value);
     }
 
     pub fn plan_imagined(&mut self, sensory: &[f32]) -> Option<PlanDecision> {
         let trace = self.encode_high_level_trace(sensory)?;
+        if self.phase_native.is_some() {
+            return self.phase_native_decision(&trace, None);
+        }
         self.imagination_planner.as_mut()?.plan(&trace)
     }
 
     pub fn choose_immediate_model(&mut self, sensory: &[f32]) -> Option<PlanDecision> {
         let trace = self.encode_high_level_trace(sensory)?;
+        if self.phase_native.is_some() {
+            let mut decision = self.phase_native_decision(&trace, Some(1))?;
+            decision.authority = Authority::Model;
+            return Some(decision);
+        }
         self.imagination_planner
             .as_mut()?
             .choose_immediate_model(&trace)
@@ -366,12 +398,16 @@ impl EvoPhase {
         depth: usize,
     ) -> Option<PlanDecision> {
         let trace = self.encode_high_level_trace(sensory)?;
+        if self.phase_native.is_some() {
+            return self.phase_native_decision(&trace, Some(depth));
+        }
         self.imagination_planner
             .as_mut()?
             .plan_with_depth(&trace, depth)
     }
 
     pub fn permute_planning_successors_for_control(&mut self) {
+        assert!(self.phase_native.is_none(), "native controls must intervene on actual synapses");
         if let Some(planner) = self.imagination_planner.as_mut() {
             planner.permute_successors_for_control();
         }
