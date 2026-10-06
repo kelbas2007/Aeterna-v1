@@ -149,37 +149,43 @@ impl EvoMacroMemory {
             return;
         }
 
+        if let Some(idx) = self.matching_macro_index(&pre, first_action) {
+            // G4 ablation: once a macro exists, disabling revision freezes that
+            // acquired program while preserving the same external factual stream.
+            if !self.config.revision_enabled {
+                return;
+            }
+
+            if need {
+                self.update_promoted(idx, &mid, second_action);
+                return;
+            }
+
+            let match_threshold = self.config.match_threshold;
+            let macro_assembly = &mut self.macros[idx];
+            macro_assembly.counterexamples.push(MacroCounterexample {
+                post: mid.clone(),
+                action: second_action,
+                observed_need: false,
+            });
+
+            if let Some(branch) = macro_assembly.branches.iter_mut().find(|branch| {
+                branch.next_action == second_action
+                    && branch.post.similarity(&mid) >= match_threshold
+            }) {
+                branch.failures = branch.failures.saturating_add(1);
+                branch.revision = branch.revision.saturating_add(1);
+            }
+
+            macro_assembly.revision = macro_assembly.revision.saturating_add(1);
+            macro_assembly.utility = (macro_assembly.utility - 0.03).clamp(-1.0, 1.0);
+            return;
+        }
+
+        // Before a macro exists, positive factual trajectories may still form one.
         if need {
             self.observe_positive_episode(pre, first_action, mid, second_action);
-            return;
         }
-
-        if !self.config.revision_enabled {
-            return;
-        }
-
-        let Some(idx) = self.matching_macro_index(&pre, first_action) else {
-            return;
-        };
-
-        let match_threshold = self.config.match_threshold;
-        let macro_assembly = &mut self.macros[idx];
-        macro_assembly.counterexamples.push(MacroCounterexample {
-            post: mid.clone(),
-            action: second_action,
-            observed_need: false,
-        });
-
-        if let Some(branch) = macro_assembly.branches.iter_mut().find(|branch| {
-            branch.next_action == second_action
-                && branch.post.similarity(&mid) >= match_threshold
-        }) {
-            branch.failures = branch.failures.saturating_add(1);
-            branch.revision = branch.revision.saturating_add(1);
-        }
-
-        macro_assembly.revision = macro_assembly.revision.saturating_add(1);
-        macro_assembly.utility = (macro_assembly.utility - 0.03).clamp(-1.0, 1.0);
     }
 
     pub fn begin(&mut self, pre: &PhaseVector) -> Option<usize> {
