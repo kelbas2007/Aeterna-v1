@@ -18,7 +18,7 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G5 | CI-1 | TECHNICAL_FAIL_EVALUATOR_BOUNDS | First G5 CI run reached the hierarchy test but one evaluator-only held-out translation exceeded the 12x12 raster boundary. No cognitive verdict; runtime mechanism unchanged. |
 | G5 | CI-2 | PASS_HIERARCHICAL_REUSE | CI run 37503517616 at commit `c1292adc5c230c0616ce8c18a3829bd1f53947db`: all 22 Rust tests PASS and release build PASS. Two independently acquired child macros are reused by newly acquired parent macros that store child carrier IDs, not flattened primitive scripts. Parent readout transfers to unseen outer-cue translations and reduces held-out candidate-sequence evaluations from 5 to 2 and primitive search actions from 16 to 8 across two tasks. Reversing child acquisition order permutes opaque child IDs while preserving the hierarchy advantage. Parent tuition cost: 72 primitive actions per arm. |
 | G6 | CI-1 | PASS_LEARNED_EXPLORATION_STRATEGY | CI run 37505474193 at commit `cd8330aed18d5d375aa6998420108faefe5042ef`: regressions and release build PASS. Strategy starts with zero weights, receives 32 factual tuition probes across eight 2-rival families with informative opaque probe identity rotated over all four IDs, and learns weights [0.6917086, 0.109836645, 0.109836645]. With strategy learning frozen, transfer to eight 3-rival worlds selects the maximally informative probe first in 7/8 versus ZERO_STRATEGY 2/8; direct disagreement oracle is also 7/8. Learned mean identification cost is 1.0000 probe versus 2.3958 for the all-24-random-orders baseline. |
-| G7 | — | NOT_STARTED | Open-world qualification |
+| G7 | FRESH-1 | FAIL_ROBUST_PERCEPTION_BOUNDARY | One-use fresh run 37508620132 at source `7f6f0ed70cd808d7d4fe64c3c28d0b2c2245d65f`, spec `a36fef13b97e0a83141c25dac5b7850f2281f582`, pack digest `8aee63cd272b8536`: FULL 20/80 = 25.0%, Wilson95 [0.1681,0.3548]. Every sub-seed was 2/8. Distractor/dropout/rotation/scale were each 0/20. ZERO_EXPLORATION and NO_HIERARCHY were also 20/80; UNREVISED was 6/80. Completed cognitive FAIL; pack permanently burned for qualification. |
 
 ## What G0 PASS establishes
 
@@ -196,3 +196,34 @@ Within the preregistered cross-family exploration world:
 - G0-G5 and ownership regressions remain PASS.
 
 This is a bounded learned exploration strategy over inherited epistemic features. It does not show self-invention of the disagreement feature, autonomous curriculum generation, or open-world scientific reasoning.
+
+
+## G7 FRESH-1 failure diagnosis
+
+Fresh authority:
+- source SHA: `7f6f0ed70cd808d7d4fe64c3c28d0b2c2245d65f`;
+- protocol blob SHA: `a36fef13b97e0a83141c25dac5b7850f2281f582`;
+- authority seed / workflow: `37508620132`;
+- world-pack digest: `8aee63cd272b8536`;
+- N=80 across 10 independently acquired organisms.
+
+Observed:
+- FULL_ORGANISM: 20/80 = 0.2500;
+- Wilson 95%: [0.1681, 0.3548];
+- per-sub-seed: [2,2,2,2,2,2,2,2,2,2];
+- ZERO_EXPLORATION: 20/80;
+- NO_HIERARCHY: 20/80;
+- UNREVISED_CHILD: 6/80;
+- distractor: 0/20;
+- dropout: 0/20;
+- rotation: 0/20;
+- scale: 0/20.
+
+The nuisance assignment contains exactly two clean worlds per 8-world sub-seed. The 2/8-per-seed result together with 0/20 in every nuisance category is therefore consistent with a sharp upstream representation boundary: the whole chain works on clean translated worlds and collapses whenever any preregistered nuisance is applied.
+
+Downstream mechanisms still show causal value on cases that reach them:
+- matched probe cost FULL 1.05 vs ZERO_EXPLORATION 2.70;
+- matched parent-candidate cost FULL 1.00 vs NO_HIERARCHY 2.65;
+- revision-required worlds: FULL 14/57 vs UNREVISED_CHILD 0/57.
+
+No G7 PASS is claimed. This pack is burned and may be used only for diagnosis/regression, never as fresh evidence after redesign.
