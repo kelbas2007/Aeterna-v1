@@ -163,6 +163,131 @@ fn r1_robust_high_level_perception_survives_each_single_nuisance_end_to_end() {
 }
 
 #[test]
+fn r1_nonfresh_mixed_80_world_development_pack() {
+    const DEV_SEED: u64 = 0xA7E7_5101_2026_1006;
+
+    let mut total = 0usize;
+    let mut full_ok = 0usize;
+    let mut zero_ok = 0usize;
+    let mut no_hierarchy_ok = 0usize;
+    let mut unrevised_ok = 0usize;
+
+    let mut mask_total = [0usize; 16];
+    let mut mask_success = [0usize; 16];
+    let mut matched_full_probes = 0usize;
+    let mut matched_zero_probes = 0usize;
+    let mut matched_probe_cases = 0usize;
+    let mut matched_full_candidates = 0usize;
+    let mut matched_no_hierarchy_candidates = 0usize;
+    let mut matched_candidate_cases = 0usize;
+
+    for sub in 0..10u64 {
+        let maturity_seed = DEV_SEED
+            ^ sub.wrapping_mul(0xD1B5_4A32_D192_ED03)
+            ^ 0x771B_A37E_2C91_5F04;
+        let mut perm_rng = Rng::new(maturity_seed);
+        let perm = perm4(&mut perm_rng);
+        let worlds = generate_worlds(DEV_SEED, sub, perm);
+
+        let mut mature = build_mature(maturity_seed);
+        assert_eq!(mature.perm, perm);
+        prepare_worlds(&mut mature, &worlds);
+
+        let mut sub_ok = 0usize;
+        for world in worlds {
+            let full = score_world(&mature, world, Arm::Full);
+            let zero = score_world(&mature, world, Arm::ZeroExploration);
+            let no_hierarchy = score_world(&mature, world, Arm::NoHierarchy);
+            let unrevised = score_world(&mature, world, Arm::UnrevisedChild);
+
+            total += 1;
+            full_ok += usize::from(full.success);
+            zero_ok += usize::from(zero.success);
+            no_hierarchy_ok += usize::from(no_hierarchy.success);
+            unrevised_ok += usize::from(unrevised.success);
+            sub_ok += usize::from(full.success);
+
+            let mask = world.nuisance as usize;
+            mask_total[mask] += 1;
+            mask_success[mask] += usize::from(full.success);
+
+            if full.success && zero.success {
+                matched_full_probes += full.probes;
+                matched_zero_probes += zero.probes;
+                matched_probe_cases += 1;
+            }
+            if full.success && no_hierarchy.success {
+                matched_full_candidates += full.candidate_evals;
+                matched_no_hierarchy_candidates += no_hierarchy.candidate_evals;
+                matched_candidate_cases += 1;
+            }
+        }
+
+        println!("R1_DEV_SUBSEED sub={} full_success={}/8", sub, sub_ok);
+    }
+
+    let full_rate = full_ok as f64 / total as f64;
+    let matched_probe_full = matched_full_probes as f64 / matched_probe_cases.max(1) as f64;
+    let matched_probe_zero = matched_zero_probes as f64 / matched_probe_cases.max(1) as f64;
+    let matched_candidate_full =
+        matched_full_candidates as f64 / matched_candidate_cases.max(1) as f64;
+    let matched_candidate_no_hierarchy =
+        matched_no_hierarchy_candidates as f64 / matched_candidate_cases.max(1) as f64;
+
+    println!(
+        "R1_DEV_RESULT seed={} N={} full={}/{} rate={:.4} zero={}/{} no_hierarchy={}/{} unrevised={}/{} masks_total={:?} masks_success={:?} matched_probe_full={:.4} matched_probe_zero={:.4} matched_candidates_full={:.4} matched_candidates_no_hierarchy={:.4}",
+        DEV_SEED,
+        total,
+        full_ok,
+        total,
+        full_rate,
+        zero_ok,
+        total,
+        no_hierarchy_ok,
+        total,
+        unrevised_ok,
+        total,
+        mask_total,
+        mask_success,
+        matched_probe_full,
+        matched_probe_zero,
+        matched_candidate_full,
+        matched_candidate_no_hierarchy,
+    );
+
+    assert_eq!(total, 80);
+    assert!(
+        full_rate >= 0.80,
+        "R1 development pack must clear the preregistered whole-chain 80% floor before any fresh retry"
+    );
+
+    for mask in [
+        DISTRACTOR as usize,
+        DROPOUT as usize,
+        ROTATE as usize,
+        SCALE as usize,
+        (DISTRACTOR | ROTATE) as usize,
+        (DROPOUT | SCALE) as usize,
+    ] {
+        assert!(mask_total[mask] > 0, "required development nuisance mask missing");
+        assert!(
+            mask_success[mask] > 0,
+            "every single and combined nuisance mode must have at least one end-to-end success"
+        );
+    }
+
+    assert!(
+        matched_probe_cases > 0 && matched_probe_full < matched_probe_zero,
+        "learned exploration advantage must remain visible on matched survivable development worlds"
+    );
+    assert!(
+        matched_candidate_cases > 0
+            && matched_candidate_full < matched_candidate_no_hierarchy,
+        "hierarchy advantage must remain visible on matched survivable development worlds"
+    );
+}
+
+#[test]
 #[ignore = "requires one-use AETERNA_FRESH_SEED from CI"]
 fn fresh_g7_whole_organism_pack() {
     let authority_seed: u64 = std::env::var("AETERNA_FRESH_SEED")
