@@ -1,4 +1,5 @@
 use crate::hdc::PhaseVector;
+use crate::trace::ShapeTrace;
 
 #[derive(Debug, Clone)]
 pub struct RasterFieldConfig {
@@ -135,6 +136,11 @@ impl EvoRasterField {
         self.relational_trace(raster)
     }
 
+    pub fn encode_robust_shape_trace(&self, raster: &[f32]) -> Option<ShapeTrace> {
+        self.assert_raster(raster);
+        self.robust_shape_trace(raster)
+    }
+
     pub fn active_unit_ids(&self, raster: &[f32]) -> Vec<u64> {
         self.assert_raster(raster);
         let Some(trace) = self.relational_trace(raster) else {
@@ -254,6 +260,57 @@ impl EvoRasterField {
         best
     }
 
+    fn robust_shape_trace(&self, raster: &[f32]) -> Option<ShapeTrace> {
+        let points = raster
+            .iter()
+            .enumerate()
+            .filter(|(_, value)| **value >= 0.5)
+            .map(|(idx, _)| ((idx % self.config.width) as i32, (idx / self.config.width) as i32))
+            .collect::<Vec<_>>();
+
+        if points.len() < 3 {
+            return None;
+        }
+
+        let mut fragments = Vec::new();
+        for i in 0..points.len() {
+            for j in (i + 1)..points.len() {
+                for k in (j + 1)..points.len() {
+                    let mut d2 = [
+                        Self::distance_squared(points[i], points[j]),
+                        Self::distance_squared(points[i], points[k]),
+                        Self::distance_squared(points[j], points[k]),
+                    ];
+                    d2.sort_unstable();
+                    let max = d2[2];
+                    if max == 0 {
+                        continue;
+                    }
+
+                    // Two normalized side-length ratios define triangle shape up
+                    // to translation, rotation/reflection and uniform scale.
+                    // Quantization is generic substrate geometry, not a task label.
+                    let q0 = ((d2[0] * 255 + max / 2) / max).min(255) as u64;
+                    let q1 = ((d2[1] * 255 + max / 2) / max).min(255) as u64;
+                    let token = 0x5348_4150_4500_0000u64 ^ (q0 << 8) ^ q1;
+                    fragments.push(token);
+                }
+            }
+        }
+
+        if fragments.is_empty() {
+            None
+        } else {
+            Some(ShapeTrace::new(fragments))
+        }
+    }
+
+    fn distance_squared(a: (i32, i32), b: (i32, i32)) -> u64 {
+        let dx = (a.0 - b.0) as i64;
+        let dy = (a.1 - b.1) as i64;
+        (dx * dx + dy * dy) as u64
+    }
+
     fn relational_trace(&self, raster: &[f32]) -> Option<PhaseVector> {
         let active: Vec<usize> = raster
             .iter()
@@ -338,5 +395,21 @@ mod tests {
             field.active_unit_ids(&horizontal),
             field.active_unit_ids(&vertical)
         );
+    }
+
+    #[test]
+    fn robust_shape_trace_survives_generic_geometric_nuisances() {
+        let field = EvoRasterField::new(RasterFieldConfig::for_raster(12, 12, 2), 192);
+        let clean = raster(&[(1, 1), (3, 1), (1, 3), (4, 4)]);
+        let rotation = raster(&[(8, 1), (8, 3), (6, 1), (5, 4)]);
+        let scale = raster(&[(1, 1), (5, 1), (1, 5), (7, 7)]);
+        let dropout = raster(&[(1, 1), (3, 1), (1, 3)]);
+        let distractor = raster(&[(1, 1), (3, 1), (1, 3), (4, 4), (9, 9)]);
+
+        let base = field.encode_robust_shape_trace(&clean).unwrap();
+        assert_eq!(base.similarity(&field.encode_robust_shape_trace(&rotation).unwrap()), 1.0);
+        assert_eq!(base.similarity(&field.encode_robust_shape_trace(&scale).unwrap()), 1.0);
+        assert!(base.similarity(&field.encode_robust_shape_trace(&dropout).unwrap()) >= 0.99);
+        assert!(base.similarity(&field.encode_robust_shape_trace(&distractor).unwrap()) >= 0.99);
     }
 }
