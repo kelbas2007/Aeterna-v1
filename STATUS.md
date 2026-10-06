@@ -7,7 +7,8 @@ Date: 2026-10-06
 **G0 PASS — minimal EvoPhase ownership precursor.**  
 **G1-B PASS — raw-raster relational distinction with held-out translation transfer.**  
 **G2 PASS — carrier-owned informative experiment selection.**  
-**G3 PASS — first acquired reusable EvoPhase macro/program.**
+**G3 PASS — first acquired reusable EvoPhase macro/program.**  
+**G4 PASS — factual revision of the same acquired macro identity.**
 
 No AGI claim. No production promotion.
 
@@ -101,10 +102,27 @@ Workflow: `37497610519`
 - G_READOUT reaches factual Need on 2/2 held-out contexts inside the fixed two-action budget;
 - disabling macro readout/consolidation removes the complete held-out advantage.
 
+### G4 — same-identity macro revision
+
+Qualified commit: `9dcf13c67fd44a52dac9a825b93c908b7b535bb8`  
+Workflow: `37499873532`
+
+- 18/18 Rust tests PASS;
+- optimized release build PASS;
+- revision arms receive identical factual evidence;
+- revision cost: 24 physical actions;
+- macro count stays 1 and macro ID is unchanged;
+- contradictory factual outcomes are retained explicitly;
+- obsolete action evidence is preserved and accumulates failures;
+- newly supported terminal action replaces it in readout for the changed branch;
+- unchanged branch remains correct;
+- REVISION succeeds 2/2 on held-out translations;
+- NO_REVISION fails the changed context.
+
 ## Next gate
 
-**G4: revision of the same acquired macro.**
+**G5: hierarchical reuse of acquired macros.**
 
-A factual counterexample must revise the already acquired macro itself, preserve the contradictory fact, invalidate the obsolete dependent branch/action, and restore correct behavior without discarding the whole macro.
+An already acquired macro must become a child building block of a newly acquired higher-level macro. The hierarchy must be acquired from experience, transfer to held-out bindings, and reduce physical/search cost relative to a matched organism that cannot reuse acquired macros as children.
 
 CI remains manual-only between qualification checkpoints to avoid unnecessary runner usage.
