@@ -1,6 +1,14 @@
 # AETERNA v1
 
-A clean no-LLM intelligence research line with **full EvoPhase cognitive ownership**.
+A clean no-LLM intelligence research line targeting **full EvoPhase cognitive ownership**.
+
+## Current architectural qualification
+
+**Full physical phase-native execution is NOT yet established.** The recorded task results in `STATUS.md` remain evidence, but they must not be confused with proof that the phase-cell/synapse network itself executes every cognitive operation.
+
+The 2026-10-06 [phase-execution audit](docs/PHASE_EXECUTION_AUDIT_RESULT.md) reproduced a specific gap: the current G8 planning path gave identical decisions in 18/18 deterministic matched cases with phase plasticity and structural recruitment disabled and no dormant cells. Its learned transition table remained present; removing that table removed the plan. A standalone version of the same production planner also worked without constructing an EvoPhase instance.
+
+This is a negative architectural witness, not an all-learning ablation and not an invalidation of every earlier result. The strong ownership requirement below remains unchanged. G10 is preregistered; this audit does not implement or qualify it.
 
 ## Non-negotiable rule
 
@@ -39,8 +47,10 @@ Matched controls must preserve raw observations, primitive substrate, factual ou
 
 ## Current branch
 
-Development starts on `genesis/full-evophase`.
+Development is on **`main`**, following the owner's merge of `genesis/full-evophase`.
 
-First target: **EVO-OWNERSHIP-0** — prove that residual-driven structural growth inside EvoPhase changes held-out prediction and action, and that a factual counterexample revises the same carrier-owned structure.
+Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them.
 
-Status: **GENESIS / research implementation, not AGI claim**.
+Next architectural requirement: a learned physical execution path with selective phase-path suppression and restoration, rather than counting a nested graph-search data structure as proof of phase-native imagination. The existing graph planner remains a useful reference implementation.
+
+Status: **research implementation; no AGI claim or production promotion**. CI is manual-only between explicit execution checkpoints.
