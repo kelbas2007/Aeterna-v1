@@ -344,3 +344,34 @@ belief_t+1 = permute(belief_t) ⊗ action_role ⊗ encode(next observation)
 The dimension permutation makes the recurrent HDC/FHRR state order-sensitive. The evaluator does not pass latent-context IDs to production cognition.
 
 This is a bounded mechanism witness for history-conditioned carrier state under deliberate observation aliasing. Fresh statistical qualification remains required.
+
+
+## G9-FRESH one-use result — PASS_HISTORY_CONDITIONED_BELIEF
+
+Run `37517982423` completed PASS and permanently burned the G9 fresh pack.
+
+Fresh authority:
+- source SHA: `b218668436b5baf29f2e3a479991c233a255bc4a`;
+- authority seed: `37517982423`;
+- protocol fingerprint (FNV64): `cd76f953e5a49b2c`;
+- pack digest: `bc2608fd9a60e0df`;
+- N=80 / 10 sub-seeds;
+- representation-only pre-seal rejects: 3.
+
+Observed:
+- FULL_BELIEF: 80/80 = 100%;
+- Wilson 95% CI: [0.9542, 1.0000];
+- OBSERVATION_ONLY: 20/80 = 25%;
+- RESET_HISTORY: 2/80 = 2.5%;
+- belief-separation violations: 0;
+- authority/REAL-firewall violations: 0;
+- per-sub-seed FULL: [8,8,8,8,8,8,8,8,8,8];
+- history length 1: 30/30;
+- history length 2: 30/30;
+- history length 3: 20/20;
+- successful terminal motor IDs: {0,1,2,3};
+- mean physical actions: FULL 2.875, OBSERVATION_ONLY 2.000, RESET_HISTORY 1.200.
+
+The lower physical-action counts of controls reflect early failure, not greater efficiency.
+
+This statistically qualifies the bounded claim that recurrent carrier history resolves deliberate current-observation aliasing across fresh randomized episodes and history lengths up to three. It does not establish arbitrary POMDP solving or learned memory architecture.
