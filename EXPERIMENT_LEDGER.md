@@ -13,7 +13,7 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G1-B | relational-phase | PASS_RAW_RASTER_RELATIONAL_TRANSFER | CI run 37493664700 at commit `0dba8c2acac189712a9aebb1f7c9e58d4e135e8f`: all 12 tests PASS and release build PASS. GENUINE acquired relation units from raw 12x12 rasters, reused the same unit identity on an unseen translation, chose the correct opaque motor on 2/2 held-out translations, and matched formation/readout ablations lost the full advantage. |
 | G2 | CI-1 | TECHNICAL_FAIL_OBSERVER_METRIC | First compiled G2 run reached the held-out epistemic test, but the observer incorrectly mixed withheld-prediction similarity with probe-2 disagreement via `min()`. No cognitive verdict; algorithm/world unchanged. |
 | G2 | CI-2 | PASS_ACTIVE_EPISTEMIC_SELECTION | CI run 37495559913 at commit `4bbf08ead05d85c5a30363971e756e7e01615abb`: all 14 Rust tests PASS and release build PASS. Two carrier-owned rival world hypotheses coexist; GENUINE selects the most-discriminating opaque probe first, collapses to one rival after one factual POST on both held-out laws, and predicts a withheld consequence. Matched generic exploration starts with non-discriminating probe 0 and requires more physical probes. Tuition cost: 18 factual probes. |
-| G3 | — | NOT_STARTED | Acquired reusable EvoPhase macro/program |
+| G3 | CI-1 | PASS_FIRST_ACQUIRED_MACRO | CI run 37497610519 at commit `da5711f7c2d9491ba38336f0b1154d6e8781ee34`: all 16 Rust tests PASS and release build PASS. From 108 matched factual tuition actions, GENUINE consolidates one two-step branching EvoPhase macro; NO_CONSOLIDATION acquires none. The macro learns opaque first motor 1 and two relational post-trace branches leading to different learned terminal motors, transfers to two unseen spatial bindings, changes held-out action, and reaches factual Need on 2/2 held-out contexts within the fixed two-action budget. |
 | G4 | — | NOT_STARTED | Revision of the same acquired macro |
 | G5 | — | NOT_STARTED | Hierarchical reuse |
 | G6 | — | NOT_STARTED | Learned exploration strategy |
@@ -83,3 +83,24 @@ Within the preregistered hidden-law probe world:
 - G0 and G1-B regression tests remain PASS.
 
 This is active epistemic selection from an acquired hypothesis set. It does not yet prove that the organism has learned a reusable **strategy for how to explore** across new task families; that remains G6.
+
+
+## What G3 PASS establishes
+
+Within the preregistered bounded two-step macro world:
+
+- the macro is absent before tuition;
+- both GENUINE and NO_CONSOLIDATION receive identical factual episode ledgers;
+- tuition cost is 108 physical actions;
+- only factual Need=true trajectories contribute to generic structural consolidation;
+- GENUINE promotes one EvoPhase macro from repeated successful carrier dynamics;
+- NO_CONSOLIDATION retains the same facts and child representations but promotes zero macros;
+- the learned macro contains an acquired opaque first motor and at least two learned relational branches with different terminal motors;
+- the same macro transfers to two absolute raster translations absent from tuition;
+- macro readout changes at least one held-out physical action;
+- G_READOUT reaches factual Need in 2/2 held-out contexts within two actions;
+- removing readout and/or consolidation removes the complete held-out advantage;
+- G0, G1-B and G2 regressions remain PASS;
+- optimized release build succeeds.
+
+This is the first bounded acquired reusable control program in Aeterna-v1. It is a two-step branching macro-assembly, not arbitrary program induction, recursion, a universal VM or AGI.
