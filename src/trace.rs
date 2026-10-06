@@ -2,39 +2,55 @@ use crate::hdc::PhaseVector;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShapeTrace {
-    point_count: usize,
     oriented_fragments: Vec<u64>,
+    scale_free_oriented_fragments: Vec<u64>,
     invariant_fragments: Vec<u64>,
 }
 
 impl ShapeTrace {
     pub fn new(invariant_fragments: Vec<u64>) -> Self {
-        Self::from_geometry(0, Vec::new(), invariant_fragments)
+        Self::from_channels(Vec::new(), Vec::new(), invariant_fragments)
     }
 
     pub fn from_fragments(
         oriented_fragments: Vec<u64>,
         invariant_fragments: Vec<u64>,
     ) -> Self {
-        Self::from_geometry(0, oriented_fragments, invariant_fragments)
+        Self::from_channels(oriented_fragments, Vec::new(), invariant_fragments)
     }
 
     pub fn from_geometry(
-        point_count: usize,
+        _point_count: usize,
+        oriented_fragments: Vec<u64>,
+        invariant_fragments: Vec<u64>,
+    ) -> Self {
+        // Kept as a compatibility constructor for the first R1 development
+        // iterations. Matching is based on relational evidence, not on a
+        // nuisance/cardinality branch.
+        Self::from_channels(oriented_fragments, Vec::new(), invariant_fragments)
+    }
+
+    pub fn from_channels(
         mut oriented_fragments: Vec<u64>,
+        mut scale_free_oriented_fragments: Vec<u64>,
         mut invariant_fragments: Vec<u64>,
     ) -> Self {
         oriented_fragments.sort_unstable();
+        scale_free_oriented_fragments.sort_unstable();
         invariant_fragments.sort_unstable();
         Self {
-            point_count,
             oriented_fragments,
+            scale_free_oriented_fragments,
             invariant_fragments,
         }
     }
 
     pub fn oriented_fragments(&self) -> &[u64] {
         &self.oriented_fragments
+    }
+
+    pub fn scale_free_oriented_fragments(&self) -> &[u64] {
+        &self.scale_free_oriented_fragments
     }
 
     pub fn invariant_fragments(&self) -> &[u64] {
@@ -44,30 +60,38 @@ impl ShapeTrace {
     pub fn similarity(&self, other: &Self) -> f32 {
         let oriented =
             Self::containment(&self.oriented_fragments, &other.oriented_fragments);
+        let scale_free = Self::containment(
+            &self.scale_free_oriented_fragments,
+            &other.scale_free_oriented_fragments,
+        );
         let invariant =
             Self::containment(&self.invariant_fragments, &other.invariant_fragments);
 
-        // The number of observed active points is factual sensor information,
-        // not an evaluator label. When cardinality changed, prefer the oriented
-        // surviving substructure: this distinguishes dropout/distractor matches
-        // that an invariant one-triangle view would over-generalize. When the
-        // cardinality is unchanged, exact oriented agreement wins; otherwise
-        // the normalized shape view can express rotation/scale equivalence.
-        if self.point_count > 0 && other.point_count > 0 {
-            if self.point_count != other.point_count {
-                if oriented > 0.0 {
-                    oriented
-                } else {
-                    invariant
-                }
-            } else if oriented >= 0.999 {
-                oriented
-            } else {
+        // Evidence sufficiency, not nuisance detection:
+        // - oriented triples preserve exact surviving substructure;
+        // - scale-free oriented triples preserve that substructure under uniform
+        //   integer scale;
+        // - fully invariant triangle shape supports rotation/reflection, but a
+        //   single such triangle is too underdetermined to identify a learned
+        //   four-point world on its own.
+        //
+        // Legacy traces containing only invariant fragments remain comparable.
+        let structural_channels_present = !self.oriented_fragments.is_empty()
+            || !other.oriented_fragments.is_empty()
+            || !self.scale_free_oriented_fragments.is_empty()
+            || !other.scale_free_oriented_fragments.is_empty();
+        let invariant_evidence = self
+            .invariant_fragments
+            .len()
+            .min(other.invariant_fragments.len());
+        let invariant_score =
+            if invariant_evidence >= 2 || !structural_channels_present {
                 invariant
-            }
-        } else {
-            oriented.max(invariant)
-        }
+            } else {
+                0.0
+            };
+
+        oriented.max(scale_free).max(invariant_score)
     }
 
     fn containment(a: &[u64], b: &[u64]) -> f32 {
@@ -148,10 +172,16 @@ mod tests {
             vec![5, 11, 22, 33, 44, 99],
         );
         let rotated = ShapeTrace::from_fragments(vec![201, 202, 203], vec![11, 22, 33, 44]);
+        let ambiguous_single_invariant = ShapeTrace::from_fragments(vec![301], vec![11]);
 
         assert_eq!(clean.similarity(&dropout), 1.0);
         assert_eq!(clean.similarity(&distractor), 1.0);
         assert_eq!(clean.similarity(&rotated), 1.0);
+        assert_eq!(
+            clean.similarity(&ambiguous_single_invariant),
+            0.0,
+            "one invariant triangle cannot override conflicting structural evidence"
+        );
         assert_eq!(
             clean.similarity(&ShapeTrace::from_fragments(vec![301, 302], vec![77, 88])),
             0.0
