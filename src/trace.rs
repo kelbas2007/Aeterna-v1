@@ -2,35 +2,61 @@ use crate::hdc::PhaseVector;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShapeTrace {
-    fragments: Vec<u64>,
+    oriented_fragments: Vec<u64>,
+    invariant_fragments: Vec<u64>,
 }
 
 impl ShapeTrace {
-    pub fn new(mut fragments: Vec<u64>) -> Self {
-        fragments.sort_unstable();
-        Self { fragments }
+    pub fn new(invariant_fragments: Vec<u64>) -> Self {
+        Self::from_fragments(Vec::new(), invariant_fragments)
     }
 
-    pub fn fragments(&self) -> &[u64] {
-        &self.fragments
+    pub fn from_fragments(
+        mut oriented_fragments: Vec<u64>,
+        mut invariant_fragments: Vec<u64>,
+    ) -> Self {
+        oriented_fragments.sort_unstable();
+        invariant_fragments.sort_unstable();
+        Self {
+            oriented_fragments,
+            invariant_fragments,
+        }
+    }
+
+    pub fn oriented_fragments(&self) -> &[u64] {
+        &self.oriented_fragments
+    }
+
+    pub fn invariant_fragments(&self) -> &[u64] {
+        &self.invariant_fragments
     }
 
     pub fn similarity(&self, other: &Self) -> f32 {
-        if self.fragments.is_empty() || other.fragments.is_empty() {
+        // Two generic views coexist:
+        // 1) translation-equivariant oriented pair fragments, which are strong
+        //    under dropout/distractors;
+        // 2) normalized triangle-shape fragments, which survive rotation/scale.
+        //
+        // No task label chooses individual fragments. The carrier accepts the
+        // strongest factual geometric correspondence available.
+        Self::containment(&self.oriented_fragments, &other.oriented_fragments)
+            .max(Self::containment(
+                &self.invariant_fragments,
+                &other.invariant_fragments,
+            ))
+    }
+
+    fn containment(a: &[u64], b: &[u64]) -> f32 {
+        if a.is_empty() || b.is_empty() {
             return 0.0;
         }
 
-        // Multiset containment, normalized by the smaller observation.
-        // A clean four-point relation has four triangle fragments. One dropped
-        // point leaves one of those learned fragments; one distractor preserves
-        // all original fragments while adding extras. Rotation and uniform scale
-        // preserve every normalized triangle fragment.
         let mut i = 0usize;
         let mut j = 0usize;
         let mut overlap = 0usize;
 
-        while i < self.fragments.len() && j < other.fragments.len() {
-            match self.fragments[i].cmp(&other.fragments[j]) {
+        while i < a.len() && j < b.len() {
+            match a[i].cmp(&b[j]) {
                 std::cmp::Ordering::Less => i += 1,
                 std::cmp::Ordering::Greater => j += 1,
                 std::cmp::Ordering::Equal => {
@@ -41,7 +67,7 @@ impl ShapeTrace {
             }
         }
 
-        overlap as f32 / self.fragments.len().min(other.fragments.len()) as f32
+        overlap as f32 / a.len().min(b.len()) as f32
     }
 }
 
@@ -88,12 +114,23 @@ mod tests {
 
     #[test]
     fn robust_shape_similarity_is_subset_tolerant() {
-        let clean = ShapeTrace::new(vec![11, 22, 33, 44]);
-        let dropout = ShapeTrace::new(vec![22]);
-        let distractor = ShapeTrace::new(vec![5, 11, 22, 33, 44, 99]);
+        let clean = ShapeTrace::from_fragments(
+            vec![101, 102, 103, 104, 105, 106],
+            vec![11, 22, 33, 44],
+        );
+        let dropout = ShapeTrace::from_fragments(vec![102, 104, 106], vec![22]);
+        let distractor = ShapeTrace::from_fragments(
+            vec![5, 101, 102, 103, 104, 105, 106, 120],
+            vec![5, 11, 22, 33, 44, 99],
+        );
+        let rotated = ShapeTrace::from_fragments(vec![201, 202, 203], vec![11, 22, 33, 44]);
 
         assert_eq!(clean.similarity(&dropout), 1.0);
         assert_eq!(clean.similarity(&distractor), 1.0);
-        assert_eq!(clean.similarity(&ShapeTrace::new(vec![77, 88])), 0.0);
+        assert_eq!(clean.similarity(&rotated), 1.0);
+        assert_eq!(
+            clean.similarity(&ShapeTrace::from_fragments(vec![301, 302], vec![77, 88])),
+            0.0
+        );
     }
 }
