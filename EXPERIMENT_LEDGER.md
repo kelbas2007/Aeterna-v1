@@ -31,6 +31,13 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | P4 | PREFLIGHT-1 | PASS_LEARNED_PHASE_NATIVE_EXPLORATION_DRIVE | Workflow 37530869041 at source `9aa725a443ac7f975896c4e20f689cef90dae334`: learned drive weights [0.99999994,1.0], LEARNED_DRIVE 12/12 mean 25.000, ZERO_DRIVE 0/12, FRONTIER_WEIGHT_LESION 0/12 mean 60.000, ZERO_PHASE_DRIVE 0/12 mean 60.000, RANDOM 6/12 mean 47.917, P3 ceiling 12/12. Source guard, regressions and Release PASS. |
 | P4 | FRESH-TECH-1 | TECHNICAL_FAIL_WORKFLOW_PARSE | Run 37531623310 created zero jobs because the first trigger expression was invalid. The evaluator never executed and no authority-derived world pack was generated/printed; no cognitive verdict. |
 | P4 | FRESH-1 | PASS_FRESH_LEARNED_DRIVE_TRANSFER | First valid one-use authority run 37531676452 at source `3795f3865f90dbff1942ffbc7d450aba24b2b66d`, spec `2069b8269944cb65ff5967e9580bd3c152640fdb`, pack `47b2a86ebe50dc8f`: FULL 80/80, Wilson95 [0.954182,1.000000], all seeds 8/8; ZERO_DRIVE 0/80; FRONTIER_LESION 7/80; ZERO_PHASE_DRIVE 0/80; RANDOM 18/80; P3 ceiling 80/80. Mean FULL cost 24.087 vs lesion 55.700, zero-phase 60.000, random 52.062. Source meta-tuition 646 interactions. Target drive frozen; target carriers started with zero receptors/circuits/legacy graph transitions. Full regressions and Release PASS; pack permanently burned. |
+| P5 | PREFLIGHT-1 | FAIL_CONTINUAL_FORWARD_READOUT | Workflow 37532474106: after learning B, persistent organism could no longer execute previously learned A. A test-only source-guard self-match was also found and fixed separately. No fresh pack consumed. |
+| P5 | DIAG-REPRESENTATION | FAIL_NOT_ALIASING | Workflow 37533268179: max A/B carrier-trace similarity 0.077763 at threshold 0.97; A still failed after B. Representation aliasing ruled out. |
+| P5 | DIAG-FORWARD | FAIL_FORWARD_ONLY | Workflow 37533755925: retained A P1 plan still selected correct motor 1 at value 0.9025, but ordinary P2 action+prediction path abstained. |
+| P5 | DIAG-SYNAPSE | FAIL_NO_OLD_PARAMETER_OVERWRITE | Workflow 37534252495: 0/606 tracked pre-existing A/drive/decoder synapses changed after B; A forward readout still failed. |
+| P5 | DIAG-COMPONENT | FAIL_SHARED_CELL_REFERENCE | Workflow 37534474528: zeroing newly added B synapses did not recover A forward readout, localizing failure to shared cell substrate state. |
+| P5 | PREFLIGHT-2 | PASS_PERSISTENT_CONTINUAL_RETENTION_AND_REVISION | Workflow 37534699260 at source `de2f931b5a6b03995f62f8723011cfca89581be0` after production fix `797e366d64a186bc7c36d283f84fff3dfe57e8f7`: persistent acquisition costs [9,24,12,20], retention actions 34, changed-B repair 9, receptors [4,9,13,18], circuits [7,19,27,38], ZERO_DRIVE 0/4, NO_GROWTH 0/4, whole-lifetime checkpoint restore PASS, full regressions and Release PASS. |
+
 
 ## What G0 PASS establishes
 
@@ -393,3 +400,10 @@ P3 proved that a cold organism could gather its own transition experience, but t
 The fresh P4 result shows that this learned drive can be transferred **without** source-world receptors or transition circuits into new cold carriers and still solve 80/80 longer target worlds. Removing the learned frontier synapse drops success to 7/80; disabling drive phase learning drops it to 0/80; a zero drive scores 0/80; seeded random scores 18/80.
 
 This qualifies learned weighting of inherited epistemic features, not invention of the feature vocabulary. Continual learning under interference, stochastic/POMDP exploration, arbitrary concepts/domains and AGI remain open.
+
+
+## P5 continual-retention diagnosis and mechanism result
+
+The first P5 failure was not erased. The old A world model remained physically present, but long-lived P2 decoder coherence was lost because factual observations permanently drifted shared sensory-cell phases. The phase-native fix stabilizes that intrinsic reference while leaving adaptation in synapses.
+
+After the fix, one persistent organism acquired four distinct worlds, retained earlier worlds after each later acquisition, selectively repaired a changed B law while preserving A/C/D, and survived one full checkpoint/restart. This remains a deterministic mechanism witness pending FRESH-P5.
