@@ -15,7 +15,8 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G2 | CI-2 | PASS_ACTIVE_EPISTEMIC_SELECTION | CI run 37495559913 at commit `4bbf08ead05d85c5a30363971e756e7e01615abb`: all 14 Rust tests PASS and release build PASS. Two carrier-owned rival world hypotheses coexist; GENUINE selects the most-discriminating opaque probe first, collapses to one rival after one factual POST on both held-out laws, and predicts a withheld consequence. Matched generic exploration starts with non-discriminating probe 0 and requires more physical probes. Tuition cost: 18 factual probes. |
 | G3 | CI-1 | PASS_FIRST_ACQUIRED_MACRO | CI run 37497610519 at commit `da5711f7c2d9491ba38336f0b1154d6e8781ee34`: all 16 Rust tests PASS and release build PASS. From 108 matched factual tuition actions, GENUINE consolidates one two-step branching EvoPhase macro; NO_CONSOLIDATION acquires none. The macro learns opaque first motor 1 and two relational post-trace branches leading to different learned terminal motors, transfers to two unseen spatial bindings, changes held-out action, and reaches factual Need on 2/2 held-out contexts within the fixed two-action budget. |
 | G4 | CI-1 | PASS_SAME_IDENTITY_MACRO_REVISION | CI run 37499873532 at commit `9dcf13c67fd44a52dac9a825b93c908b7b535bb8`: all 18 Rust tests PASS and release build PASS. After a world-law change, the same acquired macro ID is retained, contradiction evidence is preserved, obsolete branch action accumulates failures, a newly supported action takes over for the changed branch, the unchanged branch remains correct, and NO_REVISION fails the changed held-out context. Revision cost: 24 physical actions. |
-| G5 | — | NOT_STARTED | Hierarchical reuse |
+| G5 | CI-1 | TECHNICAL_FAIL_EVALUATOR_BOUNDS | First G5 CI run reached the hierarchy test but one evaluator-only held-out translation exceeded the 12x12 raster boundary. No cognitive verdict; runtime mechanism unchanged. |
+| G5 | CI-2 | PASS_HIERARCHICAL_REUSE | CI run 37503517616 at commit `c1292adc5c230c0616ce8c18a3829bd1f53947db`: all 22 Rust tests PASS and release build PASS. Two independently acquired child macros are reused by newly acquired parent macros that store child carrier IDs, not flattened primitive scripts. Parent readout transfers to unseen outer-cue translations and reduces held-out candidate-sequence evaluations from 5 to 2 and primitive search actions from 16 to 8 across two tasks. Reversing child acquisition order permutes opaque child IDs while preserving the hierarchy advantage. Parent tuition cost: 72 primitive actions per arm. |
 | G6 | — | NOT_STARTED | Learned exploration strategy |
 | G7 | — | NOT_STARTED | Open-world qualification |
 
@@ -125,3 +126,23 @@ Within the preregistered macro-revision world:
 - optimized release build succeeds.
 
 This closes same-identity bounded macro repair. It does not yet establish hierarchical reuse of acquired macros inside newly acquired higher-level macros.
+
+
+## What G5 PASS establishes
+
+Within the preregistered bounded hierarchy world:
+
+- both arms begin with the same two acquired child macros;
+- parent tuition ledgers are identical;
+- parent tuition cost is 72 primitive physical actions per arm;
+- GENUINE acquires two parent macros; NO_HIERARCHY acquires none;
+- parent bodies reference acquired child macro IDs and do not copy their primitive action sequences;
+- held-out outer cues use translations absent from parent tuition;
+- actual child macros execute their own learned bodies when invoked by the parent;
+- across two held-out tasks, hierarchy reduces child-sequence candidate evaluations from 5 to 2;
+- primitive physical actions spent searching fall from 16 to 8;
+- reversing child acquisition order changes opaque carrier IDs, yet consistent parent formation preserves success and cost advantage;
+- G0-G4 and ownership audits remain PASS;
+- optimized release build succeeds.
+
+This demonstrates bounded hierarchical reuse of acquired programs. It does not yet show that the organism learned a reusable exploration strategy or arbitrary-depth recursive program composition.
