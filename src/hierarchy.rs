@@ -1,4 +1,5 @@
 use crate::hdc::PhaseVector;
+use crate::trace::CarrierTrace;
 
 #[derive(Debug, Clone)]
 pub struct HierarchyConfig {
@@ -24,7 +25,7 @@ impl Default for HierarchyConfig {
 #[derive(Debug, Clone)]
 pub struct ParentMacro {
     pub id: u64,
-    pub cue: PhaseVector,
+    pub cue: CarrierTrace,
     pub child_sequence: Vec<u64>,
     pub support: u32,
     pub utility: f32,
@@ -33,7 +34,7 @@ pub struct ParentMacro {
 
 #[derive(Debug, Clone)]
 struct ParentCandidate {
-    cue: PhaseVector,
+    cue: CarrierTrace,
     child_sequence: Vec<u64>,
     support: u32,
 }
@@ -97,6 +98,15 @@ impl EvoHierarchyMemory {
         child_sequence: Vec<u64>,
         need: bool,
     ) {
+        self.observe_successful_trace(CarrierTrace::exact(cue), child_sequence, need);
+    }
+
+    pub fn observe_successful_trace(
+        &mut self,
+        cue: CarrierTrace,
+        child_sequence: Vec<u64>,
+        need: bool,
+    ) {
         if !need
             || !self.config.learning_enabled
             || !self.config.formation_enabled
@@ -150,6 +160,10 @@ impl EvoHierarchyMemory {
     }
 
     pub fn select_sequence(&self, cue: &PhaseVector) -> Option<Vec<u64>> {
+        self.select_sequence_trace(&CarrierTrace::exact(cue.clone()))
+    }
+
+    pub fn select_sequence_trace(&self, cue: &CarrierTrace) -> Option<Vec<u64>> {
         if !self.config.readout_enabled {
             return None;
         }
