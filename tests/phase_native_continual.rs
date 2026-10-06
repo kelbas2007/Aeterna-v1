@@ -727,3 +727,538 @@ fn p5_source_guard_has_no_world_identity_channel() {
         );
     }
 }
+
+
+struct FreshP5Rng(u64);
+
+impl FreshP5Rng {
+    fn new(seed: u64) -> Self {
+        Self(seed ^ 0xD6E8_FEB8_6659_FD93)
+    }
+
+    fn next(&mut self) -> u64 {
+        let mut x = self.0;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        self.0 = x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+
+    fn range(&mut self, upper: usize) -> usize {
+        (self.next() % upper as u64) as usize
+    }
+}
+
+#[derive(Debug, Clone)]
+struct FreshP5Block {
+    source: Vec<World>,
+    target: Vec<World>,
+    order: [usize; 4],
+    changed_domain: usize,
+    intermediate_xy: [[(usize, usize); 4]; 4],
+    pre_xy: [(usize, usize); 4],
+    post_xy: [(usize, usize); 4],
+    restart_xy: [(usize, usize); 4],
+}
+
+fn fresh_p5_world(rng: &mut FreshP5Rng, min_len: usize, max_len: usize) -> World {
+    let length = min_len + rng.range(max_len - min_len + 1);
+    let advance = (0..length).map(|_| rng.range(3)).collect::<Vec<_>>();
+    let detour_at = rng.range(length);
+    let detour_action = rng.range(3);
+    World {
+        length,
+        advance,
+        detour_at,
+        detour_action,
+    }
+}
+
+fn fresh_p5_xy(rng: &mut FreshP5Rng) -> (usize, usize) {
+    (1 + rng.range(3), 1 + rng.range(3))
+}
+
+fn fresh_p5_order(rng: &mut FreshP5Rng) -> [usize; 4] {
+    let mut order = [0usize, 1, 2, 3];
+    for i in (1..4).rev() {
+        let j = rng.range(i + 1);
+        order.swap(i, j);
+    }
+    order
+}
+
+fn fnv64_mix(mut hash: u64, value: u64) -> u64 {
+    const PRIME: u64 = 1_099_511_628_211;
+    for byte in value.to_le_bytes() {
+        hash ^= byte as u64;
+        hash = hash.wrapping_mul(PRIME);
+    }
+    hash
+}
+
+fn fresh_p5_blocks(authority: u64) -> (Vec<FreshP5Block>, u64) {
+    let mut blocks = Vec::new();
+    let mut digest = 14_695_981_039_346_656_037_u64;
+
+    for sub in 0..10u64 {
+        let derived = authority
+            ^ sub.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+            ^ 0x50A5_C011_71A1_5EED;
+        let mut rng = FreshP5Rng::new(derived);
+        let source = (0..8)
+            .map(|_| fresh_p5_world(&mut rng, 2, 3))
+            .collect::<Vec<_>>();
+        let target = (0..4)
+            .map(|_| fresh_p5_world(&mut rng, 3, 4))
+            .collect::<Vec<_>>();
+        let order = fresh_p5_order(&mut rng);
+        let changed_domain = rng.range(4);
+
+        let mut intermediate_xy = [[(1usize, 1usize); 4]; 4];
+        for stage in 0..4 {
+            for domain in 0..4 {
+                intermediate_xy[stage][domain] = fresh_p5_xy(&mut rng);
+            }
+        }
+        let mut pre_xy = [(1usize, 1usize); 4];
+        let mut post_xy = [(1usize, 1usize); 4];
+        let mut restart_xy = [(1usize, 1usize); 4];
+        for domain in 0..4 {
+            pre_xy[domain] = fresh_p5_xy(&mut rng);
+            post_xy[domain] = fresh_p5_xy(&mut rng);
+            restart_xy[domain] = fresh_p5_xy(&mut rng);
+        }
+
+        digest = fnv64_mix(digest, sub);
+        for (family, worlds) in [(0u64, &source), (1u64, &target)] {
+            digest = fnv64_mix(digest, family);
+            for world in worlds {
+                digest = fnv64_mix(digest, world.length as u64);
+                digest = fnv64_mix(digest, world.detour_at as u64);
+                digest = fnv64_mix(digest, world.detour_action as u64);
+                for action in &world.advance {
+                    digest = fnv64_mix(digest, *action as u64);
+                }
+            }
+        }
+        for domain in order {
+            digest = fnv64_mix(digest, domain as u64);
+        }
+        digest = fnv64_mix(digest, changed_domain as u64);
+        for stage in 0..4 {
+            for domain in 0..4 {
+                let (x, y) = intermediate_xy[stage][domain];
+                digest = fnv64_mix(digest, x as u64);
+                digest = fnv64_mix(digest, y as u64);
+            }
+        }
+        for bank in [&pre_xy, &post_xy, &restart_xy] {
+            for &(x, y) in bank.iter() {
+                digest = fnv64_mix(digest, x as u64);
+                digest = fnv64_mix(digest, y as u64);
+            }
+        }
+
+        blocks.push(FreshP5Block {
+            source,
+            target,
+            order,
+            changed_domain,
+            intermediate_xy,
+            pre_xy,
+            post_xy,
+            restart_xy,
+        });
+    }
+
+    (blocks, digest)
+}
+
+fn train_drive_from(source: &[World]) -> (PhaseDriveCheckpoint, usize) {
+    let mut checkpoint = None;
+    let mut cost = 0usize;
+    for world in source {
+        let mut evo = carrier(true);
+        if let Some(previous) = checkpoint.take() {
+            assert!(evo.restore_phase_native_drive_checkpoint(previous));
+        } else {
+            assert!(evo.enable_phase_native_learned_drive(PhaseDriveConfig::default()));
+            assert_eq!(evo.phase_native_drive_weights(), Some([0.0, 0.0]));
+        }
+        assert_eq!(evo.phase_native_receptor_count(), 0);
+        assert_eq!(evo.phase_native_circuits().len(), 0);
+        let outcome = source_teacher_acquire(&mut evo, world);
+        assert!(outcome.success, "fresh P5 source meta-world must be solvable");
+        cost += outcome.interactions;
+        checkpoint = evo.phase_native_drive_checkpoint();
+    }
+    (
+        checkpoint.expect("fresh P5 learned drive checkpoint"),
+        cost,
+    )
+}
+
+fn p5_wilson95(success: usize, n: usize) -> (f64, f64) {
+    let z = 1.959_963_984_540_054_f64;
+    let n = n as f64;
+    let p = success as f64 / n;
+    let denominator = 1.0 + z * z / n;
+    let center = (p + z * z / (2.0 * n)) / denominator;
+    let half = z
+        * (p * (1.0 - p) / n + z * z / (4.0 * n * n)).sqrt()
+        / denominator;
+    (center - half, center + half)
+}
+
+fn p5_mean_sd(values: &[usize]) -> (f64, f64) {
+    if values.is_empty() {
+        return (0.0, 0.0);
+    }
+    let mean = values.iter().sum::<usize>() as f64 / values.len() as f64;
+    if values.len() == 1 {
+        return (mean, 0.0);
+    }
+    let variance = values
+        .iter()
+        .map(|value| (*value as f64 - mean).powi(2))
+        .sum::<f64>()
+        / (values.len() - 1) as f64;
+    (mean, variance.sqrt())
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn p5_fresh_continual_retention_pack() {
+    let authority: u64 = std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse()
+        .expect("fresh P5 seed must be u64");
+    let source_sha = std::env::var("AETERNA_SOURCE_SHA").unwrap_or_else(|_| "unknown".into());
+    let spec_sha = std::env::var("AETERNA_SPEC_SHA").unwrap_or_else(|_| "unknown".into());
+
+    let (blocks, digest) = fresh_p5_blocks(authority);
+    println!(
+        "FRESH_P5_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha, spec_sha, authority, digest
+    );
+    for (sub, block) in blocks.iter().enumerate() {
+        println!("FRESH_P5_BLOCK sub={} {:?}", sub, block);
+    }
+
+    let mut target_acquisition_success = 0usize;
+    let mut intermediate_success = 0usize;
+    let mut intermediate_total = 0usize;
+    let mut pre_success = 0usize;
+    let mut post_success = 0usize;
+    let mut checkpoint_success = 0usize;
+    let mut repair_success = 0usize;
+    let mut frozen_changed_success = 0usize;
+    let mut reset_earlier_success = 0usize;
+    let mut zero_drive_acquisition_success = 0usize;
+    let mut no_growth_acquisition_success = 0usize;
+    let mut primary_per_seed = Vec::new();
+    let mut acquisition_costs = Vec::new();
+    let mut repair_costs = Vec::new();
+    let mut meta_cost = 0usize;
+    let mut drive_weight_violations = 0usize;
+    let mut legacy_graph_violations = 0usize;
+    let mut structural_counts = Vec::new();
+
+    for (sub, block) in blocks.iter().enumerate() {
+        let (drive_checkpoint, sub_meta_cost) = train_drive_from(&block.source);
+        meta_cost += sub_meta_cost;
+
+        let mut full = persistent_with_drive(drive_checkpoint.clone(), true);
+        let frozen_drive = full.phase_native_drive_weights().expect("fresh P5 drive");
+        assert!(frozen_drive[0] > 0.05 && frozen_drive[1] > 0.05);
+        assert_eq!(full.phase_native_receptor_count(), 0);
+        assert_eq!(full.phase_native_circuits().len(), 0);
+        assert_eq!(full.planning_transition_count(), 0);
+
+        let mut acquired = Vec::new();
+        let mut counts = Vec::new();
+
+        for (stage, &domain) in block.order.iter().enumerate() {
+            full.set_planning_learning_enabled(true);
+            let outcome = acquire_domain(
+                &mut full,
+                domain,
+                &block.target[domain],
+                false,
+                ACQUIRE_BUDGET,
+            );
+            target_acquisition_success += usize::from(outcome.success);
+            acquisition_costs.push(outcome.interactions);
+            acquired.push(domain);
+
+            if full.phase_native_drive_weights() != Some(frozen_drive) {
+                drive_weight_violations += 1;
+            }
+            if full.planning_transition_count() != 0 {
+                legacy_graph_violations += 1;
+            }
+
+            counts.push((
+                full.phase_native_receptor_count(),
+                full.phase_native_circuits().len(),
+            ));
+
+            full.set_planning_learning_enabled(false);
+            for &prior in &acquired {
+                intermediate_total += 1;
+                let (x, y) = block.intermediate_xy[stage][prior];
+                let retained = exploit_domain(
+                    &mut full,
+                    prior,
+                    &block.target[prior],
+                    false,
+                    x,
+                    y,
+                );
+                intermediate_success += usize::from(retained.success);
+            }
+        }
+        structural_counts.push(counts);
+
+        let mut sub_primary = 0usize;
+        full.set_planning_learning_enabled(false);
+        for domain in 0..4 {
+            let (x, y) = block.pre_xy[domain];
+            let retained = exploit_domain(
+                &mut full,
+                domain,
+                &block.target[domain],
+                false,
+                x,
+                y,
+            );
+            pre_success += usize::from(retained.success);
+            sub_primary += usize::from(retained.success);
+        }
+
+        let mut frozen_changed = full.clone();
+        frozen_changed.set_planning_learning_enabled(false);
+        let changed = block.changed_domain;
+        let (fx, fy) = block.post_xy[changed];
+        let frozen_result = exploit_domain(
+            &mut frozen_changed,
+            changed,
+            &block.target[changed],
+            true,
+            fx,
+            fy,
+        );
+        frozen_changed_success += usize::from(frozen_result.success);
+
+        full.set_planning_learning_enabled(true);
+        let repaired = acquire_domain(
+            &mut full,
+            changed,
+            &block.target[changed],
+            true,
+            REPAIR_BUDGET,
+        );
+        repair_success += usize::from(repaired.success);
+        if repaired.success {
+            repair_costs.push(repaired.interactions);
+        }
+        if full.phase_native_drive_weights() != Some(frozen_drive) {
+            drive_weight_violations += 1;
+        }
+        if full.planning_transition_count() != 0 {
+            legacy_graph_violations += 1;
+        }
+
+        full.set_planning_learning_enabled(false);
+        for domain in 0..4 {
+            let (x, y) = block.post_xy[domain];
+            let retained = exploit_domain(
+                &mut full,
+                domain,
+                &block.target[domain],
+                domain == changed,
+                x,
+                y,
+            );
+            post_success += usize::from(retained.success);
+            sub_primary += usize::from(retained.success);
+        }
+
+        let checkpoint = full.phase_native_checkpoint().expect("fresh P5 lifetime checkpoint");
+        let mut restarted = restore_full(checkpoint);
+        assert!(restarted.current_real().is_none());
+        restarted.set_planning_learning_enabled(false);
+        for domain in 0..4 {
+            let (x, y) = block.restart_xy[domain];
+            let retained = exploit_domain(
+                &mut restarted,
+                domain,
+                &block.target[domain],
+                domain == changed,
+                x,
+                y,
+            );
+            checkpoint_success += usize::from(retained.success);
+        }
+
+        primary_per_seed.push(sub_primary);
+
+        // RESET_BETWEEN_WORLDS: only the final separately trained carrier survives.
+        let mut final_cold = None;
+        for &domain in &block.order {
+            let mut cold = persistent_with_drive(drive_checkpoint.clone(), true);
+            let _ = acquire_domain(
+                &mut cold,
+                domain,
+                &block.target[domain],
+                false,
+                ACQUIRE_BUDGET,
+            );
+            final_cold = Some((domain, cold));
+        }
+        let (final_domain, mut final_cold) = final_cold.expect("final reset control");
+        final_cold.set_planning_learning_enabled(false);
+        for domain in 0..4 {
+            if domain == final_domain {
+                continue;
+            }
+            let (x, y) = block.pre_xy[domain];
+            reset_earlier_success += usize::from(
+                exploit_domain(
+                    &mut final_cold,
+                    domain,
+                    &block.target[domain],
+                    false,
+                    x,
+                    y,
+                )
+                .success,
+            );
+        }
+
+        // ZERO_DRIVE persistent control.
+        let mut zero = carrier(true);
+        assert!(zero.enable_phase_native_learned_drive(PhaseDriveConfig {
+            learning_enabled: false,
+            ..PhaseDriveConfig::default()
+        }));
+        zero.set_phase_native_drive_learning_enabled(false);
+        for &domain in &block.order {
+            let outcome = acquire_domain(
+                &mut zero,
+                domain,
+                &block.target[domain],
+                false,
+                ACQUIRE_BUDGET,
+            );
+            zero_drive_acquisition_success += usize::from(outcome.success);
+        }
+
+        // NO_GROWTH persistent control.
+        let mut no_growth = persistent_with_drive(drive_checkpoint, false);
+        for &domain in &block.order {
+            let outcome = acquire_domain(
+                &mut no_growth,
+                domain,
+                &block.target[domain],
+                false,
+                ACQUIRE_BUDGET,
+            );
+            no_growth_acquisition_success += usize::from(outcome.success);
+        }
+
+        println!(
+            "FRESH_P5_SUB sub={} primary={}/8 acquired_so_far={} repair={} counts={:?} drive={:?}",
+            sub,
+            sub_primary,
+            target_acquisition_success,
+            repaired.success,
+            structural_counts.last().unwrap(),
+            frozen_drive,
+        );
+    }
+
+    let primary_success = pre_success + post_success;
+    let n = 80usize;
+    let (lo, hi) = p5_wilson95(primary_success, n);
+    let (acquisition_mean, acquisition_sd) = p5_mean_sd(&acquisition_costs);
+    let (repair_mean, repair_sd) = p5_mean_sd(&repair_costs);
+
+    println!(
+        "FRESH_P5_RESULT N={} primary={}/{} wilson95=[{:.6},{:.6}] per_seed={:?} acquisition={}/40 intermediate={}/{} pre={}/40 repair={}/10 post={}/40 checkpoint={}/40 frozen_changed={}/10 reset_earlier={}/30 zero_drive_acq={}/40 no_growth_acq={}/40 drive_weight_violations={} legacy_graph_violations={}",
+        n,
+        primary_success,
+        n,
+        lo,
+        hi,
+        primary_per_seed,
+        target_acquisition_success,
+        intermediate_success,
+        intermediate_total,
+        pre_success,
+        repair_success,
+        post_success,
+        checkpoint_success,
+        frozen_changed_success,
+        reset_earlier_success,
+        zero_drive_acquisition_success,
+        no_growth_acquisition_success,
+        drive_weight_violations,
+        legacy_graph_violations,
+    );
+    println!(
+        "FRESH_P5_COST acquisition_mean={:.3} acquisition_sd={:.3} repair_mean={:.3} repair_sd={:.3} source_meta_cost={}",
+        acquisition_mean,
+        acquisition_sd,
+        repair_mean,
+        repair_sd,
+        meta_cost,
+    );
+    println!("FRESH_P5_STRUCTURE {:?}", structural_counts);
+
+    assert_eq!(target_acquisition_success, 40, "all 40 target worlds must be acquired");
+    assert_eq!(
+        intermediate_success, intermediate_total,
+        "every intermediate retained revisit must succeed"
+    );
+    assert_eq!(pre_success, 40, "pre-change retention must be 40/40");
+    assert!(repair_success >= 9, "changed-world repair must be >=9/10");
+    assert!(post_success >= 39, "post-change retention must be >=39/40");
+    assert!(primary_success >= 79, "primary FULL must be >=79/80");
+    assert!(lo >= 0.93, "Wilson95 lower bound must be >=0.93");
+    assert!(
+        primary_per_seed.iter().all(|score| *score >= 7),
+        "every sub-seed primary score must be >=7/8"
+    );
+    assert!(
+        checkpoint_success >= 39,
+        "checkpoint-restored retention must be >=39/40"
+    );
+    assert!(
+        frozen_changed_success <= 2,
+        "frozen changed-world control must be <=2/10"
+    );
+    assert!(
+        reset_earlier_success <= 6,
+        "reset-between-worlds earlier retention must be <=6/30"
+    );
+    assert!(
+        zero_drive_acquisition_success <= 20,
+        "zero-drive acquisition must be <=20/40"
+    );
+    assert!(
+        no_growth_acquisition_success <= 4,
+        "no-growth acquisition must be <=4/40"
+    );
+    assert!(
+        acquisition_mean <= 35.0,
+        "mean target acquisition cost must be <=35"
+    );
+    assert!(
+        repair_mean <= 30.0,
+        "mean successful repair cost must be <=30"
+    );
+    assert_eq!(drive_weight_violations, 0, "target P4 drive must remain frozen");
+    assert_eq!(legacy_graph_violations, 0, "legacy graph backend must remain absent");
+}
