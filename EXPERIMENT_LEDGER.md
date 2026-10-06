@@ -14,7 +14,7 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G2 | CI-1 | TECHNICAL_FAIL_OBSERVER_METRIC | First compiled G2 run reached the held-out epistemic test, but the observer incorrectly mixed withheld-prediction similarity with probe-2 disagreement via `min()`. No cognitive verdict; algorithm/world unchanged. |
 | G2 | CI-2 | PASS_ACTIVE_EPISTEMIC_SELECTION | CI run 37495559913 at commit `4bbf08ead05d85c5a30363971e756e7e01615abb`: all 14 Rust tests PASS and release build PASS. Two carrier-owned rival world hypotheses coexist; GENUINE selects the most-discriminating opaque probe first, collapses to one rival after one factual POST on both held-out laws, and predicts a withheld consequence. Matched generic exploration starts with non-discriminating probe 0 and requires more physical probes. Tuition cost: 18 factual probes. |
 | G3 | CI-1 | PASS_FIRST_ACQUIRED_MACRO | CI run 37497610519 at commit `da5711f7c2d9491ba38336f0b1154d6e8781ee34`: all 16 Rust tests PASS and release build PASS. From 108 matched factual tuition actions, GENUINE consolidates one two-step branching EvoPhase macro; NO_CONSOLIDATION acquires none. The macro learns opaque first motor 1 and two relational post-trace branches leading to different learned terminal motors, transfers to two unseen spatial bindings, changes held-out action, and reaches factual Need on 2/2 held-out contexts within the fixed two-action budget. |
-| G4 | — | NOT_STARTED | Revision of the same acquired macro |
+| G4 | CI-1 | PASS_SAME_IDENTITY_MACRO_REVISION | CI run 37499873532 at commit `9dcf13c67fd44a52dac9a825b93c908b7b535bb8`: all 18 Rust tests PASS and release build PASS. After a world-law change, the same acquired macro ID is retained, contradiction evidence is preserved, obsolete branch action accumulates failures, a newly supported action takes over for the changed branch, the unchanged branch remains correct, and NO_REVISION fails the changed held-out context. Revision cost: 24 physical actions. |
 | G5 | — | NOT_STARTED | Hierarchical reuse |
 | G6 | — | NOT_STARTED | Learned exploration strategy |
 | G7 | — | NOT_STARTED | Open-world qualification |
@@ -104,3 +104,24 @@ Within the preregistered bounded two-step macro world:
 - optimized release build succeeds.
 
 This is the first bounded acquired reusable control program in Aeterna-v1. It is a two-step branching macro-assembly, not arbitrary program induction, recursion, a universal VM or AGI.
+
+
+## What G4 PASS establishes
+
+Within the preregistered macro-revision world:
+
+- both REVISION and NO_REVISION begin from the same single G3-acquired macro;
+- both receive identical revision factual ledgers;
+- revision cost is 24 physical actions;
+- macro count remains 1 and the macro ID is unchanged;
+- contradictory outcomes remain stored as explicit counterexamples;
+- the obsolete branch action remains represented with accumulated failure evidence rather than being deleted;
+- the same macro revision counter increases;
+- a newly factually supported terminal action becomes selected for the changed branch;
+- the unchanged branch keeps its previous action and remains successful;
+- on two held-out translations, REVISION reaches factual Need in 2/2 contexts;
+- NO_REVISION still invokes the obsolete changed-branch action and fails that context;
+- G0-G3 regressions remain PASS;
+- optimized release build succeeds.
+
+This closes same-identity bounded macro repair. It does not yet establish hierarchical reuse of acquired macros inside newly acquired higher-level macros.
