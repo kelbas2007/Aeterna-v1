@@ -1,4 +1,5 @@
 pub mod authority;
+pub mod belief;
 pub mod carrier;
 pub mod epistemic;
 pub mod exploration;
@@ -11,6 +12,7 @@ pub mod raster;
 pub mod trace;
 
 pub use authority::Authority;
+pub use belief::{BeliefConfig, EvoBeliefState};
 pub use carrier::{DendriticBranch, EvoConfig, EvoPhase, FactualFrame, LearningReport, Prediction};
 pub use epistemic::{
     EpistemicEpisode, EvoEpistemicState, HypothesisPrediction, WorldHypothesis,
