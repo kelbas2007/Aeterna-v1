@@ -92,7 +92,7 @@ fn identify(
     epistemic: bool,
     ox: usize,
     oy: usize,
-) -> (u32, usize, f32, f32, f32) {
+) -> (u32, usize, f32, f32, f32, f32) {
     let mut evo = mature.clone();
     let pre = start_scene(ox, oy);
 
@@ -133,7 +133,8 @@ fn identify(
         first_action,
         d0,
         d1,
-        d2.min(predicted_similarity),
+        d2,
+        predicted_similarity,
     )
 }
 
@@ -161,9 +162,9 @@ fn g2_disagreement_selects_the_informative_probe() {
         (HiddenLaw::Alpha, 8usize, 3usize),
         (HiddenLaw::Beta, 4usize, 8usize),
     ] {
-        let (g_probes, g_first, d0, d1, g_quality) =
+        let (g_probes, g_first, d0, d1, d2, predicted_similarity) =
             identify(&mature, law, true, ox, oy);
-        let (c_probes, c_first, _, _, _) =
+        let (c_probes, c_first, _, _, _, _) =
             identify(&mature, law, false, ox, oy);
 
         assert!(
@@ -171,7 +172,11 @@ fn g2_disagreement_selects_the_informative_probe() {
             "opaque probe 1 must have greater acquired disagreement than the non-discriminating probe"
         );
         assert!(
-            g_quality > 0.90,
+            d1 > d2,
+            "opaque probe 1 must remain more discriminating than the withheld probe"
+        );
+        assert!(
+            predicted_similarity > 0.97,
             "the surviving hypothesis must predict the withheld relational consequence"
         );
         assert_eq!(
