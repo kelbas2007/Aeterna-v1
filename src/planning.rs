@@ -129,6 +129,45 @@ impl EvoImaginationPlanner {
         self.plan_with_depth(start, self.config.max_depth)
     }
 
+    pub fn choose_immediate_model(&mut self, start: &CarrierTrace) -> Option<PlanDecision> {
+        self.last_rollout.clear();
+
+        let mut best: Option<PlanDecision> = None;
+        let mut considered = 0usize;
+
+        for edge in self.transitions.iter().filter(|edge| {
+            edge.from.similarity(start) >= self.config.match_threshold
+        }) {
+            considered = considered.saturating_add(1);
+            let candidate = PlanDecision {
+                first_action: edge.action,
+                predicted_value: edge.mean_reward(),
+                selected_depth: 1,
+                expanded_nodes: considered,
+                authority: Authority::Model,
+            };
+
+            let better = best
+                .as_ref()
+                .map(|current| {
+                    candidate.predicted_value > current.predicted_value + 1.0e-6
+                        || ((candidate.predicted_value - current.predicted_value).abs()
+                            <= 1.0e-6
+                            && candidate.first_action < current.first_action)
+                })
+                .unwrap_or(true);
+
+            if better {
+                best = Some(candidate);
+            }
+        }
+
+        if let Some(best) = best.as_mut() {
+            best.expanded_nodes = considered;
+        }
+        best
+    }
+
     pub fn plan_with_depth(
         &mut self,
         start: &CarrierTrace,
