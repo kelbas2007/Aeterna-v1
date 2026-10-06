@@ -237,7 +237,9 @@ impl EvoPhase {
             // No task label, coordinate, map or correct action is available here.
             let score =
                 2.0 * p.need
-                + 0.30 * uncertainty
+                // Unsupported motor hypotheses must remain testable; otherwise one
+                // early globally-successful action can suppress contextual learning.
+                + 0.60 * uncertainty
                 + 0.80 * novelty
                 + 0.20 * branch_utility
                 + 0.05 * coherence;
