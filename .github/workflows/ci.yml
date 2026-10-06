@@ -1,5 +1,5 @@
 name: evo-ci
-# Manual-only between sealed qualification checkpoints.
+# Temporary deterministic P4 preflight trigger; fresh qualification inputs remain off.
 
 on:
   workflow_dispatch:
@@ -19,11 +19,17 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ci.yml']
+
 permissions:
   contents: read
 
 jobs:
   rust:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p4: run learned drive deterministic preflight'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
