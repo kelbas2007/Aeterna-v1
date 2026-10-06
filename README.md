@@ -32,6 +32,27 @@ The result is **a learned associative forward model with physical causal depende
 
 See the [P2 protocol](docs/PHASE_NATIVE_P2_PROTOCOL.md), [executed P2 result and limitations](docs/PHASE_NATIVE_P2_RESULT.md), and [ordinary API usage and coordinate-frame limits](docs/PHASE_NATIVE_P2_USAGE.md). P2's observed pack is burned for subsequent design revisions.
 
+### P3: autonomous acquisition without a supplied transition curriculum
+
+P3 adds a phase-native acquisition selector that gives intrinsic value to unmodelled actions and propagates deeper frontier novelty backward through **the same acquired successor synapses**. In the reset-chain test family, wrong actions reset the environment to the start, so the organism must reuse already learned transitions to deliberately return to deeper unknown states.
+
+The first one-use FRESH-P3 authority run `37528857872` at source `52bbbc2654894bbaf8501e6834757dff25f1e242` passed its frozen contract:
+
+- cold FULL acquisition **80/80**, Wilson95 [0.954182,1.000000];
+- held-out frozen exploitation **80/80**;
+- restore into a newly constructed EvoPhase and solve again **80/80**;
+- DIRECT_ONLY **9/80**, seeded random **35/80**;
+- no-learning / no-growth / zero-phase / zero-weight controls **[0,0,9,2]/80**;
+- changed-law detour repair **78/80**, while frozen stale copies scored **0/80**;
+- revised solve + checkpoint restore **78/78**;
+- mean initial acquisition cost **20.075** physical interactions;
+- mean changed-law repair cost **16.462**;
+- legacy graph transition table remained absent.
+
+This is the first bounded result in this line where the tested transition experience is **not handed in as a prepared curriculum**. The organism chooses the physical acquisition actions itself and learns only from their factual consequences.
+
+It is still not general intelligence: the intrinsic frontier-novelty rule is hand-specified, worlds are deterministic and fully observed, and the tested family is narrow. See [P3 protocol](docs/PHASE_NATIVE_P3_PROTOCOL.md), [fresh protocol](docs/PHASE_NATIVE_P3_FRESH_PROTOCOL.md), and [P3 result](docs/PHASE_NATIVE_P3_RESULT.md). The authority pack `c9a3d25d6f64c483` is permanently burned.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
@@ -71,8 +92,8 @@ Matched controls must preserve raw observations, primitive substrate, factual ou
 
 Development is on **`main`**, following the owner's merge of `genesis/full-evophase`.
 
-Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate [P1 result](docs/PHASE_NATIVE_P1_RESULT.md) and [P2 result](docs/PHASE_NATIVE_P2_RESULT.md) record subsequent bounded shared-synapse checkpoints without rewriting that history.
+Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1, P2 and P3 result records document bounded phase-native checkpoints without rewriting that history.
 
-Next capability requirement: remove the supplied transition curriculum. One cold-start organism must select its own informative physical interactions, learn the needed distinctions and world dynamics, use experience for goals not supplied as route scripts, retain useful knowledge under factual revision, and preserve acquired state across restart. P2 supplies a tested forward-model component, not completion of that intelligence objective. The existing graph planner remains a reference implementation.
+P3 closes the prepared-transition-curriculum gap for one deterministic family. The next architectural bottleneck is no longer “can it collect its own transitions?” but whether exploration itself can become **learned and history-dependent** rather than a hand-written unknown-action novelty rule, while retaining old knowledge across multiple changing worlds. G10 composite-concept construction remains a separate preregistered capability target.
 
-Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Fresh P1 and P2 qualifications are disabled by default and require explicit selection of a new first-attempt workflow run.
+Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Any future fresh qualification requires a newly frozen source/spec and a new first-attempt authority run.
