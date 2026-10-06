@@ -210,6 +210,21 @@ impl EvoMacroMemory {
         Some(macro_assembly.first_action)
     }
 
+    pub fn begin_by_id(&mut self, pre: &PhaseVector, macro_id: u64) -> Option<usize> {
+        self.active_macro = None;
+        if !self.config.readout_enabled {
+            return None;
+        }
+
+        let macro_assembly = self.macros.iter().find(|m| m.id == macro_id)?;
+        if macro_assembly.entry.similarity(pre) < self.config.match_threshold {
+            return None;
+        }
+
+        self.active_macro = Some(macro_assembly.id);
+        Some(macro_assembly.first_action)
+    }
+
     pub fn continue_after_factual_post(&mut self, mid: &PhaseVector) -> Option<usize> {
         if !self.config.readout_enabled {
             self.active_macro = None;
