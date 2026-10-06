@@ -451,3 +451,389 @@ fn p3_source_guard_excludes_host_graph_search_from_autonomous_selector() {
         assert!(selector.contains(required), "P3 selector missing {required}");
     }
 }
+
+
+struct FreshRng(u64);
+
+impl FreshRng {
+    fn new(seed: u64) -> Self {
+        Self(seed ^ 0x9E37_79B9_7F4A_7C15)
+    }
+
+    fn next(&mut self) -> u64 {
+        let mut x = self.0;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        self.0 = x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+
+    fn range(&mut self, n: usize) -> usize {
+        (self.next() % n as u64) as usize
+    }
+}
+
+#[derive(Debug, Clone)]
+struct FreshCase {
+    sub_seed: usize,
+    world: World,
+    x: usize,
+    y: usize,
+    random_seed: u64,
+}
+
+fn wilson95(success: usize, n: usize) -> (f64, f64) {
+    let z = 1.959_963_984_540_054_f64;
+    let n = n as f64;
+    let p = success as f64 / n;
+    let denominator = 1.0 + z * z / n;
+    let center = (p + z * z / (2.0 * n)) / denominator;
+    let half = z
+        * (p * (1.0 - p) / n + z * z / (4.0 * n * n)).sqrt()
+        / denominator;
+    (center - half, center + half)
+}
+
+fn mean_sd(values: &[usize]) -> (f64, f64) {
+    let mean = values.iter().sum::<usize>() as f64 / values.len() as f64;
+    let variance = values
+        .iter()
+        .map(|value| (*value as f64 - mean).powi(2))
+        .sum::<f64>()
+        / (values.len().saturating_sub(1).max(1)) as f64;
+    (mean, variance.sqrt())
+}
+
+fn fnv_mix(mut hash: u64, bytes: &[u8]) -> u64 {
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(1_099_511_628_211);
+    }
+    hash
+}
+
+fn fresh_cases(authority: u64) -> Vec<FreshCase> {
+    let mut pack = Vec::new();
+    for sub in 0..10u64 {
+        let derived = authority
+            ^ sub.wrapping_mul(0xD1B5_4A32_D192_ED03)
+            ^ 0xA37E_C915_5F04_771B;
+        let mut rng = FreshRng::new(derived);
+
+        for _ in 0..8 {
+            let length = 3 + rng.range(3);
+            let mut advance = Vec::with_capacity(length);
+            for _ in 0..length {
+                advance.push(rng.range(3));
+            }
+            let detour_at = 1 + rng.range(length - 1);
+            let mut detour_action = rng.range(3);
+            if detour_action == advance[detour_at] {
+                detour_action = (detour_action + 1) % 3;
+            }
+            pack.push(FreshCase {
+                sub_seed: sub as usize,
+                world: World {
+                    length,
+                    advance,
+                    detour_at,
+                    detour_action,
+                },
+                x: 1 + rng.range(6),
+                y: 1 + rng.range(6),
+                random_seed: rng.next(),
+            });
+        }
+    }
+    pack
+}
+
+#[test]
+#[ignore = "one-use post-freeze FRESH-P3 authority only"]
+fn p3_fresh_autonomous_acquisition_pack() {
+    let authority: u64 = std::env::var("AETERNA_FRESH_SEED")
+        .expect("CI authority required")
+        .parse()
+        .expect("authority must be u64");
+    let source = std::env::var("AETERNA_SOURCE_SHA").expect("source SHA required");
+    let spec = std::env::var("AETERNA_SPEC_SHA").expect("spec SHA required");
+    assert_eq!(
+        std::env::var("GITHUB_RUN_ID").expect("GitHub run id"),
+        authority.to_string()
+    );
+    assert_eq!(source.len(), 40);
+    assert_eq!(spec.len(), 40);
+
+    let pack = fresh_cases(authority);
+    assert_eq!(pack.len(), 80);
+
+    let mut digest = 14_695_981_039_346_656_037_u64;
+    for (index, case) in pack.iter().enumerate() {
+        let row = format!(
+            "{}:{}:{:?}:x={}:y={}:random_seed={}",
+            index, case.sub_seed, case.world, case.x, case.y, case.random_seed
+        );
+        digest = fnv_mix(digest, row.as_bytes());
+        println!("P3_WORLD {row}");
+    }
+    println!(
+        "P3_SEAL source={} spec={} authority={} pack_digest={:016x} N=80 seeds=10 BEFORE_ALL_ACQUISITION_AND_SCORING",
+        source, spec, authority, digest
+    );
+
+    let mut full = 0usize;
+    let mut exploit_ok = 0usize;
+    let mut restart_ok = 0usize;
+    let mut direct = 0usize;
+    let mut random = 0usize;
+    let mut controls = [0usize; 4];
+
+    let mut revision = 0usize;
+    let mut revision_exploit = 0usize;
+    let mut revision_restart = 0usize;
+    let mut frozen_changed = 0usize;
+
+    let mut per_seed = [0usize; 10];
+    let mut revision_per_seed = [0usize; 10];
+    let mut acquisition_costs = Vec::with_capacity(80);
+    let mut revision_costs = Vec::with_capacity(80);
+    let mut graph_table_nonzero = 0usize;
+
+    for (index, case) in pack.iter().enumerate() {
+        let world = &case.world;
+
+        let mut evo = carrier("native");
+        let acquired = autonomous_acquire(
+            &mut evo,
+            world,
+            false,
+            ACQUISITION_BUDGET,
+            false,
+        );
+        acquisition_costs.push(acquired.interactions);
+        full += usize::from(acquired.reward);
+        per_seed[case.sub_seed] += usize::from(acquired.reward);
+        graph_table_nonzero += usize::from(evo.planning_transition_count() != 0);
+
+        if acquired.reward {
+            let mut frozen_eval = evo.clone();
+            frozen_eval.set_planning_learning_enabled(false);
+            exploit_ok += usize::from(
+                exploit(
+                    &mut frozen_eval,
+                    world,
+                    false,
+                    case.x,
+                    case.y,
+                    world.length + 1,
+                )
+                .0,
+            );
+
+            let checkpoint = evo.phase_native_checkpoint().expect("fresh P3 checkpoint");
+            let mut restarted = restore_into_new_carrier(checkpoint);
+            restarted.set_planning_learning_enabled(false);
+            restart_ok += usize::from(
+                exploit(
+                    &mut restarted,
+                    world,
+                    false,
+                    case.x,
+                    case.y,
+                    world.length + 1,
+                )
+                .0,
+            );
+
+            let mut stale = evo.clone();
+            stale.set_planning_learning_enabled(false);
+            frozen_changed += usize::from(
+                exploit(
+                    &mut stale,
+                    world,
+                    true,
+                    case.x,
+                    case.y,
+                    world.length + 3,
+                )
+                .0,
+            );
+
+            let mut repairing = evo.clone();
+            repairing.set_planning_learning_enabled(true);
+            let repaired = autonomous_acquire(
+                &mut repairing,
+                world,
+                true,
+                REVISION_BUDGET,
+                false,
+            );
+            revision_costs.push(repaired.interactions);
+            revision += usize::from(repaired.reward);
+            revision_per_seed[case.sub_seed] += usize::from(repaired.reward);
+
+            if repaired.reward {
+                let mut revised_eval = repairing.clone();
+                revised_eval.set_planning_learning_enabled(false);
+                revision_exploit += usize::from(
+                    exploit(
+                        &mut revised_eval,
+                        world,
+                        true,
+                        case.x,
+                        case.y,
+                        world.length + 3,
+                    )
+                    .0,
+                );
+
+                let checkpoint = repairing
+                    .phase_native_checkpoint()
+                    .expect("fresh revised P3 checkpoint");
+                let mut revised_restarted = restore_into_new_carrier(checkpoint);
+                revised_restarted.set_planning_learning_enabled(false);
+                revision_restart += usize::from(
+                    exploit(
+                        &mut revised_restarted,
+                        world,
+                        true,
+                        case.x,
+                        case.y,
+                        world.length + 3,
+                    )
+                    .0,
+                );
+            }
+        } else {
+            revision_costs.push(REVISION_BUDGET);
+        }
+
+        let mut direct_evo = carrier("native");
+        direct += usize::from(
+            autonomous_acquire(
+                &mut direct_evo,
+                world,
+                false,
+                ACQUISITION_BUDGET,
+                true,
+            )
+            .reward,
+        );
+        random += usize::from(
+            random_acquire(world, case.random_seed, ACQUISITION_BUDGET).0,
+        );
+
+        for (control_index, mode) in
+            ["no_learning", "no_growth", "zero_phase", "zero_weight"]
+                .iter()
+                .enumerate()
+        {
+            let mut control = carrier(mode);
+            controls[control_index] += usize::from(
+                autonomous_acquire(
+                    &mut control,
+                    world,
+                    false,
+                    ACQUISITION_BUDGET,
+                    false,
+                )
+                .reward,
+            );
+        }
+
+        println!(
+            "P3_WORLD_RESULT index={} seed={} world={:?} full={} acquire_actions={} exploit={} restart={} repair_count={} repair_actions={} direct_cumulative={} random_cumulative={}",
+            index,
+            case.sub_seed,
+            world,
+            acquired.reward,
+            acquired.interactions,
+            exploit_ok,
+            restart_ok,
+            revision,
+            *revision_costs.last().unwrap(),
+            direct,
+            random,
+        );
+    }
+
+    let ci = wilson95(full, pack.len());
+    let (acquisition_mean, acquisition_sd) = mean_sd(&acquisition_costs);
+    let (revision_mean, revision_sd) = mean_sd(&revision_costs);
+
+    println!(
+        "P3_FRESH full={}/80 wilson95=[{:.6},{:.6}] per_seed={:?} exploit={}/{} restart={}/{} direct={}/80 random={}/80 controls_no_learning_no_growth_zero_phase_zero_weight={:?}",
+        full,
+        ci.0,
+        ci.1,
+        per_seed,
+        exploit_ok,
+        full,
+        restart_ok,
+        full,
+        direct,
+        random,
+        controls,
+    );
+    println!(
+        "P3_REVISION repaired={}/80 per_seed={:?} revised_exploit={}/{} revised_restart={}/{} frozen_changed={}/{} graph_table_nonzero={}",
+        revision,
+        revision_per_seed,
+        revision_exploit,
+        revision,
+        revision_restart,
+        revision,
+        frozen_changed,
+        full,
+        graph_table_nonzero,
+    );
+    println!(
+        "P3_COST acquisition_mean={:.3} acquisition_sd={:.3} revision_mean={:.3} revision_sd={:.3}",
+        acquisition_mean,
+        acquisition_sd,
+        revision_mean,
+        revision_sd,
+    );
+
+    assert!(full >= 76, "FULL initial autonomous acquisition must be >=76/80");
+    assert!(ci.0 >= 0.87, "Wilson lower bound must be >=0.87");
+    assert!(
+        per_seed.iter().all(|value| *value >= 6),
+        "every sub-seed must acquire >=6/8"
+    );
+    assert_eq!(exploit_ok, full, "every acquired world must solve frozen held-out translation");
+    assert_eq!(restart_ok, full, "every acquired world must survive checkpoint restore");
+    assert!(acquisition_mean <= 45.0, "mean acquisition cost exceeds frozen budget criterion");
+    assert!(
+        full.saturating_sub(direct) >= 24,
+        "DIRECT_ONLY must trail FULL by >=0.30 absolute"
+    );
+    assert!(
+        full.saturating_sub(random) >= 20,
+        "RANDOM_ACTION must trail FULL by >=0.25 absolute"
+    );
+    assert!(
+        controls.iter().all(|value| *value < 40),
+        "no structural/plastic control may reach 50% success"
+    );
+    assert!(revision >= 72, "changed-law autonomous repair must be >=72/80");
+    assert!(
+        revision_per_seed.iter().all(|value| *value >= 6),
+        "every sub-seed must repair >=6/8"
+    );
+    assert!(revision_mean <= 25.0, "mean changed-law repair cost exceeds frozen criterion");
+    assert_eq!(
+        revision_exploit, revision,
+        "every repaired world must solve after learning freeze"
+    );
+    assert_eq!(
+        revision_restart, revision,
+        "every repaired world must survive revised checkpoint restore"
+    );
+    assert!(
+        frozen_changed < revision,
+        "frozen stale copies must be strictly worse than learned repair"
+    );
+    assert_eq!(graph_table_nonzero, 0, "legacy graph transition table must remain absent");
+}
