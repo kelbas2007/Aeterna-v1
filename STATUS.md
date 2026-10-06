@@ -6,7 +6,8 @@ Date: 2026-10-06
 
 **G0 PASS — minimal EvoPhase ownership precursor.**  
 **G1-B PASS — raw-raster relational distinction with held-out translation transfer.**  
-**G2 PASS — carrier-owned informative experiment selection.**
+**G2 PASS — carrier-owned informative experiment selection.**  
+**G3 PASS — first acquired reusable EvoPhase macro/program.**
 
 No AGI claim. No production promotion.
 
@@ -83,10 +84,27 @@ Still not demonstrated:
 - learned cross-domain exploration strategy;
 - ARC/AGI.
 
+### G3 — acquired reusable macro
+
+Qualified commit: `da5711f7c2d9491ba38336f0b1154d6e8781ee34`  
+Workflow: `37497610519`
+
+- 16/16 Rust tests PASS;
+- optimized release build PASS;
+- 108 matched factual tuition actions;
+- macro absent before tuition;
+- GENUINE consolidates one two-step branching macro from successful carrier trajectories;
+- NO_CONSOLIDATION acquires zero macros from the same factual episodes;
+- learned body contains opaque first motor + two relational post-trace branches with different terminal motors;
+- same macro transfers to 2 unseen absolute raster bindings;
+- macro readout causally changes held-out action;
+- G_READOUT reaches factual Need on 2/2 held-out contexts inside the fixed two-action budget;
+- disabling macro readout/consolidation removes the complete held-out advantage.
+
 ## Next gate
 
-**G3: first acquired reusable EvoPhase macro/program.**
+**G4: revision of the same acquired macro.**
 
-Repeated successful carrier dynamics must consolidate into a new parameterized macro-assembly that did not exist in the inherited substrate. It must be invoked on a new binding, change action, survive checkpoint semantics, and later be revisable by factual counterexample.
+A factual counterexample must revise the already acquired macro itself, preserve the contradictory fact, invalidate the obsolete dependent branch/action, and restore correct behavior without discarding the whole macro.
 
 CI remains manual-only between qualification checkpoints to avoid unnecessary runner usage.
