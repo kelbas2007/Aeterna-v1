@@ -241,9 +241,11 @@ impl EvoPhase {
         };
         let min_support = u64::from(self.config.min_recruit_support);
         let floor = state.config.coherence_floor;
+        let sensory_cells = self.config.sensory_cells;
+        let motor_cells = self.config.motor_cells;
 
         let action_known = |cell: usize, action: usize, state: &PhaseNativeState, synapses: &[PhaseSynapse]| {
-            let motor = self.config.sensory_cells + action;
+            let motor = sensory_cells + action;
             state.circuits.iter().any(|c| {
                 c.support >= min_support
                     && synapses[c.afferent_synapse].from == cell
@@ -255,7 +257,7 @@ impl EvoPhase {
 
         // Direct local novelty is strongest: every opaque action must earn its
         // factual model before it stops being epistemically valuable.
-        for action in 0..self.config.motor_cells {
+        for action in 0..motor_cells {
             if !action_known(entry, action, &state, &self.synapses) {
                 self.phase_native = Some(state);
                 return Some(action);
@@ -276,10 +278,10 @@ impl EvoPhase {
         }
         let mut intrinsic = vec![0.0_f32; membranes.len()];
         for receptor in &state.receptors {
-            let unknown = (0..self.config.motor_cells)
+            let unknown = (0..motor_cells)
                 .filter(|action| !action_known(receptor.cell, *action, &state, &self.synapses))
                 .count();
-            intrinsic[receptor.cell] = unknown as f32 / self.config.motor_cells as f32;
+            intrinsic[receptor.cell] = unknown as f32 / motor_cells as f32;
             membranes[receptor.cell].charge = intrinsic[receptor.cell];
         }
 
@@ -315,10 +317,10 @@ impl EvoPhase {
                 continue;
             }
             let output = &self.synapses[circuit.motor_synapse];
-            let Some(action) = output.to.checked_sub(self.config.sensory_cells) else {
+            let Some(action) = output.to.checked_sub(sensory_cells) else {
                 continue;
             };
-            if action >= self.config.motor_cells {
+            if action >= motor_cells {
                 continue;
             }
             let afferent = &self.synapses[circuit.afferent_synapse];
