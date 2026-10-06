@@ -272,18 +272,34 @@ impl EvoRasterField {
             return None;
         }
 
-        // Translation-equivariant oriented pair fragments. We keep *all* pair
-        // relations; Rust does not select a task-relevant offset or classifier.
-        // They are especially useful when a point is dropped or a distractor is
-        // added, because the surviving factual substructure remains present.
+        // Translation-equivariant oriented triangle fragments. Every visible
+        // triple is retained; no task-specific offset is selected. A one-point
+        // dropout leaves one exact learned triple, while a distractor preserves
+        // all original triples among additional ones. Keeping the two bound
+        // displacements together avoids the aliasing of an unordered pair bag.
         let mut oriented = Vec::new();
         for i in 0..points.len() {
             for j in (i + 1)..points.len() {
-                let dx = points[j].0 - points[i].0;
-                let dy = points[j].1 - points[i].1;
-                let ux = (dx + 16) as u64;
-                let uy = (dy + 16) as u64;
-                oriented.push(0x4f52_4945_4e54_0000u64 ^ (ux << 8) ^ uy);
+                for k in (j + 1)..points.len() {
+                    let dx1 = points[j].0 - points[i].0;
+                    let dy1 = points[j].1 - points[i].1;
+                    let dx2 = points[k].0 - points[i].0;
+                    let dy2 = points[k].1 - points[i].1;
+
+                    let fields = [
+                        (dx1 + 16) as u64,
+                        (dy1 + 16) as u64,
+                        (dx2 + 16) as u64,
+                        (dy2 + 16) as u64,
+                    ];
+
+                    let token = 0x4f52_5452_4900_0000u64
+                        ^ (fields[0] << 18)
+                        ^ (fields[1] << 12)
+                        ^ (fields[2] << 6)
+                        ^ fields[3];
+                    oriented.push(token);
+                }
             }
         }
 
