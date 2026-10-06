@@ -1,21 +1,19 @@
-# Aeterna-v1 — EvoPhase Genesis
+# AETERNA v1
 
-A fresh no-LLM intelligence research line built around **full EvoPhase cognitive ownership**.
+A clean no-LLM intelligence research line with **full EvoPhase cognitive ownership**.
 
-This repository is intentionally *not* a continuation of the old AETERNA implementation architecture. Earlier results, failures, controls and invariants are treated as empirical lessons. EvoPhase is the one mandatory architectural constraint.
+## Non-negotiable rule
 
-## Non-negotiable boundary
+EvoPhase is the cognitive substrate, not a planner plugin.
 
-EvoPhase is the cognitive substrate, not a planner plugin or execution backend.
-
-Rust implements substrate physics and the trusted shell. It may perform I/O, persistence, serialization, bounded resource accounting, provenance checks, safety gates and exact verification. It may **not** carry hidden task answers or choose representations, hypotheses, programs, experiments, plans or actions on behalf of the organism.
+Rust may implement substrate physics and the trusted shell (I/O, persistence, serialization, provenance, safety and exact verification), but Rust must not contain hidden task answers or perform task-level cognition on behalf of the organism.
 
 The following adaptive state must be EvoPhase-owned:
 
-- sensory distinctions and learned representations;
-- concepts and relational structure;
+- learned sensory distinctions and representations;
+- concepts and relations;
 - predictive hypotheses and rival models;
-- reusable skills/programs and their composition;
+- reusable skills / programs and their composition;
 - experiment selection;
 - imagined rollouts and planning state;
 - action policy;
@@ -24,29 +22,25 @@ The following adaptive state must be EvoPhase-owned:
 
 No LLM is used by the runtime.
 
-## Acceptance rule
+## Acceptance chain
 
-A capability is accepted only through a causal chain:
+A capability is accepted only when the same ordinary organism demonstrates:
 
 ```text
-experience
-  -> EvoPhase state change
-  -> new prediction / concept / program / experiment / plan
-  -> changed action
+raw experience
+  -> EvoPhase-owned state change
+  -> new prediction / program / experiment / plan
+  -> changed physical action
   -> factual external result
   -> revision of the same EvoPhase-owned structure
 ```
 
-Matched controls must preserve the same observations, primitive substrate, resource limits and factual outcomes while removing only the formation/readout being tested.
+Matched controls must preserve raw observations, primitive substrate, factual outcomes and resource limits while disabling only the mechanism under test.
 
-## Current status
+## Current branch
 
-**GENESIS / carrier-kernel implementation. Not AGI.**
+Development starts on `genesis/full-evophase`.
 
-The first executable target is deliberately lower than ARC: prove that a phase-coded, locally plastic, structurally growing carrier can own prediction and recruit new internal structure from raw sensorimotor events without a symbolic solver taking over cognition.
+First target: **EVO-OWNERSHIP-0** — prove that residual-driven structural growth inside EvoPhase changes held-out prediction and action, and that a factual counterexample revises the same carrier-owned structure.
 
-See:
-
-- `docs/ARCHITECTURE_RU.md`
-- `docs/RESEARCH_2026.md`
-- `docs/FIRST_EXPERIMENT.md`
+Status: **GENESIS / research implementation, not AGI claim**.
