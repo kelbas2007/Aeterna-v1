@@ -48,9 +48,15 @@ One-use fresh run 37512861361 scored 79/80 (98.75%, Wilson95 [0.9325,0.9978]) ac
 
 ## G8 — Internal imagination / planning
 
-Status: PASS (bounded mechanism witness).
+Status: FRESH PASS under explicit observability contract.
 
-Carrier-owned IMAGINED rollout selects depth-3 delayed-reward plans: 8/8 versus DEPTH1 0/8 and SHUFFLED_MODEL 0/8. REAL state remains unchanged during pure imagination. Fresh statistical qualification is next.
+One-use run 37516415100 scored FULL 80/80 (Wilson95 [0.9542,1.0000]) over route depths 2-4 and four nuisance types. DEPTH1, immediate MODEL and SHUFFLED_MODEL each scored 0/80. This qualification is conditional on carrier-state observability; 46 candidate worlds were rejected by a frozen representation-only observability seal before pack sealing.
+
+## G9 — Belief-state planning under perceptual aliasing
+
+Status: ACTIVE.
+
+Deliberately remove the G8 observability assumption. Distinct physical states may share the same current carrier observation. The organism must maintain a carrier-owned history/belief state and use it for planning; matched observation-only/memoryless controls must lose the advantage.
 
 ## Rule for advancing
 
