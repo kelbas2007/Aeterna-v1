@@ -11,7 +11,8 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G0 | REVISION-1 | PASS_MINIMAL_EVO_OWNERSHIP_PRECURSOR | Generic epistemic pressure was raised so unsupported motor hypotheses remain testable. Final CI: 7/7 tests PASS and release build PASS at commit `1002ae2310ce84cfac847ad941f641a659ac292f`; workflow run 37479430355 |
 | G1-A | local-shared-field | FAIL_TRANSLATION_REUSE | CI run 37493255258: raw-raster code compiled, but the learned local motif set grew beyond the preregistered reuse bound on an unseen translation. The local-window representation was still too tied to patch alignment; no G1 capability PASS. |
 | G1-B | relational-phase | PASS_RAW_RASTER_RELATIONAL_TRANSFER | CI run 37493664700 at commit `0dba8c2acac189712a9aebb1f7c9e58d4e135e8f`: all 12 tests PASS and release build PASS. GENUINE acquired relation units from raw 12x12 rasters, reused the same unit identity on an unseen translation, chose the correct opaque motor on 2/2 held-out translations, and matched formation/readout ablations lost the full advantage. |
-| G2 | — | NOT_STARTED | Carrier-owned informative experiment selection |
+| G2 | CI-1 | TECHNICAL_FAIL_OBSERVER_METRIC | First compiled G2 run reached the held-out epistemic test, but the observer incorrectly mixed withheld-prediction similarity with probe-2 disagreement via `min()`. No cognitive verdict; algorithm/world unchanged. |
+| G2 | CI-2 | PASS_ACTIVE_EPISTEMIC_SELECTION | CI run 37495559913 at commit `4bbf08ead05d85c5a30363971e756e7e01615abb`: all 14 Rust tests PASS and release build PASS. Two carrier-owned rival world hypotheses coexist; GENUINE selects the most-discriminating opaque probe first, collapses to one rival after one factual POST on both held-out laws, and predicts a withheld consequence. Matched generic exploration starts with non-discriminating probe 0 and requires more physical probes. Tuition cost: 18 factual probes. |
 | G3 | — | NOT_STARTED | Acquired reusable EvoPhase macro/program |
 | G4 | — | NOT_STARTED | Revision of the same acquired macro |
 | G5 | — | NOT_STARTED | Hierarchical reuse |
@@ -64,3 +65,21 @@ Within the preregistered 12x12 / 2-motor world:
 - optimized release build succeeds.
 
 This is a narrow raw-raster relational-transfer result. It does not establish arbitrary object discovery, unrestricted relation invention, acquired programs, planning, ARC competence or AGI.
+
+
+## What G2 PASS establishes
+
+Within the preregistered hidden-law probe world:
+
+- two incompatible predictive episode models are acquired from factual raw-raster transitions without evaluator law labels entering cognition;
+- translated tuition episodes of the same law consolidate into the same carrier hypothesis;
+- both rivals remain active at the held-out start;
+- epistemic value is computed from disagreement among acquired EvoPhase-owned predicted post-traces;
+- GENUINE selects opaque probe 1 first because its carrier predictions disagree most;
+- one factual probe reduces the rival set from two to one on each held-out law;
+- matched generic exploration begins with non-discriminating probe 0 and requires more factual probes;
+- after identification, the surviving model predicts an additional withheld relational consequence before it is revealed;
+- tuition cost is 18 factual probes; held-out GENUINE cost is 1 probe per world;
+- G0 and G1-B regression tests remain PASS.
+
+This is active epistemic selection from an acquired hypothesis set. It does not yet prove that the organism has learned a reusable **strategy for how to explore** across new task families; that remains G6.
