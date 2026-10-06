@@ -146,3 +146,32 @@ Within the preregistered bounded hierarchy world:
 - optimized release build succeeds.
 
 This demonstrates bounded hierarchical reuse of acquired programs. It does not yet show that the organism learned a reusable exploration strategy or arbitrary-depth recursive program composition.
+
+
+## Fresh statistical qualification — G1 translation
+
+Run: `37504043614`  
+Source SHA: `a73342a35dcf4b5c08162f3508ecaabbdc6ae261`  
+Spec blob SHA: `e32fc861f94ad86bf93631c1ed671762e1fd3f50`  
+Authority seed: `37504043614`  
+World-pack digest: `8e09c44e887c2ba0`
+
+One-use fresh pack:
+- N = 80 held-out worlds;
+- 10 independent sub-seeds;
+- randomized opaque 2-motor permutation per sub-seed;
+- EvoPhase = 80/80 = 1.0000;
+- Wilson 95% CI = [0.9542, 1.0000];
+- raw-template NN = 28/80 = 0.3500;
+- linear perceptron = 36/80 = 0.4500;
+- every sub-seed = 8/8.
+
+Therefore the preregistered FRESH-G1 **translation-transfer qualification PASSed**.
+
+Stress diagnostics on the same burned pack:
+- +1 distractor pixel: 42/80;
+- one task-pixel dropout: 42/80;
+- 90-degree rotation with class identity preserved: 0/80;
+- doubled spacing: 42/80.
+
+These stress outcomes are diagnostic failures/limitations, not tuned-away results. This pack is burned. Any design change motivated by them must be evaluated on a new fresh authority seed.
