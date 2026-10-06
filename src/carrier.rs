@@ -351,6 +351,12 @@ impl EvoPhase {
         }
     }
 
+    pub fn set_macro_revision_enabled(&mut self, enabled: bool) {
+        if let Some(memory) = self.macro_memory.as_mut() {
+            memory.set_revision_enabled(enabled);
+        }
+    }
+
     pub fn macros(&self) -> &[MacroAssembly] {
         self.macro_memory
             .as_ref()
@@ -382,6 +388,32 @@ impl EvoPhase {
             .as_mut()
             .expect("enable_macro_memory must be called first")
             .observe_successful_episode(pre, first_action, mid, second_action, need);
+    }
+
+    pub fn observe_factual_macro_episode(
+        &mut self,
+        pre_sensory: &[f32],
+        first_action: usize,
+        mid_sensory: &[f32],
+        second_action: usize,
+        need: bool,
+    ) {
+        let field = self
+            .raster_field
+            .as_ref()
+            .expect("macro revision requires an attached raw raster field");
+
+        let pre = field
+            .encode_relational_trace(pre_sensory)
+            .expect("macro revision requires a relational PRE trace");
+        let mid = field
+            .encode_relational_trace(mid_sensory)
+            .expect("macro revision requires a relational MID trace");
+
+        self.macro_memory
+            .as_mut()
+            .expect("enable_macro_memory must be called first")
+            .observe_factual_episode(pre, first_action, mid, second_action, need);
     }
 
     pub fn begin_macro_invocation(&mut self, pre_sensory: &[f32]) -> Option<usize> {
