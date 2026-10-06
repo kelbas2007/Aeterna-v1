@@ -64,6 +64,11 @@ fn g7_preflight_composes_perception_exploration_revision_and_hierarchy() {
         let no_hierarchy = score_world(&mature, world, Arm::NoHierarchy);
         let unrevised = score_world(&mature, world, Arm::UnrevisedChild);
 
+        println!(
+            "G7_PREFLIGHT_WORLD family={} law={} informative={} full={:?} zero={:?} no_hierarchy={:?} unrevised={:?}",
+            world.family, world.law, world.informative, full, zero, no_hierarchy, unrevised
+        );
+
         full_success += usize::from(full.success);
         zero_success += usize::from(zero.success);
         no_hierarchy_success += usize::from(no_hierarchy.success);
