@@ -20,6 +20,9 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | G6 | CI-1 | PASS_LEARNED_EXPLORATION_STRATEGY | CI run 37505474193 at commit `cd8330aed18d5d375aa6998420108faefe5042ef`: regressions and release build PASS. Strategy starts with zero weights, receives 32 factual tuition probes across eight 2-rival families with informative opaque probe identity rotated over all four IDs, and learns weights [0.6917086, 0.109836645, 0.109836645]. With strategy learning frozen, transfer to eight 3-rival worlds selects the maximally informative probe first in 7/8 versus ZERO_STRATEGY 2/8; direct disagreement oracle is also 7/8. Learned mean identification cost is 1.0000 probe versus 2.3958 for the all-24-random-orders baseline. |
 | G7 | FRESH-1 | FAIL_ROBUST_PERCEPTION_BOUNDARY | One-use fresh run 37508620132 at source `7f6f0ed70cd808d7d4fe64c3c28d0b2c2245d65f`, spec `a36fef13b97e0a83141c25dac5b7850f2281f582`, pack digest `8aee63cd272b8536`: FULL 20/80 = 25.0%, Wilson95 [0.1681,0.3548]. Every sub-seed was 2/8. Distractor/dropout/rotation/scale were each 0/20. ZERO_EXPLORATION and NO_HIERARCHY were also 20/80; UNREVISED was 6/80. Completed cognitive FAIL; pack permanently burned for qualification. |
 | R1 / G1-C | MECHANISM-1 | PASS_ROBUST_RELATIONAL_PERCEPTION | Workflow 37512561691 on `main`: preregistered robust-perception mechanism gate PASS. Robust carrier meets clean/nuisance thresholds, strictly exceeds directed-only nuisance performance, formation/readout ablations lose material advantage, whole-organism single-nuisance preflight passes 8/8, and G0-G6/ownership/release regressions remain PASS. Deterministic mechanism witness only; not fresh statistical qualification. |
+| G8 | CI-1 | FAIL_ROBUST_TRACE_DEPTH_COLLAPSE | First completed G8 mechanism run reached the planning witness but the robust ShapeTrace containment channel collapsed distinct route states enough that the selected plan did not require depth >=3. Planner unit test and prior regressions passed. Development witness only; no fresh pack consumed. |
+| G8 | CI-2 | TECHNICAL_FAIL_ESCAPED_NEWLINE | Follow-up run failed in rustfmt because a literal escaped newline was inserted into the evaluator test while adding diagnostics. No cognitive verdict. |
+| G8 | CI-3 | PASS_IMAGINED_DELAYED_REWARD_PLANNING | Workflow 37513785835 at source `371f9579be97ec6a3a5816c31b01d53260924b72`: FULL_IMAGINATION 8/8, DEPTH1 0/8, SHUFFLED_MODEL 0/8, rollout_nodes=64. Selected plans were depth 3 with Authority::Imagined, opaque motor permutations were followed, REAL state remained unchanged during imagination, regressions/ownership/R1/release build PASS. Exact relational FHRR channel used for the bounded planning witness. |
 | G7 | FRESH-2 | PASS_WHOLE_ORGANISM_OPEN_WORLD | One-use fresh run 37512861361 at source `80be115ce28b53d4668b75c9eab7105ada6780b6`, spec `a36fef13b97e0a83141c25dac5b7850f2281f582`, pack digest `982ea2a9d8512fa9`: FULL 79/80=98.75%, Wilson95 [0.9325,0.9978], per-seed [8,8,8,8,8,8,8,8,8,7]. Nuisance: distractor 20/20, dropout 19/20, rotation 20/20, scale 19/20. ZERO_EXPLORATION 78/80 but matched probes 2.3590 vs FULL 1.1667; NO_HIERARCHY 80/80 but matched parent candidates 2.5823 vs FULL 1.0000; UNREVISED 22/80 and 0/58 on revision-required worlds vs FULL 57/58. Release build PASS. Pack permanently burned. |
 
 ## What G0 PASS establishes
@@ -244,3 +247,19 @@ Under the frozen G7 protocol and one-use authority pack:
 - all source/spec/seed/digest values were fixed/logged before scoring.
 
 This is a bounded fresh whole-organism qualification, not AGI or unrestricted open-world competence.
+
+
+## What G8 mechanism PASS establishes
+
+Within the preregistered delayed-reward development witness:
+
+- local factual transitions are acquired before planning;
+- alternative future states are expanded inside EvoPhase-owned IMAGINED state;
+- the planner rejects an immediate reward of 0.30 in favor of a three-step route whose discounted predicted value is 0.9025;
+- the selected first action follows opaque motor permutation rather than a fixed action ID;
+- depth-1 planning chooses the immediate trap and fails all 8 worlds;
+- consistently shuffled learned successor bindings fail all 8 worlds;
+- pure imagination does not mutate REAL factual state;
+- factual execution of the selected route succeeds 8/8.
+
+This is a bounded mechanism PASS, not yet fresh statistical qualification or unrestricted planning.

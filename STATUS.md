@@ -13,7 +13,8 @@ Date: 2026-10-06
 **G6 PASS — learned exploration strategy transfers across rival-count families.**  
 **G7 FRESH-1 — FAIL: robust perception/representation boundary.**  
 **R1 / G1-C MECHANISM PASS — robust carrier-owned relational perception.**  
-**G7 FRESH-2 PASS — whole-organism fresh open-world qualification.**
+**G7 FRESH-2 PASS — whole-organism fresh open-world qualification.**  
+**G8 MECHANISM PASS — carrier-owned imagined delayed-reward planning.**
 
 No AGI claim. No production promotion.
 
@@ -270,10 +271,27 @@ R1 mechanism witness on the same frozen source logged:
 - NO_FORMATION=0/20;
 - NO_READOUT=0/20.
 
+## G8 imagined-planning mechanism result
+
+Workflow `37513785835` completed PASS on source `371f9579be97ec6a3a5816c31b01d53260924b72`.
+
+- FULL_IMAGINATION: 8/8 delayed-reward development worlds;
+- DEPTH1: 0/8;
+- SHUFFLED_MODEL: 0/8;
+- each selected full plan had depth 3 and IMAGINED authority;
+- the chosen first motor followed opaque motor permutations rather than fixed numeric IDs;
+- pure imagination left REAL factual state unchanged;
+- 64 rollout nodes were expanded across the 8 successful worlds;
+- G0-G7 regressions, ownership audit, R1 mechanism and release build remained PASS.
+
+The first G8 attempt using the robust containment trace failed the depth witness because distinct route states collapsed too aggressively. That result is preserved as a mechanism-design FAIL. G8 was then isolated on the exact translation-invariant FHRR relational channel, where route-state distinctions remain available. A later syntax-only newline error was technical and did not alter the mechanism.
+
+This is a bounded mechanism witness. Fresh statistical planning qualification remains pending.
+
 ## Next gate
 
-**G8: carrier-owned internal imagination and multi-step planning.**
+**G8-FRESH: one-use statistical qualification of imagined planning.**
 
-The organism must evaluate alternative future action/macro trajectories in IMAGINED authority before physical execution, select a delayed-reward plan, and then survive factual verification. No host-side BFS/solver may choose the plan.
+Freeze source/spec, generate >=80 delayed-reward worlds over >=10 sub-seeds with opaque motor permutations and route depths 2-4, then compare FULL_IMAGINATION with DEPTH1, NO_IMAGINATION/immediate-value, and SHUFFLED_MODEL controls.
 
 CI is manual-only between qualification checkpoints.

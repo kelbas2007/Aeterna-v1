@@ -48,9 +48,9 @@ One-use fresh run 37512861361 scored 79/80 (98.75%, Wilson95 [0.9325,0.9978]) ac
 
 ## G8 — Internal imagination / planning
 
-Active.
+Status: PASS (bounded mechanism witness).
 
-The carrier must compare multi-step future trajectories under IMAGINED authority before physical action, use acquired world/macro structures to choose a delayed-reward plan, and then verify that plan factually. A host-side BFS/search solver is forbidden.
+Carrier-owned IMAGINED rollout selects depth-3 delayed-reward plans: 8/8 versus DEPTH1 0/8 and SHUFFLED_MODEL 0/8. REAL state remains unchanged during pure imagination. Fresh statistical qualification is next.
 
 ## Rule for advancing
 
