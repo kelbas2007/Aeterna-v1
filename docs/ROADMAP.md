@@ -6,19 +6,19 @@ This is a capability ladder, not a commitment to old AETERNA phases.
 
 Prove that a factual residual changes EvoPhase structure, that the acquired structure changes a later action, and that a counterexample revises the same structure. Matched no-growth control.
 
-Current status: IMPLEMENTED, UNCOMPILED, UNQUALIFIED.
+Current status: PASS (minimal ownership precursor).
 
 ## G1 — Raw perceptual distinction
 
-Replace the 8-bit precursor with a small raw raster world. No object labels, coordinates, map, correct action or host features. EvoPhase must autonomously retain a distinction only when it improves prediction or action.
+Status: PASS via G1-B relational phase formation.
 
-Acceptance: held-out surface change, matched NO_FORMATION and NO_READOUT controls.
+Raw 12x12 input is encoded through generic retinotopic phase algebra; an acquired relation unit transfers across unseen absolute translations and matched formation/readout controls lose the effect.
 
 ## G2 — Active epistemic learning
 
-Several carrier-owned rival hypotheses must coexist. The organism chooses a probe because the hypotheses disagree and the result matters for Need or future prediction.
+Status: PASS.
 
-Acceptance: fewer factual probes than matched generic exploration on held-out worlds; total tuition cost reported.
+Two carrier-owned rival world hypotheses coexist. On held-out hidden-law worlds, disagreement readout selects the discriminating probe in one factual interaction while matched generic exploration requires more. Tuition cost: 18 factual probes.
 
 ## G3 — Motif consolidation / first acquired program
 
