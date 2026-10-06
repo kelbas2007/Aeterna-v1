@@ -272,43 +272,46 @@ impl EvoRasterField {
             return None;
         }
 
-        // Translation-equivariant oriented triangle fragments. Every visible
-        // triple is retained; no task-specific offset is selected. A one-point
-        // dropout leaves one exact learned triple, while a distractor preserves
-        // all original triples among additional ones. Keeping the two bound
-        // displacements together avoids the aliasing of an unordered pair bag.
+        // Three generic geometric channels are retained in parallel:
+        //
+        // 1) oriented triples: translation invariant and highly specific;
+        // 2) scale-free oriented triples: additionally invariant to uniform
+        //    integer scale while retaining handed/orientation structure;
+        // 3) normalized side-length triples: rotation/reflection/scale invariant.
+        //
+        // No nuisance label selects a channel. ShapeTrace scores the strongest
+        // sufficiently-supported relational evidence available.
         let mut oriented = Vec::new();
+        let mut scale_free_oriented = Vec::new();
+        let mut invariant = Vec::new();
+
         for i in 0..points.len() {
             for j in (i + 1)..points.len() {
                 for k in (j + 1)..points.len() {
-                    let dx1 = points[j].0 - points[i].0;
-                    let dy1 = points[j].1 - points[i].1;
-                    let dx2 = points[k].0 - points[i].0;
-                    let dy2 = points[k].1 - points[i].1;
-
-                    let fields = [
-                        (dx1 + 16) as u64,
-                        (dy1 + 16) as u64,
-                        (dx2 + 16) as u64,
-                        (dy2 + 16) as u64,
+                    let offsets = [
+                        points[j].0 - points[i].0,
+                        points[j].1 - points[i].1,
+                        points[k].0 - points[i].0,
+                        points[k].1 - points[i].1,
                     ];
 
-                    let token = 0x4f52_5452_4900_0000u64
-                        ^ (fields[0] << 18)
-                        ^ (fields[1] << 12)
-                        ^ (fields[2] << 6)
-                        ^ fields[3];
-                    oriented.push(token);
-                }
-            }
-        }
+                    oriented.push(Self::pack_oriented_triangle(
+                        0x4f52_5452_4900_0000u64,
+                        offsets,
+                    ));
 
-        // Normalized triangle fragments. These carry no orientation or absolute
-        // scale and therefore provide a second, generic shape-equivalence view.
-        let mut invariant = Vec::new();
-        for i in 0..points.len() {
-            for j in (i + 1)..points.len() {
-                for k in (j + 1)..points.len() {
+                    let divisor = Self::common_abs_gcd(offsets);
+                    let normalized = [
+                        offsets[0] / divisor,
+                        offsets[1] / divisor,
+                        offsets[2] / divisor,
+                        offsets[3] / divisor,
+                    ];
+                    scale_free_oriented.push(Self::pack_oriented_triangle(
+                        0x5346_5452_4900_0000u64,
+                        normalized,
+                    ));
+
                     let mut d2 = [
                         Self::distance_squared(points[i], points[j]),
                         Self::distance_squared(points[i], points[k]),
@@ -322,17 +325,57 @@ impl EvoRasterField {
 
                     let q0 = ((d2[0] * 255 + max / 2) / max).min(255) as u64;
                     let q1 = ((d2[1] * 255 + max / 2) / max).min(255) as u64;
-                    let token = 0x5348_4150_4500_0000u64 ^ (q0 << 8) ^ q1;
-                    invariant.push(token);
+                    invariant.push(0x5348_4150_4500_0000u64 ^ (q0 << 8) ^ q1);
                 }
             }
         }
 
-        if oriented.is_empty() && invariant.is_empty() {
+        if oriented.is_empty() && scale_free_oriented.is_empty() && invariant.is_empty() {
             None
         } else {
-            Some(ShapeTrace::from_geometry(points.len(), oriented, invariant))
+            Some(ShapeTrace::from_channels(
+                oriented,
+                scale_free_oriented,
+                invariant,
+            ))
         }
+    }
+
+    fn pack_oriented_triangle(prefix: u64, offsets: [i32; 4]) -> u64 {
+        let fields = offsets.map(|value| {
+            assert!((-16..=15).contains(&value));
+            (value + 16) as u64
+        });
+        prefix
+            ^ (fields[0] << 18)
+            ^ (fields[1] << 12)
+            ^ (fields[2] << 6)
+            ^ fields[3]
+    }
+
+    fn common_abs_gcd(values: [i32; 4]) -> i32 {
+        let mut gcd = 0i32;
+        for value in values {
+            let value = value.abs();
+            if value == 0 {
+                continue;
+            }
+            gcd = if gcd == 0 {
+                value
+            } else {
+                Self::gcd(gcd, value)
+            };
+        }
+        gcd.max(1)
+    }
+
+    fn gcd(mut a: i32, mut b: i32) -> i32 {
+        while b != 0 {
+            let r = a % b;
+            a = b;
+            b = r;
+        }
+        a.abs().max(1)
     }
 
     fn distance_squared(a: (i32, i32), b: (i32, i32)) -> u64 {
@@ -435,11 +478,26 @@ mod tests {
         let scale = raster(&[(1, 1), (5, 1), (1, 5), (7, 7)]);
         let dropout = raster(&[(1, 1), (3, 1), (1, 3)]);
         let distractor = raster(&[(1, 1), (3, 1), (1, 3), (4, 4), (9, 9)]);
+        let dropout_scale = raster(&[(1, 1), (5, 1), (1, 5)]);
+        let distractor_rotation =
+            raster(&[(8, 1), (8, 3), (6, 1), (5, 4), (10, 10)]);
 
         let base = field.encode_robust_shape_trace(&clean).unwrap();
         assert_eq!(base.similarity(&field.encode_robust_shape_trace(&rotation).unwrap()), 1.0);
         assert_eq!(base.similarity(&field.encode_robust_shape_trace(&scale).unwrap()), 1.0);
         assert!(base.similarity(&field.encode_robust_shape_trace(&dropout).unwrap()) >= 0.99);
         assert!(base.similarity(&field.encode_robust_shape_trace(&distractor).unwrap()) >= 0.99);
+        assert!(
+            base.similarity(&field.encode_robust_shape_trace(&dropout_scale).unwrap()) >= 0.99,
+            "scale-free oriented triples must preserve a dropped visible substructure"
+        );
+        assert!(
+            base.similarity(
+                &field
+                    .encode_robust_shape_trace(&distractor_rotation)
+                    .unwrap()
+            ) >= 0.99,
+            "multiple invariant fragments must support rotated shape with a distractor"
+        );
     }
 }
