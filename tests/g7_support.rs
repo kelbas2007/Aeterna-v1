@@ -35,6 +35,7 @@ pub struct Score {
     pub probes: usize,
     pub candidate_evals: usize,
     pub primitive_actions: usize,
+    pub rivals_at_start: usize,
     /// 0=start/rival activation, 1=epistemic loop, 2=identified law,
     /// 3=parent/sequence selected, 4=child execution completed.
     pub stage: u8,
@@ -611,6 +612,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
         let Some(action) = evo.choose_learned_exploration_probe() else {
             return Score {
                 probes,
+                rivals_at_start,
                 stage,
                 ..Score::default()
             };
@@ -631,6 +633,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
         if rivals == 0 {
             return Score {
                 probes,
+                rivals_at_start,
                 stage,
                 ..Score::default()
             };
@@ -640,6 +643,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
     if rivals != 1 {
         return Score {
             probes,
+            rivals_at_start,
             stage,
             ..Score::default()
         };
@@ -671,6 +675,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
                     probes,
                     candidate_evals,
                     primitive_actions,
+                    rivals_at_start,
                     stage: 4,
                 };
             }
@@ -680,6 +685,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
             probes,
             candidate_evals,
             primitive_actions,
+            rivals_at_start,
             stage: 3,
             ..Score::default()
         };
@@ -688,6 +694,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
     let Some(sequence) = evo.select_parent_sequence(&cue) else {
         return Score {
             probes,
+            rivals_at_start,
             stage,
             ..Score::default()
         };
@@ -708,6 +715,7 @@ pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
         probes,
         candidate_evals: 1,
         primitive_actions,
+        rivals_at_start,
         stage: 4,
     }
 }
