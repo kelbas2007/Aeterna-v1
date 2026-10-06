@@ -19,6 +19,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_p4:
+        description: 'Consume a new one-use P4 learned-drive qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -29,7 +34,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p4: run learned drive deterministic preflight'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p4: execute frozen learned-drive qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -74,6 +79,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P3_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test phase_native_autonomy p3_fresh_autonomous_acquisition_pack -- --ignored --nocapture | tee p3-evidence.log
+      - name: Explicit one-use fresh P4 learned-drive qualification
+        if: ${{ inputs.qualify_p4 || (github.event_name == 'push' && github.event.head_commit.message == 'p4: execute frozen learned-drive qualification') }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P4_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test phase_native_learned_drive p4_fresh_learned_drive_transfer_pack -- --ignored --nocapture | tee p4-evidence.log
+      - name: Preserve P4 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p4-execution-evidence
+          path: p4-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve P3 execution log
         if: always()
         uses: actions/upload-artifact@v4
