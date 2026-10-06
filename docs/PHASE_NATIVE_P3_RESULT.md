@@ -2,7 +2,7 @@
 
 Date: 2026-10-06
 
-Status: **MECHANISM PASS / FRESH QUALIFICATION NOT YET RUN**
+Status: **MECHANISM PASS / FRESH-P3 PASS**
 
 Protocol was committed before P3 implementation as `docs/PHASE_NATIVE_P3_PROTOCOL.md` at commit `47d325790068e4b43a9f242a71c57b26ef807b91`.
 
@@ -115,4 +115,46 @@ This is still a small deterministic family with a hand-specified intrinsic novel
 - arbitrary goals or domains;
 - AGI.
 
-The next evidence step is the separately sealed one-use FRESH-P3 statistical qualification.
+## FRESH-P3 one-use statistical qualification
+
+The first authority pack was opened only after source and fresh specification freeze.
+
+- workflow run: `37528857872`;
+- source SHA: `52bbbc2654894bbaf8501e6834757dff25f1e242`;
+- fresh specification blob SHA: `b561a3af878c89531ed8df27b338959fd4d868f5`;
+- authority seed: `37528857872`;
+- world-pack digest: `c9a3d25d6f64c483`;
+- N = 80 worlds from 10 independent authority-derived sub-seeds;
+- world descriptions and the digest were logged before any acquisition or scoring;
+- full optimized regression suite: PASS;
+- Release build: PASS;
+- P1/P2 one-use qualification packs were not rerun.
+
+Frozen-threshold results:
+
+- FULL cold autonomous acquisition: **80/80**;
+- Wilson 95% CI: **[0.954182, 1.000000]**;
+- per-sub-seed acquisition: **[8,8,8,8,8,8,8,8,8,8]**;
+- frozen held-out translated exploitation: **80/80**;
+- new-EvoPhase checkpoint restore + frozen exploitation: **80/80**;
+- DIRECT_ONLY exploration: **9/80**;
+- seeded RANDOM_ACTION baseline: **35/80**;
+- NO_LEARNING / NO_STRUCTURAL_GROWTH / ZERO_PHASE_LEARNING / ZERO_WEIGHT_LEARNING: **[0,0,9,2] / 80**;
+- mean acquisition cost: **20.075** physical interactions, SD **9.957**;
+- changed-law autonomous detour repair: **78/80**;
+- repair per sub-seed: **[8,7,8,8,8,7,8,8,8,8]**;
+- frozen post-repair exploitation: **78/78**;
+- revised checkpoint restore + exploitation: **78/78**;
+- frozen stale changed-law copies: **0/80**;
+- mean repair cost: **16.462** additional interactions, SD **8.847**;
+- legacy graph transition table non-zero cases: **0**.
+
+Two changed-law worlds exhausted the frozen 40-interaction repair budget, so the repair result is 78/80 rather than 80/80. This was accepted by the preregistered >=72/80 threshold; no post-observation tuning was performed.
+
+All frozen FRESH-P3 thresholds passed. The pack is now **permanently burned**. It may be used for diagnosis/regression only and must never be called fresh evidence for a design revised after observing this run.
+
+## Current interpretation
+
+P3 establishes bounded autonomous acquisition in a deterministic reset-chain family without a supplied transition curriculum: the organism selects its own opaque physical actions, builds a phase-native forward/value model from the consequences, propagates frontier novelty through acquired synapses, exploits the learned model, restores it into a new carrier, and repairs an unseen detour after factual surprise.
+
+The result does **not** establish general intelligence. The intrinsic novelty rule is still hand-specified, the worlds are fully observed and deterministic, and the tested family is structurally narrow. The next architectural target should remove one of those remaining crutches rather than merely enlarge this same benchmark.
