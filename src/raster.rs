@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use crate::hdc::PhaseVector;
 
 #[derive(Debug, Clone)]
@@ -7,7 +5,6 @@ pub struct RasterFieldConfig {
     pub width: usize,
     pub height: usize,
     pub motor_cells: usize,
-    pub patch_side: usize,
     pub min_active: usize,
     pub max_units: usize,
     pub match_threshold: f32,
@@ -23,7 +20,6 @@ impl RasterFieldConfig {
             width,
             height,
             motor_cells,
-            patch_side: 3,
             min_active: 2,
             max_units: 64,
             match_threshold: 0.97,
@@ -59,6 +55,7 @@ impl OutcomeStat {
         if support < min_support || support == 0 {
             return 0.0;
         }
+
         let success = self.success as f32;
         let failure = self.failure as f32;
         let mean = (success - failure) / support as f32;
@@ -80,7 +77,7 @@ pub struct PhaseFieldUnit {
 #[derive(Debug, Clone)]
 pub struct EvoRasterField {
     config: RasterFieldConfig,
-    slot_roles: Vec<PhaseVector>,
+    position_roles: Vec<PhaseVector>,
     units: Vec<PhaseFieldUnit>,
     next_id: u64,
 }
@@ -89,21 +86,25 @@ impl EvoRasterField {
     pub fn new(config: RasterFieldConfig, hdc_dim: usize) -> Self {
         assert!(config.width > 0 && config.height > 0);
         assert!(config.motor_cells > 0);
-        assert!(config.patch_side > 0);
-        assert!(config.patch_side <= config.width && config.patch_side <= config.height);
-        assert!(config.min_active > 0);
+        assert!(config.min_active >= 2);
         assert!(config.max_units > 0);
 
-        // These are generic local receptive-field slots, shared at every raster
-        // translation. They do not encode world coordinates or task semantics.
-        let slots = config.patch_side * config.patch_side;
-        let slot_roles = (0..slots)
-            .map(|i| PhaseVector::from_seed(hdc_dim, 0xC011_AE00 + i as u64))
-            .collect();
+        // Generic retinotopic phase algebra. The two basis vectors do not encode
+        // task semantics. Absolute translation is represented as a common phase
+        // factor and cancels when one position role is unbound from another.
+        let axis_x = PhaseVector::from_seed(hdc_dim, 0xA11C_0001);
+        let axis_y = PhaseVector::from_seed(hdc_dim, 0xA11C_0002);
+
+        let mut position_roles = Vec::with_capacity(config.width * config.height);
+        for y in 0..config.height {
+            for x in 0..config.width {
+                position_roles.push(axis_x.powi(x as i32).bind(&axis_y.powi(y as i32)));
+            }
+        }
 
         Self {
             config,
-            slot_roles,
+            position_roles,
             units: Vec::new(),
             next_id: 1,
         }
@@ -131,11 +132,14 @@ impl EvoRasterField {
 
     pub fn active_unit_ids(&self, raster: &[f32]) -> Vec<u64> {
         self.assert_raster(raster);
-        let traces = self.patch_traces(raster);
-        self.active_units_from_traces(&traces)
-            .into_iter()
-            .map(|idx| self.units[idx].id)
-            .collect()
+        let Some(trace) = self.relational_trace(raster) else {
+            return Vec::new();
+        };
+
+        self.best_matching_unit(&trace)
+            .filter(|(_, similarity)| *similarity >= self.config.match_threshold)
+            .map(|(idx, _)| vec![self.units[idx].id])
+            .unwrap_or_default()
     }
 
     pub fn observe_factual(&mut self, raster: &[f32], action: usize, need: bool) {
@@ -146,27 +150,33 @@ impl EvoRasterField {
             return;
         }
 
-        let traces = self.patch_traces(raster);
+        let Some(trace) = self.relational_trace(raster) else {
+            return;
+        };
 
-        if self.config.formation_enabled {
-            for trace in &traces {
-                self.match_or_recruit(trace);
-            }
-        }
+        let unit_idx = if self.config.formation_enabled {
+            self.match_or_recruit(&trace)
+        } else {
+            self.best_matching_unit(&trace)
+                .filter(|(_, similarity)| *similarity >= self.config.match_threshold)
+                .map(|(idx, _)| idx)
+        };
 
-        let active = self.active_units_from_traces(&traces);
-        for idx in active {
-            let stat = &mut self.units[idx].outcomes[action];
-            let before = stat.signed_value(self.config.min_readout_support);
-            stat.observe(need);
-            let after = stat.signed_value(self.config.min_readout_support);
+        let Some(idx) = unit_idx else {
+            return;
+        };
 
-            let unit = &mut self.units[idx];
-            unit.support = unit.support.saturating_add(1);
-            unit.utility = (unit.utility + after * 0.05).clamp(-1.0, 1.0);
-            if before.signum() != 0.0 && after.signum() != before.signum() {
-                unit.revision = unit.revision.saturating_add(1);
-            }
+        let stat = &mut self.units[idx].outcomes[action];
+        let before = stat.signed_value(self.config.min_readout_support);
+        stat.observe(need);
+        let after = stat.signed_value(self.config.min_readout_support);
+
+        let unit = &mut self.units[idx];
+        unit.support = unit.support.saturating_add(1);
+        unit.utility = (unit.utility + after * 0.05).clamp(-1.0, 1.0);
+
+        if before.signum() != 0.0 && after.signum() != before.signum() {
+            unit.revision = unit.revision.saturating_add(1);
         }
     }
 
@@ -178,42 +188,42 @@ impl EvoRasterField {
             return evidence;
         }
 
-        let traces = self.patch_traces(raster);
-        let active = self.active_units_from_traces(&traces);
+        let Some(trace) = self.relational_trace(raster) else {
+            return evidence;
+        };
 
-        for idx in active {
-            let unit = &self.units[idx];
-            for (action, stat) in unit.outcomes.iter().enumerate() {
-                evidence[action] += stat.signed_value(self.config.min_readout_support)
-                    * (0.5 + 0.5 * unit.utility.max(0.0));
-            }
+        let Some((idx, similarity)) = self.best_matching_unit(&trace) else {
+            return evidence;
+        };
+
+        if similarity < self.config.match_threshold {
+            return evidence;
+        }
+
+        let unit = &self.units[idx];
+        for (action, stat) in unit.outcomes.iter().enumerate() {
+            evidence[action] = stat.signed_value(self.config.min_readout_support)
+                * (0.5 + 0.5 * unit.utility.max(0.0));
         }
 
         evidence
     }
 
-    fn match_or_recruit(&mut self, trace: &PhaseVector) {
-        let mut best: Option<(usize, f32)> = None;
-        for (idx, unit) in self.units.iter().enumerate() {
-            let similarity = unit.prototype.similarity(trace);
-            if best.map(|(_, score)| similarity > score).unwrap_or(true) {
-                best = Some((idx, similarity));
-            }
-        }
-
-        if let Some((idx, similarity)) = best {
+    fn match_or_recruit(&mut self, trace: &PhaseVector) -> Option<usize> {
+        if let Some((idx, similarity)) = self.best_matching_unit(trace) {
             if similarity >= self.config.match_threshold {
                 self.units[idx].support = self.units[idx].support.saturating_add(1);
-                return;
+                return Some(idx);
             }
         }
 
         if self.units.len() >= self.config.max_units {
-            return;
+            return None;
         }
 
         let id = self.next_id;
         self.next_id = self.next_id.saturating_add(1);
+
         self.units.push(PhaseFieldUnit {
             id,
             prototype: trace.clone(),
@@ -222,57 +232,50 @@ impl EvoRasterField {
             revision: 0,
             outcomes: vec![OutcomeStat::default(); self.config.motor_cells],
         });
+
+        Some(self.units.len() - 1)
     }
 
-    fn active_units_from_traces(&self, traces: &[PhaseVector]) -> Vec<usize> {
-        let mut active = BTreeSet::new();
+    fn best_matching_unit(&self, trace: &PhaseVector) -> Option<(usize, f32)> {
+        let mut best: Option<(usize, f32)> = None;
 
-        for trace in traces {
-            let mut best: Option<(usize, f32)> = None;
-            for (idx, unit) in self.units.iter().enumerate() {
-                let similarity = unit.prototype.similarity(trace);
-                if best.map(|(_, score)| similarity > score).unwrap_or(true) {
-                    best = Some((idx, similarity));
-                }
-            }
-
-            if let Some((idx, similarity)) = best {
-                if similarity >= self.config.match_threshold {
-                    active.insert(idx);
-                }
+        for (idx, unit) in self.units.iter().enumerate() {
+            let similarity = unit.prototype.similarity(trace);
+            if best.map(|(_, score)| similarity > score).unwrap_or(true) {
+                best = Some((idx, similarity));
             }
         }
 
-        active.into_iter().collect()
+        best
     }
 
-    fn patch_traces(&self, raster: &[f32]) -> Vec<PhaseVector> {
-        let mut traces = Vec::new();
-        let side = self.config.patch_side;
+    fn relational_trace(&self, raster: &[f32]) -> Option<PhaseVector> {
+        let active: Vec<usize> = raster
+            .iter()
+            .enumerate()
+            .filter(|(_, value)| **value >= 0.5)
+            .map(|(idx, _)| idx)
+            .collect();
 
-        for top in 0..=(self.config.height - side) {
-            for left in 0..=(self.config.width - side) {
-                let mut active_roles = Vec::new();
+        if active.len() < self.config.min_active {
+            return None;
+        }
 
-                for local_y in 0..side {
-                    for local_x in 0..side {
-                        let global_x = left + local_x;
-                        let global_y = top + local_y;
-                        let value = raster[global_y * self.config.width + global_x];
-                        if value >= 0.5 {
-                            let slot = local_y * side + local_x;
-                            active_roles.push(&self.slot_roles[slot]);
-                        }
-                    }
-                }
-
-                if active_roles.len() >= self.config.min_active {
-                    traces.push(PhaseVector::bundle(&active_roles));
-                }
+        let mut relations = Vec::new();
+        for i in 0..active.len() {
+            for j in (i + 1)..active.len() {
+                let from = &self.position_roles[active[i]];
+                let to = &self.position_roles[active[j]];
+                relations.push(to.unbind(from));
             }
         }
 
-        traces
+        if relations.is_empty() {
+            return None;
+        }
+
+        let refs: Vec<&PhaseVector> = relations.iter().collect();
+        Some(PhaseVector::bundle(&refs))
     }
 
     fn assert_raster(&self, raster: &[f32]) {
@@ -296,20 +299,39 @@ mod tests {
     }
 
     #[test]
-    fn learned_local_phase_motif_reappears_after_translation() {
-        let mut field = EvoRasterField::new(RasterFieldConfig::for_raster(12, 12, 2), 128);
+    fn relational_phase_trace_reuses_same_unit_after_translation() {
+        let mut field = EvoRasterField::new(RasterFieldConfig::for_raster(12, 12, 2), 192);
 
         let first = raster(&[(1, 1), (2, 1), (3, 1)]);
         field.observe_factual(&first, 0, true);
-        assert!(!field.units().is_empty());
+        assert_eq!(field.units().len(), 1);
+        let first_id = field.active_unit_ids(&first);
+        assert_eq!(first_id.len(), 1);
 
-        let learned = field.units().len();
         let shifted = raster(&[(7, 8), (8, 8), (9, 8)]);
         field.observe_factual(&shifted, 0, true);
 
-        // Shared local receptive-field roles mean the translated relation reuses
-        // existing carrier motifs rather than requiring one absolute-address unit
-        // for every translation.
-        assert!(field.units().len() <= learned + 2);
+        assert_eq!(
+            field.units().len(),
+            1,
+            "translation must reuse the same relational carrier unit"
+        );
+        assert_eq!(field.active_unit_ids(&shifted), first_id);
+    }
+
+    #[test]
+    fn different_relations_recruit_different_units() {
+        let mut field = EvoRasterField::new(RasterFieldConfig::for_raster(12, 12, 2), 192);
+
+        let horizontal = raster(&[(2, 2), (3, 2), (4, 2)]);
+        let vertical = raster(&[(2, 2), (2, 3), (2, 4)]);
+        field.observe_factual(&horizontal, 0, true);
+        field.observe_factual(&vertical, 1, true);
+
+        assert_eq!(field.units().len(), 2);
+        assert_ne!(
+            field.active_unit_ids(&horizontal),
+            field.active_unit_ids(&vertical)
+        );
     }
 }
