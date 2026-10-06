@@ -126,6 +126,43 @@ fn g7_preflight_composes_perception_exploration_revision_and_hierarchy() {
 }
 
 #[test]
+fn r1_robust_high_level_perception_survives_each_single_nuisance_end_to_end() {
+    let mut mature = build_mature(0xA7E7_0000_0000_1001);
+    let nuisances = [
+        DISTRACTOR, DROPOUT, ROTATE, SCALE,
+        DISTRACTOR, DROPOUT, ROTATE, SCALE,
+    ];
+
+    let worlds = nuisances
+        .into_iter()
+        .enumerate()
+        .map(|(i, nuisance)| World {
+            family: 600 + i,
+            law: i % 3,
+            informative: mature.perm[(i + 2) % 4],
+            origin: if i % 2 == 0 { (4, 4) } else { (5, 4) },
+            nuisance,
+            sensor_seed: 0xC0DE_1000 + i as u64,
+        })
+        .collect::<Vec<_>>();
+
+    prepare_worlds(&mut mature, &worlds);
+
+    let mut success = 0usize;
+    for world in worlds {
+        let score = score_world(&mature, world, Arm::Full);
+        println!("R1_NUISANCE_PREFLIGHT world={:?} score={:?}", world, score);
+        success += usize::from(score.success);
+        assert!(
+            score.success,
+            "robust high-level trace must preserve the complete learned chain under each single nuisance"
+        );
+    }
+
+    assert_eq!(success, 8);
+}
+
+#[test]
 #[ignore = "requires one-use AETERNA_FRESH_SEED from CI"]
 fn fresh_g7_whole_organism_pack() {
     let authority_seed: u64 = std::env::var("AETERNA_FRESH_SEED")
