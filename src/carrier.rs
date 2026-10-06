@@ -452,7 +452,7 @@ impl EvoPhase {
                 self.cells[i].phase = wrap_phase(self.cells[i].phase + 0.01);
             }
         }
-        self.cells[self.need_cell()].charge = if need { 1.0 } else { 0.0 };
+        let need_cell = self.need_cell();\n        self.cells[need_cell].charge = if need { 1.0 } else { 0.0 };
         self.current_real = Some(FactualFrame {
             sensory: sensory.to_vec(),
             need,
