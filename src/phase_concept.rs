@@ -398,10 +398,83 @@ impl EvoPhase {
             }
         }
 
+        self.reevaluate_phase_concept_promotions(
+            &mut physical,
+            min_composite_support,
+            min_action_support,
+            child_ceiling,
+            promotion_threshold,
+        );
         physical.circuits.sort_by_key(|circuit| circuit.concept_id);
         state.concepts = Some(physical);
         self.phase_native = Some(state);
         true
+    }
+
+    fn reevaluate_phase_concept_promotions(
+        &mut self,
+        physical: &mut PhaseConceptState,
+        min_composite_support: u32,
+        min_action_support: u32,
+        child_ceiling: f32,
+        promotion_threshold: f32,
+    ) {
+        for circuit_index in 0..physical.circuits.len() {
+            if physical.circuits[circuit_index].promoted
+                || physical.circuits[circuit_index].support < min_composite_support
+            {
+                continue;
+            }
+
+            let mut winning: Option<(usize, f32)> = None;
+            for motor in 0..self.config.motor_cells {
+                if physical.circuits[circuit_index].action_support[motor]
+                    < min_action_support
+                {
+                    continue;
+                }
+                let weight = self.synapses
+                    [physical.circuits[circuit_index].motor_synapses[motor]]
+                    .weight;
+                let centered = 2.0 * weight - 1.0;
+                if centered <= 0.0 {
+                    continue;
+                }
+                if winning
+                    .map(|(_, best)| centered > best)
+                    .unwrap_or(true)
+                {
+                    winning = Some((motor, centered));
+                }
+            }
+
+            let Some((winning_motor, evidence)) = winning else {
+                continue;
+            };
+            if evidence < promotion_threshold {
+                continue;
+            }
+
+            let children_weak = physical.circuits[circuit_index]
+                .child_ids
+                .iter()
+                .all(|child_id| {
+                    let atom = physical
+                        .atoms
+                        .iter()
+                        .find(|atom| atom.atom_id == *child_id)
+                        .expect("physical child atom");
+                    if atom.action_support[winning_motor] < min_action_support {
+                        return false;
+                    }
+                    let weight = self.synapses[atom.motor_synapses[winning_motor]].weight;
+                    (2.0 * weight - 1.0).abs() <= child_ceiling
+                });
+
+            if children_weak {
+                physical.circuits[circuit_index].promoted = true;
+            }
+        }
     }
 
     fn learn_phase_concept_running_mean_synapse(
