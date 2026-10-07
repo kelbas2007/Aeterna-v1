@@ -1004,3 +1004,24 @@ Run `37628961906` PASSed on source `dfeaf2d7b7dc93b84d871d5cfef95bdbb30dbb60`.
 This statistically qualifies bounded goal-conditioned active information acquisition.
 
 Next intelligence gate: **G19 physical rival-hypothesis discrimination and causal experiment selection**.
+
+
+## G19 physical rival-hypothesis discrimination
+
+Workflow `37630711406` PASSed on source `ce402311f4c733957f8997e8edc23ea6d58569a8`.
+
+- FULL requested probe 8/8;
+- contradicted rival suppression 8/8;
+- GOOD post-plan 4/4;
+- DEAD fallback post-plan 4/4;
+- WRONG_GOAL 8/8;
+- NOVELTY_ONLY 0/8;
+- no-goal disagreement 4/8;
+- broken goal / relevance route / pi phase 0/8;
+- no-rival-revision DEAD fallback 0/4;
+- rival-prediction lesion collapses discrimination 8/8;
+- exact restore 8/8;
+- irrelevant rival lesion 8/8;
+- source guard, Human Protection, regressions and Release PASS.
+
+Active evidence gate: **FRESH-G19**.
