@@ -164,7 +164,7 @@ Workflow `37614779191`: reward **12/12**, held-out plan **12/12**, restart plan 
 
 A non-learned final physical-action authorization boundary is now integrated. Human-affecting actions with predicted harm >1%, hazard confidence <90%, invalid evidence, or an emergency-stop condition are blocked. Emergency stop latches across cognitive checkpoint restore and can be cleared only through an explicit external human-reset API.
 
-The protection layer produces a sealed permit only for allowed proposals. It is independent of planner reward, exploration drive, concepts and learned transitions. The repository does not yet contain person-detection/collision sensors or an authenticated hardware actuator adapter; those remain deployment requirements.
+The protection layer produces a sealed permit only for allowed proposals. Human Protection v1.1 additionally makes that permit a **single-use actuator permit**: it is non-Clone/non-Copy, bound to the current screening sequence, invalidated by later screening or emergency stop, and consumed through the protection gate. It is independent of planner reward, exploration drive, concepts and learned transitions. The repository does not yet contain person-detection/collision sensors or an authenticated hardware actuator adapter; those remain deployment requirements.
 
 ## Non-negotiable rule
 
