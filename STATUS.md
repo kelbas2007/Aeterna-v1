@@ -28,7 +28,8 @@ Date: 2026-10-06
 **G10 MECHANISM PASS — autonomous composite concept construction from individually non-predictive acquired atoms.**  
 **G10 FRESH PASS — statistical composite-concept construction across authority-sampled relation atoms and bindings.**  
 **G10 PHASE OWNERSHIP AUDIT — NEGATIVE: dedicated concept readout worked without the physical phase network.**  
-**G10-PHYS MECHANISM PASS — composite promotion/readout migrated to actual phase-sensitive cells/synapses.**
+**G10-PHYS MECHANISM PASS — composite promotion/readout migrated to actual phase-sensitive cells/synapses.**  
+**G10-PHYS FRESH PASS — statistical physical concept promotion/execution with causal synapse interventions.**
 
 No AGI claim. No production promotion.
 
@@ -593,3 +594,26 @@ Run `37571372722` PASSed on source `9accdaf95f7df67f1a32aa9c704e96a54a86dd03`.
 - full regressions and Release PASS.
 
 The negative phase-ownership audit remains preserved as the before-state. FRESH-G10-PHYS is now the active evidence gate.
+
+
+## G10-PHYS FRESH result
+
+Run `37571774016` PASSed on source `7dd0985588abced43e26905330e5d12c95ff3122`.
+
+- spec SHA: `4a278e6245816b09b2468efe6c8bc2c3450cf537`;
+- authority seed: `37571774016`;
+- burned pack digest: `1b97f883da445664`;
+- FULL: **80/80**, Wilson95 [0.954182,1.000000];
+- every sub-seed: **8/8**;
+- ZERO_PHASE / ZERO_WEIGHT / NO_CAPACITY / NO_GROWTH: **0/80 each**;
+- necessary lesion: **0/20**;
+- pi phase shift: **0/20**;
+- exact restore: **20/20**;
+- unrelated lesion target preserved: **10/10**;
+- table-composite violations: 0;
+- physical count violations: 0;
+- physical state per sub-seed: 4 atoms, 4 promoted composites, 24 concept synapses;
+- motor mappings: 5/5;
+- full regressions and Release PASS.
+
+This closes the previously demonstrated G10 physical ownership gap for the bounded binary-composite family.
