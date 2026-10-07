@@ -734,3 +734,27 @@ Qualifying workflow `37603203990` PASSed on source `6f0fb657309e16230f0fcc0ac659
 Earlier workflow `37593455572` remains preserved as non-qualifying protocol drift because its evaluator used 40x40 instead of frozen 20x20.
 
 Active evidence gate: **FRESH-G13**.
+
+
+## G13 FRESH depth-generic result
+
+Run `37603829184` PASSed on source `0ba1e6ef8081dd5de3151aa903b1dcc230f9a61b`.
+
+- spec SHA: `43471572d08f6db4d18a712b98200affa9068257`;
+- authority seed: `37603829184`;
+- burned pack: `e5d76dc63d2acca4`;
+- FULL_DEPTH3 **80/80**, Wilson95 [0.954182,1.000000];
+- every seed 8/8;
+- MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH: **0/80 each**;
+- Stage1/2/3 structure violations: 0;
+- child/reference violations: 0;
+- lesion / pi phase: **0/20** each;
+- exact restore **20/20**;
+- unrelated lesion **10/10**;
+- lower L1->L2 lesion dependent success **0/20**;
+- all six motor roles exercised;
+- full regressions and Release PASS.
+
+This statistically qualifies one generic physical abstraction rule reused through L2 and L3 on fresh 20x20 hierarchies.
+
+Next gate: **self-selected abstraction depth** rather than an externally supplied task depth ceiling.
