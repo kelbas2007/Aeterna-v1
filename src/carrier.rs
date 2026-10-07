@@ -22,6 +22,7 @@ pub use phase_native::{
     PhaseCompositionWitness, PhaseDeepNodeInfo, PhaseDriveCheckpoint, PhaseDriveConfig,
     PhaseMetaControlCheckpoint, PhaseMetaControlConfig, PhaseMetaDecision, PhaseCognitiveProposal,
     PhaseHypothesisEcologyConfig, PhaseHypothesisProposal, PhaseHypothesisDecision,
+    PhaseEcologicalCognitiveProposal,
     PhaseHypothesisRecordInfo, HYPOTHESIS_CAPACITY,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
     PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
