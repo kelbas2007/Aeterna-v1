@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - name: Verify repaired cognitive freeze unchanged
         run: git diff --exit-code 397e57bcceae47b59275eac9fbfa865e2d6238da -- src Cargo.toml Cargo.lock
