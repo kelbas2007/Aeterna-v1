@@ -1,5 +1,5 @@
 name: evo-ci
-# Manual-only between sealed qualification checkpoints.
+# Temporary G13 depth-generic abstraction mechanism trigger; no fresh pack.
 
 on:
   workflow_dispatch:
@@ -49,11 +49,17 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ci.yml']
+
 permissions:
   contents: read
 
 jobs:
   rust:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g13: run depth-generic abstraction mechanism'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -67,6 +73,8 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
+      - name: G13 depth-generic abstraction causal preflight
+        run: cargo test --release --test g13_depth_generic_abstraction -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
