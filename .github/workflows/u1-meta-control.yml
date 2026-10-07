@@ -1,4 +1,5 @@
 name: u1-meta-control
+# Rerun after comment-only include fix; U1 protocol unchanged.
 on:
   workflow_dispatch:
   push:
