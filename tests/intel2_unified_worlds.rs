@@ -870,3 +870,144 @@ fn intel2_burned_world_c_diagnosis(){
 
     assert!(reproduced,"burned World C failure did not reproduce");
 }
+
+
+#[test]
+fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
+    // Diagnostic only on the burned authority pack. This tests evaluator
+    // terminal semantics; it is NOT a replacement INTEL-2 verdict.
+    let seed:u64=37_687_243_350;
+    let (evo,l1)=foundation::build24();
+    let meta=meta_checkpoint();
+
+    let mut rng=Rng::new(seed);
+    let mut states=(0usize..24).collect::<Vec<_>>();
+    shuffle(&mut rng,&mut states);
+    let a_states:[usize;5]=states[0..5].try_into().unwrap();
+    let b_states:[usize;5]=states[5..10].try_into().unwrap();
+    let c_states:[usize;6]=states[10..16].try_into().unwrap();
+
+    let mut ma=[0usize,1,2,3,4,5];shuffle(&mut rng,&mut ma);
+    let mut mb=[0usize,1,2,3,4,5];shuffle(&mut rng,&mut mb);
+    let mut mc=[0usize,1,2,3,4,5];shuffle(&mut rng,&mut mc);
+
+    let mut rt=ScientificRuntime::new(evo).unwrap();
+    assert!(rt.enable_context_refinement());
+    assert!(rt.enable_perceptual_refinement());
+    assert!(rt.enable_compositional_refinement());
+    assert!(rt.enable_unified_cognition(
+        meta,
+        PhaseHypothesisEcologyConfig{
+            learning_rate:0.35,
+            dormancy_threshold:0.05,
+            learning_enabled:true,
+            phase_learning_enabled:true,
+        }
+    ));
+    let mut monitor=Monitor::default();
+
+    let mut wa=WorldA::new(
+        a_states,[ma[0],ma[1],ma[2],ma[3],ma[4]]
+    );
+    assert!(run_a(&mut rt,&l1,&mut monitor,&mut wa,48,0,None));
+    rt.set_model_learning_enabled(false);
+    let mut wa_reuse=WorldA::new(
+        a_states,[ma[0],ma[1],ma[2],ma[3],ma[4]]
+    );
+    assert!(run_a(
+        &mut rt,&l1,&mut monitor,&mut wa_reuse,6,4,Some(a_states[1])
+    ));
+    rt.set_model_learning_enabled(true);
+
+    let mut wb=WorldB::new(b_states,[mb[0],mb[1],mb[2]]);
+    assert!(run_b_goal(&mut rt,&l1,&mut monitor,&mut wb,false,64,1));
+    assert!(run_b_goal(&mut rt,&l1,&mut monitor,&mut wb,true,12,2));
+
+    let mut wc=WorldC::new(c_states,[mc[0],mc[1]],seed^0xC0FFEE);
+    set_world(&mut rt,&l1,wc.state,c_states[4],0);
+    let c_goal=foundation::scene(&l1,c_states[4],1);
+    let c_base=rt.organism().phase_native_abstract_state(
+        &foundation::scene(&l1,c_states[3],0)
+    ).unwrap().cell;
+
+    let mut unsupported=None;
+    let mut environment_resets=0usize;
+    for k in 0..1800usize{
+        if wc.trials>=72 && rt.organism().phase_native_context_witnesses()
+            .iter().any(|w|w.promoted&&w.base_cell==c_base)
+        {break;}
+
+        if wc.state==c_states[4] || wc.state==c_states[5] {
+            // Terminal transition is an environment episode boundary, not a
+            // cognitive action. Preserve the organism; provide fresh factual
+            // reset observation exactly as an external environment may do.
+            wc.state=c_states[0];
+            rt.observe_external(
+                &foundation::scene(&l1,wc.state,(k+1)%6)
+            ).unwrap();
+            rt.set_goal(&c_goal).unwrap();
+            environment_resets+=1;
+            continue;
+        }
+
+        monitor.before(&rt,&c_goal);
+        let layout=k%4;
+        if let Err(error)=step_u(&mut rt,&mut monitor,|a|{
+            let (next,value)=wc.step(a);
+            (foundation::scene(&l1,next,layout),value)
+        }){
+            unsupported=Some((k,wc.state,error));
+            break;
+        }
+    }
+
+    let c_promoted=rt.organism().phase_native_context_witnesses()
+        .iter().any(|w|w.promoted&&w.base_cell==c_base);
+    println!(
+        "INTEL2_C_RESET_DIAG trained_trials={} environment_resets={} promoted={} unsupported={:?} contexts={:?} u2={:?}",
+        wc.trials,environment_resets,c_promoted,unsupported,
+        rt.organism().phase_native_context_witnesses(),
+        rt.organism().phase_native_hypothesis_records()
+    );
+
+    assert!(unsupported.is_none(),"corrected episodic C still lost action support");
+    assert!(c_promoted,"corrected episodic C failed to promote context");
+
+    rt.set_model_learning_enabled(false);
+    let mut c_correct=0usize;
+    let mut c_side=[0usize;2];
+    let mut c_side_correct=[0usize;2];
+    let mut memoryless=0usize;
+    for i in 0..32usize{
+        let side=i%2;
+        let pred=c_states[1+side];
+        rt.observe_external(&foundation::scene(&l1,pred,(4+i)%6)).unwrap();
+        rt.set_goal(&c_goal).unwrap();
+        monitor.before(&rt,&c_goal);
+        let outcome=rt.step_unified(
+            |_|Some(safe()),
+            |_|Ok((foundation::scene(&l1,c_states[3],(4+i)%6),0.0))
+        ).unwrap();
+        assert!(matches!(outcome,StepOutcome::Executed{..}));
+        let proposal=rt.propose_unified().unwrap().expect("context readout");
+        c_side[side]+=1;
+        if proposal.action==mc[side]{
+            c_correct+=1;
+            c_side_correct[side]+=1;
+        }
+
+        let current=foundation::scene(&l1,c_states[3],(4+i)%6);
+        let old=rt.organism().clone();
+        memoryless+=usize::from(
+            old.plan_phase_native_abstract_goal(&current,&c_goal,None)
+                .map(|d|d.first_action)==Some(mc[side])
+        );
+    }
+    println!(
+        "INTEL2_C_RESET_SCORE promoted={} score={}/32 sides={:?}/{:?} memoryless={}/32",
+        c_promoted,c_correct,c_side_correct,c_side,memoryless
+    );
+    assert!(c_correct>=28);
+    assert!(c_side_correct[0]>=13&&c_side_correct[1]>=13);
+    assert!(memoryless<=20);
+}
