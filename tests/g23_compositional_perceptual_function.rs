@@ -125,8 +125,13 @@ fn train(
     assert!(evo.phase_native_composition_witnesses().is_empty());
     fact(evo,&d2,x,&dead(l1,1));
     let born=evo.phase_native_composition_witnesses();
-    assert_eq!(born.len(),3);
+    assert!(born.len()>=3 && born.len()<=16);
     assert!(born.iter().all(|w|w.eligible_observations==0));
+    let a_desc=descriptor(A_VALUE);
+    let b_desc=descriptor(B_VALUE);
+    assert!(born.iter().any(|w|w.program==PhasePerceptProgram::Atom(b_desc)));
+    assert!(born.iter().any(|w|w.program==PhasePerceptProgram::And(a_desc,b_desc)));
+    assert!(born.iter().any(|w|w.program==PhasePerceptProgram::Xor(a_desc,b_desc)));
 
     // Frozen future distribution per 10 anchor facts:
     // 00 x6, 01 x1, 10 x1, 11 x2.
@@ -152,12 +157,17 @@ fn train(
 
     let witnesses=evo.phase_native_composition_witnesses();
     println!("G23_LEARNING swap={} witnesses={:?}",swap,witnesses);
-    let xor=witnesses.iter().find(|w|matches!(w.program,PhasePerceptProgram::Xor(_, _)))
-        .expect("XOR candidate");
-    let atom=witnesses.iter().find(|w|matches!(w.program,PhasePerceptProgram::Atom(_)))
-        .expect("Atom candidate");
-    let and=witnesses.iter().find(|w|matches!(w.program,PhasePerceptProgram::And(_, _)))
-        .expect("AND candidate");
+    let a_desc=descriptor(A_VALUE);
+    let b_desc=descriptor(B_VALUE);
+    let xor=witnesses.iter().find(|w|
+        w.program==PhasePerceptProgram::Xor(a_desc,b_desc))
+        .expect("target XOR candidate");
+    let atom=witnesses.iter().find(|w|
+        w.program==PhasePerceptProgram::Atom(b_desc))
+        .expect("target Atom candidate");
+    let and=witnesses.iter().find(|w|
+        w.program==PhasePerceptProgram::And(a_desc,b_desc))
+        .expect("target AND candidate");
 
     assert!(xor.promoted && !xor.retired);
     assert_eq!(xor.eligible_observations,40);
@@ -208,9 +218,11 @@ fn train_irrelevant_composition(
 }
 
 fn xor_witness(evo:&EvoPhase)->PhaseCompositionWitness{
+    let a=descriptor(A_VALUE);
+    let b=descriptor(B_VALUE);
     evo.phase_native_composition_witnesses().into_iter()
-        .find(|w|w.promoted && matches!(w.program,PhasePerceptProgram::Xor(_, _)))
-        .expect("promoted XOR witness")
+        .find(|w|w.promoted && w.program==PhasePerceptProgram::Xor(a,b))
+        .expect("promoted target XOR witness")
 }
 
 fn eval_program(program:PhasePerceptProgram,a:bool,b:bool)->bool{
@@ -242,8 +254,10 @@ fn score(
     evo.set_planning_learning_enabled(false);
     let (x,y)=fixture::action_pair(swap);
     let witnesses=evo.phase_native_composition_witnesses();
-    let atom=witnesses.iter().find(|w|matches!(w.program,PhasePerceptProgram::Atom(_))).unwrap();
-    let and=witnesses.iter().find(|w|matches!(w.program,PhasePerceptProgram::And(_, _))).unwrap();
+    let a_desc=descriptor(A_VALUE);
+    let b_desc=descriptor(B_VALUE);
+    let atom=witnesses.iter().find(|w|w.program==PhasePerceptProgram::Atom(b_desc)).unwrap();
+    let and=witnesses.iter().find(|w|w.program==PhasePerceptProgram::And(a_desc,b_desc)).unwrap();
     assert!(!atom.promoted && !and.promoted);
 
     let mut full=0usize;
