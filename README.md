@@ -128,7 +128,7 @@ G12 has a mechanism PASS: the ordinary factual concept-learning path can keep us
 
 Workflow `37590743597`: FULL_AUTO **8/8**, NO_ESCALATION **0/8**, FROZEN_SIMPLE **0/8**, ZERO_PHASE/ZERO_WEIGHT **0/8**, necessary lesion **6/8**, pi phase shift **6/8**, exact restore **8/8**. FULL used **0** pre-residual L2 candidates versus **4** for ALWAYS_ESCALATE.
 
-FRESH-G12 is the active evidence gate.
+FRESH-G12 has now passed: FULL_AUTO **80/80**, all four matched failure controls **0/80**, zero premature FULL L2 allocation across all 10 seeds, first L2 candidate exactly at the first supported-weak observation in every seed, necessary lesion/phase **0/20**, exact restore **20/20**. This statistically qualifies bounded evidence-driven self-triggered L1→L2 escalation.
 
 ## Non-negotiable rule
 
