@@ -261,14 +261,36 @@ impl EvoPhase {
         }
 
         if native.config.learning_enabled {
-            if let Some(w) = matching.iter()
+            // Repair-5: an unfinished hypothesis may request its anchor only
+            // when the currently observed predecessor side is not already more
+            // sampled than its opposite side. Repeating an over-sampled side
+            // cannot reduce the hypothesis's missing information, so ordinary
+            // epistemic reasoning must get a chance instead.
+            let experiment = matching.iter()
                 .copied()
                 .filter(|w| !w.promoted)
-                .min_by_key(|w| (w.born_fact, w.anchor_action))
-            {
-                return (true, Some(w.anchor_action));
+                .filter_map(|w| {
+                    let side = w.predecessor_cells.iter()
+                        .position(|&p| p == previous)?;
+                    let counts = self.context_counts(native, w);
+                    let current = counts[side][0] + counts[side][1];
+                    let opposite = counts[1 - side][0] + counts[1 - side][1];
+                    (current <= opposite).then_some((
+                        current,
+                        current + opposite,
+                        w.born_fact,
+                        w.anchor_action,
+                    ))
+                })
+                .min();
+
+            if let Some((_, _, _, action)) = experiment {
+                return (true, Some(action));
             }
         }
+        // No currently informative context experiment is available. Do not
+        // fail closed merely because a stale one-sided candidate exists;
+        // lower-priority rival/goal/general epistemic reasoning may continue.
         (false, None)
     }
 
