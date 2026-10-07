@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary P5 deterministic preflight trigger; stable sensory phase fix rerun, no fresh authority pack.
+# One-use P5 continual-retention qualification trigger; algorithm/spec already frozen.
 
 on:
   workflow_dispatch:
@@ -24,6 +24,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_p5:
+        description: 'Consume a new one-use P5 continual-retention qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -34,7 +39,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p5: run persistent continual preflight'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p5: execute frozen continual qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -91,6 +96,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P4_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test phase_native_learned_drive p4_fresh_learned_drive_transfer_pack -- --ignored --nocapture | tee p4-evidence.log
+      - name: Explicit one-use fresh P5 continual-retention qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_p5 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P5_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test phase_native_continual p5_fresh_continual_retention_pack -- --ignored --nocapture | tee p5-evidence.log
+      - name: Preserve P5 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p5-execution-evidence
+          path: p5-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve P4 execution log
         if: always()
         uses: actions/upload-artifact@v4
