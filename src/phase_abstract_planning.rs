@@ -352,6 +352,141 @@ impl EvoPhase {
         )
     }
 
+    /// Goal-conditioned physical planning. The goal is supplied only as a raw
+    /// observation that must resolve to an already-acquired abstract cell.
+    /// No learned outcome value is required for the goal signal.
+    pub fn plan_phase_native_abstract_goal(
+        &mut self,
+        sensory: &[f32],
+        goal_sensory: &[f32],
+        depth: Option<usize>,
+    ) -> Option<PlanDecision> {
+        let current = self.phase_native_abstract_state(sensory)?;
+        let goal = self.phase_native_abstract_state(goal_sensory)?;
+        if current.level != goal.level || current.cell == goal.cell {
+            return None;
+        }
+        self.phase_native_goal_decision_from_cells(
+            current.cell,
+            goal.cell,
+            depth,
+        )
+    }
+
+    fn phase_native_goal_decision_from_cells(
+        &mut self,
+        entry: usize,
+        goal: usize,
+        depth: Option<usize>,
+    ) -> Option<PlanDecision> {
+        if entry >= self.cells.len()
+            || goal >= self.cells.len()
+            || !self.cells[entry].recruited
+            || !self.cells[goal].recruited
+        {
+            return None;
+        }
+
+        let state = self.phase_native.as_mut()?;
+        state.last_local_updates = 0;
+        state.last_motor_potentials.fill(0.0);
+        let horizon = depth
+            .unwrap_or(state.config.horizon)
+            .min(state.config.horizon)
+            .max(1);
+        let floor = state.config.coherence_floor;
+
+        let mut membranes = self.cells.clone();
+        for cell in &mut membranes {
+            cell.charge = 0.0;
+        }
+        membranes[goal].charge = 1.0;
+        let mut latency = vec![0usize; membranes.len()];
+
+        for _ in 0..horizon {
+            let old = membranes.clone();
+            let old_latency = latency.clone();
+
+            for cell in &mut membranes {
+                cell.charge = 0.0;
+            }
+            latency.fill(0);
+
+            // Re-seed the requested acquired goal on every recurrence step so
+            // paths shorter than the configured horizon remain available.
+            membranes[goal].charge = 1.0;
+
+            for circuit in &state.circuits {
+                state.last_local_updates += 1;
+                if circuit.support < u64::from(self.config.min_recruit_support) {
+                    continue;
+                }
+
+                let afferent = &self.synapses[circuit.afferent_synapse];
+                let successor = &self.synapses[circuit.successor_synapse];
+                let future = state.config.discount
+                    * conductance(&old, successor, floor)
+                    * old[successor.to].charge;
+                if future <= 1.0e-8 {
+                    continue;
+                }
+
+                let current =
+                    conductance(&old, afferent, floor) * future;
+                if current > membranes[circuit.relay_cell].charge {
+                    membranes[circuit.relay_cell].charge = current;
+                }
+
+                let delay = old_latency[successor.to].saturating_add(1);
+                latency[circuit.relay_cell] = delay;
+
+                if current > membranes[afferent.from].charge {
+                    membranes[afferent.from].charge = current;
+                    latency[afferent.from] = delay;
+                }
+            }
+        }
+
+        let mut motor_latency = vec![0usize; self.config.motor_cells];
+        for circuit in &state.circuits {
+            if self.synapses[circuit.afferent_synapse].from != entry {
+                continue;
+            }
+            let output = &self.synapses[circuit.motor_synapse];
+            let action =
+                output.to.checked_sub(self.config.sensory_cells)?;
+            if action >= self.config.motor_cells {
+                return None;
+            }
+            let current = membranes[circuit.relay_cell].charge
+                * conductance(&membranes, output, floor);
+            if current > state.last_motor_potentials[action] {
+                state.last_motor_potentials[action] = current;
+                motor_latency[action] = latency[circuit.relay_cell];
+            }
+        }
+
+        let mut selected = None;
+        let mut peak = 1.0e-8;
+        for (motor, potential) in
+            state.last_motor_potentials.iter().copied().enumerate()
+        {
+            if potential > peak {
+                peak = potential;
+                selected = Some(motor);
+            }
+        }
+        let action = selected?;
+
+        Some(PlanDecision {
+            first_action: action,
+            predicted_value: peak,
+            selected_depth: motor_latency[action],
+            expanded_nodes: state.last_local_updates,
+            authority: Authority::Imagined,
+        })
+    }
+
     /// Plan from the unique highest active acquired abstraction using P1's
     /// physical backward value recurrence. The optional bound is diagnostic;
     /// None uses the native configured horizon.
