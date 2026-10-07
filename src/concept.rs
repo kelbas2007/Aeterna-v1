@@ -149,6 +149,10 @@ impl EvoConceptMemory {
         &self.atoms
     }
 
+    pub fn min_action_support(&self) -> u32 {
+        self.config.min_action_support
+    }
+
     pub fn composites(&self) -> &[CompositeConcept] {
         &self.composites
     }
