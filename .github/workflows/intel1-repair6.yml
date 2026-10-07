@@ -21,6 +21,8 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --exit-code
+      - name: Repair-6 arbitration diagnostic
+        run: cargo test --release --test intel1_repair6_context_rival intel1_repair6_diagnose_junction_arbitration -- --nocapture
       - name: Repair-6 context-owned rival witness
         run: cargo test --release --test intel1_repair6_context_rival intel1_repair6_ -- --nocapture
       - name: Repair-5 balanced context witness
