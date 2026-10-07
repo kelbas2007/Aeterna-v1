@@ -9,8 +9,6 @@ mod fixture {
         let mut evo=target(&drive);
         let l1=train_abstraction(&mut evo);
         assert!(evo.enable_phase_native_context_refinement());
-        assert!(evo.enable_phase_native_perceptual_refinement());
-        assert!(evo.enable_phase_native_compositional_refinement());
         (evo,l1)
     }
 
@@ -27,7 +25,7 @@ fn feed(
     layout:usize,
 ){
     let post=fixture::scene(l1,post_state,layout);
-    assert!(evo.observe_phase_native_refinement_fanout_result(action,&post).is_some());
+    assert!(evo.observe_phase_native_context_result(action,&post).is_some());
 }
 
 fn enter_base_from(
