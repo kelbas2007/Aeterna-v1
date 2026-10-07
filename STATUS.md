@@ -1094,3 +1094,19 @@ Run `37676727090`, source `974ce3cd7cc3518aa42625eef26f9e269fac23bc`.
 - G20-G23, Human Protection and Release PASS.
 
 Next architectural gate: **U2 lifetime hypothesis ecology**.
+
+
+## INTEL-2 frozen unified verdict
+
+Canonical first INTEL-2 verdict: **FAIL**.
+
+Run `37687243350`, burned authority seed `37687243350`.
+
+Frozen cognitive core `07b44fb8e00837568bc9655e760eb031d1944dff` passed source-freeze, unified runtime, U1-U3, Human Protection and Release pre-gates.
+
+- World A: PASS, 14 actions; translated frozen reuse 2 actions.
+- World B: PASS, 10 actions; switched goal 2 additional actions.
+- World C: FAIL before useful context promotion: unified runtime returned `NoSupportedAction`.
+- Worlds D/E/final retention: not scored after earliest frozen failure.
+
+U1-U3 remain qualified. No immediate Repair-N belongs to the INTEL-2 verdict cycle. Next step is read-only architecture diagnosis of why unified proposal generation/competition can become empty or unsupported during history-dependent bootstrap.
