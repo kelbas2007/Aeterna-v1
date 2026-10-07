@@ -684,3 +684,676 @@ fn g19_selector_has_no_host_hypothesis_table_or_search_fallback(){
         );
     }
 }
+
+
+#[derive(Clone,Debug)]
+struct Fresh19Spec {
+    atom_perm:[usize;16],
+    l1_pairs:[[usize;2];8],
+    state_pairs:[[usize;2];9],
+    state_roles:[usize;9],
+    motor_roles:[usize;6],
+    layouts:[[(usize,usize);4];6],
+    tuition_order:Vec<usize>,
+}
+
+struct Fresh19Rng(u64);
+
+impl Fresh19Rng{
+    fn new(seed:u64)->Self{Self(seed^0xA319_19A1_C011_2026)}
+    fn next(&mut self)->u64{
+        let mut x=self.0;
+        x^=x>>12;
+        x^=x<<25;
+        x^=x>>27;
+        self.0=x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+    fn range(&mut self,upper:usize)->usize{(self.next()%upper as u64) as usize}
+}
+
+fn fresh19_shuffle<T>(rng:&mut Fresh19Rng,values:&mut [T]){
+    for i in (1..values.len()).rev(){
+        let j=rng.range(i+1);
+        values.swap(i,j);
+    }
+}
+
+fn fresh19_fnv(mut h:u64,value:u64)->u64{
+    const PRIME:u64=1_099_511_628_211;
+    for b in value.to_le_bytes(){
+        h^=b as u64;
+        h=h.wrapping_mul(PRIME);
+    }
+    h
+}
+
+#[derive(Clone,Copy,Debug)]
+struct Fresh19StateRoles{
+    start:usize,
+    a_good:usize,
+    a_dead:usize,
+    b_good:usize,
+    b_dead:usize,
+    fall_a:usize,
+    fall_b:usize,
+    goal_a:usize,
+    goal_b:usize,
+}
+
+fn fresh19_state_roles(spec:&Fresh19Spec)->Fresh19StateRoles{
+    Fresh19StateRoles{
+        start:spec.state_roles[0],
+        a_good:spec.state_roles[1],
+        a_dead:spec.state_roles[2],
+        b_good:spec.state_roles[3],
+        b_dead:spec.state_roles[4],
+        fall_a:spec.state_roles[5],
+        fall_b:spec.state_roles[6],
+        goal_a:spec.state_roles[7],
+        goal_b:spec.state_roles[8],
+    }
+}
+
+fn fresh19_motor_roles(spec:&Fresh19Spec)->Roles{
+    Roles{
+        probe_a:spec.motor_roles[0],
+        probe_b:spec.motor_roles[1],
+        fallback_a:spec.motor_roles[2],
+        fallback_b:spec.motor_roles[3],
+        step_a:spec.motor_roles[4],
+        step_b:spec.motor_roles[5],
+    }
+}
+
+#[derive(Clone,Copy,Debug)]
+struct Fresh19Fact{pre:usize,action:usize,post:usize}
+
+fn fresh19_model_facts(spec:&Fresh19Spec)->Vec<Fresh19Fact>{
+    let s=fresh19_state_roles(spec);
+    let r=fresh19_motor_roles(spec);
+    let mut facts=Vec::<Fresh19Fact>::new();
+
+    let mut add=|pre,action,post|{
+        facts.push(Fresh19Fact{pre,action,post});
+    };
+
+    add(s.start,r.probe_a,s.a_good);
+    add(s.start,r.probe_a,s.a_dead);
+    add(s.start,r.probe_b,s.b_good);
+    add(s.start,r.probe_b,s.b_dead);
+
+    add(s.a_good,r.step_a,s.goal_a);
+    add(s.b_good,r.step_b,s.goal_b);
+    add(s.start,r.fallback_a,s.fall_a);
+    add(s.fall_a,r.step_a,s.a_good);
+    add(s.start,r.fallback_b,s.fall_b);
+    add(s.fall_b,r.step_b,s.b_good);
+
+    // Fill every still-unrepresented state/action slot with a neutral self-loop.
+    for state in 0..9usize {
+        for action in 0..6usize {
+            if facts.iter().any(|f|f.pre==state && f.action==action){
+                continue;
+            }
+            add(state,action,state);
+        }
+    }
+
+    // 54 state/action slots plus one extra rival successor for each probe.
+    assert_eq!(facts.len(),56);
+    facts
+}
+
+fn fresh19_specs(authority:u64)->(Vec<Fresh19Spec>,u64){
+    let mut specs=Vec::new();
+    let mut digest=14_695_981_039_346_656_037u64;
+
+    for sub in 0..10u64 {
+        let mut rng=Fresh19Rng::new(
+            authority
+                ^ sub.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                ^ 0x19A0_C71E_5EED_0019
+        );
+
+        let mut atoms=(0usize..16).collect::<Vec<_>>();
+        fresh19_shuffle(&mut rng,&mut atoms);
+        let mut atom_perm=[0usize;16];
+        atom_perm.copy_from_slice(&atoms);
+
+        let factors=factorization_16();
+        let l1_pairs=factors[0].map(|p|{
+            let mut pair=[atom_perm[p[0]],atom_perm[p[1]]];
+            pair.sort_unstable();
+            pair
+        });
+
+        let mut all_pairs=Vec::<[usize;2]>::new();
+        for i in 0..8usize{
+            for j in (i+1)..8usize{
+                all_pairs.push([i,j]);
+            }
+        }
+        fresh19_shuffle(&mut rng,&mut all_pairs);
+        let mut state_pairs=[[0usize;2];9];
+        state_pairs.copy_from_slice(&all_pairs[..9]);
+
+        let mut sr=[0usize,1,2,3,4,5,6,7,8];
+        fresh19_shuffle(&mut rng,&mut sr);
+
+        let mut mr=[0usize,1,2,3,4,5];
+        fresh19_shuffle(&mut rng,&mut mr);
+
+        let mut layouts=LAYOUTS;
+        fresh19_shuffle(&mut rng,&mut layouts);
+
+        let mut provisional=Fresh19Spec{
+            atom_perm,
+            l1_pairs,
+            state_pairs,
+            state_roles:sr,
+            motor_roles:mr,
+            layouts,
+            tuition_order:Vec::new(),
+        };
+        let fact_len=fresh19_model_facts(&provisional).len();
+        let mut order=(0usize..fact_len).collect::<Vec<_>>();
+        fresh19_shuffle(&mut rng,&mut order);
+        provisional.tuition_order=order;
+
+        digest=fresh19_fnv(digest,sub);
+        for x in provisional.atom_perm {digest=fresh19_fnv(digest,x as u64);}
+        for p in provisional.l1_pairs {for x in p {digest=fresh19_fnv(digest,x as u64);}}
+        for p in provisional.state_pairs {for x in p {digest=fresh19_fnv(digest,x as u64);}}
+        for x in provisional.state_roles {digest=fresh19_fnv(digest,x as u64);}
+        for x in provisional.motor_roles {digest=fresh19_fnv(digest,x as u64);}
+        for layout in provisional.layouts {
+            for (x,y) in layout {
+                digest=fresh19_fnv(digest,x as u64);
+                digest=fresh19_fnv(digest,y as u64);
+            }
+        }
+        for &x in &provisional.tuition_order {
+            digest=fresh19_fnv(digest,x as u64);
+        }
+        specs.push(provisional);
+    }
+    (specs,digest)
+}
+
+fn fresh19_state_scene(
+    spec:&Fresh19Spec,
+    state:usize,
+    layout:[(usize,usize);4],
+)->Vec<f32>{
+    let mut r=blank();
+    let mut cursor=0usize;
+    for child in spec.state_pairs[state] {
+        for atom in spec.l1_pairs[child] {
+            add_motif(&mut r,atom,layout[cursor]);
+            cursor+=1;
+        }
+    }
+    r
+}
+
+fn fresh19_train_abstraction(evo:&mut EvoPhase,spec:&Fresh19Spec){
+    let factors=factorization_16();
+
+    for pair in spec.l1_pairs {
+        for layout in spec.layouts[..4].iter().copied(){
+            let scene=pair_scene(pair,layout);
+            for action in [0usize,1usize] {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &scene,action,action==0
+                ));
+            }
+        }
+    }
+
+    for (index,round) in factors[1..5].iter().enumerate(){
+        for raw in *round {
+            let mut pair=[
+                spec.atom_perm[raw[0]],
+                spec.atom_perm[raw[1]],
+            ];
+            pair.sort_unstable();
+            let scene=pair_scene(pair,spec.layouts[index]);
+            for action in [0usize,1usize] {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &scene,action,action==1
+                ));
+            }
+        }
+    }
+
+    assert_eq!(evo.concept_atoms().len(),16);
+    assert_eq!(evo.phase_native_promoted_concept_count(),8);
+    assert!(evo.enable_phase_native_depth_generic_abstraction(2));
+
+    for child in 0..8usize {
+        let scene=pair_scene(
+            spec.l1_pairs[child],
+            spec.layouts[child%4],
+        );
+        for rep in 0..4usize {
+            let first=rep%2==0;
+            assert!(evo.observe_phase_native_depth_generic_factual(
+                &scene,2,first
+            ));
+            assert!(evo.observe_phase_native_depth_generic_factual(
+                &scene,3,!first
+            ));
+        }
+    }
+
+    for cycle in 0..4usize {
+        for state in 0..9usize {
+            let scene=fresh19_state_scene(spec,state,spec.layouts[cycle]);
+            for action in [2usize,3usize] {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==2
+                ));
+            }
+            for child in spec.state_pairs[state] {
+                let single=pair_scene(
+                    spec.l1_pairs[child],
+                    spec.layouts[(cycle+child+2)%6],
+                );
+                for action in [2usize,3usize] {
+                    assert!(evo.observe_phase_native_depth_generic_factual(
+                        &single,action,action==3
+                    ));
+                }
+            }
+        }
+    }
+
+    assert_eq!(evo.phase_native_deep_candidate_count(2),9);
+    assert_eq!(evo.phase_native_promoted_deep_count(2),9);
+    evo.set_concept_learning_enabled(false);
+
+    let mut cells=std::collections::BTreeSet::new();
+    for state in 0..9usize {
+        let reference=evo.phase_native_abstract_state(
+            &fresh19_state_scene(spec,state,spec.layouts[0])
+        ).unwrap();
+        assert_eq!(reference.level,2);
+        assert!(cells.insert(reference.cell));
+        for layout in spec.layouts {
+            assert_eq!(
+                evo.phase_native_abstract_state(
+                    &fresh19_state_scene(spec,state,layout)
+                ).unwrap(),
+                reference
+            );
+        }
+    }
+    assert_eq!(cells.len(),9);
+}
+
+fn fresh19_base(
+    drive:&PhaseDriveCheckpoint,
+    spec:&Fresh19Spec,
+)->EvoPhase{
+    let mut evo=target(drive);
+    fresh19_train_abstraction(&mut evo,spec);
+    let facts=fresh19_model_facts(spec);
+    for &index in &spec.tuition_order {
+        let fact=facts[index];
+        assert!(evo.observe_phase_native_abstract_transition(
+            &fresh19_state_scene(spec,fact.pre,spec.layouts[0]),
+            fact.action,
+            &fresh19_state_scene(spec,fact.post,spec.layouts[0]),
+            0.0,
+        ));
+    }
+    assert_eq!(evo.phase_native_circuits().len(),56);
+    assert_eq!(evo.planning_transition_count(),0);
+    evo
+}
+
+fn fresh19_state_ref(
+    evo:&EvoPhase,
+    spec:&Fresh19Spec,
+    state:usize,
+)->PhaseAbstractStateRef{
+    evo.phase_native_abstract_state(
+        &fresh19_state_scene(spec,state,spec.layouts[0])
+    ).unwrap()
+}
+
+fn fresh19_circuit(
+    evo:&EvoPhase,
+    spec:&Fresh19Spec,
+    pre:usize,
+    action:usize,
+    post:usize,
+)->PhaseCircuitInfo{
+    transition_circuit(
+        evo,
+        fresh19_state_ref(evo,spec,pre),
+        action,
+        fresh19_state_ref(evo,spec,post),
+    )
+}
+
+fn fresh19_l2_node(
+    evo:&EvoPhase,
+    spec:&Fresh19Spec,
+    state:usize,
+)->PhaseDeepNodeInfo{
+    l2_node(evo,fresh19_state_ref(evo,spec,state))
+}
+
+#[derive(Default,Clone,Copy)]
+struct Fresh19Episode{
+    probe_ok:bool,
+    suppressed_ok:bool,
+    plan_ok:bool,
+    fp_violation:usize,
+    endpoint_violation:usize,
+}
+
+fn fresh19_episode(
+    evo:&mut EvoPhase,
+    spec:&Fresh19Spec,
+    goal_a:bool,
+    actual_good:bool,
+    layout:[(usize,usize);4],
+)->Fresh19Episode{
+    let s=fresh19_state_roles(spec);
+    let r=fresh19_motor_roles(spec);
+    let goal=if goal_a{s.goal_a}else{s.goal_b};
+    let good=if goal_a{s.a_good}else{s.b_good};
+    let dead=if goal_a{s.a_dead}else{s.b_dead};
+    let probe=if goal_a{r.probe_a}else{r.probe_b};
+    let fallback=if goal_a{r.fallback_a}else{r.fallback_b};
+
+    let current=fresh19_state_scene(spec,s.start,layout);
+    let goal_scene=fresh19_state_scene(spec,goal,layout);
+    evo.observe_initial_real(&current,false);
+
+    let fp_before=evo.phase_native_learned_fingerprint();
+    let selected=evo.choose_phase_native_goal_rival_probe(&goal_scene);
+    let fp_after=evo.phase_native_learned_fingerprint();
+    let fp_violation=usize::from(fp_before!=fp_after);
+    let probe_ok=selected==Some(probe);
+
+    let actual=if actual_good{good}else{dead};
+    let suppressed=evo.observe_phase_native_rival_probe_result(
+        probe,
+        &fresh19_state_scene(spec,actual,layout),
+    ).unwrap_or(0);
+    let suppressed_ok=suppressed==1;
+
+    let abstract_cells=evo.phase_native_deep_nodes().iter()
+        .filter(|n|n.promoted && n.level==2)
+        .map(|n|n.concept_cell)
+        .collect::<std::collections::BTreeSet<_>>();
+    let endpoint_violation=evo.phase_native_circuits().iter()
+        .filter(|c|{
+            let a=evo.phase_native_synapse(c.afferent_synapse).unwrap();
+            let z=evo.phase_native_synapse(c.successor_synapse).unwrap();
+            !abstract_cells.contains(&a.from) || !abstract_cells.contains(&z.to)
+        }).count();
+
+    evo.observe_initial_real(&current,false);
+    let fp_plan_before=evo.phase_native_learned_fingerprint();
+    let plan=evo.plan_phase_native_abstract_goal(
+        &current,&goal_scene,None
+    ).map(|d|d.first_action);
+    let fp_plan_after=evo.phase_native_learned_fingerprint();
+    let expected=if actual_good{probe}else{fallback};
+    let plan_ok=plan==Some(expected);
+
+    Fresh19Episode{
+        probe_ok,
+        suppressed_ok,
+        plan_ok,
+        fp_violation:fp_violation+usize::from(fp_plan_before!=fp_plan_after),
+        endpoint_violation,
+    }
+}
+
+fn fresh19_wilson95(success:usize,n:usize)->(f64,f64){
+    let z=1.959_963_984_540_054_f64;
+    let n=n as f64;
+    let p=success as f64/n;
+    let denom=1.0+z*z/n;
+    let center=(p+z*z/(2.0*n))/denom;
+    let half=z*(p*(1.0-p)/n+z*z/(4.0*n*n)).sqrt()/denom;
+    (center-half,center+half)
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn g19_fresh_rival_hypothesis_discrimination_pack(){
+    let authority:u64=std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse().expect("fresh G19 seed must be u64");
+    let source_sha=std::env::var("AETERNA_SOURCE_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+    let spec_sha=std::env::var("AETERNA_SPEC_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+
+    let (specs,digest)=fresh19_specs(authority);
+    println!(
+        "FRESH_G19_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha,spec_sha,authority,digest
+    );
+    for (sub,spec) in specs.iter().enumerate(){
+        println!("FRESH_G19_BLOCK sub={} {:?}",sub,spec);
+    }
+
+    let drive=train_drive();
+    let mut full=0usize;
+    let mut suppressed=0usize;
+    let mut good_plan=0usize;
+    let mut dead_plan=0usize;
+    let mut wrong_goal=0usize;
+    let mut novelty=0usize;
+    let mut no_goal=0usize;
+    let mut broken_goal=0usize;
+    let mut broken_relevance=0usize;
+    let mut phase_relevance=0usize;
+    let mut no_revision_dead=0usize;
+    let mut rival_collapse=0usize;
+    let mut restored=0usize;
+    let mut irrelevant=0usize;
+    let mut endpoint_violations=0usize;
+    let mut fp_violations=0usize;
+    let mut legacy_violations=0usize;
+    let mut motor_mask=0u8;
+    let mut per_seed=Vec::new();
+
+    for (sub,spec) in specs.iter().enumerate(){
+        for m in spec.motor_roles {motor_mask|=1u8<<m;}
+        let base=fresh19_base(&drive,spec);
+        let s=fresh19_state_roles(spec);
+        let r=fresh19_motor_roles(spec);
+        if base.planning_transition_count()!=0 {legacy_violations+=1;}
+        let mut sub_full=0usize;
+
+        for goal_a in [true,false] {
+            for actual_good in [true,false] {
+                for layout in spec.layouts[2..4].iter().copied(){
+                    let mut evo=base.clone();
+                    let e=fresh19_episode(
+                        &mut evo,spec,goal_a,actual_good,layout
+                    );
+                    full+=usize::from(e.probe_ok);
+                    sub_full+=usize::from(e.probe_ok);
+                    suppressed+=usize::from(e.suppressed_ok);
+                    if actual_good {
+                        good_plan+=usize::from(e.plan_ok);
+                    }else{
+                        dead_plan+=usize::from(e.plan_ok);
+                    }
+                    endpoint_violations+=e.endpoint_violation;
+                    fp_violations+=e.fp_violation;
+
+                    let start=fresh19_state_scene(spec,s.start,layout);
+                    let goal=if goal_a{s.goal_a}else{s.goal_b};
+                    let goal_scene=fresh19_state_scene(spec,goal,layout);
+                    let expected_probe=if goal_a{r.probe_a}else{r.probe_b};
+
+                    let mut wrong=base.clone();
+                    wrong.observe_initial_real(&start,false);
+                    let other_goal=if goal_a{s.goal_b}else{s.goal_a};
+                    wrong_goal+=usize::from(
+                        wrong.choose_phase_native_goal_rival_probe(
+                            &fresh19_state_scene(spec,other_goal,layout)
+                        )==Some(if goal_a{r.probe_b}else{r.probe_a})
+                    );
+
+                    let mut nov=base.clone();
+                    nov.observe_initial_real(&start,false);
+                    novelty+=usize::from(
+                        nov.choose_phase_native_goal_unknown_probe_only_for_control(
+                            &goal_scene
+                        )==Some(expected_probe)
+                    );
+
+                    let mut ng=base.clone();
+                    ng.observe_initial_real(&start,false);
+                    no_goal+=usize::from(
+                        ng.choose_phase_native_rival_probe_no_goal_for_control()
+                            ==Some(expected_probe)
+                    );
+                }
+            }
+
+            let layout=spec.layouts[2];
+            let start=fresh19_state_scene(spec,s.start,layout);
+            let goal=if goal_a{s.goal_a}else{s.goal_b};
+            let goal_scene=fresh19_state_scene(spec,goal,layout);
+            let good=if goal_a{s.a_good}else{s.b_good};
+            let dead=if goal_a{s.a_dead}else{s.b_dead};
+            let probe=if goal_a{r.probe_a}else{r.probe_b};
+            let fallback=if goal_a{r.fallback_a}else{r.fallback_b};
+            let step=if goal_a{r.step_a}else{r.step_b};
+
+            let mut bg=base.clone();
+            let node=fresh19_l2_node(&bg,spec,goal);
+            bg.perturb_phase_native_synapse_for_control(
+                node.child_synapses[0],0.0,0.0
+            ).unwrap();
+            bg.observe_initial_real(&start,false);
+            broken_goal+=usize::from(
+                bg.choose_phase_native_goal_rival_probe(&goal_scene)
+                    ==Some(probe)
+            );
+
+            let route=fresh19_circuit(&base,spec,good,step,goal);
+            let mut br=base.clone();
+            let saved=br.perturb_phase_native_synapse_for_control(
+                route.successor_synapse,0.0,0.0
+            ).unwrap();
+            br.observe_initial_real(&start,false);
+            broken_relevance+=usize::from(
+                br.choose_phase_native_goal_rival_probe(&goal_scene)
+                    ==Some(probe)
+            );
+
+            br.restore_phase_native_synapse_for_control(
+                route.successor_synapse,saved.clone()
+            );
+            br.observe_initial_real(&start,false);
+            restored+=usize::from(
+                br.choose_phase_native_goal_rival_probe(&goal_scene)
+                    ==Some(probe)
+            );
+
+            let mut ps=base.clone();
+            ps.perturb_phase_native_synapse_for_control(
+                route.successor_synapse,1.0,std::f32::consts::PI
+            ).unwrap();
+            ps.observe_initial_real(&start,false);
+            phase_relevance+=usize::from(
+                ps.choose_phase_native_goal_rival_probe(&goal_scene)
+                    ==Some(probe)
+            );
+
+            // DEAD factual result without contradiction suppression.
+            let mut nr=base.clone();
+            nr.observe_initial_real(&start,false);
+            assert!(nr.observe_phase_native_abstract_action_result(
+                probe,
+                &fresh19_state_scene(spec,dead,layout),
+                0.0,
+                false,
+            ).is_some());
+            nr.observe_initial_real(&start,false);
+            no_revision_dead+=usize::from(
+                nr.plan_phase_native_abstract_goal(
+                    &start,&goal_scene,None
+                ).map(|d|d.first_action)==Some(fallback)
+            );
+
+            // Remove one rival prediction and require discrimination collapse.
+            let rival=fresh19_circuit(&base,spec,s.start,probe,dead);
+            let mut rc=base.clone();
+            rc.perturb_phase_native_synapse_for_control(
+                rival.successor_synapse,0.0,0.0
+            ).unwrap();
+            let score=rc.phase_native_goal_rival_disagreement_for_control(
+                &start,&goal_scene,probe
+            ).unwrap();
+            rival_collapse+=usize::from(score<=1.0e-8);
+        }
+
+        // Irrelevant competing-goal rival lesion.
+        let layout=spec.layouts[2];
+        let start=fresh19_state_scene(spec,s.start,layout);
+        let goal_scene=fresh19_state_scene(spec,s.goal_a,layout);
+        let rival=fresh19_circuit(
+            &base,spec,s.start,r.probe_b,s.b_dead
+        );
+        let mut irr=base.clone();
+        irr.perturb_phase_native_synapse_for_control(
+            rival.successor_synapse,0.0,0.0
+        ).unwrap();
+        irr.observe_initial_real(&start,false);
+        irrelevant+=usize::from(
+            irr.choose_phase_native_goal_rival_probe(&goal_scene)
+                ==Some(r.probe_a)
+        );
+
+        per_seed.push(sub_full);
+        println!(
+            "FRESH_G19_SUB sub={} full={}/8 roles={:?} motors={:?}",
+            sub,sub_full,spec.state_roles,spec.motor_roles
+        );
+    }
+
+    let (lo,hi)=fresh19_wilson95(full,80);
+    println!(
+        "FRESH_G19_RESULT full={}/80 wilson95=[{:.6},{:.6}] per_seed={:?} suppressed={}/80 good_plan={}/40 dead_plan={}/40 wrong_goal={}/80 novelty={}/80 no_goal={}/80 broken_goal={}/20 broken_relevance={}/20 phase_relevance={}/20 no_revision_dead={}/20 rival_collapse={}/20 restored={}/20 irrelevant={}/10 endpoint_violations={} fp_violations={} legacy_violations={} motor_mask={:#08b}",
+        full,lo,hi,per_seed,suppressed,good_plan,dead_plan,wrong_goal,
+        novelty,no_goal,broken_goal,broken_relevance,phase_relevance,
+        no_revision_dead,rival_collapse,restored,irrelevant,
+        endpoint_violations,fp_violations,legacy_violations,motor_mask
+    );
+
+    assert!(full>=76);
+    assert!(lo>=0.87);
+    assert!(per_seed.iter().all(|x|*x>=6));
+    assert!(suppressed>=76);
+    assert!(good_plan>=38);
+    assert!(dead_plan>=38);
+    assert!(wrong_goal>=72);
+    assert!(novelty<=20);
+    assert!(no_goal<=48);
+    assert!(broken_goal<=4);
+    assert!(broken_relevance<=4);
+    assert!(phase_relevance<=4);
+    assert!(no_revision_dead<=4);
+    assert!(rival_collapse>=19);
+    assert!(restored>=19);
+    assert!(irrelevant>=9);
+    assert_eq!(endpoint_violations,0);
+    assert_eq!(fp_violations,0);
+    assert_eq!(legacy_violations,0);
+    assert_eq!(motor_mask,0b11_1111);
+}
