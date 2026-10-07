@@ -1,5 +1,6 @@
 use crate::authority::Authority;
 use crate::belief::{BeliefConfig, EvoBeliefState};
+use crate::concept::{CompositeConcept, ConceptAtom, ConceptConfig, EvoConceptMemory};
 use crate::epistemic::{EvoEpistemicState, WorldHypothesis};
 use crate::exploration::{EvoExplorationStrategy, ExplorationConfig, ProbeFeatures};
 use crate::hdc::PhaseVector;
@@ -120,6 +121,7 @@ pub struct EvoPhase {
     sensory_roles: Vec<PhaseVector>,
     motor_roles: Vec<PhaseVector>,
     raster_field: Option<EvoRasterField>,
+    concept_memory: Option<EvoConceptMemory>,
     epistemic_state: Option<EvoEpistemicState>,
     macro_memory: Option<EvoMacroMemory>,
     hierarchy_memory: Option<EvoHierarchyMemory>,
@@ -169,6 +171,7 @@ impl EvoPhase {
             sensory_roles,
             motor_roles,
             raster_field: None,
+            concept_memory: None,
             epistemic_state: None,
             macro_memory: None,
             hierarchy_memory: None,
@@ -232,6 +235,87 @@ impl EvoPhase {
 
     pub fn raster_field(&self) -> Option<&EvoRasterField> {
         self.raster_field.as_ref()
+    }
+
+    pub fn enable_concept_memory(&mut self, config: ConceptConfig) {
+        assert_eq!(
+            config.width * config.height,
+            self.config.sensory_cells,
+            "concept memory raster must match sensory cells"
+        );
+        assert_eq!(
+            config.motor_cells,
+            self.config.motor_cells,
+            "concept memory and carrier must share motor count"
+        );
+        assert_eq!(
+            config.hdc_dim,
+            self.config.hdc_dim,
+            "concept memory and carrier must share HDC dimension"
+        );
+        self.concept_memory = Some(EvoConceptMemory::new(config));
+    }
+
+    pub fn set_concept_learning_enabled(&mut self, enabled: bool) {
+        if let Some(memory) = self.concept_memory.as_mut() {
+            memory.set_learning_enabled(enabled);
+        }
+    }
+
+    pub fn set_concept_readout_enabled(&mut self, enabled: bool) {
+        if let Some(memory) = self.concept_memory.as_mut() {
+            memory.set_readout_enabled(enabled);
+        }
+    }
+
+    pub fn concept_atoms(&self) -> &[ConceptAtom] {
+        self.concept_memory
+            .as_ref()
+            .map(EvoConceptMemory::atoms)
+            .unwrap_or(&[])
+    }
+
+    pub fn composite_concepts(&self) -> &[CompositeConcept] {
+        self.concept_memory
+            .as_ref()
+            .map(EvoConceptMemory::composites)
+            .unwrap_or(&[])
+    }
+
+    pub fn active_concept_atom_ids(&self, sensory: &[f32]) -> Vec<u64> {
+        self.concept_memory
+            .as_ref()
+            .map(|memory| memory.active_atom_ids(sensory))
+            .unwrap_or_default()
+    }
+
+    pub fn observe_concept_factual(&mut self, sensory: &[f32], action: usize, need: bool) {
+        self.concept_memory
+            .as_mut()
+            .expect("enable_concept_memory must be called first")
+            .observe_factual(sensory, action, need);
+    }
+
+    pub fn choose_composite_concept_action(&self, sensory: &[f32]) -> Option<usize> {
+        self.concept_memory.as_ref()?.choose_composite_action(sensory)
+    }
+
+    pub fn choose_atom_only_concept_action(&self, sensory: &[f32]) -> Option<usize> {
+        self.concept_memory.as_ref()?.choose_atom_only_action(sensory)
+    }
+
+    pub fn concept_atom_action_evidence(&self, atom_id: u64, action: usize) -> Option<f32> {
+        self.concept_memory.as_ref()?.atom_action_evidence(atom_id, action)
+    }
+
+    pub fn composite_concept_action_evidence(
+        &self,
+        concept_id: u64,
+        action: usize,
+    ) -> Option<f32> {
+        self.concept_memory
+            .as_ref()?
+            .composite_action_evidence(concept_id, action)
     }
 
     pub fn set_robust_high_level_perception(&mut self, enabled: bool) {
