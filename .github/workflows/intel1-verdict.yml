@@ -1,4 +1,4 @@
-name: intel1-verdict
+name: intel1-r1-verdict
 # One-use frozen-core intelligence verdict. No cognitive source changes permitted.
 on:
   workflow_dispatch:
@@ -21,8 +21,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Enforce cognitive freeze
         run: |
-          git diff --exit-code 308aba7c06fa89613276ef90da725be963f2d25f -- src Cargo.toml Cargo.lock
-          git diff --name-only 308aba7c06fa89613276ef90da725be963f2d25f --             | grep -Ev '^(tests/intel1_|docs/INTEL1_|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH3_RESULT.md|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH2_INVALID.md|EXPERIMENT_LEDGER.md|STATUS.md|\.github/workflows/(intel1|g23-fresh3))'             | (! grep .)
+          git diff --exit-code 397e57bcceae47b59275eac9fbfa865e2d6238da -- src Cargo.toml Cargo.lock
+          git diff --name-only 397e57bcceae47b59275eac9fbfa865e2d6238da --             | grep -Ev '^(tests/intel1_|docs/INTEL1_|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH3_RESULT.md|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH2_INVALID.md|EXPERIMENT_LEDGER.md|STATUS.md|\.github/workflows/(intel1|g23-fresh3))'             | (! grep .)
       - name: Verify historical regression before verdict
         run: |
           cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed_current_sensory_predicate_when_atoms_fail -- --nocapture
@@ -50,4 +50,4 @@ jobs:
         if: always()
         run: |
           git diff --exit-code
-          git diff --exit-code 308aba7c06fa89613276ef90da725be963f2d25f -- src Cargo.toml Cargo.lock
+          git diff --exit-code 397e57bcceae47b59275eac9fbfa865e2d6238da -- src Cargo.toml Cargo.lock
