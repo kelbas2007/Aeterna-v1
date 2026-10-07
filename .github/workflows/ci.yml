@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G13 frozen-20x20 conformance rerun; no fresh pack.
+# One-use G13 fresh depth-generic qualification trigger; production/spec frozen.
 
 on:
   workflow_dispatch:
@@ -49,6 +49,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g13:
+        description: 'Consume a new one-use G13 depth-generic abstraction qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -59,7 +64,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g13: run depth-generic abstraction mechanism'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g13: execute frozen fresh depth-generic qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -168,6 +173,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G12_SELF_TRIGGERED_ABSTRACTION_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test g12_self_triggered_abstraction g12_fresh_self_triggered_abstraction_pack -- --ignored --nocapture | tee g12-evidence.log
+      - name: Explicit one-use fresh G13 depth-generic qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g13 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G13_DEPTH_GENERIC_ABSTRACTION_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g13_depth_generic_abstraction g13_fresh_depth_generic_abstraction_pack -- --ignored --nocapture | tee g13-evidence.log
+      - name: Preserve G13 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g13-execution-evidence
+          path: g13-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve G12 execution log
         if: always()
         uses: actions/upload-artifact@v4
