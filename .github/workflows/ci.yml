@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use G12 self-triggered abstraction qualification trigger; source/spec frozen.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -49,17 +49,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g12: execute frozen fresh self-triggered abstraction qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -73,8 +67,6 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
-      - name: G12 self-triggered abstraction causal preflight
-        run: cargo test --release --test g12_self_triggered_abstraction -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
@@ -159,7 +151,7 @@ jobs:
           set -o pipefail
           cargo test --release --test g11_recursive_abstraction g11_fresh_recursive_abstraction_pack -- --ignored --nocapture | tee g11-evidence.log
       - name: Explicit one-use fresh G12 self-triggered abstraction qualification
-        if: ${{ github.event_name == 'push' || inputs.qualify_g12 }}
+        if: ${{ inputs.qualify_g12 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
