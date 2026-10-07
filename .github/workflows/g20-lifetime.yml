@@ -1,0 +1,45 @@
+name: g20-lifetime
+# One bounded integration run; no fresh qualification is requested.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/g20-lifetime.yml']
+permissions:
+  contents: read
+jobs:
+  lifetime:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g20: run integrated continual lifetime mechanism'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify exact committed source
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code
+      - name: G20 continual reasoning and protected execution
+        run: |
+          set -o pipefail
+          cargo test --release --test g20_continual_reasoning g20_ -- --nocapture | tee g20-evidence.log
+      - name: Human Protection regressions
+        run: cargo test --release --test human_protection -- --nocapture
+      - name: Full ordinary regression suite
+        run: cargo test --release --all --all-targets -- --nocapture
+      - name: Release build
+        run: cargo build --release
+      - name: Preserve integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g20-lifetime-evidence
+          path: g20-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Verify source unchanged
+        if: always()
+        run: git diff --exit-code
