@@ -957,6 +957,28 @@ fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
         let layout=k%4;
         let at_junction=wc.state==c_states[3];
         let side=usize::from(wc.next_side==1);
+        if at_junction && junction_actions.iter().flatten().sum::<usize>() < 12 {
+            let proposals=rt.organism().collect_phase_native_unified_proposals(&c_goal);
+            let selected=rt.organism().choose_phase_native_unified_proposal(&proposals);
+            let mut context_probe=rt.organism().clone();
+            let mut percept_probe=rt.organism().clone();
+            let mut composition_probe=rt.organism().clone();
+            let mut rival_probe=rt.organism().clone();
+            let mut goal_probe=rt.organism().clone();
+            let mut general_probe=rt.organism().clone();
+            println!(
+                "INTEL2_C_JUNCTION_TRACE trial={} side={} direct_unknown={:?} context={:?} percept={:?} composition={:?} rival={:?} goal={:?} general={:?} selected={:?} proposals={:?}",
+                wc.trials,side,
+                rt.organism().choose_phase_native_abstract_direct_action(),
+                context_probe.phase_native_context_action(&c_goal),
+                percept_probe.phase_native_perceptual_action(&c_goal),
+                composition_probe.phase_native_compositional_action(&c_goal),
+                rival_probe.choose_phase_native_goal_rival_probe(&c_goal),
+                goal_probe.choose_phase_native_goal_active_action(&c_goal),
+                general_probe.choose_phase_native_abstract_learned_drive_action(),
+                selected,proposals
+            );
+        }
         if let Err(error)=step_u(&mut rt,&mut monitor,|a|{
             if at_junction { junction_actions[side][a]+=1; }
             let (next,value)=wc.step(a);
