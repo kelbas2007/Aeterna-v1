@@ -249,6 +249,20 @@ impl EvoPhase {
             return None;
         }
 
+        // INTEL-1 Repair-2: frozen operation is exploitation, not an
+        // opportunity to chase epistemic novelty that cannot be learned.
+        // Use the already-acquired physical goal recurrence directly.
+        let learning_enabled = self.phase_native.as_ref()?.config.learning_enabled;
+        if !learning_enabled {
+            return self
+                .phase_native_goal_decision_from_cells(
+                    entry.cell,
+                    goal.cell,
+                    None,
+                )
+                .map(|decision| decision.first_action);
+        }
+
         let best = {
             let state = self.phase_native.as_ref()?;
             if state
