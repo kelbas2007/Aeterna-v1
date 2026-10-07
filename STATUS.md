@@ -775,3 +775,22 @@ Workflow `37604831999` PASSed on source `29f37f5b9d196533bbae205f8df91385a26d302
 - source guard, regressions and Release PASS.
 
 The ordinary cognition path no longer receives required task depth. Active evidence gate: FRESH-G14.
+
+
+## G14 FRESH self-selected depth
+
+Run `37605704724` PASSed on source `6f015be57cbf81edc6b0b61ee30ebeec78c621c5`.
+
+- spec SHA: `61b55d96b9f3e5de2abdf2f1fb886dfce4520b6e`;
+- authority seed: `37605704724`;
+- burned pack: `dbfb32f48339bb0a`;
+- SIMPLE **40/40**, every seed 4/4, every seed stopped at L2, zero L3-candidate violations;
+- DEEP **80/80**, Wilson95 [0.954182,1.000000], every seed 8/8, every seed grew to L3, zero L4-candidate violations;
+- safety ceiling 16 with zero violations;
+- CAP_LEVEL2 / NO_HIGHER_ENGINE **0/80**;
+- lesion / pi phase **0/20**;
+- exact restore **20/20**;
+- lower L1->L2 lesion dependent success **0/20**;
+- regressions and Release PASS.
+
+This qualifies bounded self-selected representational depth. Next gate: G15 abstract model-based planning.
