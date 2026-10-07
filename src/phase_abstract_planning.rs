@@ -110,6 +110,144 @@ impl EvoPhase {
         Some(selected)
     }
 
+    fn phase_native_abstract_cells_at_level(&self, level: u8) -> Vec<usize> {
+        let Some(state) = self.phase_native.as_ref() else {
+            return Vec::new();
+        };
+        let Some(concepts) = state.concepts.as_ref() else {
+            return Vec::new();
+        };
+
+        let mut cells = if level == 1 {
+            concepts
+                .circuits
+                .iter()
+                .filter(|circuit| circuit.promoted)
+                .map(|circuit| circuit.concept_cell)
+                .collect::<Vec<_>>()
+        } else {
+            state
+                .deep
+                .as_ref()
+                .map(|deep| {
+                    deep.nodes
+                        .iter()
+                        .filter(|node| node.promoted && node.level == level)
+                        .map(|node| node.concept_cell)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default()
+        };
+        cells.sort_unstable();
+        cells.dedup();
+        cells
+    }
+
+    /// G16 target selector: apply the SAME learned P4 epistemic weights to
+    /// acquired abstract state cells. If no epistemic value remains, ordinary
+    /// abstract model-based exploitation is allowed.
+    pub fn choose_phase_native_abstract_learned_drive_action(
+        &mut self,
+    ) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        if !state_cells.contains(&entry.cell) {
+            return None;
+        }
+
+        let best = {
+            let state = self.phase_native.as_ref()?;
+            if state
+                .drive
+                .as_ref()
+                .map(|drive| drive.config.readout_enabled)
+                != Some(true)
+            {
+                return None;
+            }
+
+            let frontier =
+                self.phase_drive_frontier_activity_for_cells(state, &state_cells);
+            let mut best: Option<(usize, f32, [f32; 2])> = None;
+            for action in 0..self.config.motor_cells {
+                let features =
+                    self.phase_drive_features(state, entry.cell, action, &frontier);
+                let score = self.phase_drive_score(state, features)?;
+                match best {
+                    None => best = Some((action, score, features)),
+                    Some((best_action, best_score, _)) => {
+                        if score > best_score + 1.0e-6
+                            || ((score - best_score).abs() <= 1.0e-6
+                                && action < best_action)
+                        {
+                            best = Some((action, score, features));
+                        }
+                    }
+                }
+            }
+            best
+        }?;
+
+        let (action, score, features) = best;
+        if score <= 1.0e-8 {
+            return self
+                .phase_native_decision_from_cell(entry.cell, None)
+                .map(|decision| decision.first_action);
+        }
+
+        self.phase_native
+            .as_mut()?
+            .drive
+            .as_mut()?
+            .pending_features = Some(features);
+        Some(action)
+    }
+
+    /// Matched G16 diagnostic: explore only a locally unmodelled action at
+    /// the current abstract state. It cannot deliberately navigate back to a
+    /// deeper reachable frontier after a reset.
+    pub fn choose_phase_native_abstract_direct_action(&self) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        let state = self.phase_native.as_ref()?;
+        (0..self.config.motor_cells)
+            .find(|action| !self.phase_drive_action_known_at(state, entry.cell, *action))
+    }
+
+    /// Commit one actually executed abstract action and update the transferred
+    /// drive only from structural information gain. REAL advances to factual
+    /// POST; no imagined state can enter this API.
+    pub fn observe_phase_native_abstract_action_result(
+        &mut self,
+        action: usize,
+        post_sensory: &[f32],
+        value: f32,
+    ) -> Option<bool> {
+        let pre_sensory = self.current_real.as_ref()?.sensory.clone();
+        let pre = self.phase_native_abstract_state(&pre_sensory)?;
+        let post = self.phase_native_abstract_state(post_sensory)?;
+        if pre.level != post.level {
+            return None;
+        }
+        let state_cells = self.phase_native_abstract_cells_at_level(pre.level);
+        let before = self.phase_native_circuits().len();
+        let accepted = self.observe_phase_native_abstract_transition(
+            &pre_sensory,
+            action,
+            post_sensory,
+            value,
+        );
+        let structural_gain = self.phase_native_circuits().len() > before;
+        self.phase_native_drive_after_cell_fact(
+            post.cell,
+            &state_cells,
+            structural_gain,
+        );
+        self.observe_initial_real(post_sensory, value >= 1.0);
+        Some(accepted)
+    }
+
     /// Learn one factual transition directly between already-acquired physical
     /// abstraction cells using the SAME P1 circuit and synapse arrays.
     pub fn observe_phase_native_abstract_transition(
