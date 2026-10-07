@@ -1,5 +1,5 @@
 name: evo-ci
-# Manual-only between sealed qualification checkpoints.
+# Temporary Human Protection v1.1 actuator-permit qualification trigger.
 
 on:
   workflow_dispatch:
@@ -69,11 +69,17 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ci.yml']
+
 permissions:
   contents: read
 
 jobs:
   rust:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'safety: run single-use Human Protection permits'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
