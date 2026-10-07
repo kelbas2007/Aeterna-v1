@@ -272,7 +272,8 @@ fn g21_same_image_becomes_two_evidence_gated_operational_states() {
 fn g21_state_refinement_is_native_not_a_host_context_answer_table() {
     let native = include_str!("../src/phase_contextual.rs");
     for required in ["native_cell_observation", "context_gate", "context_counts",
-        "conductance", "phase_native_goal_decision_from_cells", "born_now"] {
+        "conductance", "phase_native_goal_decision_from_cells",
+        "context_find_novel_collision", "context_witness_signature"] {
         assert!(native.contains(required), "missing native dependency {}", required);
     }
     for forbidden in ["world.context", "STATE_PAIRS", "expected()", "EvoImaginationPlanner",
