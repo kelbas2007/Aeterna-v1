@@ -274,9 +274,25 @@ impl EvoPhase {
         }
 
         if active_states.len() > 1 {
-            // Competing promoted explanations disagree: do not choose one by a
-            // host-side tie-break.
-            return (true, None);
+            // Repair-8: distinct promoted hypotheses may be complementary
+            // explanations of the same factual history. They may jointly act
+            // only when their independently learned physical goal recurrences
+            // agree on exactly one first action. Any disagreement or missing
+            // supported plan remains fail-closed.
+            let mut consensus: Option<usize> = None;
+            for &entry in &active_states {
+                let Some(decision) =
+                    self.phase_native_goal_decision_from_cells(entry, goal.cell, None)
+                else {
+                    return (true, None);
+                };
+                match consensus {
+                    None => consensus = Some(decision.first_action),
+                    Some(action) if action == decision.first_action => {}
+                    Some(_) => return (true, None),
+                }
+            }
+            return (true, consensus);
         }
         if let Some(&entry) = active_states.first() {
             if native.config.learning_enabled {
