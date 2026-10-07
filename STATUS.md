@@ -715,3 +715,22 @@ Run `37591926021` PASSed on source `7452e31d3c04eaf35eb1b655f5ade1ca76c82572`.
 - full regressions and Release PASS.
 
 This statistically qualifies bounded evidence-driven self-triggered L1->L2 escalation.
+
+
+## G13 depth-generic abstraction mechanism
+
+Qualifying workflow `37603203990` PASSed on source `6f0fb657309e16230f0fcc0ac659af57d579b61a`, strictly using the frozen **20x20** substrate.
+
+- FULL_DEPTH3 8/8;
+- MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH: 0/8 each;
+- necessary L2->L3 lesion 4/8;
+- pi phase shift 4/8;
+- exact restore 8/8;
+- unrelated lesion 2/2;
+- lower L1->L2 lesion dependent success 0/2;
+- hierarchy 16 atoms -> 8 L1 -> 4 L2 -> 2 L3;
+- source guard, regressions and Release PASS.
+
+Earlier workflow `37593455572` remains preserved as non-qualifying protocol drift because its evaluator used 40x40 instead of frozen 20x20.
+
+Active evidence gate: **FRESH-G13**.
