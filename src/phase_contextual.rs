@@ -179,6 +179,31 @@ impl EvoPhase {
         })
     }
 
+    fn context_uncovered_action(
+        ctx: &PhaseContextState,
+        base: usize,
+        previous: usize,
+        motor_cells: usize,
+    ) -> Option<usize> {
+        // Coverage becomes meaningful only after this base has actually been
+        // encountered from some other factual predecessor. Ordinary chain
+        // states with a single predecessor are left to the existing explorer.
+        let has_other_predecessor = ctx.discovery.iter().any(|fact| {
+            fact.base == base && fact.predecessor != previous
+        });
+        if !has_other_predecessor {
+            return None;
+        }
+
+        (0..motor_cells).find(|action| {
+            !ctx.discovery.iter().any(|fact| {
+                fact.base == base
+                    && fact.predecessor == previous
+                    && fact.action == *action
+            })
+        })
+    }
+
     /// Return (applicable, action). Multiple bounded context hypotheses may
     /// coexist on one acquired base. Only hypotheses whose factual predecessor
     /// pair contains the current predecessor are applicable.
@@ -210,7 +235,19 @@ impl EvoPhase {
             .collect::<Vec<_>>();
         if matching.is_empty() {
             // An old hypothesis about another predecessor pair must not block
-            // ordinary reasoning in a later world/lifetime regime.
+            // ordinary reasoning. But once this same base is known to have
+            // multiple factual predecessors, an action unseen under the
+            // current predecessor remains a context-coverage frontier.
+            if native.config.learning_enabled {
+                if let Some(action) = Self::context_uncovered_action(
+                    ctx,
+                    base.cell,
+                    previous,
+                    self.config.motor_cells,
+                ) {
+                    return (true, Some(action));
+                }
+            }
             return (false, None);
         }
 
@@ -287,10 +324,18 @@ impl EvoPhase {
             if let Some((_, _, _, action)) = experiment {
                 return (true, Some(action));
             }
+
+            if let Some(action) = Self::context_uncovered_action(
+                ctx,
+                base.cell,
+                previous,
+                self.config.motor_cells,
+            ) {
+                return (true, Some(action));
+            }
         }
-        // No currently informative context experiment is available. Do not
-        // fail closed merely because a stale one-sided candidate exists;
-        // lower-priority rival/goal/general epistemic reasoning may continue.
+        // No currently informative context experiment or predecessor-specific
+        // coverage gap is available. Lower-priority reasoning may continue.
         (false, None)
     }
 
