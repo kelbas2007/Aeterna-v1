@@ -19,8 +19,9 @@ use crate::trace::CarrierTrace;
 mod phase_native;
 pub use phase_native::{
     AutoAbstractionMetrics, PhaseAbstractStateRef, PhaseCircuitInfo, PhaseConceptCircuitInfo, PhaseDeepChildRef,
-    PhaseDeepNodeInfo, PhaseDriveCheckpoint, PhaseDriveConfig, PhaseNativeCheckpoint,
-    PhaseNativeConfig, PhasePerceptFeature, PhasePerceptWitness, PhaseRecursiveConceptInfo,
+    PhaseCompositionWitness, PhaseDeepNodeInfo, PhaseDriveCheckpoint, PhaseDriveConfig,
+    PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
+    PhasePerceptWitness, PhaseRecursiveConceptInfo,
 };
 use phase_native::PhaseNativeState;
 
