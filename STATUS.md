@@ -25,7 +25,8 @@ Date: 2026-10-06
 **P4 FRESH PASS — learned phase-native exploration drive transfers by itself to cold longer worlds.**  
 **P5 MECHANISM PASS — one persistent organism retains multiple worlds and selectively repairs one changed world.**  
 **P5 FRESH PASS — statistical continual retention/revision across 10 independent persistent lifetimes.**  
-**G10 MECHANISM PASS — autonomous composite concept construction from individually non-predictive acquired atoms.**
+**G10 MECHANISM PASS — autonomous composite concept construction from individually non-predictive acquired atoms.**  
+**G10 FRESH PASS — statistical composite-concept construction across authority-sampled relation atoms and bindings.**
 
 No AGI claim. No production promotion.
 
@@ -540,3 +541,25 @@ This establishes bounded composite predicate construction, not unrestricted conc
 ## Active evidence gate
 
 **FRESH-G10 — statistical composite-concept qualification** on newly sampled relation atoms/pair assignments/motor permutations.
+
+
+## G10 FRESH composite-concept result
+
+Run `37570124870` PASSed on source `4bc42dfc670689842619661d0e13ea54b3689048`.
+
+- spec SHA: `abfc17b088cdd133eaa683c27ef8b9cfbac43180`;
+- authority seed: `37570124870`;
+- burned pack digest: `7b41074ef2926446`;
+- FULL: **80/80**, Wilson95 [0.954182,1.000000];
+- every sub-seed: **8/8**;
+- NO_CONSTRUCTION: **40/80**;
+- NO_READOUT: **40/80**;
+- atom inventory mismatches: 0;
+- child-reference violations: 0;
+- max child evidence: 0.000000;
+- min winning composite evidence: 1.000000;
+- motor mappings: 5/5;
+- 4 acquired atoms and 4 composites in every FULL sub-seed;
+- full regressions and Release PASS.
+
+This statistically qualifies bounded composite predicate construction. The current concept state is EvoPhase-owned but dedicated; physical phase-cell/synapse execution of concept formation/readout is the next ownership gate.
