@@ -1433,3 +1433,393 @@ fn g14_open_depth_entrypoint_has_no_task_depth_argument_or_hidden_two_three() {
     }
     assert!(entry.contains("OPEN_DEPTH_SAFETY_CEILING"));
 }
+
+
+#[derive(Clone, Debug)]
+struct FreshG14Block {
+    base: FreshG13Block,
+    simple_confirm: [[(usize,usize);4];4],
+    simple_heldout: [[(usize,usize);4];4],
+    simple_layout_rejections: usize,
+}
+
+fn fresh14_l2_atoms(base:&FreshG13Block,target:usize)->[usize;4] {
+    let pair=base.l2_targets[target];
+    [
+        base.l1_pairs[pair[0]][0],
+        base.l1_pairs[pair[0]][1],
+        base.l1_pairs[pair[1]][0],
+        base.l1_pairs[pair[1]][1],
+    ]
+}
+
+fn fresh14_unique_layout4(
+    atoms:&[usize;4],
+    rng:&mut FreshG13Rng,
+    used:&mut Vec<[(usize,usize);4]>,
+    rejections:&mut usize,
+)->[(usize,usize);4] {
+    for _ in 0..100_000usize {
+        let mut candidate=Vec::with_capacity(4);
+        for &atom in atoms {
+            let (dx,dy)=G13_OFFSETS[atom];
+            candidate.push((rng.range(W-dx),rng.range(H-dy)));
+        }
+        let array:[(usize,usize);4]=candidate.try_into().unwrap();
+        if used.contains(&array) || !fresh13_layout_valid(atoms,&array) {
+            *rejections+=1;
+            continue;
+        }
+        used.push(array);
+        return array;
+    }
+    panic!("frozen geometry-only G14 L2 layout search exhausted");
+}
+
+fn fresh14_block(authority:u64,sub:u64)->FreshG14Block {
+    let base=fresh13_block(
+        authority ^ 0x14A4_D33F_C011_5EED,
+        sub
+    );
+    let mut rng=FreshG13Rng::new(
+        authority
+            ^ sub.wrapping_mul(0xD1B5_4A32_D192_ED03)
+            ^ 0x1414_0A37_E5E0_0014
+    );
+    let mut simple_confirm=[[(0usize,0usize);4];4];
+    let mut simple_heldout=[[(0usize,0usize);4];4];
+    let mut rejections=0usize;
+
+    for target in 0..4 {
+        let atoms=fresh14_l2_atoms(&base,target);
+        let mut used=Vec::new();
+        simple_confirm[target]=fresh14_unique_layout4(
+            &atoms,&mut rng,&mut used,&mut rejections
+        );
+        simple_heldout[target]=fresh14_unique_layout4(
+            &atoms,&mut rng,&mut used,&mut rejections
+        );
+    }
+
+    FreshG14Block {
+        base,
+        simple_confirm,
+        simple_heldout,
+        simple_layout_rejections:rejections,
+    }
+}
+
+fn fresh14_digest(blocks:&[FreshG14Block])->u64 {
+    let mut h=14_695_981_039_346_656_037u64;
+    for (sub,block) in blocks.iter().enumerate() {
+        h=fresh13_fnv(h,sub as u64);
+        for &v in &block.base.relation_perm { h=fresh13_fnv(h,v as u64); }
+        for pair in block.base.l1_pairs { for v in pair { h=fresh13_fnv(h,v as u64); } }
+        for pair in block.base.l2_targets { for v in pair { h=fresh13_fnv(h,v as u64); } }
+        for pair in block.base.l3_targets { for v in pair { h=fresh13_fnv(h,v as u64); } }
+        for &v in &block.base.motors { h=fresh13_fnv(h,v as u64); }
+        for target in 0..4 {
+            for (x,y) in block.simple_confirm[target] {
+                h=fresh13_fnv(h,x as u64);
+                h=fresh13_fnv(h,y as u64);
+            }
+            for (x,y) in block.simple_heldout[target] {
+                h=fresh13_fnv(h,x as u64);
+                h=fresh13_fnv(h,y as u64);
+            }
+        }
+        for target in 0..2 {
+            for layout in block.base.l3_tuition[target] {
+                for (x,y) in layout {
+                    h=fresh13_fnv(h,x as u64);
+                    h=fresh13_fnv(h,y as u64);
+                }
+            }
+            for layout in block.base.l3_heldout[target] {
+                for (x,y) in layout {
+                    h=fresh13_fnv(h,x as u64);
+                    h=fresh13_fnv(h,y as u64);
+                }
+            }
+        }
+    }
+    h
+}
+
+fn fresh14_l2_scene(
+    block:&FreshG14Block,
+    target:usize,
+    layout:[(usize,usize);4],
+)->Vec<f32> {
+    let pair=block.base.l2_targets[target];
+    concept_scene(
+        &block.base.l1_pairs,
+        &[pair[0],pair[1]],
+        &layout,
+    )
+}
+
+fn fresh14_confirm_simple(evo:&mut EvoPhase,block:&FreshG14Block) {
+    let actions=[block.base.motors[2],block.base.motors[3]];
+    for _ in 0..4 {
+        for target in 0..4 {
+            let scene=fresh14_l2_scene(
+                block,target,block.simple_confirm[target]
+            );
+            let correct=if target%2==0 {actions[0]} else {actions[1]};
+            for action in actions {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==correct
+                ));
+            }
+        }
+    }
+}
+
+fn fresh14_score_simple(evo:&EvoPhase,block:&FreshG14Block)->usize {
+    let actions=[block.base.motors[2],block.base.motors[3]];
+    let mut score=0usize;
+    for target in 0..4 {
+        let scene=fresh14_l2_scene(
+            block,target,block.simple_heldout[target]
+        );
+        let expected=if target%2==0 {actions[0]} else {actions[1]};
+        score+=usize::from(
+            evo.choose_phase_native_depth_generic_action(&scene)==Some(expected)
+        );
+    }
+    score
+}
+
+fn fresh14_confirm_deep(evo:&mut EvoPhase,block:&FreshG14Block) {
+    let actions=[block.base.motors[4],block.base.motors[5]];
+    for _ in 0..4 {
+        for target in 0..2 {
+            let scene=fresh13_l3_scene(
+                &block.base,target,block.base.l3_tuition[target][0]
+            );
+            let correct=if target==0 {actions[0]} else {actions[1]};
+            for action in actions {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==correct
+                ));
+            }
+        }
+    }
+}
+
+fn fresh14_wilson95(success:usize,n:usize)->(f64,f64) {
+    fresh13_wilson95(success,n)
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn g14_fresh_self_selected_depth_pack() {
+    let authority:u64=std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse().expect("fresh G14 seed must be u64");
+    let source_sha=std::env::var("AETERNA_SOURCE_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+    let spec_sha=std::env::var("AETERNA_SPEC_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+
+    let blocks=(0..10u64)
+        .map(|sub|fresh14_block(authority,sub))
+        .collect::<Vec<_>>();
+    let digest=fresh14_digest(&blocks);
+
+    println!(
+        "FRESH_G14_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha,spec_sha,authority,digest
+    );
+    for (sub,block) in blocks.iter().enumerate() {
+        println!("FRESH_G14_BLOCK sub={} {:?}",sub,block);
+    }
+
+    let mut simple_total=0usize;
+    let mut deep_total=0usize;
+    let mut simple_per_seed=Vec::new();
+    let mut deep_per_seed=Vec::new();
+    let mut simple_depth_violations=0usize;
+    let mut simple_l3_violations=0usize;
+    let mut deep_depth_violations=0usize;
+    let mut deep_l4_violations=0usize;
+    let mut safety_violations=0usize;
+    let mut cap2_total=0usize;
+    let mut no_engine_total=0usize;
+    let mut lesion_ok=0usize;
+    let mut phase_ok=0usize;
+    let mut restored_ok=0usize;
+    let mut lower_ok=0usize;
+    let mut layout_rejections=0usize;
+
+    for (sub,block) in blocks.iter().enumerate() {
+        layout_rejections+=
+            block.simple_layout_rejections+block.base.layout_rejections;
+
+        let mut stage1=carrier();
+        fresh13_train_l1(&mut stage1,&block.base);
+
+        let mut open_stage2=stage1.clone();
+        assert!(open_stage2.enable_phase_native_open_depth_abstraction());
+        let ceiling=open_stage2.phase_native_deep_max_level().unwrap();
+        safety_violations+=usize::from(ceiling<8);
+        fresh13_train_l2(&mut open_stage2,&block.base);
+
+        let mut simple=open_stage2.clone();
+        fresh14_confirm_simple(&mut simple,block);
+        simple_l3_violations+=usize::from(
+            simple.phase_native_deep_candidate_count(3)!=0
+        );
+        simple_depth_violations+=usize::from(
+            g14_highest_promoted_level(&simple)!=2
+        );
+        freeze(&mut simple);
+        let simple_score=fresh14_score_simple(&simple,block);
+        simple_total+=simple_score;
+        simple_per_seed.push(simple_score);
+
+        let mut deep=open_stage2.clone();
+        fresh13_train_l3(&mut deep,&block.base,true);
+        fresh14_confirm_deep(&mut deep,block);
+        deep_l4_violations+=usize::from(
+            deep.phase_native_deep_candidate_count(4)!=0
+        );
+        deep_depth_violations+=usize::from(
+            g14_highest_promoted_level(&deep)!=3
+        );
+        freeze(&mut deep);
+        let deep_score=fresh13_score(&deep,&block.base);
+        deep_total+=deep_score;
+        deep_per_seed.push(deep_score);
+
+        let mut cap2=stage1.clone();
+        assert!(cap2.enable_phase_native_depth_generic_abstraction(2));
+        fresh13_train_l2(&mut cap2,&block.base);
+        fresh13_train_l3(&mut cap2,&block.base,true);
+        freeze(&mut cap2);
+        cap2_total+=fresh13_score(&cap2,&block.base);
+
+        let mut no_engine=stage1.clone();
+        freeze(&mut no_engine);
+        no_engine_total+=fresh13_score(&no_engine,&block.base);
+
+        let actions=[block.base.motors[4],block.base.motors[5]];
+        let expected=actions[0];
+        let node=fresh13_l3_node(
+            &deep,&block.base,0,block.base.l3_heldout[0][0]
+        );
+
+        let mut lesioned=deep.clone();
+        let saved=lesioned.perturb_phase_native_synapse_for_control(
+            node.child_synapses[0],0.0,0.0
+        ).expect("fresh G14 necessary L2->L3 synapse");
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(
+                &block.base,0,block.base.l3_heldout[0][holdout]
+            );
+            lesion_ok+=usize::from(
+                lesioned.choose_phase_native_depth_generic_action(&scene)
+                    ==Some(expected)
+            );
+        }
+
+        lesioned.restore_phase_native_synapse_for_control(
+            node.child_synapses[0],saved
+        );
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(
+                &block.base,0,block.base.l3_heldout[0][holdout]
+            );
+            restored_ok+=usize::from(
+                lesioned.choose_phase_native_depth_generic_action(&scene)
+                    ==Some(expected)
+            );
+        }
+
+        let mut shifted=deep.clone();
+        shifted.perturb_phase_native_synapse_for_control(
+            node.child_synapses[0],1.0,std::f32::consts::PI
+        ).expect("fresh G14 phase intervention");
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(
+                &block.base,0,block.base.l3_heldout[0][holdout]
+            );
+            phase_ok+=usize::from(
+                shifted.choose_phase_native_depth_generic_action(&scene)
+                    ==Some(expected)
+            );
+        }
+
+        let l2_child=node.children[0];
+        let l2_node=deep.phase_native_deep_nodes().iter()
+            .find(|n|n.promoted && n.level==2 && n.id==l2_child.id)
+            .expect("fresh G14 lower L2 node").clone();
+        let mut lower=deep.clone();
+        lower.perturb_phase_native_synapse_for_control(
+            l2_node.child_synapses[0],0.0,0.0
+        ).expect("fresh G14 lower L1->L2 dependency");
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(
+                &block.base,0,block.base.l3_heldout[0][holdout]
+            );
+            lower_ok+=usize::from(
+                lower.choose_phase_native_depth_generic_action(&scene)
+                    ==Some(expected)
+            );
+        }
+
+        println!(
+            "FRESH_G14_SUB sub={} safety={} simple={}/4 simple_highest={} simple_l3={} deep={}/8 deep_highest={} deep_l4={} rejected_layouts={}",
+            sub,
+            ceiling,
+            simple_score,
+            g14_highest_promoted_level(&simple),
+            simple.phase_native_deep_candidate_count(3),
+            deep_score,
+            g14_highest_promoted_level(&deep),
+            deep.phase_native_deep_candidate_count(4),
+            block.simple_layout_rejections+block.base.layout_rejections,
+        );
+    }
+
+    let (deep_lo,deep_hi)=fresh14_wilson95(deep_total,80);
+    println!(
+        "FRESH_G14_RESULT simple={}/40 simple_per_seed={:?} simple_depth_violations={} simple_l3_violations={} deep={}/80 wilson95=[{:.6},{:.6}] deep_per_seed={:?} deep_depth_violations={} deep_l4_violations={} safety_violations={} cap2={}/80 no_engine={}/80 lesion={}/20 phase_shift={}/20 restored={}/20 lower_lesion_success={}/20 layout_rejections={}",
+        simple_total,
+        simple_per_seed,
+        simple_depth_violations,
+        simple_l3_violations,
+        deep_total,
+        deep_lo,
+        deep_hi,
+        deep_per_seed,
+        deep_depth_violations,
+        deep_l4_violations,
+        safety_violations,
+        cap2_total,
+        no_engine_total,
+        lesion_ok,
+        phase_ok,
+        restored_ok,
+        lower_ok,
+        layout_rejections
+    );
+
+    assert!(simple_total>=38);
+    assert!(simple_per_seed.iter().all(|score|*score>=3));
+    assert_eq!(simple_depth_violations,0);
+    assert_eq!(simple_l3_violations,0);
+    assert!(deep_total>=76);
+    assert!(deep_lo>=0.87);
+    assert!(deep_per_seed.iter().all(|score|*score>=6));
+    assert_eq!(deep_depth_violations,0);
+    assert_eq!(deep_l4_violations,0);
+    assert_eq!(safety_violations,0);
+    assert!(cap2_total<=40);
+    assert!(no_engine_total<=40);
+    assert!(lesion_ok<=4);
+    assert!(phase_ok<=4);
+    assert!(restored_ok>=19);
+    assert!(lower_ok<=1);
+}
