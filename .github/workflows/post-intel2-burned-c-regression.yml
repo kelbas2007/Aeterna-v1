@@ -1,0 +1,18 @@
+name: post-INTEL2 burned C regression
+
+on:
+  push:
+    branches:
+      - post-intel2-action-ecology
+    paths:
+      - '.github/workflows/post-intel2-burned-c-regression.yml'
+  workflow_dispatch:
+
+jobs:
+  burned-c:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Burned C diagnostic only
+        run: cargo test --release --test intel2_unified_worlds intel2_burned_world_c_with_environment_terminal_reset_diagnosis -- --nocapture
