@@ -62,6 +62,16 @@ If more than one eligible program exists, choose deterministically by:
 
 No outcome-aware tie break is allowed after candidate birth.
 
+### Pre-implementation clarification on candidate allocation
+
+This clarification is frozen before G23 production implementation and before any G23 outcome observation.
+
+A factual collision may instantiate **multiple** syntactically eligible programs for the same base/action, in the deterministic ordering above, until the lifetime cap of 16 is reached. The ordering controls allocation only; it is not an outcome-dependent winner selection. Every instantiated program receives its own future-only evidence stream and may promote or retire independently.
+
+This is necessary for the anti-shortcut test: simple Atom candidates are allowed to be born from the same discovery collision and must subsequently fail the frozen future evidence/effect gate, while a depth-2 composition may pass. Production must not delete or suppress an Atom candidate merely because a composite candidate exists.
+
+At readout, if exactly one promoted program applies it is used. If multiple promoted programs apply, the mechanism must abstain rather than resolve them with evaluator information. The deterministic witness is constructed so only the useful composite promotes.
+
 ## Native physical representation
 
 For one selected binary program P:
