@@ -1025,3 +1025,24 @@ Workflow `37630711406` PASSed on source `ce402311f4c733957f8997e8edc23ea6d58569a
 - source guard, Human Protection, regressions and Release PASS.
 
 Active evidence gate: **FRESH-G19**.
+
+
+## G22 evidence-gated perceptual variable invention
+
+Workflow `37644349129` PASSed on source `3f606fd2ee76b647105d4462beb07376cd2ec497`.
+
+- useful raw descriptor candidate selected after factual collision but discovery facts contributed 0 validation samples;
+- promotion after 32 future anchor observations;
+- log evidence 18.247769 vs frozen threshold 7.377759;
+- FULL **64/64 + 64/64**;
+- inherited/memoryless comparator **32/64 + 32/64**;
+- both new feature sides **32/32** in both motor permutations;
+- irrelevant raw descriptor candidate retired after 128 future observations with log evidence -4.618278;
+- learned feature/state links pass weight-lesion, pi-phase, exact-restore, unrelated-link and checkpoint/restart controls;
+- inherited active concept atoms remain unchanged by the subthreshold raw marker;
+- legacy graph transitions 0; dedicated table composites 0;
+- G21, G20, Human Protection, full regressions and Release PASS.
+
+This is bounded current-sensory representation invention from a programmer-authored descriptor family, not arbitrary feature synthesis or AGI.
+
+Next evidence gate: **FRESH-G22** across independently sampled descriptor identities/types, nuisance features and motor/successor assignments.
