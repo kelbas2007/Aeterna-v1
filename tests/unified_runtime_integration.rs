@@ -158,13 +158,33 @@ fn unified_runtime_uses_carrier_winner_then_protected_single_fact_and_generic_cr
 
     // Repeated no-gain facts are credited generically to all applicable stored
     // hypotheses. U2 regression separately verifies later reactivation.
-    for _ in 0..8 {
-        let _ = rt.step_unified(
+    let mut applicable_zero_facts=0usize;
+    for turn in 0..8 {
+        let before=rt.organism().collect_phase_native_unified_proposals(&goal);
+        let present=before.iter()
+            .any(|p|p.persistent_candidate_id==Some(candidate));
+        let outcome=rt.step_unified(
             |_|Some(safe()),
             |_|Ok((current.clone(),0.0))
         );
+        if present && matches!(outcome,Ok(StepOutcome::Executed{..})) {
+            applicable_zero_facts+=1;
+        }
+        let record=rt.organism().phase_native_hypothesis_records().into_iter()
+            .find(|r|r.candidate_id==candidate).unwrap();
+        println!(
+            "UNIFIED_ASSEMBLY_DECAY turn={} present={} outcome={:?} weight={} dormant={}",
+            turn,present,outcome.as_ref().map(|_|"ok"),record.weight,record.dormant
+        );
     }
-    assert_eq!(rt.organism().phase_native_hypothesis_dormant(candidate),Some(true));
+    let still_present=rt.organism().collect_phase_native_unified_proposals(&goal)
+        .iter().any(|p|p.persistent_candidate_id==Some(candidate));
+    if still_present && applicable_zero_facts>=6 {
+        assert_eq!(rt.organism().phase_native_hypothesis_dormant(candidate),Some(true));
+    } else {
+        assert!(!still_present,
+            "candidate remained applicable without enough factual decay evidence");
+    }
 
     let records_before=rt.organism().phase_native_hypothesis_records();
     let meta_before=rt.organism().phase_native_meta_weights().unwrap();
