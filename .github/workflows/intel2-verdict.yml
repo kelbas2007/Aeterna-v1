@@ -1,5 +1,6 @@
 name: intel2-verdict
 # preflight-2 after full-history checkout
+# preflight-3 after evaluator import repair
 on:
   workflow_dispatch:
   push:
