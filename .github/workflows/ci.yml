@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G18 goal-conditioned active reasoning mechanism trigger; no fresh G18 pack.
+# One-use G18 goal-conditioned active reasoning qualification trigger; source/spec frozen.
 
 on:
   workflow_dispatch:
@@ -74,6 +74,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g18:
+        description: 'Consume a new one-use G18 goal-conditioned active reasoning qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -84,7 +89,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g18: run goal-conditioned active reasoning mechanism'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g18: execute frozen fresh goal-conditioned active reasoning qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -249,6 +254,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G17_GOAL_CONDITIONED_PLANNING_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test g17_goal_conditioned_planning g17_fresh_goal_conditioned_planning_pack -- --ignored --nocapture | tee g17-evidence.log
+      - name: Explicit one-use fresh G18 goal-conditioned active reasoning qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g18 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G18_GOAL_CONDITIONED_ACTIVE_REASONING_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g18_goal_conditioned_active_reasoning g18_fresh_goal_conditioned_active_reasoning_pack -- --ignored --nocapture | tee g18-evidence.log
+      - name: Preserve G18 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g18-execution-evidence
+          path: g18-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve G17 execution log
         if: always()
         uses: actions/upload-artifact@v4
