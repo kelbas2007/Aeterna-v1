@@ -408,3 +408,5 @@ This qualifies learned weighting of inherited epistemic features, not invention 
 The first P5 failure was not erased. The old A world model remained physically present, but long-lived P2 decoder coherence was lost because factual observations permanently drifted shared sensory-cell phases. The phase-native fix stabilizes that intrinsic reference while leaving adaptation in synapses.
 
 After the fix, one persistent organism acquired four distinct worlds, retained earlier worlds after each later acquisition, selectively repaired a changed B law while preserving A/C/D, and survived one full checkpoint/restart. This remains a deterministic mechanism witness pending FRESH-P5.
+
+| G10 | MECHANISM-1 | PASS_AUTONOMOUS_COMPOSITE_CONCEPT | Workflow 37569651485 at source `74b736986870419ea42989c387026a57e498d900`: FULL 8/8, NO_CONSTRUCTION 4/8, NO_READOUT 4/8 across both opaque motor permutations. Four acquired atom units were identical in matched arms; four composites referenced child atom IDs; child evidence stayed <=0.20 and composite evidence >=0.60. Regressions and Release PASS. |
