@@ -98,6 +98,14 @@ Workflow `37534699260` passed the fixed preregistered mechanism:
 
 The subsequent one-use FRESH-P5 run `37569003124` statistically qualified this bounded continual-learning result: primary **80/80**, acquisition **40/40**, intermediate revisits **100/100**, changed-world repair **10/10**, post-change retention **40/40**, checkpoint restore **40/40**; FROZEN_CHANGED **0/10**, RESET_BETWEEN earlier retention **0/30**, ZERO_DRIVE **1/40**, NO_GROWTH **0/40**. See [P5 protocol](docs/PHASE_NATIVE_P5_PROTOCOL.md), [fresh protocol](docs/PHASE_NATIVE_P5_FRESH_PROTOCOL.md), [mechanism result](docs/PHASE_NATIVE_P5_RESULT.md) and [fresh result](docs/PHASE_NATIVE_P5_FRESH_RESULT.md).
 
+### G10: autonomous composite concept construction
+
+G10 now has a deterministic mechanism PASS. From raw scenes containing two local motifs, AETERNA acquires reusable lower-level relation atoms and promotes new composite concepts only when joint factual evidence is strong while each child remains individually non-predictive.
+
+Workflow `37569651485`: FULL **8/8**, matched NO_CONSTRUCTION **4/8**, NO_READOUT **4/8**, with both opaque motor permutations. The composites store acquired child atom IDs rather than evaluator labels, and transfer to unseen absolute motif bindings. Full regressions and Release build passed.
+
+This is bounded concept construction, not unrestricted concept invention. Fresh statistical G10 qualification is the active evidence gate. See [G10 protocol](docs/G10_COMPOSITE_CONCEPT_PROTOCOL.md), [numeric freeze](docs/G10_COMPOSITE_CONCEPT_IMPLEMENTATION_SPEC.md), and [mechanism result](docs/G10_COMPOSITE_CONCEPT_RESULT.md).
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
@@ -139,6 +147,6 @@ Development is on **`main`**, following the owner's merge of `genesis/full-evoph
 
 Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1–P5 result records document bounded phase-native checkpoints without rewriting that history.
 
-P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now has a fresh statistical qualification for bounded continual retention/revision in one persistent organism. The active architectural gate is **G10 autonomous composite-concept construction**: create a new reusable internal concept from acquired lower-level carrier structures when no individual child is predictive enough.
+P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now has a fresh statistical qualification for bounded continual retention/revision in one persistent organism. G10 now has a mechanism PASS for autonomous composite-concept construction. The active evidence gate is **FRESH-G10**, which must reproduce the effect across authority-sampled relation atoms, pair assignments, opaque motors and held-out bindings.
 
 Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Any future fresh qualification requires a newly frozen source/spec and a new first-attempt authority run.
