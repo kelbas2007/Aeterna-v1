@@ -930,6 +930,9 @@ fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
         &foundation::scene(&l1,c_states[3],0)
     ).unwrap().cell;
 
+    let recruited_before_c=rt.organism().recruited_relays();
+    let dormant_capacity=rt.organism().config().dormant_cells;
+    let mut junction_actions=[[0usize;6];2];
     let mut unsupported=None;
     let mut environment_resets=0usize;
     for k in 0..1800usize{
@@ -952,7 +955,10 @@ fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
 
         monitor.before(&rt,&c_goal);
         let layout=k%4;
+        let at_junction=wc.state==c_states[3];
+        let side=usize::from(wc.next_side==1);
         if let Err(error)=step_u(&mut rt,&mut monitor,|a|{
+            if at_junction { junction_actions[side][a]+=1; }
             let (next,value)=wc.step(a);
             (foundation::scene(&l1,next,layout),value)
         }){
@@ -964,8 +970,10 @@ fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
     let c_promoted=rt.organism().phase_native_context_witnesses()
         .iter().any(|w|w.promoted&&w.base_cell==c_base);
     println!(
-        "INTEL2_C_RESET_DIAG trained_trials={} environment_resets={} promoted={} unsupported={:?} contexts={:?} u2={:?}",
+        "INTEL2_C_RESET_DIAG trained_trials={} environment_resets={} promoted={} unsupported={:?} recruited_before_c={}/{} recruited_after_c={} junction_actions={:?} contexts={:?} u2={:?}",
         wc.trials,environment_resets,c_promoted,unsupported,
+        recruited_before_c,dormant_capacity,rt.organism().recruited_relays(),
+        junction_actions,
         rt.organism().phase_native_context_witnesses(),
         rt.organism().phase_native_hypothesis_records()
     );
