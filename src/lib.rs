@@ -11,6 +11,7 @@ pub mod macro_memory;
 pub mod phase;
 pub mod planning;
 pub mod raster;
+pub mod scientific_runtime;
 pub mod trace;
 
 pub use authority::Authority;
