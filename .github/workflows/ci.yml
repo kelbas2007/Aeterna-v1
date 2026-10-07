@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use G15 abstract model-planning qualification trigger; source/spec already frozen.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -64,17 +64,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g15: execute frozen fresh abstract planning qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -88,8 +82,6 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
-      - name: G15 abstract model planning causal preflight
-        run: cargo test --release --test g15_abstract_model_planning -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
@@ -204,7 +196,7 @@ jobs:
           set -o pipefail
           cargo test --release --test g13_depth_generic_abstraction g14_fresh_self_selected_depth_pack -- --ignored --nocapture | tee g14-evidence.log
       - name: Explicit one-use fresh G15 abstract model-planning qualification
-        if: ${{ github.event_name == 'push' || inputs.qualify_g15 }}
+        if: ${{ inputs.qualify_g15 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
