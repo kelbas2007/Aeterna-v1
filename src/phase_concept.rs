@@ -38,6 +38,13 @@ pub(super) struct PhaseConceptState {
     next_recursive_id: u64,
     recursive_formation_enabled: bool,
     recursive_readout_enabled: bool,
+    auto_abstraction_enabled: bool,
+    auto_always_escalate: bool,
+    auto_child_revision_enabled: bool,
+    auto_observations: u64,
+    auto_first_weak_observation: Option<u64>,
+    auto_first_candidate_observation: Option<u64>,
+    auto_first_promotion_observation: Option<u64>,
 }
 
 impl PhaseConceptState {
@@ -50,6 +57,13 @@ impl PhaseConceptState {
             next_recursive_id: 1,
             recursive_formation_enabled: false,
             recursive_readout_enabled: false,
+            auto_abstraction_enabled: false,
+            auto_always_escalate: false,
+            auto_child_revision_enabled: true,
+            auto_observations: 0,
+            auto_first_weak_observation: None,
+            auto_first_candidate_observation: None,
+            auto_first_promotion_observation: None,
         }
     }
 }
