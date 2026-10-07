@@ -154,6 +154,18 @@ Workflow `37608846717`: FULL **8/8** with depth >=3 on every success, DEPTH1 **0
 
 The active evidence gate is FRESH-G15 across new hierarchies, raw bindings and delayed route lengths.
 
+### G16: autonomous abstract model acquisition
+
+G16 has a mechanism PASS. A target starts with acquired abstract states and a transferred learned exploration drive but zero target transition circuits. It autonomously interacts, grows the physical abstract model, discovers delayed reward, freezes learning, plans correctly on held-out raw bindings, and retains the model across restart.
+
+Workflow `37614779191`: reward **12/12**, held-out plan **12/12**, restart plan **12/12**; ZERO_DRIVE/FRONTIER_LESION/DIRECT_ONLY **0/12**; mean first-delayed-reward cost **32.000** against frozen <=45. FRESH-G16 is the active evidence gate.
+
+### Human Protection v1
+
+A non-learned final physical-action authorization boundary is now integrated. Human-affecting actions with predicted harm >1%, hazard confidence <90%, invalid evidence, or an emergency-stop condition are blocked. Emergency stop latches across cognitive checkpoint restore and can be cleared only through an explicit external human-reset API.
+
+The protection layer produces a sealed permit only for allowed proposals. It is independent of planner reward, exploration drive, concepts and learned transitions. The repository does not yet contain person-detection/collision sensors or an authenticated hardware actuator adapter; those remain deployment requirements.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
