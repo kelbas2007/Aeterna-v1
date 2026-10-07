@@ -153,6 +153,56 @@ impl EvoConceptMemory {
         self.config.min_action_support
     }
 
+    pub fn physical_promotion_thresholds(&self) -> (u32, f32, f32) {
+        (
+            self.config.min_composite_support,
+            self.config.child_predictiveness_ceiling,
+            self.config.composite_promotion_threshold,
+        )
+    }
+
+    /// Atom-only acquisition path for phase-native concept execution.
+    /// It may recruit/match generic lower-level relation prototypes, but it
+    /// does not update pair candidates or action-conditioned concept answers.
+    pub fn observe_atoms(&mut self, raster: &[f32]) -> Vec<u64> {
+        self.assert_raster(raster);
+        if !self.config.learning_enabled {
+            return self.active_atom_ids(raster);
+        }
+
+        let traces = self.local_relation_traces(raster);
+        let mut active = Vec::new();
+        for trace in traces {
+            let atom_idx = if let Some((idx, similarity)) = self.best_atom(&trace) {
+                if similarity >= self.config.atom_match_threshold {
+                    Some(idx)
+                } else if self.config.atom_formation_enabled && self.atoms.len() < self.config.max_atoms {
+                    Some(self.recruit_atom(trace))
+                } else {
+                    None
+                }
+            } else if self.config.atom_formation_enabled && self.atoms.len() < self.config.max_atoms {
+                Some(self.recruit_atom(trace))
+            } else {
+                None
+            };
+            if let Some(idx) = atom_idx {
+                if !active.contains(&idx) {
+                    active.push(idx);
+                }
+            }
+        }
+
+        active.sort_unstable();
+        active.dedup();
+        for idx in &active {
+            self.atoms[*idx].support = self.atoms[*idx].support.saturating_add(1);
+        }
+        let mut ids = active.into_iter().map(|idx| self.atoms[idx].id).collect::<Vec<_>>();
+        ids.sort_unstable();
+        ids
+    }
+
     pub fn composites(&self) -> &[CompositeConcept] {
         &self.composites
     }
