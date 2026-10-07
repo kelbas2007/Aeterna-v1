@@ -1,5 +1,5 @@
 name: u1-meta-control
-# Clean U1 run on unified-cognition branch from frozen R4 core.
+# Clean U1 rerun with genuine simultaneous mixed-proposal integration witness.
 on:
   workflow_dispatch:
   push:
