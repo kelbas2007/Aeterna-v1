@@ -753,3 +753,120 @@ fn intel2_evaluator_uses_only_unified_external_runtime(){
     assert!(!source.contains("world_id"));
     assert!(!source.contains("task_id"));
 }
+
+
+#[test]
+fn intel2_burned_world_c_diagnosis(){
+    // Diagnostic only. This reuses the permanently burned INTEL-2 authority
+    // seed and MUST NOT be interpreted as a new verdict or qualification run.
+    let seed:u64=37_687_243_350;
+    let (evo,l1)=foundation::build24();
+    let meta=meta_checkpoint();
+
+    let mut rng=Rng::new(seed);
+    let mut states=(0usize..24).collect::<Vec<_>>();
+    shuffle(&mut rng,&mut states);
+    let a_states:[usize;5]=states[0..5].try_into().unwrap();
+    let b_states:[usize;5]=states[5..10].try_into().unwrap();
+    let c_states:[usize;6]=states[10..16].try_into().unwrap();
+
+    let mut ma=[0usize,1,2,3,4,5];shuffle(&mut rng,&mut ma);
+    let mut mb=[0usize,1,2,3,4,5];shuffle(&mut rng,&mut mb);
+    let mut mc=[0usize,1,2,3,4,5];shuffle(&mut rng,&mut mc);
+
+    let mut rt=ScientificRuntime::new(evo).unwrap();
+    assert!(rt.enable_context_refinement());
+    assert!(rt.enable_perceptual_refinement());
+    assert!(rt.enable_compositional_refinement());
+    assert!(rt.enable_unified_cognition(
+        meta,
+        PhaseHypothesisEcologyConfig{
+            learning_rate:0.35,
+            dormancy_threshold:0.05,
+            learning_enabled:true,
+            phase_learning_enabled:true,
+        }
+    ));
+    let mut monitor=Monitor::default();
+
+    // Reproduce the exact pre-C lifetime from the burned pack.
+    let mut wa=WorldA::new(
+        a_states,[ma[0],ma[1],ma[2],ma[3],ma[4]]
+    );
+    assert!(run_a(&mut rt,&l1,&mut monitor,&mut wa,48,0,None));
+    rt.set_model_learning_enabled(false);
+    let mut wa_reuse=WorldA::new(
+        a_states,[ma[0],ma[1],ma[2],ma[3],ma[4]]
+    );
+    assert!(run_a(
+        &mut rt,&l1,&mut monitor,&mut wa_reuse,6,4,Some(a_states[1])
+    ));
+    rt.set_model_learning_enabled(true);
+
+    let mut wb=WorldB::new(b_states,[mb[0],mb[1],mb[2]]);
+    assert!(run_b_goal(&mut rt,&l1,&mut monitor,&mut wb,false,64,1));
+    assert!(run_b_goal(&mut rt,&l1,&mut monitor,&mut wb,true,12,2));
+
+    let mut wc=WorldC::new(c_states,[mc[0],mc[1]],seed^0xC0FFEE);
+    set_world(&mut rt,&l1,wc.state,c_states[4],0);
+    let c_goal=foundation::scene(&l1,c_states[4],1);
+
+    let mut reproduced=false;
+    for k in 0..1800usize{
+        let current=rt.organism().current_real().unwrap().sensory.clone();
+        let base=rt.organism().phase_native_abstract_state(&current).unwrap().cell;
+        let proposals=rt.organism().collect_phase_native_unified_proposals(&c_goal);
+        let selected=rt.organism().choose_phase_native_unified_proposal(&proposals);
+
+        if selected.is_none(){
+            let mut context_probe=rt.organism().clone();
+            let mut percept_probe=rt.organism().clone();
+            let mut composition_probe=rt.organism().clone();
+            let mut rival_probe=rt.organism().clone();
+            let mut goal_probe=rt.organism().clone();
+            let mut general_probe=rt.organism().clone();
+
+            println!(
+                "INTEL2_C_DIAG_STOP k={} world_state={} base={} trials={} proposals={} selected={:?}",
+                k,wc.state,base,wc.trials,proposals.len(),selected
+            );
+            println!("INTEL2_C_DIAG_PROPOSALS {:?}",proposals);
+            println!(
+                "INTEL2_C_DIAG_SOURCES context={:?} percept={:?} composition={:?} rival={:?} goal={:?} general={:?}",
+                context_probe.phase_native_context_action(&c_goal),
+                percept_probe.phase_native_perceptual_action(&c_goal),
+                composition_probe.phase_native_compositional_action(&c_goal),
+                rival_probe.choose_phase_native_goal_rival_probe(&c_goal),
+                goal_probe.choose_phase_native_goal_active_action(&c_goal),
+                general_probe.choose_phase_native_abstract_learned_drive_action(),
+            );
+            println!(
+                "INTEL2_C_DIAG_CONTEXTS {:?}",
+                rt.organism().phase_native_context_witnesses()
+            );
+            println!(
+                "INTEL2_C_DIAG_U2 {:?}",
+                rt.organism().phase_native_hypothesis_records()
+            );
+            reproduced=true;
+            break;
+        }
+
+        monitor.before(&rt,&c_goal);
+        let layout=k%4;
+        let result=step_u(&mut rt,&mut monitor,|a|{
+            let (next,value)=wc.step(a);
+            (foundation::scene(&l1,next,layout),value)
+        });
+        if let Err(error)=result{
+            println!(
+                "INTEL2_C_DIAG_RUNTIME_STOP k={} world_state={} base={} trials={} error={:?}",
+                k,wc.state,base,wc.trials,error
+            );
+            reproduced=true;
+            break;
+        }
+    }
+
+    assert!(reproduced,"burned World C failure did not reproduce");
+}
