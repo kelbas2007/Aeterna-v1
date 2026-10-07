@@ -98,6 +98,103 @@ impl EvoPhase {
         ])
     }
 
+    fn unified_state_action_candidate(
+        &self,
+        action: usize,
+    ) -> Option<(u64,f32)> {
+        if action >= self.config.motor_cells { return None; }
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        Some((
+            unified_hash(&[
+                0xA6710_u64,
+                entry.level as u64,
+                entry.cell as u64,
+                action as u64,
+            ]),
+            1.0,
+        ))
+    }
+
+    fn unified_state_action_available(&self, action: usize) -> bool {
+        let Some((candidate_id,_)) = self.unified_state_action_candidate(action)
+            else { return false; };
+        if !self.phase_native_hypothesis_registered(candidate_id) {
+            return true;
+        }
+        !self.phase_native_hypothesis_dormant(candidate_id).unwrap_or(true)
+    }
+
+    /// Unified-only G16 selector with the same learned drive score and
+    /// evidence-order tie-break as the qualified selector. The only additional
+    /// constraint is carrier-owned U2 dormancy for the current state-action
+    /// candidate. No source/world/task identity enters the ranking.
+    fn unified_general_action(&self) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        if !state_cells.contains(&entry.cell) {
+            return None;
+        }
+
+        let state = self.phase_native.as_ref()?;
+        if state
+            .drive
+            .as_ref()
+            .map(|drive| drive.config.readout_enabled)
+            != Some(true)
+        {
+            return None;
+        }
+
+        let frontier =
+            self.phase_drive_frontier_activity_for_cells(state, &state_cells);
+        let min_support = u64::from(self.config.min_recruit_support);
+        let mut best: Option<(usize, f32, u64)> = None;
+
+        for action in 0..self.config.motor_cells {
+            if !self.unified_state_action_available(action) {
+                continue;
+            }
+
+            let features =
+                self.phase_drive_features(state, entry.cell, action, &frontier);
+            let score = self.phase_drive_score(state, features)?;
+            let global_support = state
+                .circuits
+                .iter()
+                .filter(|circuit| {
+                    circuit.support >= min_support
+                        && self.synapses[circuit.motor_synapse].to
+                            == self.config.sensory_cells + action
+                })
+                .map(|circuit| circuit.support)
+                .sum::<u64>();
+
+            match best {
+                None => best = Some((action, score, global_support)),
+                Some((best_action, best_score, best_support)) => {
+                    if score > best_score + 1.0e-6
+                        || ((score - best_score).abs() <= 1.0e-6
+                            && (global_support > best_support
+                                || (global_support == best_support
+                                    && action < best_action)))
+                    {
+                        best = Some((action, score, global_support));
+                    }
+                }
+            }
+        }
+
+        let (action, score, _) = best?;
+        if score <= 1.0e-8 {
+            let decision = self.phase_native_decision_from_cell(entry.cell, None)?;
+            return self.unified_state_action_available(decision.first_action)
+                .then_some(decision.first_action);
+        }
+        Some(action)
+    }
+
     fn unified_context_candidate(
         &self,
         action: usize,
@@ -300,14 +397,15 @@ impl EvoPhase {
         let mut goal_active=self.clone();
         if let Some(action)=goal_active.choose_phase_native_goal_active_action(goal_sensory){
             self.push_unified_proposal(
-                &mut out,&sensory,goal_sensory,action,None,0x60A1,
+                &mut out,&sensory,goal_sensory,action,
+                self.unified_state_action_candidate(action),0x60A1,
             );
         }
 
-        let mut general=self.clone();
-        if let Some(action)=general.choose_phase_native_abstract_learned_drive_action(){
+        if let Some(action)=self.unified_general_action(){
             self.push_unified_proposal(
-                &mut out,&sensory,goal_sensory,action,None,0xE915,
+                &mut out,&sensory,goal_sensory,action,
+                self.unified_state_action_candidate(action),0xE915,
             );
         }
 
