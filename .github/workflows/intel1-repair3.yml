@@ -22,7 +22,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --exit-code
       - name: Repair-3 fanout witness
-        run: cargo test --release --test intel1_repair3_fanout -- --nocapture
+        run: cargo test --release --test intel1_repair3_fanout intel1_repair3_ -- --nocapture
       - name: Repair-1 bootstrap witness
         run: cargo test --release --test intel1_repair1_bootstrap -- --nocapture
       - name: Repair-2 frozen exploitation witness
