@@ -148,6 +148,7 @@ impl EvoPhase {
         let perceptual_synapse = self.is_native_perceptual_synapse(index);
         let composition_synapse = self.is_native_composition_synapse(index);
         let meta_synapse = self.is_native_meta_synapse(index);
+        let hypothesis_synapse = self.is_native_hypothesis_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
@@ -156,6 +157,7 @@ impl EvoPhase {
             && !perceptual_synapse
             && !composition_synapse
             && !meta_synapse
+            && !hypothesis_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -697,3 +699,5 @@ include!("phase_perceptual.rs");
 include!("phase_compositional.rs");
 include!("phase_refinement_fanout.rs");
 include!("phase_meta_control.rs");
+
+include!("phase_hypothesis_ecology.rs");
