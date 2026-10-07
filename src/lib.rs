@@ -1,6 +1,7 @@
 pub mod authority;
 pub mod belief;
 pub mod carrier;
+pub mod concept;
 pub mod epistemic;
 pub mod exploration;
 pub mod hdc;
@@ -13,6 +14,7 @@ pub mod trace;
 
 pub use authority::Authority;
 pub use belief::{BeliefConfig, EvoBeliefState};
+pub use concept::{CompositeConcept, ConceptAtom, ConceptConfig, ConceptOutcomeStat, EvoConceptMemory};
 pub use carrier::{DendriticBranch, EvoConfig, EvoPhase, FactualFrame, LearningReport, Prediction};
 pub use epistemic::{
     EpistemicEpisode, EvoEpistemicState, HypothesisPrediction, WorldHypothesis,
