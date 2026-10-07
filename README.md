@@ -96,7 +96,7 @@ Workflow `37534699260` passed the fixed preregistered mechanism:
 - a full post-lifetime checkpoint restored A/revised-B/C/D in a newly constructed EvoPhase;
 - full optimized regressions and Release build PASS.
 
-This is a mechanism result, not yet fresh statistical continual-learning qualification. See [P5 protocol](docs/PHASE_NATIVE_P5_PROTOCOL.md) and [P5 result](docs/PHASE_NATIVE_P5_RESULT.md).
+The subsequent one-use FRESH-P5 run `37569003124` statistically qualified this bounded continual-learning result: primary **80/80**, acquisition **40/40**, intermediate revisits **100/100**, changed-world repair **10/10**, post-change retention **40/40**, checkpoint restore **40/40**; FROZEN_CHANGED **0/10**, RESET_BETWEEN earlier retention **0/30**, ZERO_DRIVE **1/40**, NO_GROWTH **0/40**. See [P5 protocol](docs/PHASE_NATIVE_P5_PROTOCOL.md), [fresh protocol](docs/PHASE_NATIVE_P5_FRESH_PROTOCOL.md), [mechanism result](docs/PHASE_NATIVE_P5_RESULT.md) and [fresh result](docs/PHASE_NATIVE_P5_FRESH_RESULT.md).
 
 ## Non-negotiable rule
 
@@ -139,6 +139,6 @@ Development is on **`main`**, following the owner's merge of `genesis/full-evoph
 
 Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1–P5 result records document bounded phase-native checkpoints without rewriting that history.
 
-P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now demonstrates the continual-retention mechanism in one persistent organism after fixing shared sensory-phase drift. The next evidence gate is **fresh statistical P5 qualification** across randomized sequential worlds; G10 composite-concept construction remains a separate preregistered capability target.
+P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now has a fresh statistical qualification for bounded continual retention/revision in one persistent organism. The active architectural gate is **G10 autonomous composite-concept construction**: create a new reusable internal concept from acquired lower-level carrier structures when no individual child is predictive enough.
 
 Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Any future fresh qualification requires a newly frozen source/spec and a new first-attempt authority run.
