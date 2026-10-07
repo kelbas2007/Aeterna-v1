@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use G10-PHYS qualification trigger; production/spec already frozen.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -39,17 +39,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g10: execute frozen fresh phase-native concept qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -63,8 +57,6 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
-      - name: G10 phase-native concept causal preflight
-        run: cargo test --release --test g10_phase_native_concept -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
@@ -129,7 +121,7 @@ jobs:
           set -o pipefail
           cargo test --release --test g10_composite_concept g10_fresh_composite_concept_pack -- --ignored --nocapture | tee g10-evidence.log
       - name: Explicit one-use fresh G10-PHYS qualification
-        if: ${{ github.event_name == 'push' || inputs.qualify_g10_phys }}
+        if: ${{ inputs.qualify_g10_phys }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
