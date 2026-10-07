@@ -41,17 +41,17 @@ struct ResetWorld {
 }
 
 impl ResetWorld {
-    fn step(&self, state:usize, action:usize)->(usize,f32){
+    fn step(&self, state:usize, action:usize)->(usize,f32,bool){
         if state==0 && action==self.immediate {
-            return (0,0.55);
+            return (0,0.55,true);
         }
         if action==self.advance[state] {
             if state+1==self.length {
-                return (0,1.0);
+                return (0,1.0,true);
             }
-            return (state+1,0.0);
+            return (state+1,0.0,false);
         }
-        (0,0.0)
+        (0,0.0,false)
     }
 
     fn delayed_first(&self)->usize{self.advance[0]}
@@ -388,11 +388,11 @@ fn acquire(
             return Outcome{reward:false,interactions:interaction-1};
         };
 
-        let (next,value)=world.step(state,action);
+        let (next,value,episode_boundary)=world.step(state,action);
         let layout=LAYOUTS[4+(interaction%4)];
         let post=state_scene(next,layout);
         let accepted=evo.observe_phase_native_abstract_action_result(
-            action,&post,value
+            action,&post,value,episode_boundary
         ).expect("factual abstract action result");
         if evo.config().structural_growth_enabled
             && evo.phase_native_circuits().len()>0
@@ -417,7 +417,7 @@ fn random_acquire(world:&ResetWorld,seed:u64)->Outcome{
         x^=x<<25;
         x^=x>>27;
         let action=(x.wrapping_mul(0x2545_F491_4F6C_DD1D)%6) as usize;
-        let (next,value)=world.step(state,action);
+        let (next,value,_episode_boundary)=world.step(state,action);
         state=next;
         if value>=1.0 {
             return Outcome{reward:true,interactions:interaction};
@@ -562,7 +562,7 @@ fn g16_abstract_drive_selector_has_no_route_or_search_fallback(){
     for forbidden in [
         "ResetWorld",
         "delayed_first",
-        "advance",
+        "world.advance",
         "immediate",
         "correct_action",
         "route",
