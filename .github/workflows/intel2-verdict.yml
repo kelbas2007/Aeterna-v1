@@ -1,0 +1,61 @@
+name: intel2-verdict
+on:
+  workflow_dispatch:
+  push:
+    branches: [unified-cognition]
+    paths: ['.github/workflows/intel2-verdict.yml']
+permissions:
+  contents: read
+jobs:
+  intel2:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: execute frozen unified system verdict'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify frozen cognitive source
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+          git diff --exit-code
+      - name: Unified runtime assembly pre-gate
+        run: cargo test --release --test unified_runtime_integration unified_runtime_ -- --nocapture
+      - name: U3 pre-gate
+        run: cargo test --release --test u3_cross_mechanism_allocation u3_ -- --nocapture
+      - name: U2 pre-gate
+        run: cargo test --release --test u2_hypothesis_ecology -- --nocapture
+      - name: U1 pre-gate
+        run: |
+          cargo test --release --test u1_meta_control -- --nocapture
+          cargo test --release --test u1_runtime_integration -- --nocapture
+      - name: Human Protection pre-gate
+        run: cargo test --release --test human_protection -- --nocapture
+      - name: Release build pre-gate
+        run: cargo build --release
+      - name: Execute one-use INTEL-2 verdict
+        env:
+          AETERNA_INTEL2_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/INTEL2_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test intel2_unified_worlds intel2_frozen_unified_unknown_world_lifetime -- --nocapture | tee intel2-evidence.log
+      - name: INTEL-2 evaluator source guard
+        run: cargo test --release --test intel2_unified_worlds intel2_evaluator_uses_only_unified_external_runtime -- --nocapture
+      - name: Preserve INTEL-2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intel2-evidence
+          path: intel2-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Verify cognitive source still frozen
+        if: always()
+        run: |
+          git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+          git diff --exit-code
