@@ -1076,3 +1076,20 @@ All other fresh criteria passed, including FULL 80/80, AND 5/5, XOR 5/5, target 
 Post-failure analysis found the single-atom threshold was incompatible with the balanced AND truth table: the no-composition majority/single-atom ceiling is 6/8 per AND seed and 4/8 per XOR seed, exactly 50/80 over the 5+5 pack. This does not retroactively change FRESH-1.
 
 Next gate: a new independently seeded **FRESH-G23-2** protocol with operator-specific no-composition ceilings fixed before its evaluator/run.
+
+
+## FINAL INTEL-1 verdict for AETERNA-v1
+
+Canonical final evidence-line verdict: **FAIL**.
+
+- frozen core: `b811b59a5777b59b4ab640ef4ac2ebf75a53c45d`;
+- run: `37669439298`;
+- W1 acquisition/reuse PASS: 11 / 3 actions;
+- W2 acquisition/reuse PASS: 10 / 3 actions;
+- W3 FAIL: no useful contextual promotion, 0/32 scored;
+- later Repair-5/6/7/8 are post-verdict diagnostics and do not alter INTEL-1.
+
+Current architecture diagnosis: **host-authored meta-control fragmentation between otherwise real acquired cognitive mechanisms**.
+
+AETERNA-v1 evidence line is closed. No G24 or Repair-9.
+Any future work should be a new architecture line centered on carrier-owned unified cognitive competition, followed by a new INTEL-2 rather than continued INTEL-1 patching.
