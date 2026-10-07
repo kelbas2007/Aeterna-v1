@@ -46,7 +46,15 @@ impl PhaseDeepState {
     }
 }
 
+const OPEN_DEPTH_SAFETY_CEILING: u8 = 16;
+
 impl EvoPhase {
+    /// Ordinary self-selected-depth entrypoint. The ceiling is a generic
+    /// substrate safety bound, not a task-supplied abstraction depth.
+    pub fn enable_phase_native_open_depth_abstraction(&mut self) -> bool {
+        self.enable_phase_native_depth_generic_abstraction(OPEN_DEPTH_SAFETY_CEILING)
+    }
+
     pub fn enable_phase_native_depth_generic_abstraction(
         &mut self,
         max_level: u8,
