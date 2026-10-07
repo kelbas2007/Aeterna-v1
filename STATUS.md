@@ -24,7 +24,8 @@ Date: 2026-10-06
 **P3 FRESH PASS — cold autonomous phase-native acquisition, checkpoint persistence and changed-law repair.**  
 **P4 FRESH PASS — learned phase-native exploration drive transfers by itself to cold longer worlds.**  
 **P5 MECHANISM PASS — one persistent organism retains multiple worlds and selectively repairs one changed world.**  
-**P5 FRESH PASS — statistical continual retention/revision across 10 independent persistent lifetimes.**
+**P5 FRESH PASS — statistical continual retention/revision across 10 independent persistent lifetimes.**  
+**G10 MECHANISM PASS — autonomous composite concept construction from individually non-predictive acquired atoms.**
 
 No AGI claim. No production promotion.
 
@@ -517,3 +518,25 @@ This qualifies bounded continual self-directed retention/revision in the frozen 
 **G10 — autonomous composite concept construction.**
 
 The organism must form a genuinely new reusable concept from acquired lower-level carrier units when no single child is sufficiently predictive, and the new concept must causally improve held-out action under opaque motor permutations.
+
+
+## G10 composite-concept mechanism result
+
+Workflow `37569651485` PASSed on source `74b736986870419ea42989c387026a57e498d900`.
+
+- FULL composite readout: **8/8**;
+- NO_CONSTRUCTION atom-only: **4/8**;
+- NO_READOUT atom-only: **4/8**;
+- both opaque motor permutations: FULL 4/4 vs controls 2/4;
+- four lower-level acquired atom units were identical in matched arms;
+- four promoted composites referenced acquired child atom IDs;
+- individual child evidence remained <=0.20 absolute;
+- composite evidence reached the frozen >=0.60 threshold;
+- held-out absolute motif bindings were absent from tuition;
+- full regressions and Release build PASS.
+
+This establishes bounded composite predicate construction, not unrestricted concept invention.
+
+## Active evidence gate
+
+**FRESH-G10 — statistical composite-concept qualification** on newly sampled relation atoms/pair assignments/motor permutations.
