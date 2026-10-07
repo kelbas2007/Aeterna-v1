@@ -226,6 +226,224 @@ impl EvoPhase {
         Some(action)
     }
 
+    /// G18 goal-conditioned active information selector.
+    ///
+    /// The current raw goal is resolved to an acquired physical abstract cell.
+    /// Goal relevance is propagated backward through the already-known physical
+    /// abstract model. Unknown-action novelty is then weighted by that relevance
+    /// and propagated backward again. The SAME two transferred P4 drive weights
+    /// score direct and reachable goal-relevant epistemic value.
+    pub fn choose_phase_native_goal_active_action(
+        &mut self,
+        goal_sensory: &[f32],
+    ) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        let goal = self.phase_native_abstract_state(goal_sensory)?;
+        if entry.level != goal.level || entry.cell == goal.cell {
+            return None;
+        }
+
+        let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        if !state_cells.contains(&entry.cell) || !state_cells.contains(&goal.cell) {
+            return None;
+        }
+
+        let best = {
+            let state = self.phase_native.as_ref()?;
+            if state
+                .drive
+                .as_ref()
+                .map(|drive| drive.config.readout_enabled)
+                != Some(true)
+            {
+                return None;
+            }
+
+            let relevance =
+                self.phase_goal_relevance_for_cells(state, goal.cell, &state_cells);
+            let frontier = self.phase_goal_frontier_for_cells(
+                state,
+                goal.cell,
+                &state_cells,
+                &relevance,
+            );
+
+            let min_support = u64::from(self.config.min_recruit_support);
+            let mut best: Option<(usize, f32, u64, [f32; 2])> = None;
+
+            for action in 0..self.config.motor_cells {
+                let features = if !self.phase_drive_action_known_at(
+                    state,
+                    entry.cell,
+                    action,
+                ) {
+                    [relevance[entry.cell].clamp(0.0, 1.0), 0.0]
+                } else {
+                    let motor = self.config.sensory_cells + action;
+                    let floor = state.config.coherence_floor;
+                    let reachable = state
+                        .circuits
+                        .iter()
+                        .filter(|circuit| {
+                            circuit.support >= min_support
+                                && self.synapses[circuit.afferent_synapse].from
+                                    == entry.cell
+                                && self.synapses[circuit.motor_synapse].to == motor
+                        })
+                        .map(|circuit| {
+                            let afferent =
+                                &self.synapses[circuit.afferent_synapse];
+                            let successor =
+                                &self.synapses[circuit.successor_synapse];
+                            conductance(&self.cells, afferent, floor)
+                                * conductance(&self.cells, successor, floor)
+                                * frontier[successor.to]
+                        })
+                        .fold(0.0_f32, f32::max);
+                    [0.0, reachable.clamp(0.0, 1.0)]
+                };
+
+                let score = self.phase_drive_score(state, features)?;
+                let global_support = state
+                    .circuits
+                    .iter()
+                    .filter(|circuit| {
+                        circuit.support >= min_support
+                            && self.synapses[circuit.motor_synapse].to
+                                == self.config.sensory_cells + action
+                    })
+                    .map(|circuit| circuit.support)
+                    .sum::<u64>();
+
+                match best {
+                    None => best = Some((action, score, global_support, features)),
+                    Some((best_action, best_score, best_support, _)) => {
+                        if score > best_score + 1.0e-6
+                            || ((score - best_score).abs() <= 1.0e-6
+                                && (global_support > best_support
+                                    || (global_support == best_support
+                                        && action < best_action)))
+                        {
+                            best =
+                                Some((action, score, global_support, features));
+                        }
+                    }
+                }
+            }
+            best
+        }?;
+
+        let (action, score, _, features) = best;
+        if score <= 1.0e-8 {
+            return self
+                .phase_native_goal_decision_from_cells(
+                    entry.cell,
+                    goal.cell,
+                    None,
+                )
+                .map(|decision| decision.first_action);
+        }
+
+        self.phase_native
+            .as_mut()?
+            .drive
+            .as_mut()?
+            .pending_features = Some(features);
+        Some(action)
+    }
+
+    fn phase_goal_relevance_for_cells(
+        &self,
+        state: &PhaseNativeState,
+        goal: usize,
+        state_cells: &[usize],
+    ) -> Vec<f32> {
+        let mut relevance = vec![0.0_f32; self.cells.len()];
+        if !state_cells.contains(&goal) {
+            return relevance;
+        }
+
+        relevance[goal] = 1.0;
+        let floor = state.config.coherence_floor;
+        let min_support = u64::from(self.config.min_recruit_support);
+
+        for _ in 0..state.config.horizon {
+            let old = relevance.clone();
+            relevance[goal] = 1.0;
+            for circuit in &state.circuits {
+                if circuit.support < min_support {
+                    continue;
+                }
+                let afferent = &self.synapses[circuit.afferent_synapse];
+                let successor = &self.synapses[circuit.successor_synapse];
+                if !state_cells.contains(&afferent.from)
+                    || !state_cells.contains(&successor.to)
+                {
+                    continue;
+                }
+                let propagated = state.config.discount
+                    * conductance(&self.cells, afferent, floor)
+                    * conductance(&self.cells, successor, floor)
+                    * old[successor.to];
+                if propagated > relevance[afferent.from] {
+                    relevance[afferent.from] = propagated;
+                }
+            }
+        }
+        relevance
+    }
+
+    fn phase_goal_frontier_for_cells(
+        &self,
+        state: &PhaseNativeState,
+        goal: usize,
+        state_cells: &[usize],
+        relevance: &[f32],
+    ) -> Vec<f32> {
+        let motor_cells = self.config.motor_cells;
+        let floor = state.config.coherence_floor;
+        let min_support = u64::from(self.config.min_recruit_support);
+
+        let mut frontier = vec![0.0_f32; self.cells.len()];
+        for &cell in state_cells {
+            if cell == goal {
+                continue;
+            }
+            let unknown = (0..motor_cells)
+                .filter(|action| {
+                    !self.phase_drive_action_known_at(state, cell, *action)
+                })
+                .count();
+            frontier[cell] = relevance[cell]
+                * (unknown as f32 / motor_cells as f32);
+        }
+
+        for _ in 0..state.config.horizon {
+            let old = frontier.clone();
+            for circuit in &state.circuits {
+                if circuit.support < min_support {
+                    continue;
+                }
+                let afferent = &self.synapses[circuit.afferent_synapse];
+                let successor = &self.synapses[circuit.successor_synapse];
+                if !state_cells.contains(&afferent.from)
+                    || !state_cells.contains(&successor.to)
+                {
+                    continue;
+                }
+                let propagated = state.config.discount
+                    * conductance(&self.cells, afferent, floor)
+                    * conductance(&self.cells, successor, floor)
+                    * old[successor.to];
+                if propagated > frontier[afferent.from] {
+                    frontier[afferent.from] = propagated;
+                }
+            }
+        }
+        frontier
+    }
+
     /// Matched G16 diagnostic: explore only a locally unmodelled action at
     /// the current abstract state. It cannot deliberately navigate back to a
     /// deeper reachable frontier after a reset.
