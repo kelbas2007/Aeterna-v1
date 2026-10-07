@@ -283,6 +283,8 @@ fn g21_state_refinement_is_native_not_a_host_context_answer_table() {
     assert!(!host.contains("context_log_evidence"));
     assert!(!host.contains("predecessor_cells"));
     assert!(host.contains("phase_native_context_action"));
-    assert!(host.contains("observe_phase_native_context_result"));
+    assert!(host.contains("observe_phase_native_refinement_fanout_result"));
+    let fanout = include_str!("../src/phase_refinement_fanout.rs");
+    assert!(fanout.contains("phase_context_sidecar"));
     assert!(host.find("consume_permit(permit)").unwrap() < host.find("match execute(action)").unwrap());
 }
