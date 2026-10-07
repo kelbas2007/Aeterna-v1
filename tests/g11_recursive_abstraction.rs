@@ -545,3 +545,764 @@ fn g11_recursive_selector_has_no_flat_table_or_search_fallback() {
         );
     }
 }
+
+
+const FACTOR8: [[[usize; 2]; 4]; 7] = [
+    [[0, 7], [1, 6], [2, 5], [3, 4]],
+    [[0, 6], [7, 5], [1, 4], [2, 3]],
+    [[0, 5], [6, 4], [7, 3], [1, 2]],
+    [[0, 4], [5, 3], [6, 2], [7, 1]],
+    [[0, 3], [4, 2], [5, 1], [6, 7]],
+    [[0, 2], [3, 1], [4, 7], [5, 6]],
+    [[0, 1], [2, 7], [3, 6], [4, 5]],
+];
+
+const FACTOR4: [[[usize; 2]; 2]; 3] = [
+    [[0, 1], [2, 3]],
+    [[0, 2], [1, 3]],
+    [[0, 3], [1, 2]],
+];
+
+const FRESH_PAIR_BINDING_BANK: [((usize, usize), (usize, usize)); 8] = [
+    ((1, 1), (8, 8)),
+    ((2, 1), (7, 7)),
+    ((1, 2), (8, 7)),
+    ((2, 2), (7, 8)),
+    ((1, 3), (8, 6)),
+    ((3, 1), (6, 8)),
+    ((2, 3), (8, 5)),
+    ((3, 2), (5, 8)),
+];
+
+const FRESH_TOP_LAYOUT_BANK: [[(usize, usize); 4]; 12] = [
+    [(1, 1), (1, 7), (7, 1), (7, 7)],
+    [(2, 1), (2, 7), (7, 1), (7, 7)],
+    [(1, 2), (1, 7), (7, 2), (7, 7)],
+    [(2, 2), (2, 7), (7, 2), (7, 7)],
+    [(1, 1), (1, 8), (8, 1), (8, 8)],
+    [(2, 1), (2, 8), (8, 1), (8, 8)],
+    [(1, 2), (1, 8), (8, 2), (8, 8)],
+    [(2, 2), (2, 8), (8, 2), (8, 8)],
+    [(1, 1), (2, 7), (7, 2), (8, 8)],
+    [(2, 1), (1, 8), (8, 2), (7, 7)],
+    [(1, 2), (2, 8), (8, 1), (7, 7)],
+    [(2, 2), (1, 7), (7, 1), (8, 8)],
+];
+
+#[derive(Clone, Debug)]
+struct FreshG11Block {
+    offsets: [(usize, usize); 8],
+    level1_targets: [[usize; 2]; 4],
+    negative_matchings: [[[usize; 2]; 4]; 4],
+    foundation_actions: [usize; 2],
+    top_actions: [usize; 2],
+    top_pairs: [(usize, usize, bool); 4],
+    target_bindings: [((usize, usize), (usize, usize)); 4],
+    negative_bindings: [((usize, usize), (usize, usize)); 4],
+    top_tuition: [[(usize, usize); 4]; 4],
+    top_heldout: [[(usize, usize); 4]; 8],
+}
+
+struct FreshG11Rng(u64);
+
+impl FreshG11Rng {
+    fn new(seed: u64) -> Self {
+        Self(seed ^ 0x611A_B57A_C710_0011)
+    }
+
+    fn next(&mut self) -> u64 {
+        let mut x = self.0;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        self.0 = x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+
+    fn range(&mut self, upper: usize) -> usize {
+        (self.next() % upper as u64) as usize
+    }
+}
+
+fn g11_shuffle<T>(rng: &mut FreshG11Rng, values: &mut [T]) {
+    for i in (1..values.len()).rev() {
+        let j = rng.range(i + 1);
+        values.swap(i, j);
+    }
+}
+
+fn g11_mix(mut hash: u64, value: u64) -> u64 {
+    const PRIME: u64 = 1_099_511_628_211;
+    for byte in value.to_le_bytes() {
+        hash ^= byte as u64;
+        hash = hash.wrapping_mul(PRIME);
+    }
+    hash
+}
+
+fn fresh_g11_blocks(authority: u64) -> (Vec<FreshG11Block>, u64) {
+    let mut blocks = Vec::new();
+    let mut digest = 14_695_981_039_346_656_037_u64;
+
+    for sub in 0..10u64 {
+        let derived = authority
+            ^ sub.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+            ^ 0x611A_5EED_D2C0_000B;
+        let mut rng = FreshG11Rng::new(derived);
+
+        let mut offsets = OFFSETS.to_vec();
+        g11_shuffle(&mut rng, &mut offsets);
+        let offsets: [(usize, usize); 8] = offsets.try_into().unwrap();
+
+        let target_round = rng.range(7);
+        let mut level1_targets = FACTOR8[target_round];
+        g11_shuffle(&mut rng, &mut level1_targets);
+
+        let mut other_rounds = (0..7usize)
+            .filter(|round| *round != target_round)
+            .collect::<Vec<_>>();
+        g11_shuffle(&mut rng, &mut other_rounds);
+        let negative_matchings = [
+            FACTOR8[other_rounds[0]],
+            FACTOR8[other_rounds[1]],
+            FACTOR8[other_rounds[2]],
+            FACTOR8[other_rounds[3]],
+        ];
+
+        let mut motors = [0usize, 1, 2, 3];
+        g11_shuffle(&mut rng, &mut motors);
+        let foundation_actions = [motors[0], motors[1]];
+        let top_actions = [motors[2], motors[3]];
+
+        let class0_round = rng.range(3);
+        let mut class1_choices = (0..3usize)
+            .filter(|round| *round != class0_round)
+            .collect::<Vec<_>>();
+        g11_shuffle(&mut rng, &mut class1_choices);
+        let class1_round = class1_choices[0];
+        let top_pairs = [
+            (
+                FACTOR4[class0_round][0][0],
+                FACTOR4[class0_round][0][1],
+                false,
+            ),
+            (
+                FACTOR4[class0_round][1][0],
+                FACTOR4[class0_round][1][1],
+                false,
+            ),
+            (
+                FACTOR4[class1_round][0][0],
+                FACTOR4[class1_round][0][1],
+                true,
+            ),
+            (
+                FACTOR4[class1_round][1][0],
+                FACTOR4[class1_round][1][1],
+                true,
+            ),
+        ];
+
+        let mut pair_bindings = FRESH_PAIR_BINDING_BANK.to_vec();
+        g11_shuffle(&mut rng, &mut pair_bindings);
+        let target_bindings = pair_bindings[..4].try_into().unwrap();
+        let negative_bindings = pair_bindings[4..8].try_into().unwrap();
+
+        let mut top_layouts = FRESH_TOP_LAYOUT_BANK.to_vec();
+        g11_shuffle(&mut rng, &mut top_layouts);
+        let top_tuition = top_layouts[..4].try_into().unwrap();
+        let top_heldout = top_layouts[4..12].try_into().unwrap();
+
+        digest = g11_mix(digest, sub);
+        for (dx, dy) in offsets {
+            digest = g11_mix(digest, dx as u64);
+            digest = g11_mix(digest, dy as u64);
+        }
+        for pair in level1_targets {
+            digest = g11_mix(digest, pair[0] as u64);
+            digest = g11_mix(digest, pair[1] as u64);
+        }
+        for matching in negative_matchings {
+            for pair in matching {
+                digest = g11_mix(digest, pair[0] as u64);
+                digest = g11_mix(digest, pair[1] as u64);
+            }
+        }
+        for motor in foundation_actions.into_iter().chain(top_actions) {
+            digest = g11_mix(digest, motor as u64);
+        }
+        for (a, b, class_one) in top_pairs {
+            digest = g11_mix(digest, a as u64);
+            digest = g11_mix(digest, b as u64);
+            digest = g11_mix(digest, class_one as u64);
+        }
+        for binding in target_bindings.into_iter().chain(negative_bindings) {
+            digest = g11_mix(digest, binding.0.0 as u64);
+            digest = g11_mix(digest, binding.0.1 as u64);
+            digest = g11_mix(digest, binding.1.0 as u64);
+            digest = g11_mix(digest, binding.1.1 as u64);
+        }
+        for layout in top_tuition.into_iter().chain(top_heldout) {
+            for (x, y) in layout {
+                digest = g11_mix(digest, x as u64);
+                digest = g11_mix(digest, y as u64);
+            }
+        }
+
+        blocks.push(FreshG11Block {
+            offsets,
+            level1_targets,
+            negative_matchings,
+            foundation_actions,
+            top_actions,
+            top_pairs,
+            target_bindings,
+            negative_bindings,
+            top_tuition,
+            top_heldout,
+        });
+    }
+
+    (blocks, digest)
+}
+
+fn fresh_pair_scene_g11(
+    block: &FreshG11Block,
+    first: usize,
+    second: usize,
+    binding: ((usize, usize), (usize, usize)),
+) -> Vec<f32> {
+    let mut raster = vec![0.0f32; 144];
+    for (atom, (x, y)) in [(first, binding.0), (second, binding.1)] {
+        let (dx, dy) = block.offsets[atom];
+        assert!(x + dx < 12 && y + dy < 12);
+        raster[y * 12 + x] = 1.0;
+        raster[(y + dy) * 12 + x + dx] = 1.0;
+    }
+    raster
+}
+
+fn fresh_top_scene_g11(
+    block: &FreshG11Block,
+    left_concept: usize,
+    right_concept: usize,
+    layout: [(usize, usize); 4],
+) -> Vec<f32> {
+    let mut raster = vec![0.0f32; 144];
+    let atoms = [
+        block.level1_targets[left_concept][0],
+        block.level1_targets[left_concept][1],
+        block.level1_targets[right_concept][0],
+        block.level1_targets[right_concept][1],
+    ];
+    for (atom, (x, y)) in atoms.into_iter().zip(layout) {
+        let (dx, dy) = block.offsets[atom];
+        assert!(x + dx < 12 && y + dy < 12);
+        raster[y * 12 + x] = 1.0;
+        raster[(y + dy) * 12 + x + dx] = 1.0;
+    }
+    raster
+}
+
+fn fresh_top_expected(block: &FreshG11Block, class_one: bool) -> usize {
+    if class_one {
+        block.top_actions[1]
+    } else {
+        block.top_actions[0]
+    }
+}
+
+fn train_fresh_level1(evo: &mut EvoPhase, block: &FreshG11Block) {
+    for pair in block.level1_targets {
+        for binding in block.target_bindings {
+            let raster = fresh_pair_scene_g11(block, pair[0], pair[1], binding);
+            for action in block.foundation_actions {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &raster,
+                    action,
+                    action == block.foundation_actions[0],
+                ));
+            }
+        }
+    }
+
+    for (matching, binding) in block
+        .negative_matchings
+        .into_iter()
+        .zip(block.negative_bindings)
+    {
+        for pair in matching {
+            let raster = fresh_pair_scene_g11(block, pair[0], pair[1], binding);
+            for action in block.foundation_actions {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &raster,
+                    action,
+                    action == block.foundation_actions[1],
+                ));
+            }
+        }
+    }
+}
+
+fn train_fresh_level2(
+    evo: &mut EvoPhase,
+    block: &FreshG11Block,
+    require_structural_accept: bool,
+) {
+    assert!(evo.enable_phase_native_recursive_concepts());
+    evo.set_phase_native_recursive_readout_enabled(false);
+
+    for layout in block.top_tuition {
+        for (left, right, class_one) in block.top_pairs {
+            let raster = fresh_top_scene_g11(block, left, right, layout);
+            for action in block.top_actions {
+                let accepted = evo.observe_phase_native_recursive_concept_factual(
+                    &raster,
+                    action,
+                    action == fresh_top_expected(block, class_one),
+                );
+                if require_structural_accept {
+                    assert!(accepted);
+                }
+            }
+        }
+    }
+
+    evo.set_phase_native_recursive_readout_enabled(true);
+}
+
+fn score_fresh_recursive(evo: &EvoPhase, block: &FreshG11Block) -> usize {
+    let mut score = 0usize;
+    for (pair_index, (left, right, class_one)) in block.top_pairs.into_iter().enumerate() {
+        for layout_index in 0..2 {
+            let raster = fresh_top_scene_g11(
+                block,
+                left,
+                right,
+                block.top_heldout[pair_index * 2 + layout_index],
+            );
+            score += usize::from(
+                evo.choose_phase_native_recursive_concept_action(&raster)
+                    == Some(fresh_top_expected(block, class_one)),
+            );
+        }
+    }
+    score
+}
+
+fn fresh_level1_only_action(
+    evo: &EvoPhase,
+    block: &FreshG11Block,
+    sensory: &[f32],
+) -> Option<usize> {
+    let ids = active_level1_ids(evo, sensory);
+    if ids.is_empty() {
+        return None;
+    }
+
+    let mut scores = [0.0f32; 2];
+    for concept_id in ids {
+        let circuit = evo
+            .phase_native_concept_circuits()
+            .iter()
+            .find(|circuit| circuit.promoted && circuit.concept_id == concept_id)?;
+        for slot in 0..2 {
+            let action = block.top_actions[slot];
+            let synapse = evo.phase_native_synapse(circuit.motor_synapses[action])?;
+            scores[slot] += 2.0 * synapse.weight - 1.0;
+        }
+    }
+    Some(if scores[1] > scores[0] + 1.0e-6 {
+        block.top_actions[1]
+    } else {
+        block.top_actions[0]
+    })
+}
+
+fn score_fresh_level1_only(evo: &EvoPhase, block: &FreshG11Block) -> usize {
+    let mut score = 0usize;
+    for (pair_index, (left, right, class_one)) in block.top_pairs.into_iter().enumerate() {
+        for layout_index in 0..2 {
+            let raster = fresh_top_scene_g11(
+                block,
+                left,
+                right,
+                block.top_heldout[pair_index * 2 + layout_index],
+            );
+            score += usize::from(
+                fresh_level1_only_action(evo, block, &raster)
+                    == Some(fresh_top_expected(block, class_one)),
+            );
+        }
+    }
+    score
+}
+
+fn fresh_recursive_for_scene(
+    evo: &EvoPhase,
+    sensory: &[f32],
+) -> PhaseRecursiveConceptInfo {
+    let ids = active_level1_ids(evo, sensory);
+    assert_eq!(ids.len(), 2);
+    let pair = [ids[0], ids[1]];
+    evo.phase_native_recursive_circuits()
+        .iter()
+        .find(|circuit| circuit.promoted && circuit.child_concept_ids == pair)
+        .expect("fresh promoted recursive circuit")
+        .clone()
+}
+
+fn fresh_max_l1_evidence(evo: &EvoPhase, block: &FreshG11Block) -> f32 {
+    evo.phase_native_concept_circuits()
+        .iter()
+        .filter(|circuit| circuit.promoted)
+        .flat_map(|circuit| {
+            block.top_actions.into_iter().map(|action| {
+                let synapse = evo
+                    .phase_native_synapse(circuit.motor_synapses[action])
+                    .expect("fresh L1 evidence");
+                (2.0 * synapse.weight - 1.0).abs()
+            })
+        })
+        .fold(0.0f32, f32::max)
+}
+
+fn fresh_min_l2_evidence(evo: &EvoPhase, block: &FreshG11Block) -> f32 {
+    evo.phase_native_recursive_circuits()
+        .iter()
+        .filter(|circuit| circuit.promoted)
+        .map(|circuit| {
+            block
+                .top_actions
+                .into_iter()
+                .map(|action| {
+                    let synapse = evo
+                        .phase_native_synapse(circuit.motor_synapses[action])
+                        .expect("fresh L2 evidence");
+                    2.0 * synapse.weight - 1.0
+                })
+                .fold(f32::NEG_INFINITY, f32::max)
+        })
+        .fold(1.0f32, f32::min)
+}
+
+fn g11_wilson95(success: usize, n: usize) -> (f64, f64) {
+    let z = 1.959_963_984_540_054_f64;
+    let n = n as f64;
+    let p = success as f64 / n;
+    let denominator = 1.0 + z * z / n;
+    let center = (p + z * z / (2.0 * n)) / denominator;
+    let half = z
+        * (p * (1.0 - p) / n + z * z / (4.0 * n * n)).sqrt()
+        / denominator;
+    (center - half, center + half)
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn g11_fresh_recursive_abstraction_pack() {
+    let authority: u64 = std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse()
+        .expect("fresh G11 seed must be u64");
+    let source_sha = std::env::var("AETERNA_SOURCE_SHA").unwrap_or_else(|_| "unknown".into());
+    let spec_sha = std::env::var("AETERNA_SPEC_SHA").unwrap_or_else(|_| "unknown".into());
+
+    let (blocks, digest) = fresh_g11_blocks(authority);
+    println!(
+        "FRESH_G11_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha, spec_sha, authority, digest
+    );
+    for (sub, block) in blocks.iter().enumerate() {
+        println!("FRESH_G11_BLOCK sub={} {:?}", sub, block);
+    }
+
+    let mut full = 0usize;
+    let mut no_recursion = 0usize;
+    let mut level1_only = 0usize;
+    let mut zero_phase = 0usize;
+    let mut zero_weight = 0usize;
+    let mut no_growth = 0usize;
+    let mut per_seed = Vec::new();
+    let mut max_l1 = 0.0f32;
+    let mut min_l2 = 1.0f32;
+    let mut ref_violations = 0usize;
+    let mut level1_count_violations = 0usize;
+    let mut level2_count_violations = 0usize;
+    let mut atom_count_violations = 0usize;
+    let mut lesion_ok = 0usize;
+    let mut phase_ok = 0usize;
+    let mut restored_ok = 0usize;
+    let mut unrelated_ok = 0usize;
+    let mut lower_lesion_ok = 0usize;
+    let mut motor_role_mask = 0u8;
+
+    for (sub, block) in blocks.iter().enumerate() {
+        for motor in block
+            .foundation_actions
+            .into_iter()
+            .chain(block.top_actions)
+        {
+            motor_role_mask |= 1u8 << motor;
+        }
+
+        let mut stage1 = carrier();
+        train_fresh_level1(&mut stage1, block);
+
+        if stage1.concept_atoms().len() != 8 {
+            atom_count_violations += 1;
+        }
+        if stage1.phase_native_promoted_concept_count() != 4 {
+            level1_count_violations += 1;
+        }
+
+        let mut full_evo = stage1.clone();
+        train_fresh_level2(&mut full_evo, block, true);
+        if full_evo.phase_native_promoted_recursive_count() != 4 {
+            level2_count_violations += 1;
+        }
+
+        let level1_map = full_evo
+            .phase_native_concept_circuits()
+            .iter()
+            .filter(|circuit| circuit.promoted)
+            .map(|circuit| (circuit.concept_id, circuit.concept_cell))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        for recursive in full_evo
+            .phase_native_recursive_circuits()
+            .iter()
+            .filter(|circuit| circuit.promoted)
+        {
+            for index in 0..2 {
+                if level1_map.get(&recursive.child_concept_ids[index])
+                    != Some(&recursive.child_cells[index])
+                {
+                    ref_violations += 1;
+                }
+            }
+        }
+
+        max_l1 = max_l1.max(fresh_max_l1_evidence(&full_evo, block));
+        min_l2 = min_l2.min(fresh_min_l2_evidence(&full_evo, block));
+        freeze(&mut full_evo);
+
+        let sub_score = score_fresh_recursive(&full_evo, block);
+        full += sub_score;
+        per_seed.push(sub_score);
+
+        let mut nr = stage1.clone();
+        assert!(nr.enable_phase_native_recursive_concepts());
+        nr.set_phase_native_recursive_formation_enabled(false);
+        nr.set_phase_native_recursive_readout_enabled(false);
+        for layout in block.top_tuition {
+            for (left, right, class_one) in block.top_pairs {
+                let raster = fresh_top_scene_g11(block, left, right, layout);
+                for action in block.top_actions {
+                    assert!(nr.observe_phase_native_recursive_concept_factual(
+                        &raster,
+                        action,
+                        action == fresh_top_expected(block, class_one),
+                    ));
+                }
+            }
+        }
+        freeze(&mut nr);
+        no_recursion += score_fresh_recursive(&nr, block);
+        level1_only += score_fresh_level1_only(&nr, block);
+
+        let mut zp = stage1.clone();
+        zp.set_learning_rates_for_control(1.0, 0.0);
+        train_fresh_level2(&mut zp, block, true);
+        freeze(&mut zp);
+        zero_phase += score_fresh_recursive(&zp, block);
+
+        let mut zw = stage1.clone();
+        zw.set_learning_rates_for_control(0.0, 1.0);
+        train_fresh_level2(&mut zw, block, true);
+        freeze(&mut zw);
+        zero_weight += score_fresh_recursive(&zw, block);
+
+        let mut ng = stage1.clone();
+        ng.set_structural_growth_for_control(false);
+        train_fresh_level2(&mut ng, block, false);
+        freeze(&mut ng);
+        no_growth += score_fresh_recursive(&ng, block);
+
+        let first_pair = block.top_pairs[0];
+        let expected = fresh_top_expected(block, first_pair.2);
+        let first_scene = fresh_top_scene_g11(
+            block,
+            first_pair.0,
+            first_pair.1,
+            block.top_heldout[0],
+        );
+        let recursive = fresh_recursive_for_scene(&full_evo, &first_scene);
+
+        let mut lesioned = full_evo.clone();
+        let saved = lesioned
+            .perturb_phase_native_synapse_for_control(
+                recursive.child_synapses[0],
+                0.0,
+                0.0,
+            )
+            .expect("fresh G11 necessary L1->L2 synapse");
+        for layout_index in 0..2 {
+            let raster = fresh_top_scene_g11(
+                block,
+                first_pair.0,
+                first_pair.1,
+                block.top_heldout[layout_index],
+            );
+            lesion_ok += usize::from(
+                lesioned.choose_phase_native_recursive_concept_action(&raster)
+                    == Some(expected),
+            );
+        }
+
+        lesioned.restore_phase_native_synapse_for_control(
+            recursive.child_synapses[0],
+            saved,
+        );
+        for layout_index in 0..2 {
+            let raster = fresh_top_scene_g11(
+                block,
+                first_pair.0,
+                first_pair.1,
+                block.top_heldout[layout_index],
+            );
+            restored_ok += usize::from(
+                lesioned.choose_phase_native_recursive_concept_action(&raster)
+                    == Some(expected),
+            );
+        }
+
+        let mut phase_shifted = full_evo.clone();
+        phase_shifted
+            .perturb_phase_native_synapse_for_control(
+                recursive.child_synapses[0],
+                1.0,
+                std::f32::consts::PI,
+            )
+            .expect("fresh G11 phase intervention");
+        for layout_index in 0..2 {
+            let raster = fresh_top_scene_g11(
+                block,
+                first_pair.0,
+                first_pair.1,
+                block.top_heldout[layout_index],
+            );
+            phase_ok += usize::from(
+                phase_shifted.choose_phase_native_recursive_concept_action(&raster)
+                    == Some(expected),
+            );
+        }
+
+        let other_pair = block.top_pairs[1];
+        let other_scene = fresh_top_scene_g11(
+            block,
+            other_pair.0,
+            other_pair.1,
+            block.top_heldout[2],
+        );
+        let other_recursive = fresh_recursive_for_scene(&full_evo, &other_scene);
+        let mut unrelated = full_evo.clone();
+        unrelated
+            .perturb_phase_native_synapse_for_control(
+                other_recursive.child_synapses[0],
+                0.0,
+                0.0,
+            )
+            .expect("fresh G11 unrelated L2 synapse");
+        unrelated_ok += usize::from(
+            unrelated.choose_phase_native_recursive_concept_action(&first_scene)
+                == Some(expected),
+        );
+
+        let child_id = recursive.child_concept_ids[0];
+        let lower = full_evo
+            .phase_native_concept_circuits()
+            .iter()
+            .find(|circuit| circuit.promoted && circuit.concept_id == child_id)
+            .expect("fresh G11 L1 child")
+            .clone();
+        let mut lower_lesioned = full_evo.clone();
+        lower_lesioned
+            .perturb_phase_native_synapse_for_control(
+                lower.child_synapses[0],
+                0.0,
+                0.0,
+            )
+            .expect("fresh G11 lower dependency");
+        for layout_index in 0..2 {
+            let raster = fresh_top_scene_g11(
+                block,
+                first_pair.0,
+                first_pair.1,
+                block.top_heldout[layout_index],
+            );
+            lower_lesion_ok += usize::from(
+                lower_lesioned
+                    .choose_phase_native_recursive_concept_action(&raster)
+                    == Some(expected),
+            );
+        }
+
+        println!(
+            "FRESH_G11_SUB sub={} full={}/8 atoms={} l1_promoted={} l2_promoted={} max_l1={:.4} min_l2={:.4}",
+            sub,
+            sub_score,
+            full_evo.concept_atoms().len(),
+            full_evo.phase_native_promoted_concept_count(),
+            full_evo.phase_native_promoted_recursive_count(),
+            fresh_max_l1_evidence(&full_evo, block),
+            fresh_min_l2_evidence(&full_evo, block),
+        );
+    }
+
+    let (lo, hi) = g11_wilson95(full, 80);
+    println!(
+        "FRESH_G11_RESULT full={}/80 wilson95=[{:.6},{:.6}] per_seed={:?} no_recursion={}/80 level1_only={}/80 zero_phase={}/80 zero_weight={}/80 no_growth={}/80 lesion={}/20 phase_shift={}/20 restored={}/20 unrelated={}/10 lower_lesion={}/20 atom_violations={} l1_violations={} l2_violations={} ref_violations={} max_l1={:.6} min_l2={:.6} motor_mask={:#06b}",
+        full,
+        lo,
+        hi,
+        per_seed,
+        no_recursion,
+        level1_only,
+        zero_phase,
+        zero_weight,
+        no_growth,
+        lesion_ok,
+        phase_ok,
+        restored_ok,
+        unrelated_ok,
+        lower_lesion_ok,
+        atom_count_violations,
+        level1_count_violations,
+        level2_count_violations,
+        ref_violations,
+        max_l1,
+        min_l2,
+        motor_role_mask,
+    );
+
+    assert!(full >= 76);
+    assert!(lo >= 0.87);
+    assert!(per_seed.iter().all(|score| *score >= 6));
+    assert_eq!(atom_count_violations, 0);
+    assert_eq!(level1_count_violations, 0);
+    assert_eq!(level2_count_violations, 0);
+    assert_eq!(ref_violations, 0);
+    assert!(no_recursion <= 16);
+    assert!(level1_only <= 48);
+    assert!(zero_phase <= 48);
+    assert!(zero_weight <= 48);
+    assert!(no_growth <= 16);
+    assert!(max_l1 <= 0.20 + 1.0e-6);
+    assert!(min_l2 >= 0.60 - 1.0e-6);
+    assert!(lesion_ok <= 4);
+    assert!(phase_ok <= 4);
+    assert!(restored_ok >= 19);
+    assert!(unrelated_ok >= 9);
+    assert!(lower_lesion_ok <= 4);
+    assert_eq!(motor_role_mask, 0b1111);
+}
