@@ -1,0 +1,37 @@
+name: intel1-repair1
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/intel1-repair1.yml']
+permissions:
+  contents: read
+jobs:
+  repair:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel1: verify bootstrap repair'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Repair witness
+        run: cargo test --release --test intel1_repair1_bootstrap -- --nocapture
+      - name: Historical cognitive regressions
+        run: |
+          cargo test --release --test g16_autonomous_abstract_model -- --nocapture
+          cargo test --release --test g17_goal_conditioned_planning -- --nocapture
+          cargo test --release --test g18_goal_conditioned_active_reasoning -- --nocapture
+          cargo test --release --test g19_rival_hypothesis_discrimination -- --nocapture
+          cargo test --release --test g20_continual_reasoning g20_ -- --nocapture
+          cargo test --release --test g21_contextual_state_refinement g21_ -- --nocapture
+          cargo test --release --test g22_perceptual_variable_invention -- --nocapture
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed_current_sensory_predicate_when_atoms_fail -- --nocapture
+          cargo test --release --test human_protection -- --nocapture
+      - name: Release build
+        run: cargo build --release
+      - name: Source unchanged during verification
+        if: always()
+        run: git diff --exit-code
