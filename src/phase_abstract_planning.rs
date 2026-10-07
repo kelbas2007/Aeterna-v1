@@ -223,6 +223,7 @@ impl EvoPhase {
         action: usize,
         post_sensory: &[f32],
         value: f32,
+        episode_boundary: bool,
     ) -> Option<bool> {
         let pre_sensory = self.current_real.as_ref()?.sensory.clone();
         let pre = self.phase_native_abstract_state(&pre_sensory)?;
@@ -232,11 +233,12 @@ impl EvoPhase {
         }
         let state_cells = self.phase_native_abstract_cells_at_level(pre.level);
         let before = self.phase_native_circuits().len();
-        let accepted = self.observe_phase_native_abstract_transition(
+        let accepted = self.observe_phase_native_abstract_transition_boundary(
             &pre_sensory,
             action,
             post_sensory,
             value,
+            episode_boundary,
         );
         let structural_gain = self.phase_native_circuits().len() > before;
         self.phase_native_drive_after_cell_fact(
@@ -248,14 +250,13 @@ impl EvoPhase {
         Some(accepted)
     }
 
-    /// Learn one factual transition directly between already-acquired physical
-    /// abstraction cells using the SAME P1 circuit and synapse arrays.
-    pub fn observe_phase_native_abstract_transition(
+    fn observe_phase_native_abstract_transition_boundary(
         &mut self,
         pre_sensory: &[f32],
         action: usize,
         post_sensory: &[f32],
         value: f32,
+        episode_boundary: bool,
     ) -> bool {
         assert!(action < self.config.motor_cells);
         assert!(value.is_finite() && (0.0..=1.0).contains(&value));
@@ -285,8 +286,48 @@ impl EvoPhase {
                 value,
             )
             .is_some();
+
+        if accepted && episode_boundary {
+            let motor = self.motor_cell(action);
+            if let Some(circuit) = state.circuits.iter().find(|circuit| {
+                self.synapses[circuit.afferent_synapse].from == pre.cell
+                    && self.synapses[circuit.successor_synapse].to == post.cell
+                    && self.synapses[circuit.motor_synapse].to == motor
+            }) {
+                // A factual episode boundary is encoded in the physical
+                // successor link itself: the transition remains known
+                // (weight>0), but a pi phase offset blocks fictitious future
+                // continuation/frontier propagation past the terminal edge.
+                let index = circuit.successor_synapse;
+                let synapse = &mut self.synapses[index];
+                let coherent = wrap_phase(
+                    self.cells[synapse.to].phase - self.cells[synapse.from].phase
+                );
+                synapse.phase_offset =
+                    wrap_phase(coherent + std::f32::consts::PI);
+            }
+        }
+
         self.phase_native = Some(state);
         accepted
+    }
+
+    /// Learn one nonterminal factual transition directly between already-acquired
+    /// physical abstraction cells using the SAME P1 circuit and synapse arrays.
+    pub fn observe_phase_native_abstract_transition(
+        &mut self,
+        pre_sensory: &[f32],
+        action: usize,
+        post_sensory: &[f32],
+        value: f32,
+    ) -> bool {
+        self.observe_phase_native_abstract_transition_boundary(
+            pre_sensory,
+            action,
+            post_sensory,
+            value,
+            false,
+        )
     }
 
     /// Plan from the unique highest active acquired abstraction using P1's
