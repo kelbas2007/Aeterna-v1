@@ -1,5 +1,5 @@
 name: intel1-repair3
-# rerun after precise first-outcome diagnostic
+# rerun after history witness goal/staging correction
 on:
   workflow_dispatch:
   push:
