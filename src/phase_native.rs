@@ -701,3 +701,4 @@ include!("phase_refinement_fanout.rs");
 include!("phase_meta_control.rs");
 
 include!("phase_hypothesis_ecology.rs");
+include!("phase_unified_cognition.rs");
