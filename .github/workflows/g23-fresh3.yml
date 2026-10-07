@@ -1,5 +1,5 @@
 name: g23-fresh3
-# Independent one-use geometry-safe G23 qualification after burned FRESH-1/FRESH-2.
+# First valid registered geometry-safe G23 qualification after pre-seal test-registration repair.
 on:
   workflow_dispatch:
   push:
