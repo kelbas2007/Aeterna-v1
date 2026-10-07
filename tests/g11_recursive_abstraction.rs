@@ -158,7 +158,7 @@ fn train_level1(evo: &mut EvoPhase) {
     assert_eq!(evo.phase_native_promoted_concept_count(), 4);
 }
 
-fn train_level2(evo: &mut EvoPhase, swap: bool) {
+fn train_level2(evo: &mut EvoPhase, swap: bool, require_structural_accept: bool) {
     assert!(evo.enable_phase_native_recursive_concepts());
     evo.set_phase_native_recursive_readout_enabled(false);
 
@@ -166,11 +166,17 @@ fn train_level2(evo: &mut EvoPhase, swap: bool) {
         for (left, right, class_one) in TOP_PAIRS {
             let raster = top_scene(left, right, layout);
             for action in [2usize, 3usize] {
-                assert!(evo.observe_phase_native_recursive_concept_factual(
+                let accepted = evo.observe_phase_native_recursive_concept_factual(
                     &raster,
                     action,
                     action == top_expected(class_one, swap),
-                ));
+                );
+                if require_structural_accept {
+                    assert!(
+                        accepted,
+                        "FULL/learning control must accept recursive factual observation"
+                    );
+                }
             }
         }
     }
@@ -342,7 +348,7 @@ fn g11_recursive_physical_concepts_reuse_acquired_concepts_as_children() {
         train_level1(&mut stage1);
 
         let mut full = stage1.clone();
-        train_level2(&mut full, swap);
+        train_level2(&mut full, swap, true);
         assert_eq!(full.phase_native_promoted_recursive_count(), 4);
         verify_recursive_children_are_level1(&full);
         freeze(&mut full);
@@ -447,19 +453,19 @@ fn g11_recursive_physical_concepts_reuse_acquired_concepts_as_children() {
 
         let mut zero_phase = stage1.clone();
         zero_phase.set_learning_rates_for_control(1.0, 0.0);
-        train_level2(&mut zero_phase, swap);
+        train_level2(&mut zero_phase, swap, true);
         freeze(&mut zero_phase);
         zero_phase_total += score_recursive(&zero_phase, swap);
 
         let mut zero_weight = stage1.clone();
         zero_weight.set_learning_rates_for_control(0.0, 1.0);
-        train_level2(&mut zero_weight, swap);
+        train_level2(&mut zero_weight, swap, true);
         freeze(&mut zero_weight);
         zero_weight_total += score_recursive(&zero_weight, swap);
 
         let mut no_growth = stage1.clone();
         no_growth.set_structural_growth_for_control(false);
-        train_level2(&mut no_growth, swap);
+        train_level2(&mut no_growth, swap, false);
         freeze(&mut no_growth);
         no_growth_total += score_recursive(&no_growth, swap);
     }
