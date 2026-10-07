@@ -1,0 +1,53 @@
+name: g21-context
+# One bounded mechanism/integration run; no fresh qualification pack.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/g21-context.yml']
+permissions:
+  contents: read
+jobs:
+  context:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g21: run evidence-gated context refinement verification'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify exact committed source
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code
+      - name: G21 sequential evidence arithmetic and null streams
+        run: |
+          set -o pipefail
+          cargo test --release --lib context_evidence_tests -- --nocapture | tee g21-statistics.log
+      - name: G21 protected continuous representation repair
+        run: |
+          set -o pipefail
+          cargo test --release --test g21_contextual_state_refinement g21_ -- --nocapture | tee g21-context.log
+      - name: G20 integrated lifetime regression
+        run: cargo test --release --test g20_continual_reasoning g20_ -- --nocapture
+      - name: Human Protection regression
+        run: cargo test --release --test human_protection -- --nocapture
+      - name: Full ordinary regression suite
+        run: cargo test --release --all --all-targets -- --nocapture
+      - name: Release build
+        run: cargo build --release
+      - name: Preserve G21 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g21-evidence
+          path: |
+            g21-statistics.log
+            g21-context.log
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Verify tracked source unchanged
+        if: always()
+        run: git diff --exit-code
