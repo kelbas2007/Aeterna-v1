@@ -435,6 +435,10 @@ impl ScientificRuntime {
         };
 
         let before_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
+        let state_action_candidate_id =
+            self.organism.phase_native_unified_state_action_candidate_id(action);
+        let before_state_action =
+            self.organism.phase_native_unified_state_action_snapshot(action);
         let (post, task_outcome) = match execute(action) {
             Ok(result) => result,
             Err(error) => return Ok(self.latch_fault(error)),
@@ -471,6 +475,11 @@ impl ScientificRuntime {
 
         let after_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
         let info_gain = after_knowledge.gained_since(before_knowledge);
+        let state_action_gain = before_state_action
+            .map(|snapshot|
+                self.organism.phase_native_unified_state_action_progress_since(snapshot)
+            )
+            .unwrap_or(false);
 
         // U2 ecology receives generic factual credit for every persistent
         // proposal that was applicable around this fact. No reasoning-class
@@ -496,14 +505,31 @@ impl ScientificRuntime {
                 .fold(0.0_f32,f32::max);
             let evidence_gain = after_app > before_app + 1.0e-6;
             let selected = unified.supporting_candidate_ids.contains(&candidate_id);
-            let selected_gain = if selected {
+            let state_action = state_action_candidate_id == Some(candidate_id);
+
+            // Amendment-1: generic state-action authority receives only
+            // task progress or local transition/revision gain for THIS
+            // pre-cell/motor. Explanatory hypotheses retain the whole-organism
+            // structural/evidence credit used by U2/U3.
+            let selected_gain = if state_action && selected {
+                task_outcome.max(if state_action_gain {1.0}else{0.0})
+            } else if selected {
                 task_outcome.max(if info_gain {1.0}else{0.0})
             } else {
                 0.0
             };
-            let usefulness = selected_gain.max(if evidence_gain {1.0}else{0.0});
+            let usefulness = if state_action {
+                selected_gain
+            } else {
+                selected_gain.max(if evidence_gain {1.0}else{0.0})
+            };
 
-            if (selected || evidence_gain)
+            let register = if state_action {
+                selected
+            } else {
+                selected || evidence_gain
+            };
+            if register
                 && !self.organism.phase_native_hypothesis_registered(candidate_id)
             {
                 let _ = self.organism.register_phase_native_hypothesis(candidate_id);
