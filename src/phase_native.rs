@@ -651,3 +651,4 @@ include!("phase_concept.rs");
 include!("phase_recursive.rs");
 include!("phase_auto_abstraction.rs");
 include!("phase_deep_abstraction.rs");
+include!("phase_abstract_planning.rs");
