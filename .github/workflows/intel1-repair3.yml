@@ -1,5 +1,5 @@
 name: intel1-repair3
-# rerun after Repair-2 target-name correction
+# rerun after all refinement source-guard updates
 on:
   workflow_dispatch:
   push:
