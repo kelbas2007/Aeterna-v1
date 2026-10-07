@@ -33,7 +33,11 @@ impl PhaseConceptCircuitInfo {
 pub(super) struct PhaseConceptState {
     atoms: Vec<PhaseConceptAtomBinding>,
     circuits: Vec<PhaseConceptCircuitInfo>,
+    recursive: Vec<PhaseRecursiveConceptInfo>,
     next_concept_id: u64,
+    next_recursive_id: u64,
+    recursive_formation_enabled: bool,
+    recursive_readout_enabled: bool,
 }
 
 impl PhaseConceptState {
@@ -41,7 +45,11 @@ impl PhaseConceptState {
         Self {
             atoms: Vec::new(),
             circuits: Vec::new(),
+            recursive: Vec::new(),
             next_concept_id: 1,
+            next_recursive_id: 1,
+            recursive_formation_enabled: false,
+            recursive_readout_enabled: false,
         }
     }
 }
@@ -121,6 +129,10 @@ impl EvoPhase {
             .any(|atom| atom.motor_synapses.contains(&index))
             || physical
                 .circuits
+                .iter()
+                .any(|circuit| circuit.contains_synapse(index))
+            || physical
+                .recursive
                 .iter()
                 .any(|circuit| circuit.contains_synapse(index))
     }
