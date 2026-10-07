@@ -63,6 +63,7 @@ pub(super) struct PhaseNativeState {
     circuits: Vec<PhaseCircuitInfo>,
     drive: Option<PhaseDriveState>,
     concepts: Option<PhaseConceptState>,
+    deep: Option<PhaseDeepState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -107,6 +108,7 @@ impl EvoPhase {
             circuits: Vec::new(),
             drive: None,
             concepts: None,
+            deep: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -131,9 +133,11 @@ impl EvoPhase {
             .map(|drive| drive.weight_synapses.contains(&index))
             .unwrap_or(false);
         let concept_synapse = self.is_native_concept_synapse(index);
+        let deep_synapse = self.is_native_deep_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
+            && !deep_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -548,3 +552,4 @@ include!("phase_forward.rs");
 include!("phase_concept.rs");
 include!("phase_recursive.rs");
 include!("phase_auto_abstraction.rs");
+include!("phase_deep_abstraction.rs");
