@@ -150,9 +150,14 @@ fn g10_physical_composite_readout_depends_on_actual_phase_synapses() {
 
     for swap in [false, true] {
         let intact = train("full", swap);
-        assert_eq!(intact.composite_concepts().len(), 4);
+        assert_eq!(
+            intact.composite_concepts().len(),
+            0,
+            "physical G10 must not rely on dedicated pair/composite promotion state"
+        );
         assert_eq!(intact.phase_native_concept_atom_count(), 4);
         assert_eq!(intact.phase_native_concept_circuits().len(), 4);
+        assert_eq!(intact.phase_native_promoted_concept_count(), 4);
         assert_eq!(
             intact.choose_composite_concept_action(
                 &scene(AtomKind::A, AtomKind::B, (3, 1), (6, 8))
@@ -254,6 +259,8 @@ fn g10_physical_selector_has_no_dedicated_readout_or_search_fallback() {
     for forbidden in [
         "choose_composite_action",
         "choose_atom_only_action",
+        ".composites()",
+        "composite_action_evidence",
         "EvoImaginationPlanner",
         "VecDeque",
         "BinaryHeap",
