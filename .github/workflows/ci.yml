@@ -1,5 +1,5 @@
 name: evo-ci
-# Manual-only between sealed qualification checkpoints.
+# Temporary G15 abstract model-planning mechanism trigger; no fresh pack.
 
 on:
   workflow_dispatch:
@@ -58,11 +58,17 @@ on:
         description: 'Consume a new one-use G14 self-selected-depth qualification pack'
         required: false
         default: false
-        type: booleanpermissions:
+        type: boolean  push:
+    branches: [main]
+    paths: ['.github/workflows/ci.yml']
+
+permissions:
   contents: read
 
 jobs:
   rust:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g15: run abstract model planning mechanism'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -76,6 +82,8 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
+      - name: G15 abstract model planning causal preflight
+        run: cargo test --release --test g15_abstract_model_planning -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
