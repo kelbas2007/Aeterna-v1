@@ -74,6 +74,7 @@ pub struct PhaseNativeCheckpoint {
     motor_cells: usize,
     cells: Vec<PhaseCell>,
     synapses: Vec<PhaseSynapse>,
+    concept_memory: Option<EvoConceptMemory>,
     state: PhaseNativeState,
 }
 
@@ -205,6 +206,7 @@ impl EvoPhase {
             motor_cells: self.config.motor_cells,
             cells,
             synapses: self.synapses.clone(),
+            concept_memory: self.concept_memory.clone(),
             state,
         })
     }
@@ -221,6 +223,7 @@ impl EvoPhase {
         }
         self.cells = checkpoint.cells;
         self.synapses = checkpoint.synapses;
+        self.concept_memory = checkpoint.concept_memory;
         self.phase_native = Some(checkpoint.state);
         self.imagination_planner = None;
         self.current_real = None;
