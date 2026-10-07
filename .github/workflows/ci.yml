@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G16 rerun after physical episode-boundary fix; no fresh pack.
+# Temporary G16 efficiency rerun plus Human Protection mechanism; no fresh packs.
 
 on:
   workflow_dispatch:
@@ -88,6 +88,8 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
+      - name: Human Protection mechanism preflight
+        run: cargo test --release --test human_protection -- --nocapture
       - name: G16 autonomous abstract model causal preflight
         run: cargo test --release --test g16_autonomous_abstract_model -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
