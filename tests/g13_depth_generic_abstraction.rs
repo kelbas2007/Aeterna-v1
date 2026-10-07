@@ -533,3 +533,688 @@ fn g13_generic_engine_has_no_level_specific_task_branch_or_search_fallback(){
         assert!(source.contains(required),"G13 generic dependency missing {required}");
     }
 }
+
+
+#[derive(Clone, Debug)]
+struct FreshG13Block {
+    relation_perm: [usize;16],
+    l1_pairs: [[usize;2];8],
+    balancing: [[[usize;2];8];4],
+    l2_targets: [[usize;2];4],
+    l3_targets: [[usize;2];2],
+    motors: [usize;6],
+    pair_order: [usize;4],
+    l2_layout_order: [usize;4],
+    l2_orders: [[usize;4];4],
+    l3_orders: [[usize;2];4],
+    l3_tuition: [[[ (usize,usize);8 ];4];2],
+    l3_heldout: [[[ (usize,usize);8 ];4];2],
+    layout_rejections: usize,
+}
+
+struct FreshG13Rng(u64);
+
+impl FreshG13Rng {
+    fn new(seed:u64)->Self { Self(seed ^ 0xD313_A37E_5EED_0020) }
+    fn next(&mut self)->u64 {
+        let mut x=self.0;
+        x^=x>>12; x^=x<<25; x^=x>>27;
+        self.0=x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+    fn range(&mut self,upper:usize)->usize {
+        (self.next()%upper as u64) as usize
+    }
+}
+
+fn fresh13_shuffle<T>(rng:&mut FreshG13Rng, values:&mut [T]) {
+    for i in (1..values.len()).rev() {
+        let j=rng.range(i+1);
+        values.swap(i,j);
+    }
+}
+
+fn fresh13_pair(a:usize,b:usize)->[usize;2] {
+    if a<=b {[a,b]} else {[b,a]}
+}
+
+fn fresh13_layout_valid(atoms:&[usize], origins:&[(usize,usize)])->bool {
+    if atoms.len()!=origins.len() { return false; }
+    let mut points=Vec::<((usize,usize),usize)>::new();
+
+    for (owner,(&atom,&origin)) in atoms.iter().zip(origins).enumerate() {
+        let (x,y)=origin;
+        let (dx,dy)=G13_OFFSETS[atom];
+        if x+dx>=W || y+dy>=H { return false; }
+        for point in [(x,y),(x+dx,y+dy)] {
+            if points.iter().any(|(existing,_)|*existing==point) { return false; }
+            points.push((point,owner));
+        }
+    }
+
+    for i in 0..points.len() {
+        for j in (i+1)..points.len() {
+            if points[i].1==points[j].1 { continue; }
+            let a=points[i].0;
+            let b=points[j].0;
+            if a.0.abs_diff(b.0).max(a.1.abs_diff(b.1))>4 { continue; }
+            let (from,to)=if a<=b {(a,b)} else {(b,a)};
+            let dx=to.0 as isize-from.0 as isize;
+            let dy=to.1 as isize-from.1 as isize;
+            if dx>=0 && dy>=0
+                && G13_OFFSETS.iter().any(|&(x,y)|x==dx as usize && y==dy as usize)
+            {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn fresh13_unique_layout(
+    atoms:&[usize],
+    rng:&mut FreshG13Rng,
+    used:&mut Vec<[(usize,usize);8]>,
+    rejections:&mut usize,
+)->[(usize,usize);8] {
+    assert_eq!(atoms.len(),8);
+    for _ in 0..100_000usize {
+        let mut candidate=Vec::with_capacity(8);
+        for &atom in atoms {
+            let (dx,dy)=G13_OFFSETS[atom];
+            candidate.push((rng.range(W-dx),rng.range(H-dy)));
+        }
+        let array:[(usize,usize);8]=candidate.try_into().unwrap();
+        if used.contains(&array) || !fresh13_layout_valid(atoms,&array) {
+            *rejections+=1;
+            continue;
+        }
+        used.push(array);
+        return array;
+    }
+    panic!("frozen geometry-only G13 layout search exhausted");
+}
+
+fn fresh13_l3_atoms(block:&FreshG13Block,target:usize)->Vec<usize> {
+    let mut atoms=Vec::with_capacity(8);
+    for l2 in block.l3_targets[target] {
+        for l1 in block.l2_targets[l2] {
+            atoms.extend_from_slice(&block.l1_pairs[l1]);
+        }
+    }
+    atoms
+}
+
+fn fresh13_map_round(
+    round:[[usize;2];8],
+    perm:&[usize;16],
+)->[[usize;2];8] {
+    let mut out=[[0usize;2];8];
+    for (index,pair) in round.into_iter().enumerate() {
+        out[index]=fresh13_pair(perm[pair[0]],perm[pair[1]]);
+    }
+    out.sort_unstable();
+    out
+}
+
+fn fresh13_block(authority:u64,sub:u64)->FreshG13Block {
+    let mut rng=FreshG13Rng::new(
+        authority
+            ^ sub.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+            ^ 0x1313_D33F_C011_771B
+    );
+
+    let mut relation_perm:[usize;16]=std::array::from_fn(|i|i);
+    fresh13_shuffle(&mut rng,&mut relation_perm);
+
+    let factors=factorization_16();
+    let l1_pairs=fresh13_map_round(factors[0],&relation_perm);
+    let balancing:[[[usize;2];8];4]=std::array::from_fn(|i|
+        fresh13_map_round(factors[i+1],&relation_perm)
+    );
+
+    let mut l1_order:[usize;8]=std::array::from_fn(|i|i);
+    fresh13_shuffle(&mut rng,&mut l1_order);
+    let l2_targets:[ [usize;2];4 ]=std::array::from_fn(|i|
+        fresh13_pair(l1_order[2*i],l1_order[2*i+1])
+    );
+
+    let mut l2_order:[usize;4]=[0,1,2,3];
+    fresh13_shuffle(&mut rng,&mut l2_order);
+    let l3_targets:[ [usize;2];2 ]=std::array::from_fn(|i|
+        fresh13_pair(l2_order[2*i],l2_order[2*i+1])
+    );
+
+    let mut motors:[usize;6]=[0,1,2,3,4,5];
+    fresh13_shuffle(&mut rng,&mut motors);
+
+    let mut pair_order=[0usize,1,2,3];
+    fresh13_shuffle(&mut rng,&mut pair_order);
+    let mut l2_layout_order=[0usize,1,2,3];
+    fresh13_shuffle(&mut rng,&mut l2_layout_order);
+
+    let mut l2_orders=[[0usize;4];4];
+    for cycle in 0..4 {
+        l2_orders[cycle]=[0,1,2,3];
+        fresh13_shuffle(&mut rng,&mut l2_orders[cycle]);
+    }
+
+    let mut l3_orders=[[0usize;2];4];
+    for cycle in 0..4 {
+        l3_orders[cycle]=[0,1];
+        fresh13_shuffle(&mut rng,&mut l3_orders[cycle]);
+    }
+
+    let mut placeholder=FreshG13Block {
+        relation_perm,
+        l1_pairs,
+        balancing,
+        l2_targets,
+        l3_targets,
+        motors,
+        pair_order,
+        l2_layout_order,
+        l2_orders,
+        l3_orders,
+        l3_tuition:[[[(0,0);8];4];2],
+        l3_heldout:[[[(0,0);8];4];2],
+        layout_rejections:0,
+    };
+
+    let mut rejected=0usize;
+    for target in 0..2 {
+        let atoms=fresh13_l3_atoms(&placeholder,target);
+        let mut used=Vec::new();
+        for cycle in 0..4 {
+            placeholder.l3_tuition[target][cycle]=
+                fresh13_unique_layout(&atoms,&mut rng,&mut used,&mut rejected);
+        }
+        for holdout in 0..4 {
+            placeholder.l3_heldout[target][holdout]=
+                fresh13_unique_layout(&atoms,&mut rng,&mut used,&mut rejected);
+        }
+    }
+    placeholder.layout_rejections=rejected;
+    placeholder
+}
+
+fn fresh13_fnv(mut hash:u64,value:u64)->u64 {
+    const PRIME:u64=1_099_511_628_211;
+    for byte in value.to_le_bytes() {
+        hash^=byte as u64;
+        hash=hash.wrapping_mul(PRIME);
+    }
+    hash
+}
+
+fn fresh13_digest(blocks:&[FreshG13Block])->u64 {
+    let mut h=14_695_981_039_346_656_037u64;
+    for (sub,block) in blocks.iter().enumerate() {
+        h=fresh13_fnv(h,sub as u64);
+        for &v in &block.relation_perm { h=fresh13_fnv(h,v as u64); }
+        for pair in block.l1_pairs { for v in pair { h=fresh13_fnv(h,v as u64); } }
+        for pair in block.l2_targets { for v in pair { h=fresh13_fnv(h,v as u64); } }
+        for pair in block.l3_targets { for v in pair { h=fresh13_fnv(h,v as u64); } }
+        for &v in &block.motors { h=fresh13_fnv(h,v as u64); }
+        for target in 0..2 {
+            for layout in block.l3_tuition[target] {
+                for (x,y) in layout {
+                    h=fresh13_fnv(h,x as u64);
+                    h=fresh13_fnv(h,y as u64);
+                }
+            }
+            for layout in block.l3_heldout[target] {
+                for (x,y) in layout {
+                    h=fresh13_fnv(h,x as u64);
+                    h=fresh13_fnv(h,y as u64);
+                }
+            }
+        }
+    }
+    h
+}
+
+fn fresh13_train_l1(evo:&mut EvoPhase,block:&FreshG13Block) {
+    let foundation=[block.motors[0],block.motors[1]];
+    for pair in block.l1_pairs {
+        for &binding_index in &block.pair_order {
+            let raster=pair_scene(pair,STAGE1_BINDINGS[binding_index]);
+            for action in foundation {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &raster,action,action==foundation[0]
+                ));
+            }
+        }
+    }
+
+    for round_index in 0..4 {
+        let binding=NEGATIVE_BINDINGS[block.pair_order[round_index]];
+        for pair in block.balancing[round_index] {
+            let raster=pair_scene(pair,binding);
+            for action in foundation {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &raster,action,action==foundation[1]
+                ));
+            }
+        }
+    }
+
+    assert_eq!(evo.concept_atoms().len(),16);
+    assert_eq!(evo.composite_concepts().len(),0);
+    assert_eq!(evo.phase_native_promoted_concept_count(),8);
+}
+
+fn fresh13_l1_single(
+    block:&FreshG13Block,index:usize,binding_index:usize
+)->Vec<f32> {
+    pair_scene(block.l1_pairs[index],STAGE1_BINDINGS[binding_index%4])
+}
+
+fn fresh13_l2_scene(
+    block:&FreshG13Block,target:usize,layout_index:usize
+)->Vec<f32> {
+    let pair=block.l2_targets[target];
+    concept_scene(
+        &block.l1_pairs,
+        &[pair[0],pair[1]],
+        &L2_LAYOUTS[layout_index%4],
+    )
+}
+
+fn fresh13_balanced(
+    evo:&mut EvoPhase,
+    sensory:&[f32],
+    actions:[usize;2],
+) {
+    for rep in 0..4 {
+        let first=rep%2==0;
+        assert!(evo.observe_phase_native_depth_generic_factual(
+            sensory,actions[0],first
+        ));
+        assert!(evo.observe_phase_native_depth_generic_factual(
+            sensory,actions[1],!first
+        ));
+    }
+}
+
+fn fresh13_train_l2(
+    evo:&mut EvoPhase,
+    block:&FreshG13Block,
+) {
+    let actions=[block.motors[2],block.motors[3]];
+
+    for index in 0..8 {
+        let single=fresh13_l1_single(
+            block,index,block.pair_order[index%4]
+        );
+        fresh13_balanced(evo,&single,actions);
+    }
+    assert_eq!(evo.phase_native_deep_candidate_count(2),0);
+
+    for cycle in 0..4 {
+        let layout=block.l2_layout_order[cycle];
+        for target in block.l2_orders[cycle] {
+            let scene=fresh13_l2_scene(block,target,layout);
+            let correct=if target%2==0 {actions[0]} else {actions[1]};
+            for action in actions {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==correct
+                ));
+            }
+
+            let opposite=if correct==actions[0] {actions[1]} else {actions[0]};
+            for child in block.l2_targets[target] {
+                let single=fresh13_l1_single(
+                    block,child,block.pair_order[(cycle+child)%4]
+                );
+                for action in actions {
+                    assert!(evo.observe_phase_native_depth_generic_factual(
+                        &single,action,action==opposite
+                    ));
+                }
+            }
+        }
+    }
+
+    assert_eq!(evo.phase_native_deep_candidate_count(2),4);
+    assert_eq!(evo.phase_native_promoted_deep_count(2),4);
+    assert_eq!(evo.phase_native_deep_candidate_count(3),0);
+}
+
+fn fresh13_l2_single(
+    block:&FreshG13Block,l2:usize,layout_index:usize
+)->Vec<f32> {
+    fresh13_l2_scene(block,l2,layout_index)
+}
+
+fn fresh13_l3_scene(
+    block:&FreshG13Block,
+    target:usize,
+    layout:[(usize,usize);8],
+)->Vec<f32> {
+    let mut l1s=Vec::with_capacity(4);
+    for l2 in block.l3_targets[target] {
+        l1s.extend_from_slice(&block.l2_targets[l2]);
+    }
+    concept_scene(&block.l1_pairs,&l1s,&layout)
+}
+
+fn fresh13_train_l3(
+    evo:&mut EvoPhase,
+    block:&FreshG13Block,
+    require_accept:bool,
+) {
+    let actions=[block.motors[4],block.motors[5]];
+
+    for l2 in 0..4 {
+        let single=fresh13_l2_single(
+            block,l2,block.l2_layout_order[l2]
+        );
+        fresh13_balanced(evo,&single,actions);
+    }
+    assert_eq!(evo.phase_native_deep_candidate_count(3),0);
+
+    for cycle in 0..4 {
+        for target in block.l3_orders[cycle] {
+            let scene=fresh13_l3_scene(
+                block,target,block.l3_tuition[target][cycle]
+            );
+            let correct=if target==0 {actions[0]} else {actions[1]};
+            for action in actions {
+                let accepted=evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==correct
+                );
+                if require_accept { assert!(accepted); }
+            }
+
+            let opposite=if correct==actions[0] {actions[1]} else {actions[0]};
+            for l2 in block.l3_targets[target] {
+                let single=fresh13_l2_single(
+                    block,l2,block.l2_layout_order[(cycle+l2)%4]
+                );
+                for action in actions {
+                    let accepted=evo.observe_phase_native_depth_generic_factual(
+                        &single,action,action==opposite
+                    );
+                    if require_accept { assert!(accepted); }
+                }
+            }
+        }
+    }
+}
+
+fn fresh13_score(
+    evo:&EvoPhase,
+    block:&FreshG13Block,
+)->usize {
+    let actions=[block.motors[4],block.motors[5]];
+    let mut score=0usize;
+    for target in 0..2 {
+        let expected=if target==0 {actions[0]} else {actions[1]};
+        for layout in block.l3_heldout[target] {
+            let scene=fresh13_l3_scene(block,target,layout);
+            score+=usize::from(
+                evo.choose_phase_native_depth_generic_action(&scene)==Some(expected)
+            );
+        }
+    }
+    score
+}
+
+fn fresh13_reference_violations(evo:&EvoPhase)->usize {
+    let l1=evo.phase_native_concept_circuits().iter()
+        .filter(|c|c.promoted)
+        .map(|c|(c.concept_id,c.concept_cell))
+        .collect::<std::collections::BTreeMap<_,_>>();
+    let l2=evo.phase_native_deep_nodes().iter()
+        .filter(|n|n.promoted && n.level==2)
+        .map(|n|(n.id,n.concept_cell))
+        .collect::<std::collections::BTreeMap<_,_>>();
+    let mut violations=0usize;
+
+    for node in evo.phase_native_deep_nodes().iter().filter(|n|n.promoted) {
+        if node.level==2 {
+            for child in node.children {
+                if child.level!=1 || l1.get(&child.id)!=Some(&child.cell) {
+                    violations+=1;
+                }
+            }
+        } else if node.level==3 {
+            for child in node.children {
+                if child.level!=2 || l2.get(&child.id)!=Some(&child.cell) {
+                    violations+=1;
+                }
+            }
+        } else {
+            violations+=1;
+        }
+    }
+    violations
+}
+
+fn fresh13_l3_node(
+    evo:&EvoPhase,
+    block:&FreshG13Block,
+    target:usize,
+    layout:[(usize,usize);8],
+)->PhaseDeepNodeInfo {
+    let scene=fresh13_l3_scene(block,target,layout);
+    let active=promoted_deep_for_scene(evo,&scene,3);
+    assert_eq!(active.len(),1);
+    active[0].clone()
+}
+
+fn fresh13_wilson95(success:usize,n:usize)->(f64,f64) {
+    let z=1.959_963_984_540_054f64;
+    let n=n as f64;
+    let p=success as f64/n;
+    let denom=1.0+z*z/n;
+    let center=(p+z*z/(2.0*n))/denom;
+    let half=z*(p*(1.0-p)/n+z*z/(4.0*n*n)).sqrt()/denom;
+    (center-half,center+half)
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn g13_fresh_depth_generic_abstraction_pack() {
+    let authority:u64=std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse().expect("fresh G13 seed must be u64");
+    let source_sha=std::env::var("AETERNA_SOURCE_SHA").unwrap_or_else(|_|"unknown".into());
+    let spec_sha=std::env::var("AETERNA_SPEC_SHA").unwrap_or_else(|_|"unknown".into());
+
+    let blocks=(0..10u64)
+        .map(|sub|fresh13_block(authority,sub))
+        .collect::<Vec<_>>();
+    let digest=fresh13_digest(&blocks);
+
+    println!(
+        "FRESH_G13_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha,spec_sha,authority,digest
+    );
+    for (sub,block) in blocks.iter().enumerate() {
+        println!("FRESH_G13_BLOCK sub={} {:?}",sub,block);
+    }
+
+    let mut full=0usize;
+    let mut max2=0usize;
+    let mut no_engine=0usize;
+    let mut zero_phase=0usize;
+    let mut zero_weight=0usize;
+    let mut no_growth=0usize;
+    let mut per_seed=Vec::new();
+    let mut stage1_violations=0usize;
+    let mut stage2_violations=0usize;
+    let mut stage3_violations=0usize;
+    let mut reference_violations=0usize;
+    let mut lesion_ok=0usize;
+    let mut phase_ok=0usize;
+    let mut restored_ok=0usize;
+    let mut unrelated_ok=0usize;
+    let mut lower_ok=0usize;
+    let mut motor_mask=0u8;
+    let mut layout_rejections=0usize;
+
+    for (sub,block) in blocks.iter().enumerate() {
+        for motor in block.motors { motor_mask|=1u8<<motor; }
+        layout_rejections+=block.layout_rejections;
+
+        let mut stage1=carrier();
+        fresh13_train_l1(&mut stage1,block);
+        stage1_violations+=usize::from(
+            stage1.concept_atoms().len()!=16
+                || stage1.phase_native_promoted_concept_count()!=8
+                || !stage1.composite_concepts().is_empty()
+        );
+
+        let mut stage2=stage1.clone();
+        assert!(stage2.enable_phase_native_depth_generic_abstraction(3));
+        fresh13_train_l2(&mut stage2,block);
+        stage2_violations+=usize::from(
+            stage2.phase_native_promoted_deep_count(2)!=4
+                || stage2.phase_native_deep_candidate_count(3)!=0
+        );
+
+        let mut full_evo=stage2.clone();
+        fresh13_train_l3(&mut full_evo,block,true);
+        stage3_violations+=usize::from(
+            full_evo.phase_native_deep_candidate_count(3)!=2
+                || full_evo.phase_native_promoted_deep_count(3)!=2
+        );
+        reference_violations+=fresh13_reference_violations(&full_evo);
+        freeze(&mut full_evo);
+        let score=fresh13_score(&full_evo,block);
+        full+=score;
+        per_seed.push(score);
+
+        let mut max2_evo=stage1.clone();
+        assert!(max2_evo.enable_phase_native_depth_generic_abstraction(2));
+        fresh13_train_l2(&mut max2_evo,block);
+        fresh13_train_l3(&mut max2_evo,block,true);
+        freeze(&mut max2_evo);
+        max2+=fresh13_score(&max2_evo,block);
+
+        let mut no_engine_evo=stage1.clone();
+        freeze(&mut no_engine_evo);
+        no_engine+=fresh13_score(&no_engine_evo,block);
+
+        let mut zp=stage2.clone();
+        zp.set_learning_rates_for_control(1.0,0.0);
+        fresh13_train_l3(&mut zp,block,true);
+        freeze(&mut zp);
+        zero_phase+=fresh13_score(&zp,block);
+
+        let mut zw=stage2.clone();
+        zw.set_learning_rates_for_control(0.0,1.0);
+        fresh13_train_l3(&mut zw,block,true);
+        freeze(&mut zw);
+        zero_weight+=fresh13_score(&zw,block);
+
+        let mut ng=stage2.clone();
+        ng.set_structural_growth_for_control(false);
+        fresh13_train_l3(&mut ng,block,false);
+        freeze(&mut ng);
+        no_growth+=fresh13_score(&ng,block);
+
+        let actions=[block.motors[4],block.motors[5]];
+        let expected=actions[0];
+        let node=fresh13_l3_node(
+            &full_evo,block,0,block.l3_heldout[0][0]
+        );
+
+        let mut lesioned=full_evo.clone();
+        let saved=lesioned.perturb_phase_native_synapse_for_control(
+            node.child_synapses[0],0.0,0.0
+        ).expect("fresh G13 necessary L2->L3 synapse");
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(block,0,block.l3_heldout[0][holdout]);
+            lesion_ok+=usize::from(
+                lesioned.choose_phase_native_depth_generic_action(&scene)==Some(expected)
+            );
+        }
+        lesioned.restore_phase_native_synapse_for_control(
+            node.child_synapses[0],saved
+        );
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(block,0,block.l3_heldout[0][holdout]);
+            restored_ok+=usize::from(
+                lesioned.choose_phase_native_depth_generic_action(&scene)==Some(expected)
+            );
+        }
+
+        let mut shifted=full_evo.clone();
+        shifted.perturb_phase_native_synapse_for_control(
+            node.child_synapses[0],1.0,std::f32::consts::PI
+        ).expect("fresh G13 phase intervention");
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(block,0,block.l3_heldout[0][holdout]);
+            phase_ok+=usize::from(
+                shifted.choose_phase_native_depth_generic_action(&scene)==Some(expected)
+            );
+        }
+
+        let other=fresh13_l3_node(
+            &full_evo,block,1,block.l3_heldout[1][0]
+        );
+        let mut unrelated=full_evo.clone();
+        unrelated.perturb_phase_native_synapse_for_control(
+            other.child_synapses[0],0.0,0.0
+        ).expect("fresh G13 unrelated L3 synapse");
+        let target_scene=fresh13_l3_scene(block,0,block.l3_heldout[0][0]);
+        unrelated_ok+=usize::from(
+            unrelated.choose_phase_native_depth_generic_action(&target_scene)==Some(expected)
+        );
+
+        let l2_child=node.children[0];
+        let l2_node=full_evo.phase_native_deep_nodes().iter()
+            .find(|n|n.promoted && n.level==2 && n.id==l2_child.id)
+            .expect("fresh G13 lower L2 node").clone();
+        let mut lower=full_evo.clone();
+        lower.perturb_phase_native_synapse_for_control(
+            l2_node.child_synapses[0],0.0,0.0
+        ).expect("fresh G13 lower L1->L2 dependency");
+        for holdout in 0..2 {
+            let scene=fresh13_l3_scene(block,0,block.l3_heldout[0][holdout]);
+            lower_ok+=usize::from(
+                lower.choose_phase_native_depth_generic_action(&scene)==Some(expected)
+            );
+        }
+
+        println!(
+            "FRESH_G13_SUB sub={} full={}/8 l1={} l2={} l3={} refs={} rejected_layouts={}",
+            sub,score,
+            full_evo.phase_native_promoted_concept_count(),
+            full_evo.phase_native_promoted_deep_count(2),
+            full_evo.phase_native_promoted_deep_count(3),
+            fresh13_reference_violations(&full_evo),
+            block.layout_rejections
+        );
+    }
+
+    let (lo,hi)=fresh13_wilson95(full,80);
+    println!(
+        "FRESH_G13_RESULT full={}/80 wilson95=[{:.6},{:.6}] per_seed={:?} max2={}/80 no_engine={}/80 zero_phase={}/80 zero_weight={}/80 no_growth={}/80 stage1_violations={} stage2_violations={} stage3_violations={} reference_violations={} lesion={}/20 phase_shift={}/20 restored={}/20 unrelated={}/10 lower_lesion_success={}/20 motor_mask={:#08b} layout_rejections={}",
+        full,lo,hi,per_seed,max2,no_engine,zero_phase,zero_weight,no_growth,
+        stage1_violations,stage2_violations,stage3_violations,reference_violations,
+        lesion_ok,phase_ok,restored_ok,unrelated_ok,lower_ok,motor_mask,layout_rejections
+    );
+
+    assert!(full>=76);
+    assert!(lo>=0.87);
+    assert!(per_seed.iter().all(|score|*score>=6));
+    assert_eq!(stage1_violations,0);
+    assert_eq!(stage2_violations,0);
+    assert_eq!(stage3_violations,0);
+    assert_eq!(reference_violations,0);
+    assert!(max2<=40);
+    assert!(no_engine<=40);
+    assert!(zero_phase<=40);
+    assert!(zero_weight<=40);
+    assert!(no_growth<=40);
+    assert!(lesion_ok<=4);
+    assert!(phase_ok<=4);
+    assert!(restored_ok>=19);
+    assert!(unrelated_ok>=9);
+    assert!(lower_ok<=1);
+    assert_eq!(motor_mask,0b11_1111);
+}
