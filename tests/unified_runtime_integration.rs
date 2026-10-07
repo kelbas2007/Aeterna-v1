@@ -103,14 +103,14 @@ fn unified_runtime_uses_carrier_winner_then_protected_single_fact_and_generic_cr
     assert!(proposals.len()>=3,"need simultaneous heterogeneous proposals");
     let direct=rt.organism().choose_phase_native_unified_proposal(&proposals)
         .expect("carrier winner");
-    assert!(direct.persistent_candidate_id.is_some(),
-        "assembly witness requires a persistent explanatory winner");
+    assert!(!direct.supporting_candidate_ids.is_empty(),
+        "assembly witness requires persistent explanatory support");
 
     let mut reversed=proposals.clone();
     reversed.reverse();
     let rev=rt.organism().choose_phase_native_unified_proposal(&reversed).unwrap();
     assert_eq!(rev.action,direct.action);
-    assert_eq!(rev.persistent_candidate_id,direct.persistent_candidate_id);
+    assert_eq!(rev.supporting_candidate_ids,direct.supporting_candidate_ids);
 
     let proposed=rt.propose_unified().unwrap().unwrap();
     assert_eq!(proposed.action,direct.action);
@@ -133,7 +133,7 @@ fn unified_runtime_uses_carrier_winner_then_protected_single_fact_and_generic_cr
 
     let proposals=rt.organism().collect_phase_native_unified_proposals(&goal);
     let direct=rt.organism().choose_phase_native_unified_proposal(&proposals).unwrap();
-    let candidate=direct.persistent_candidate_id.unwrap();
+    let candidate=*direct.supporting_candidate_ids.first().unwrap();
     let before_support=transition_support(rt.organism(),&current,direct.action,&post);
     let before_tick=rt.organism().current_real().unwrap().tick;
 
