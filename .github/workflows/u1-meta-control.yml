@@ -2,15 +2,10 @@ name: u1-meta-control
 # Clean U1 rerun with genuine simultaneous mixed-proposal integration witness.
 on:
   workflow_dispatch:
-  push:
-    branches: [unified-cognition]
-    paths: ['.github/workflows/u1-meta-control.yml']
 permissions:
   contents: read
 jobs:
   u1:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'u1: run carrier-owned meta-control gate'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
