@@ -14,7 +14,7 @@ use crate::trace::CarrierTrace;
 #[path = "phase_native.rs"]
 mod phase_native;
 pub use phase_native::{
-    PhaseCircuitInfo, PhaseConceptCircuitInfo, PhaseDriveCheckpoint, PhaseDriveConfig,
+    AutoAbstractionMetrics, PhaseCircuitInfo, PhaseConceptCircuitInfo, PhaseDriveCheckpoint, PhaseDriveConfig,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhaseRecursiveConceptInfo,
 };
 use phase_native::PhaseNativeState;
