@@ -15,47 +15,99 @@ impl EvoPhase {
         &self,
         sensory: &[f32],
     ) -> Option<PhaseAbstractStateRef> {
+        let memory = self.concept_memory.as_ref()?;
         let state = self.phase_native.as_ref()?;
         let concepts = state.concepts.as_ref()?;
+        let active_atom_ids = memory.active_atom_ids(sensory);
+        let floor = state.config.coherence_floor;
+
+        // Raw recognition supplies only already-acquired atom identities.
+        // Whether a higher abstraction is physically active is determined by
+        // current through its ACTUAL acquired phase-sensitive synapses.
+        let mut activity = self.cells.clone();
+        for cell in &mut activity {
+            cell.charge = 0.0;
+        }
+        for atom in &concepts.atoms {
+            if active_atom_ids.binary_search(&atom.atom_id).is_ok() {
+                activity[atom.cell].charge = 1.0;
+            }
+        }
+
+        let mut active_refs = Vec::<PhaseAbstractStateRef>::new();
+
+        for circuit in &concepts.circuits {
+            if !circuit.promoted {
+                continue;
+            }
+            let left = activity[circuit.child_cells[0]].charge
+                * conductance(
+                    &self.cells,
+                    &self.synapses[circuit.child_synapses[0]],
+                    floor,
+                );
+            let right = activity[circuit.child_cells[1]].charge
+                * conductance(
+                    &self.cells,
+                    &self.synapses[circuit.child_synapses[1]],
+                    floor,
+                );
+            let current = left.min(right);
+            if current <= 1.0e-8 {
+                continue;
+            }
+            activity[circuit.concept_cell].charge =
+                activity[circuit.concept_cell].charge.max(current);
+            active_refs.push(PhaseAbstractStateRef {
+                level: 1,
+                id: circuit.concept_id,
+                cell: circuit.concept_cell,
+            });
+        }
 
         if let Some(deep) = state.deep.as_ref() {
-            let active = self.active_deep_refs(sensory, concepts, deep);
-            let highest = active.iter().map(|child| child.level).max()?;
-            let mut at_highest = active
-                .into_iter()
-                .filter(|child| child.level == highest);
-            let selected = at_highest.next()?;
-            if at_highest.next().is_some() {
-                return None;
+            for level in 2..=deep.max_level {
+                for node in deep
+                    .nodes
+                    .iter()
+                    .filter(|node| node.promoted && node.level == level)
+                {
+                    let left = activity[node.children[0].cell].charge
+                        * conductance(
+                            &self.cells,
+                            &self.synapses[node.child_synapses[0]],
+                            floor,
+                        );
+                    let right = activity[node.children[1].cell].charge
+                        * conductance(
+                            &self.cells,
+                            &self.synapses[node.child_synapses[1]],
+                            floor,
+                        );
+                    let current = left.min(right);
+                    if current <= 1.0e-8 {
+                        continue;
+                    }
+                    activity[node.concept_cell].charge =
+                        activity[node.concept_cell].charge.max(current);
+                    active_refs.push(PhaseAbstractStateRef {
+                        level,
+                        id: node.id,
+                        cell: node.concept_cell,
+                    });
+                }
             }
-            return Some(PhaseAbstractStateRef {
-                level: selected.level,
-                id: selected.id,
-                cell: selected.cell,
-            });
         }
 
-        let memory = self.concept_memory.as_ref()?;
-        let active_atoms = memory.active_atom_ids(sensory);
-        let mut active_l1 = concepts
-            .circuits
-            .iter()
-            .filter(|circuit| {
-                circuit.promoted
-                    && circuit
-                        .child_ids
-                        .iter()
-                        .all(|id| active_atoms.binary_search(id).is_ok())
-            });
-        let selected = active_l1.next()?;
-        if active_l1.next().is_some() {
+        let highest = active_refs.iter().map(|state| state.level).max()?;
+        let mut at_highest = active_refs
+            .into_iter()
+            .filter(|state| state.level == highest);
+        let selected = at_highest.next()?;
+        if at_highest.next().is_some() {
             return None;
         }
-        Some(PhaseAbstractStateRef {
-            level: 1,
-            id: selected.concept_id,
-            cell: selected.concept_cell,
-        })
+        Some(selected)
     }
 
     /// Learn one factual transition directly between already-acquired physical
