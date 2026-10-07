@@ -6,7 +6,8 @@ use crate::exploration::{EvoExplorationStrategy, ExplorationConfig, ProbeFeature
 use crate::hdc::PhaseVector;
 use crate::hierarchy::{EvoHierarchyMemory, HierarchyConfig, ParentMacro};
 use crate::human_protection::{
-    HumanProtection, HumanProtectionDecision, HumanProtectionEvidence, HumanProtectionRecord,
+    HumanProtection, HumanProtectionDecision, HumanProtectionEvidence, HumanProtectionPermit,
+    HumanProtectionPermitError, HumanProtectionRecord,
 };
 use crate::macro_memory::{EvoMacroMemory, MacroAssembly, MacroConfig};
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
@@ -231,6 +232,14 @@ impl EvoPhase {
 
     pub fn human_protection_last_record(&self) -> Option<&HumanProtectionRecord> {
         self.human_protection.last_record()
+    }
+
+    /// Actuator-side consumption of a single-use Human Protection permit.
+    pub fn consume_physical_action_permit(
+        &mut self,
+        permit: HumanProtectionPermit,
+    ) -> Result<usize, HumanProtectionPermitError> {
+        self.human_protection.consume_permit(permit)
     }
 
     pub fn human_protection_emergency_latched(&self) -> bool {
