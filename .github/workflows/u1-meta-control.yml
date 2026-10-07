@@ -26,6 +26,8 @@ jobs:
         run: |
           set -o pipefail
           cargo test --release --test u1_meta_control -- --nocapture | tee u1-evidence.log
+      - name: U1 real-mechanism runtime integration
+        run: cargo test --release --test u1_runtime_integration u1_runtime_ -- --nocapture
       - name: G20 persistent runtime regression
         run: cargo test --release --test g20_continual_reasoning g20_ -- --nocapture
       - name: G21 regression
