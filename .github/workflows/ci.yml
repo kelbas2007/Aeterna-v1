@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G17 goal-conditioned planning mechanism trigger.
+# One-use G17 goal-conditioned planning qualification trigger; source/spec frozen.
 
 on:
   workflow_dispatch:
@@ -69,6 +69,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g17:
+        description: 'Consume a new one-use G17 goal-conditioned planning qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -79,7 +84,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g17: run goal-conditioned abstract planning mechanism'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g17: execute frozen fresh goal-conditioned planning qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -232,6 +237,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G16_AUTONOMOUS_ABSTRACT_MODEL_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test g16_autonomous_abstract_model g16_fresh_autonomous_abstract_model_pack -- --ignored --nocapture | tee g16-evidence.log
+      - name: Explicit one-use fresh G17 goal-conditioned planning qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g17 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G17_GOAL_CONDITIONED_PLANNING_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g17_goal_conditioned_planning g17_fresh_goal_conditioned_planning_pack -- --ignored --nocapture | tee g17-evidence.log
+      - name: Preserve G17 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g17-execution-evidence
+          path: g17-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve G16 execution log
         if: always()
         uses: actions/upload-artifact@v4
