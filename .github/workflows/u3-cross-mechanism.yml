@@ -1,5 +1,5 @@
 name: u3-cross-mechanism
-# preflight-2: matched U1/U2 causal controls after preserved single-active invalidity
+# preflight-3: calibrated two-active U1/U2 causal controls
 on:
   workflow_dispatch:
   push:
