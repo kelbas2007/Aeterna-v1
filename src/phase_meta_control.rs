@@ -1,8 +1,8 @@
-//! U1: carrier-owned competition over task-agnostic cognitive proposal fields.
-//!
-//! This layer deliberately does not know which cognitive module emitted a
-//! proposal. It learns one physical utility projection and selects a unique
-//! proposal by that projection.
+// U1: carrier-owned competition over task-agnostic cognitive proposal fields.
+//
+// This layer deliberately does not know which cognitive module emitted a
+// proposal. It learns one physical utility projection and selects a unique
+// proposal by that projection.
 
 pub const META_FIELD_COUNT: usize = 5;
 
