@@ -1065,3 +1065,14 @@ Workflow `37652805915` PASSed on source `6425ce20f947f07d57dfbefbf30b59e6020828b
 - G22/G21/G20/Human Protection/full regressions and Release PASS.
 
 This qualifies the deterministic depth-2 composition mechanism only. Active evidence gate: **FRESH-G23** with authority-selected AND/XOR target worlds.
+
+
+## G23 FRESH-1 burned failure
+
+Run `37654097035` burned pack `c81d41f6a27db876` and is **FAIL** because single-atom = 50/80 exceeded frozen <=44/80.
+
+All other fresh criteria passed, including FULL 80/80, AND 5/5, XOR 5/5, target promotion 10/10, causal interventions, restart and regressions.
+
+Post-failure analysis found the single-atom threshold was incompatible with the balanced AND truth table: the no-composition majority/single-atom ceiling is 6/8 per AND seed and 4/8 per XOR seed, exactly 50/80 over the 5+5 pack. This does not retroactively change FRESH-1.
+
+Next gate: a new independently seeded **FRESH-G23-2** protocol with operator-specific no-composition ceilings fixed before its evaluator/run.
