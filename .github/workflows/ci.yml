@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G10 physical-ownership audit trigger; no fresh pack.
+# Temporary G10 phase-native concept mechanism trigger; no fresh pack.
 
 on:
   workflow_dispatch:
@@ -44,7 +44,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g10: run physical ownership audit'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g10: run phase-native concept mechanism'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -58,8 +58,8 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
-      - name: G10 physical execution ownership audit
-        run: cargo test --release --test g10_phase_dependency -- --nocapture
+      - name: G10 phase-native concept causal preflight
+        run: cargo test --release --test g10_phase_native_concept -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
