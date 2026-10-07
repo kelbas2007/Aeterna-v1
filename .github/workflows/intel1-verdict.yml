@@ -1,4 +1,4 @@
-name: intel1-r3-verdict
+name: intel1-r4-verdict
 # One-use frozen-core intelligence verdict. No cognitive source changes permitted.
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ permissions:
 jobs:
   intel1:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel1: execute repair3 frozen-core verdict'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel1: execute repair4 frozen-core verdict'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -21,16 +21,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Enforce cognitive freeze
         run: |
-          git diff --exit-code 5509564e8deb67c418a4c52ac67cbf360517dd6d -- src Cargo.toml Cargo.lock
-          git diff --name-only 5509564e8deb67c418a4c52ac67cbf360517dd6d --             | grep -Ev '^(tests/intel1_|docs/INTEL1_|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH3_RESULT.md|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH2_INVALID.md|EXPERIMENT_LEDGER.md|STATUS.md|\.github/workflows/(intel1|g23-fresh3))'             | (! grep .)
+          git diff --exit-code b811b59a5777b59b4ab640ef4ac2ebf75a53c45d -- src Cargo.toml Cargo.lock
+          git diff --name-only b811b59a5777b59b4ab640ef4ac2ebf75a53c45d --             | grep -Ev '^(tests/intel1_|docs/INTEL1_|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH3_RESULT.md|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH2_INVALID.md|EXPERIMENT_LEDGER.md|STATUS.md|\.github/workflows/(intel1|g23-fresh3))'             | (! grep .)
       - name: Verify historical regression before verdict
         run: |
+          cargo test --release --test intel1_repair4_context_competition -- --nocapture
           cargo test --release --test intel1_repair3_fanout intel1_repair3_ -- --nocapture
           cargo test --release --test intel1_repair1_bootstrap -- --nocapture
           cargo test --release --test intel1_repair2_frozen_exploitation -- --nocapture
           cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed_current_sensory_predicate_when_atoms_fail -- --nocapture
           cargo test --release --test g22_perceptual_variable_invention -- --nocapture
           cargo test --release --test g21_contextual_state_refinement g21_ -- --nocapture
+          cargo test --release --test g20_continual_reasoning g20_ -- --nocapture
           cargo test --release --test human_protection -- --nocapture
       - name: INTEL-1 one-lifetime verdict
         env:
@@ -53,4 +55,4 @@ jobs:
         if: always()
         run: |
           git diff --exit-code
-          git diff --exit-code 5509564e8deb67c418a4c52ac67cbf360517dd6d -- src Cargo.toml Cargo.lock
+          git diff --exit-code b811b59a5777b59b4ab640ef4ac2ebf75a53c45d -- src Cargo.toml Cargo.lock
