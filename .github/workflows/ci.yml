@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G16 autonomous abstract-model rerun after technical import fix; no fresh pack.
+# Temporary G16 rerun after physical episode-boundary fix; no fresh pack.
 
 on:
   workflow_dispatch:
