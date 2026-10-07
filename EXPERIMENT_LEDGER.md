@@ -450,3 +450,7 @@ After the fix, one persistent organism acquired four distinct worlds, retained e
 | G14 | MECHANISM-1 | PASS_SELF_SELECTED_ABSTRACTION_DEPTH | Workflow 37604831999 at source `29f37f5b9d196533bbae205f8df91385a26d302d`: open safety ceiling 16; SIMPLE 4/4 stopped at L2 with 0 L3 candidates; DEEP 8/8 grew to L3 with 0 L4 candidates; CAP_LEVEL2/NO_ENGINE 0/8; lesion 4/8, pi shift 4/8, restore 8/8, lower lesion 0/2. Regressions and Release PASS. |
 
 | G14 | FRESH-1 | PASS_FRESH_SELF_SELECTED_ABSTRACTION_DEPTH | Run 37605704724 at source `6f015be57cbf81edc6b0b61ee30ebeec78c621c5`, spec `61b55d96b9f3e5de2abdf2f1fb886dfce4520b6e`, pack `dbfb32f48339bb0a`: SIMPLE 40/40 stopped at L2 in every seed with 0 L3 violations; DEEP 80/80, Wilson95 [0.954182,1.000000], grew to L3 in every seed with 0 L4 violations; ceiling 16; CAP_LEVEL2/NO_ENGINE 0/80; lesion/phase 0/20, restore 20/20, lower lesion 0/20. Regressions and Release PASS; pack burned. |
+
+| G15 | TRIGGER-TECH-1 | TECHNICAL_FAIL_WORKFLOW_PARSE | Workflow 37608815206 created no valid cognitive job because the temporary YAML trigger was malformed. G15 source/protocol/test unchanged; no scientific pack consumed. |
+
+| G15 | MECHANISM-1 | PASS_ABSTRACT_PHASE_NATIVE_MODEL_PLANNING | Workflow 37608846717 at source `156421b208b59591d6addffed3f8ce913471b7b6`: FULL 8/8, depth>=3 8/8, DEPTH1 0/8, NO_MODEL 0/8, BROKEN_STATE 0/8, BROKEN_TRANSITION 0/8, PI_PHASE 0/8, exact restore 8/8, irrelevant 2/2; REAL/fingerprint unchanged; regressions and Release PASS. |
