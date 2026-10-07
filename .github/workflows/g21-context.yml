@@ -1,16 +1,11 @@
 name: g21-context
-# One bounded mechanism/integration run; no fresh qualification pack.
+# Manual-only after completed G21 verification; no fresh qualification pack.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/g21-context.yml']
 permissions:
   contents: read
 jobs:
   context:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g21: run evidence-gated context refinement verification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
