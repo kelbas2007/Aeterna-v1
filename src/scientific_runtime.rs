@@ -8,7 +8,7 @@
 use crate::carrier::{
     EvoPhase, PhaseNativeCheckpoint, PhaseCognitiveProposal,
     PhaseMetaControlCheckpoint, PhaseMetaDecision,
-    PhaseHypothesisEcologyConfig, PhaseUnifiedDecision,
+    PhaseHypothesisEcologyConfig, PhaseUnifiedDecision, PhaseUnifiedCognitiveProposal,
 };
 use crate::human_protection::{
     HumanProtection, HumanProtectionEvidence, HumanProtectionReason,
@@ -159,7 +159,7 @@ impl ScientificRuntime {
 
     fn select_unified_internal(
         &mut self,
-    ) -> Result<Option<(ActionProposal, PhaseUnifiedDecision)>, RuntimeError> {
+    ) -> Result<Option<(ActionProposal, PhaseUnifiedDecision, Vec<PhaseUnifiedCognitiveProposal>)>, RuntimeError> {
         if self.goal_reached()? { return Ok(None); }
         let goal = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?.clone();
         let proposals = self.organism.collect_phase_native_unified_proposals(&goal);
@@ -172,11 +172,11 @@ impl ScientificRuntime {
             learned_fingerprint: self.organism.phase_native_learned_fingerprint(),
         };
         self.record(LifetimeEventKind::Proposal(proposal.clone()));
-        Ok(Some((proposal,decision)))
+        Ok(Some((proposal,decision,proposals)))
     }
 
     pub fn propose_unified(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
-        Ok(self.select_unified_internal()?.map(|(proposal,_)|proposal))
+        Ok(self.select_unified_internal()?.map(|(proposal,_,_)|proposal))
     }
 
     /// Enable the native residual-driven representation learner. No context,
@@ -416,7 +416,7 @@ impl ScientificRuntime {
             return Ok(StepOutcome::Blocked(record));
         }
 
-        let Some((proposal, unified)) = self.select_unified_internal()? else {
+        let Some((proposal, unified, pre_proposals)) = self.select_unified_internal()? else {
             return Ok(StepOutcome::GoalReached);
         };
 
@@ -471,16 +471,47 @@ impl ScientificRuntime {
 
         let after_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
         let info_gain = after_knowledge.gained_since(before_knowledge);
-        let factual_usefulness = task_outcome.max(if info_gain { 1.0 } else { 0.0 });
 
-        if let Some(candidate_id) = unified.persistent_candidate_id {
-            if !self.organism.phase_native_hypothesis_registered(candidate_id) {
+        // U2 ecology receives generic factual credit for every persistent
+        // proposal that was applicable around this fact. No reasoning-class
+        // label is present. Increased structure applicability is passive
+        // supporting evidence; selected proposal also receives task/info gain.
+        let goal_now = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?.clone();
+        let post_proposals = self.organism.collect_phase_native_unified_proposals(&goal_now);
+        let mut candidate_ids = pre_proposals.iter()
+            .chain(post_proposals.iter())
+            .filter_map(|p|p.persistent_candidate_id)
+            .collect::<Vec<_>>();
+        candidate_ids.sort_unstable();
+        candidate_ids.dedup();
+
+        for candidate_id in candidate_ids {
+            let before_app = pre_proposals.iter()
+                .filter(|p|p.persistent_candidate_id==Some(candidate_id))
+                .map(|p|p.applicability)
+                .fold(0.0_f32,f32::max);
+            let after_app = post_proposals.iter()
+                .filter(|p|p.persistent_candidate_id==Some(candidate_id))
+                .map(|p|p.applicability)
+                .fold(0.0_f32,f32::max);
+            let evidence_gain = after_app > before_app + 1.0e-6;
+            let selected = unified.persistent_candidate_id == Some(candidate_id);
+            let selected_gain = if selected {
+                task_outcome.max(if info_gain {1.0}else{0.0})
+            } else {
+                0.0
+            };
+            let usefulness = selected_gain.max(if evidence_gain {1.0}else{0.0});
+
+            if (selected || evidence_gain)
+                && !self.organism.phase_native_hypothesis_registered(candidate_id)
+            {
                 let _ = self.organism.register_phase_native_hypothesis(candidate_id);
             }
             if self.organism.phase_native_hypothesis_registered(candidate_id) {
                 let _ = self.organism.observe_phase_native_hypothesis_utility(
                     candidate_id,
-                    factual_usefulness,
+                    usefulness,
                 );
             }
         }
