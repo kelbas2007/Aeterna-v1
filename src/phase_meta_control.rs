@@ -208,9 +208,9 @@ impl EvoPhase {
                     +config.learning_rate*(1.0-syn.confidence))
                     .clamp(0.0,1.0);
             }
+            let observations=native.meta_control.as_ref().expect("meta").observations;
             native.meta_control.as_mut().expect("meta").observations=
-                native.meta_control.as_ref().expect("meta")
-                    .observations.saturating_add(1);
+                observations.saturating_add(1);
         }
         self.phase_native=Some(native);
         true
