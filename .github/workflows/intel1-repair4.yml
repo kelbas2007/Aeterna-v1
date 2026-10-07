@@ -1,4 +1,5 @@
 name: intel1-repair4
+# rerun after evaluator type-path repair
 on:
   workflow_dispatch:
   push:
