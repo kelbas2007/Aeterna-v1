@@ -23,11 +23,12 @@ Date: 2026-10-06
 **P2 FRESH PASS — phase-native forward sensory prediction and factual revision.**  
 **P3 FRESH PASS — cold autonomous phase-native acquisition, checkpoint persistence and changed-law repair.**  
 **P4 FRESH PASS — learned phase-native exploration drive transfers by itself to cold longer worlds.**  
-**P5 MECHANISM PASS — one persistent organism retains multiple worlds and selectively repairs one changed world.**
+**P5 MECHANISM PASS — one persistent organism retains multiple worlds and selectively repairs one changed world.**  
+**P5 FRESH PASS — statistical continual retention/revision across 10 independent persistent lifetimes.**
 
 No AGI claim. No production promotion.
 
-The P-series repairs the architectural execution gap identified by the phase-execution audit. P3 removes the prepared transition curriculum for the tested deterministic reset-chain family. P4 then removes the fixed P3 frontier valuation from qualified target acquisition: the behavioral weight of generic epistemic features is learned from factual model gain and transferred through physical drive synapses. P5 adds bounded continual retention in one persistent organism and exposed/fixed a phase-native sensory-reference drift that broke old P2 decoders without overwriting their synapses. Full cognitive ownership across every subsystem is still not established, and P5 still requires fresh statistical qualification.
+The P-series repairs the architectural execution gap identified by the phase-execution audit. P3 removes the prepared transition curriculum for the tested deterministic reset-chain family. P4 then removes the fixed P3 frontier valuation from qualified target acquisition: the behavioral weight of generic epistemic features is learned from factual model gain and transferred through physical drive synapses. P5 adds bounded continual retention in one persistent organism and exposed/fixed a phase-native sensory-reference drift that broke old P2 decoders without overwriting their synapses. FRESH-P5 now statistically qualifies that bounded continual-retention/revision claim across 10 independent randomized lifetimes. Full cognitive ownership across every subsystem is still not established.
 
 The mandatory boundary remains **full EvoPhase cognitive ownership**. Rust implements carrier physics and the trusted shell; task-level adaptive state must live in EvoPhase-owned structures.
 
@@ -482,3 +483,37 @@ This is a deterministic mechanism PASS only. See `docs/PHASE_NATIVE_P5_PROTOCOL.
 The deterministic P5 mechanism now passes. The next valid P5 claim requires a one-use external-authority pack with randomized world laws/order and at least 80 scored retention/revision episodes. G10 still separately requires formation of a genuinely new reusable composite concept from already acquired lower-level carrier structures.
 
 CI is manual-only between qualification checkpoints.
+
+
+## P5 FRESH continual-retention result
+
+Run `37569003124` PASSed on source `d7e33bb53cf63b1e21a96463bc1eea5b728f45e7`.
+
+- spec SHA: `a2bc2717f94e3840576015265116a4c7b646234b`;
+- authority seed: `37569003124`;
+- burned pack digest: `f7d409553cf1de82`;
+- primary FULL: **80/80**, Wilson95 [0.954182,1.000000];
+- every sub-seed: **8/8**;
+- autonomous target acquisition: **40/40**;
+- intermediate retention revisits: **100/100**;
+- pre-change retention: **40/40**;
+- changed-world repair: **10/10**;
+- post-change retention: **40/40**;
+- checkpoint-restored lifetime: **40/40**;
+- FROZEN_CHANGED: **0/10**;
+- RESET_BETWEEN earlier-world retention: **0/30**;
+- ZERO_DRIVE acquisition: **1/40**;
+- NO_GROWTH acquisition: **0/40**;
+- mean acquisition cost: **14.875**;
+- mean repair cost: **9.400**;
+- drive-weight violations: 0;
+- legacy graph-transition violations: 0;
+- full regressions and Release build PASS.
+
+This qualifies bounded continual self-directed retention/revision in the frozen deterministic multi-world family. It does not establish unbounded lifelong learning or AGI.
+
+## Next gate
+
+**G10 — autonomous composite concept construction.**
+
+The organism must form a genuinely new reusable concept from acquired lower-level carrier units when no single child is sufficiently predictive, and the new concept must causally improve held-out action under opaque motor permutations.
