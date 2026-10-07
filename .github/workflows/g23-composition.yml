@@ -1,5 +1,5 @@
 name: g23-composition
-# G23 mechanism rerun after evaluator candidate-pool repair; no fresh pack.
+# G23 mechanism rerun after preregistered promotion-count repair; no fresh pack.
 on:
   workflow_dispatch:
   push:
