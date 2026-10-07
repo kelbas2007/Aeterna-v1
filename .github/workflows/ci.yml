@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G16 efficiency rerun plus Human Protection mechanism; no fresh packs.
+# Final G16 mechanism rerun plus Human Protection mechanism; no fresh packs.
 
 on:
   workflow_dispatch:
