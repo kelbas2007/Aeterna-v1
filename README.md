@@ -120,7 +120,7 @@ G11 now has a mechanism PASS: a physical concept acquired at level 1 can itself 
 
 The first G11 preflight also exposed and preserved a useful architectural defect: concept promotion was dependent on curriculum order. The substrate now re-evaluates supported candidates after every new fact, so late evidence can trigger abstraction without replaying the candidate itself.
 
-FRESH-G11 is the active evidence gate.
+FRESH-G11 has now passed on 80/80 fresh recursive decisions: NO_RECURSION 0/80, LEVEL1_ONLY 40/80, ZERO_PHASE/ZERO_WEIGHT/NO_GROWTH 0/80, necessary lesions 0/20 and exact restores 20/20. The next architectural gap is no longer whether recursion works, but whether AETERNA can autonomously decide **when a new abstraction level is worth creating**.
 
 ## Non-negotiable rule
 
