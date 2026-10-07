@@ -86,7 +86,7 @@ fn transition_support(
 #[test]
 fn unified_runtime_uses_carrier_winner_then_protected_single_fact_and_generic_credit(){
     let (evo,current,goal)=fixture::target();
-    let post=fixture::post_scene();
+    let post=current.clone();
     let mut rt=ScientificRuntime::new(evo).unwrap();
     assert!(rt.enable_unified_cognition(
         meta_checkpoint(),
@@ -156,17 +156,15 @@ fn unified_runtime_uses_carrier_winner_then_protected_single_fact_and_generic_cr
         .find(|r|r.candidate_id==candidate).unwrap();
     assert!(record.weight>0.0&&record.observations==1);
 
-    // Ecology lifecycle remains carrier-owned after runtime credit.
-    for _ in 0..20{
-        assert!(rt.organism_mut_for_unified_test_only()
-            .observe_phase_native_hypothesis_utility(candidate,0.0));
+    // Repeated no-gain facts are credited generically to all applicable stored
+    // hypotheses. U2 regression separately verifies later reactivation.
+    for _ in 0..8 {
+        let _ = rt.step_unified(
+            |_|Some(safe()),
+            |_|Ok((current.clone(),0.0))
+        );
     }
     assert_eq!(rt.organism().phase_native_hypothesis_dormant(candidate),Some(true));
-    for _ in 0..20{
-        assert!(rt.organism_mut_for_unified_test_only()
-            .observe_phase_native_hypothesis_utility(candidate,1.0));
-    }
-    assert_eq!(rt.organism().phase_native_hypothesis_dormant(candidate),Some(false));
 
     let records_before=rt.organism().phase_native_hypothesis_records();
     let meta_before=rt.organism().phase_native_meta_weights().unwrap();
@@ -198,4 +196,6 @@ fn unified_runtime_path_contains_no_legacy_priority_call(){
     assert!(!unified.contains("ContextualRefinement"));
     assert!(!unified.contains("PerceptualRefinement"));
     assert!(!unified.contains("RivalDiscrimination"));
+    assert!(unified.contains("evidence_gain"));
+    assert!(unified.contains("post_proposals"));
 }
