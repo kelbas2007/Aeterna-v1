@@ -772,23 +772,18 @@ struct Fresh19Fact{pre:usize,action:usize,post:usize}
 fn fresh19_model_facts(spec:&Fresh19Spec)->Vec<Fresh19Fact>{
     let s=fresh19_state_roles(spec);
     let r=fresh19_motor_roles(spec);
-    let mut facts=Vec::<Fresh19Fact>::new();
-
-    let mut add=|pre,action,post|{
-        facts.push(Fresh19Fact{pre,action,post});
-    };
-
-    add(s.start,r.probe_a,s.a_good);
-    add(s.start,r.probe_a,s.a_dead);
-    add(s.start,r.probe_b,s.b_good);
-    add(s.start,r.probe_b,s.b_dead);
-
-    add(s.a_good,r.step_a,s.goal_a);
-    add(s.b_good,r.step_b,s.goal_b);
-    add(s.start,r.fallback_a,s.fall_a);
-    add(s.fall_a,r.step_a,s.a_good);
-    add(s.start,r.fallback_b,s.fall_b);
-    add(s.fall_b,r.step_b,s.b_good);
+    let mut facts=vec![
+        Fresh19Fact{pre:s.start,action:r.probe_a,post:s.a_good},
+        Fresh19Fact{pre:s.start,action:r.probe_a,post:s.a_dead},
+        Fresh19Fact{pre:s.start,action:r.probe_b,post:s.b_good},
+        Fresh19Fact{pre:s.start,action:r.probe_b,post:s.b_dead},
+        Fresh19Fact{pre:s.a_good,action:r.step_a,post:s.goal_a},
+        Fresh19Fact{pre:s.b_good,action:r.step_b,post:s.goal_b},
+        Fresh19Fact{pre:s.start,action:r.fallback_a,post:s.fall_a},
+        Fresh19Fact{pre:s.fall_a,action:r.step_a,post:s.a_good},
+        Fresh19Fact{pre:s.start,action:r.fallback_b,post:s.fall_b},
+        Fresh19Fact{pre:s.fall_b,action:r.step_b,post:s.b_good},
+    ];
 
     // Fill every still-unrepresented state/action slot with a neutral self-loop.
     for state in 0..9usize {
@@ -796,7 +791,7 @@ fn fresh19_model_facts(spec:&Fresh19Spec)->Vec<Fresh19Fact>{
             if facts.iter().any(|f|f.pre==state && f.action==action){
                 continue;
             }
-            add(state,action,state);
+            facts.push(Fresh19Fact{pre:state,action,post:state});
         }
     }
 
