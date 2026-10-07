@@ -32,7 +32,8 @@ Date: 2026-10-06
 **G10-PHYS FRESH PASS — statistical physical concept promotion/execution with causal synapse interventions.**  
 **G11 MECHANISM PASS — acquired physical concepts become children of new physical concepts at abstraction depth 2.**  
 **G11 FRESH PASS — statistical depth-2 recursive physical abstraction across fresh relation/hierarchy/motor assignments.**  
-**G12 MECHANISM PASS — self-triggered abstraction escalation from physical evidence insufficiency.**
+**G12 MECHANISM PASS — self-triggered abstraction escalation from physical evidence insufficiency.**  
+**G12 FRESH PASS — statistical self-triggered abstraction across authority-randomized evidence regimes.**
 
 No AGI claim. No production promotion.
 
@@ -688,3 +689,29 @@ Workflow `37590743597` PASSed on source `62e26c5cbe4934545b8cbb19ab8e9ece04bad04
 - full regressions and Release PASS.
 
 G12 closes the development mechanism for evidence-driven self-triggered escalation from L1 to L2. Active evidence gate: **FRESH-G12**.
+
+
+## G12 FRESH self-triggered abstraction result
+
+Run `37591926021` PASSed on source `7452e31d3c04eaf35eb1b655f5ade1ca76c82572`.
+
+- spec SHA: `27126f4b40ef3c612e63c2b1d8c869cf24ccf79c`;
+- authority seed: `37591926021`;
+- burned pack: `a1a0025ed123f00c`;
+- FULL_AUTO **80/80**, Wilson95 [0.954182,1.000000];
+- every seed 8/8;
+- NO_ESCALATION / FROZEN_SIMPLE / ZERO_PHASE / ZERO_WEIGHT: 0/80 each;
+- FULL adequate-child L2 candidates: 0 in all 10 seeds;
+- ALWAYS_ESCALATE adequate-child candidates: 2 in all 10 seeds;
+- final FULL L2 candidates/promoted: 4/4 in all 10 seeds;
+- first candidate equals first supported-weak observation in all 10 seeds;
+- necessary lesion 0/20;
+- pi phase shift 0/20;
+- exact restore 20/20;
+- unrelated lesion 10/10;
+- lower atom->L1 lesion 0/20;
+- max L1 evidence 0.147541;
+- motor-role mask 0b1111;
+- full regressions and Release PASS.
+
+This statistically qualifies bounded evidence-driven self-triggered L1->L2 escalation.
