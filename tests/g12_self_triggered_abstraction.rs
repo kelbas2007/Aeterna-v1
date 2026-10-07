@@ -363,6 +363,31 @@ fn g12_self_triggers_higher_abstraction_only_after_child_explanation_fails() {
 
         let metrics: AutoAbstractionMetrics =
             full.phase_native_auto_abstraction_metrics().unwrap();
+        let recursive_diag = full
+            .phase_native_recursive_circuits()
+            .iter()
+            .map(|circuit| {
+                let weights = [2usize, 3usize].map(|action| {
+                    full.phase_native_synapse(circuit.motor_synapses[action])
+                        .map(|syn| syn.weight)
+                        .unwrap_or(-1.0)
+                });
+                (
+                    circuit.concept_id,
+                    circuit.child_concept_ids,
+                    circuit.support,
+                    circuit.promoted,
+                    weights,
+                )
+            })
+            .collect::<Vec<_>>();
+        println!(
+            "G12_DIAG swap={} metrics={:?} recursive={:?} max_child={:.6}",
+            swap,
+            metrics,
+            recursive_diag,
+            max_top_child_evidence(&full),
+        );
         assert_eq!(metrics.recursive_promoted, 4);
         assert!(metrics.first_weak_observation.is_some());
         assert!(metrics.first_candidate_observation.is_some());
