@@ -688,3 +688,4 @@ include!("phase_abstract_planning.rs");
 include!("phase_contextual.rs");
 include!("phase_perceptual.rs");
 include!("phase_compositional.rs");
+include!("phase_refinement_fanout.rs");
