@@ -695,3 +695,693 @@ fn g18_goal_active_selector_has_no_world_law_or_search_fallback(){
         );
     }
 }
+
+
+#[derive(Clone,Debug)]
+struct Fresh18Spec {
+    atom_perm:[usize;16],
+    l1_pairs:[[usize;2];8],
+    state_pairs:[[usize;2];7],
+    state_roles:[usize;7],
+    motor_roles:[usize;6],
+    layouts:[[(usize,usize);4];6],
+    tuition_order:[usize;40],
+}
+
+struct Fresh18Rng(u64);
+
+impl Fresh18Rng{
+    fn new(seed:u64)->Self{Self(seed^0xA318_60A1_C011_2026)}
+    fn next(&mut self)->u64{
+        let mut x=self.0;
+        x^=x>>12;
+        x^=x<<25;
+        x^=x>>27;
+        self.0=x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+    fn range(&mut self,upper:usize)->usize{(self.next()%upper as u64) as usize}
+}
+
+fn fresh18_shuffle<T>(rng:&mut Fresh18Rng,values:&mut [T]){
+    for i in (1..values.len()).rev(){
+        let j=rng.range(i+1);
+        values.swap(i,j);
+    }
+}
+
+fn fresh18_fnv(mut h:u64,value:u64)->u64{
+    const PRIME:u64=1_099_511_628_211;
+    for b in value.to_le_bytes(){
+        h^=b as u64;
+        h=h.wrapping_mul(PRIME);
+    }
+    h
+}
+
+fn fresh18_specs(authority:u64)->(Vec<Fresh18Spec>,u64){
+    let mut specs=Vec::new();
+    let mut digest=14_695_981_039_346_656_037u64;
+
+    for sub in 0..10u64 {
+        let mut rng=Fresh18Rng::new(
+            authority
+                ^ sub.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                ^ 0x18A0_C71E_5EED_0018
+        );
+
+        let mut atoms=(0usize..16).collect::<Vec<_>>();
+        fresh18_shuffle(&mut rng,&mut atoms);
+        let mut atom_perm=[0usize;16];
+        atom_perm.copy_from_slice(&atoms);
+
+        let factors=factorization_16();
+        let l1_pairs=factors[0].map(|p|{
+            let mut pair=[atom_perm[p[0]],atom_perm[p[1]]];
+            pair.sort_unstable();
+            pair
+        });
+
+        let mut all_pairs=Vec::<[usize;2]>::new();
+        for i in 0..8usize{
+            for j in (i+1)..8usize{
+                all_pairs.push([i,j]);
+            }
+        }
+        fresh18_shuffle(&mut rng,&mut all_pairs);
+        let mut state_pairs=[[0usize;2];7];
+        state_pairs.copy_from_slice(&all_pairs[..7]);
+
+        let mut sr=[0usize,1,2,3,4,5,6];
+        fresh18_shuffle(&mut rng,&mut sr);
+        let state_roles=sr;
+
+        let mut mr=[0usize,1,2,3,4,5];
+        fresh18_shuffle(&mut rng,&mut mr);
+        let motor_roles=mr;
+
+        let mut layouts=LAYOUTS;
+        fresh18_shuffle(&mut rng,&mut layouts);
+
+        let mut order_vec=(0usize..40).collect::<Vec<_>>();
+        fresh18_shuffle(&mut rng,&mut order_vec);
+        let mut tuition_order=[0usize;40];
+        tuition_order.copy_from_slice(&order_vec);
+
+        let spec=Fresh18Spec{
+            atom_perm,l1_pairs,state_pairs,state_roles,motor_roles,
+            layouts,tuition_order,
+        };
+
+        digest=fresh18_fnv(digest,sub);
+        for x in spec.atom_perm {digest=fresh18_fnv(digest,x as u64);}
+        for p in spec.l1_pairs {for x in p {digest=fresh18_fnv(digest,x as u64);}}
+        for p in spec.state_pairs {for x in p {digest=fresh18_fnv(digest,x as u64);}}
+        for x in spec.state_roles {digest=fresh18_fnv(digest,x as u64);}
+        for x in spec.motor_roles {digest=fresh18_fnv(digest,x as u64);}
+        for layout in spec.layouts {
+            for (x,y) in layout {
+                digest=fresh18_fnv(digest,x as u64);
+                digest=fresh18_fnv(digest,y as u64);
+            }
+        }
+        for x in spec.tuition_order {digest=fresh18_fnv(digest,x as u64);}
+        specs.push(spec);
+    }
+
+    (specs,digest)
+}
+
+#[derive(Clone,Copy)]
+struct FreshStateRoles{
+    start:usize,
+    hub_a:usize,
+    hub_b:usize,
+    mid_a:usize,
+    mid_b:usize,
+    goal_a:usize,
+    goal_b:usize,
+}
+
+fn fresh_state_roles(spec:&Fresh18Spec)->FreshStateRoles{
+    FreshStateRoles{
+        start:spec.state_roles[0],
+        hub_a:spec.state_roles[1],
+        hub_b:spec.state_roles[2],
+        mid_a:spec.state_roles[3],
+        mid_b:spec.state_roles[4],
+        goal_a:spec.state_roles[5],
+        goal_b:spec.state_roles[6],
+    }
+}
+
+fn fresh_motor_roles(spec:&Fresh18Spec)->Roles{
+    Roles{
+        nav_a:spec.motor_roles[0],
+        nav_b:spec.motor_roles[1],
+        shortcut_a:spec.motor_roles[2],
+        shortcut_b:spec.motor_roles[3],
+        step_a:spec.motor_roles[4],
+        step_b:spec.motor_roles[5],
+    }
+}
+
+fn fresh_state_scene(
+    spec:&Fresh18Spec,
+    state:usize,
+    layout:[(usize,usize);4],
+)->Vec<f32>{
+    let mut r=blank();
+    let mut cursor=0usize;
+    for l1 in spec.state_pairs[state] {
+        for atom in spec.l1_pairs[l1] {
+            add_motif(&mut r,atom,layout[cursor]);
+            cursor+=1;
+        }
+    }
+    r
+}
+
+fn fresh_train_abstraction(evo:&mut EvoPhase,spec:&Fresh18Spec){
+    let factors=factorization_16();
+
+    for pair in spec.l1_pairs {
+        for layout in spec.layouts[..4].iter().copied(){
+            let scene=pair_scene(pair,layout);
+            for action in [0usize,1usize] {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &scene,action,action==0
+                ));
+            }
+        }
+    }
+
+    for (index,round) in factors[1..5].iter().enumerate(){
+        let layout=spec.layouts[index];
+        for raw in *round {
+            let mut pair=[
+                spec.atom_perm[raw[0]],
+                spec.atom_perm[raw[1]],
+            ];
+            pair.sort_unstable();
+            let scene=pair_scene(pair,layout);
+            for action in [0usize,1usize] {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &scene,action,action==1
+                ));
+            }
+        }
+    }
+
+    assert_eq!(evo.concept_atoms().len(),16);
+    assert_eq!(evo.phase_native_promoted_concept_count(),8);
+    assert!(evo.enable_phase_native_depth_generic_abstraction(2));
+
+    for l1 in 0..8usize {
+        let scene=pair_scene(spec.l1_pairs[l1],spec.layouts[l1%4]);
+        for rep in 0..4usize {
+            let first=rep%2==0;
+            assert!(evo.observe_phase_native_depth_generic_factual(
+                &scene,2,first
+            ));
+            assert!(evo.observe_phase_native_depth_generic_factual(
+                &scene,3,!first
+            ));
+        }
+    }
+
+    for cycle in 0..4usize {
+        for state in 0..7usize {
+            let scene=fresh_state_scene(spec,state,spec.layouts[cycle]);
+            for action in [2usize,3usize] {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==2
+                ));
+            }
+            for child in spec.state_pairs[state] {
+                let single=pair_scene(
+                    spec.l1_pairs[child],
+                    spec.layouts[(cycle+child+2)%6]
+                );
+                for action in [2usize,3usize] {
+                    assert!(evo.observe_phase_native_depth_generic_factual(
+                        &single,action,action==3
+                    ));
+                }
+            }
+        }
+    }
+
+    assert_eq!(evo.phase_native_deep_candidate_count(2),7);
+    assert_eq!(evo.phase_native_promoted_deep_count(2),7);
+    evo.set_concept_learning_enabled(false);
+
+    let mut cells=std::collections::BTreeSet::new();
+    for state in 0..7usize {
+        let reference=evo.phase_native_abstract_state(
+            &fresh_state_scene(spec,state,spec.layouts[0])
+        ).unwrap();
+        assert_eq!(reference.level,2);
+        assert!(cells.insert(reference.cell));
+        for layout in spec.layouts {
+            assert_eq!(
+                evo.phase_native_abstract_state(
+                    &fresh_state_scene(spec,state,layout)
+                ).unwrap(),
+                reference
+            );
+        }
+    }
+    assert_eq!(cells.len(),7);
+}
+
+fn fresh_known_next(
+    state:usize,
+    action:usize,
+    spec:&Fresh18Spec,
+)->Option<usize>{
+    let s=fresh_state_roles(spec);
+    let m=fresh_motor_roles(spec);
+    if state==s.start {
+        if action==m.nav_a {Some(s.hub_a)}
+        else if action==m.nav_b {Some(s.hub_b)}
+        else {Some(s.start)}
+    } else if state==s.hub_a {
+        if action==m.shortcut_a {None}
+        else if action==m.step_a {Some(s.mid_a)}
+        else {Some(s.hub_a)}
+    } else if state==s.hub_b {
+        if action==m.shortcut_b {None}
+        else if action==m.step_b {Some(s.mid_b)}
+        else {Some(s.hub_b)}
+    } else if state==s.mid_a {
+        if action==m.step_a {Some(s.goal_a)} else {Some(s.mid_a)}
+    } else if state==s.mid_b {
+        if action==m.step_b {Some(s.goal_b)} else {Some(s.mid_b)}
+    } else if state==s.goal_a {
+        Some(s.goal_a)
+    } else if state==s.goal_b {
+        Some(s.goal_b)
+    } else {
+        None
+    }
+}
+
+fn fresh_world_step(state:usize,action:usize,spec:&Fresh18Spec)->usize{
+    let s=fresh_state_roles(spec);
+    let m=fresh_motor_roles(spec);
+    if state==s.hub_a && action==m.shortcut_a {return s.goal_a;}
+    if state==s.hub_b && action==m.shortcut_b {return s.goal_b;}
+    fresh_known_next(state,action,spec).unwrap()
+}
+
+#[derive(Clone,Copy)]
+struct FreshFact{pre:usize,action:usize,post:usize}
+
+fn fresh_partial_facts(spec:&Fresh18Spec)->Vec<FreshFact>{
+    let mut facts=Vec::new();
+    for state in 0..7usize {
+        for action in 0..6usize {
+            if let Some(post)=fresh_known_next(state,action,spec){
+                facts.push(FreshFact{pre:state,action,post});
+            }
+        }
+    }
+    assert_eq!(facts.len(),40);
+    facts
+}
+
+fn fresh_base(
+    drive:&PhaseDriveCheckpoint,
+    spec:&Fresh18Spec,
+)->EvoPhase{
+    let mut evo=target_carrier(drive);
+    fresh_train_abstraction(&mut evo,spec);
+    let facts=fresh_partial_facts(spec);
+    for index in spec.tuition_order {
+        let fact=facts[index];
+        assert!(evo.observe_phase_native_abstract_transition(
+            &fresh_state_scene(spec,fact.pre,spec.layouts[0]),
+            fact.action,
+            &fresh_state_scene(spec,fact.post,spec.layouts[0]),
+            0.0,
+        ));
+    }
+    assert_eq!(evo.phase_native_circuits().len(),40);
+    assert_eq!(evo.planning_transition_count(),0);
+    evo
+}
+
+fn fresh_state_ref(
+    evo:&EvoPhase,
+    spec:&Fresh18Spec,
+    state:usize,
+)->PhaseAbstractStateRef{
+    evo.phase_native_abstract_state(
+        &fresh_state_scene(spec,state,spec.layouts[0])
+    ).unwrap()
+}
+
+fn fresh_transition_circuit(
+    evo:&EvoPhase,
+    spec:&Fresh18Spec,
+    pre:usize,
+    action:usize,
+    post:usize,
+)->PhaseCircuitInfo{
+    transition_circuit(
+        evo,
+        fresh_state_ref(evo,spec,pre),
+        action,
+        fresh_state_ref(evo,spec,post),
+    )
+}
+
+fn fresh_l2_node(
+    evo:&EvoPhase,
+    spec:&Fresh18Spec,
+    state:usize,
+)->PhaseDeepNodeInfo{
+    l2_node(evo,fresh_state_ref(evo,spec,state))
+}
+
+#[derive(Default,Clone,Copy)]
+struct FreshEpisode{
+    acquired:bool,
+    first_ok:bool,
+    second_ok:bool,
+    post_plan:bool,
+    irrelevant_gain:usize,
+    endpoint_violation:usize,
+    drive_mutation:usize,
+}
+
+fn fresh_full_episode(
+    evo:&mut EvoPhase,
+    spec:&Fresh18Spec,
+    goal_a:bool,
+    layout:[(usize,usize);4],
+)->FreshEpisode{
+    let s=fresh_state_roles(spec);
+    let m=fresh_motor_roles(spec);
+    let start=s.start;
+    let hub=if goal_a{s.hub_a}else{s.hub_b};
+    let goal=if goal_a{s.goal_a}else{s.goal_b};
+    let nav=if goal_a{m.nav_a}else{m.nav_b};
+    let shortcut=if goal_a{m.shortcut_a}else{m.shortcut_b};
+    let goal_scene=fresh_state_scene(spec,goal,layout);
+    let before=evo.phase_native_circuits().len();
+    let weights=evo.phase_native_drive_weights().unwrap();
+
+    let mut state=start;
+    evo.observe_initial_real(&fresh_state_scene(spec,state,layout),false);
+    let Some(first)=evo.choose_phase_native_goal_active_action(&goal_scene) else{
+        return FreshEpisode::default();
+    };
+    let first_ok=first==nav;
+    state=fresh_world_step(state,first,spec);
+    let _=evo.observe_phase_native_abstract_action_result(
+        first,&fresh_state_scene(spec,state,layout),0.0,false
+    );
+
+    let Some(second)=evo.choose_phase_native_goal_active_action(&goal_scene) else{
+        return FreshEpisode{first_ok,..FreshEpisode::default()};
+    };
+    let second_ok=second==shortcut;
+    state=fresh_world_step(state,second,spec);
+    let _=evo.observe_phase_native_abstract_action_result(
+        second,&fresh_state_scene(spec,state,layout),0.0,false
+    );
+
+    let after=evo.phase_native_circuits().len();
+    let acquired=state==goal && after==before+1;
+    let irrelevant_gain=after.saturating_sub(before+usize::from(acquired));
+    let drive_mutation=usize::from(evo.phase_native_drive_weights()!=Some(weights));
+
+    let abstract_cells=evo.phase_native_deep_nodes().iter()
+        .filter(|n|n.promoted && n.level==2)
+        .map(|n|n.concept_cell)
+        .collect::<std::collections::BTreeSet<_>>();
+    let endpoint_violation=evo.phase_native_circuits().iter()
+        .skip(before)
+        .filter(|c|{
+            let a=evo.phase_native_synapse(c.afferent_synapse).unwrap();
+            let z=evo.phase_native_synapse(c.successor_synapse).unwrap();
+            !abstract_cells.contains(&a.from) || !abstract_cells.contains(&z.to)
+        }).count();
+
+    evo.set_planning_learning_enabled(false);
+    evo.set_phase_native_drive_readout_enabled(false);
+    let post_plan=evo.plan_phase_native_abstract_goal(
+        &fresh_state_scene(spec,hub,layout),
+        &goal_scene,
+        None,
+    ).map(|d|d.first_action)==Some(shortcut);
+
+    FreshEpisode{
+        acquired,first_ok,second_ok,post_plan,
+        irrelevant_gain,endpoint_violation,drive_mutation,
+    }
+}
+
+fn fresh_general_episode(
+    evo:&mut EvoPhase,
+    spec:&Fresh18Spec,
+    goal_a:bool,
+    layout:[(usize,usize);4],
+)->bool{
+    let s=fresh_state_roles(spec);
+    let goal=if goal_a{s.goal_a}else{s.goal_b};
+    let before=evo.phase_native_circuits().len();
+    let mut state=s.start;
+    evo.observe_initial_real(&fresh_state_scene(spec,state,layout),false);
+
+    let Some(a)=evo.choose_phase_native_abstract_learned_drive_action() else{return false;};
+    state=fresh_world_step(state,a,spec);
+    let _=evo.observe_phase_native_abstract_action_result(
+        a,&fresh_state_scene(spec,state,layout),0.0,false
+    );
+    let Some(b)=evo.choose_phase_native_abstract_learned_drive_action() else{return false;};
+    state=fresh_world_step(state,b,spec);
+    let _=evo.observe_phase_native_abstract_action_result(
+        b,&fresh_state_scene(spec,state,layout),0.0,false
+    );
+
+    state==goal && evo.phase_native_circuits().len()==before+1
+}
+
+fn fresh18_wilson95(success:usize,n:usize)->(f64,f64){
+    let z=1.959_963_984_540_054_f64;
+    let n=n as f64;
+    let p=success as f64/n;
+    let denom=1.0+z*z/n;
+    let center=(p+z*z/(2.0*n))/denom;
+    let half=z*(p*(1.0-p)/n+z*z/(4.0*n*n)).sqrt()/denom;
+    (center-half,center+half)
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn g18_fresh_goal_conditioned_active_reasoning_pack(){
+    let authority:u64=std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse().expect("fresh G18 seed must be u64");
+    let source_sha=std::env::var("AETERNA_SOURCE_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+    let spec_sha=std::env::var("AETERNA_SPEC_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+
+    let (specs,digest)=fresh18_specs(authority);
+    println!(
+        "FRESH_G18_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha,spec_sha,authority,digest
+    );
+    for (sub,spec) in specs.iter().enumerate(){
+        println!("FRESH_G18_BLOCK sub={} {:?}",sub,spec);
+    }
+
+    let drive=train_drive();
+    let mut full=0usize;
+    let mut first=0usize;
+    let mut second=0usize;
+    let mut post_plan=0usize;
+    let mut general=0usize;
+    let no_goal=0usize;
+    let mut wrong_goal=0usize;
+    let mut broken_goal=0usize;
+    let mut broken_path=0usize;
+    let mut phase_path=0usize;
+    let mut restored=0usize;
+    let mut irrelevant=0usize;
+    let mut no_learning_plan=0usize;
+    let mut irrelevant_gain=0usize;
+    let mut drive_violations=0usize;
+    let mut endpoint_violations=0usize;
+    let mut per_seed=Vec::new();
+    let mut motor_mask=0u8;
+
+    for (sub,spec) in specs.iter().enumerate(){
+        for m in spec.motor_roles {motor_mask|=1u8<<m;}
+        let base=fresh_base(&drive,spec);
+        let sr=fresh_state_roles(spec);
+        let mr=fresh_motor_roles(spec);
+        let mut sub_full=0usize;
+
+        for goal_a in [true,false] {
+            for layout in spec.layouts[2..6].iter().copied(){
+                let mut evo=base.clone();
+                let e=fresh_full_episode(&mut evo,spec,goal_a,layout);
+                full+=usize::from(e.acquired);
+                sub_full+=usize::from(e.acquired);
+                first+=usize::from(e.first_ok);
+                second+=usize::from(e.second_ok);
+                post_plan+=usize::from(e.post_plan);
+                irrelevant_gain+=e.irrelevant_gain;
+                drive_violations+=e.drive_mutation;
+                endpoint_violations+=e.endpoint_violation;
+
+                let mut gen=base.clone();
+                general+=usize::from(fresh_general_episode(
+                    &mut gen,spec,goal_a,layout
+                ));
+
+                let mut wrong=base.clone();
+                wrong_goal+=usize::from(
+                    fresh_full_episode(&mut wrong,spec,!goal_a,layout).acquired
+                );
+
+                // NO_TRANSITION_LEARNING: selector may execute, but shortcut
+                // cannot become part of the physical abstract model.
+                let mut nl=base.clone();
+                nl.set_planning_learning_enabled(false);
+                let goal=if goal_a{sr.goal_a}else{sr.goal_b};
+                let hub=if goal_a{sr.hub_a}else{sr.hub_b};
+                let shortcut=if goal_a{mr.shortcut_a}else{mr.shortcut_b};
+                let goal_scene=fresh_state_scene(spec,goal,layout);
+                let mut state=sr.start;
+                nl.observe_initial_real(&fresh_state_scene(spec,state,layout),false);
+                if let Some(a)=nl.choose_phase_native_goal_active_action(&goal_scene){
+                    state=fresh_world_step(state,a,spec);
+                    let _=nl.observe_phase_native_abstract_action_result(
+                        a,&fresh_state_scene(spec,state,layout),0.0,false
+                    );
+                    if let Some(b)=nl.choose_phase_native_goal_active_action(&goal_scene){
+                        state=fresh_world_step(state,b,spec);
+                        let _=nl.observe_phase_native_abstract_action_result(
+                            b,&fresh_state_scene(spec,state,layout),0.0,false
+                        );
+                    }
+                }
+                no_learning_plan+=usize::from(
+                    nl.plan_phase_native_abstract_goal(
+                        &fresh_state_scene(spec,hub,layout),
+                        &goal_scene,
+                        None,
+                    ).map(|d|d.first_action)==Some(shortcut)
+                );
+            }
+
+            // Fresh causal interventions on first held-out layout per goal.
+            let layout=spec.layouts[2];
+            let goal=if goal_a{sr.goal_a}else{sr.goal_b};
+
+            let mut bg=base.clone();
+            let node=fresh_l2_node(&bg,spec,goal);
+            bg.perturb_phase_native_synapse_for_control(
+                node.child_synapses[0],0.0,0.0
+            ).unwrap();
+            broken_goal+=usize::from(
+                fresh_full_episode(&mut bg,spec,goal_a,layout).acquired
+            );
+
+            let (pre,action,post)=if goal_a{
+                (sr.mid_a,mr.step_a,sr.goal_a)
+            }else{
+                (sr.mid_b,mr.step_b,sr.goal_b)
+            };
+            let circuit=fresh_transition_circuit(
+                &base,spec,pre,action,post
+            );
+
+            let mut br=base.clone();
+            br.perturb_phase_native_synapse_for_control(
+                circuit.successor_synapse,0.0,0.0
+            ).unwrap();
+            broken_path+=usize::from(
+                fresh_full_episode(&mut br,spec,goal_a,layout).acquired
+            );
+
+            let mut ps=base.clone();
+            ps.perturb_phase_native_synapse_for_control(
+                circuit.successor_synapse,1.0,std::f32::consts::PI
+            ).unwrap();
+            phase_path+=usize::from(
+                fresh_full_episode(&mut ps,spec,goal_a,layout).acquired
+            );
+
+            let mut rr=base.clone();
+            let saved=rr.perturb_phase_native_synapse_for_control(
+                circuit.successor_synapse,0.0,0.0
+            ).unwrap();
+            rr.restore_phase_native_synapse_for_control(
+                circuit.successor_synapse,saved
+            );
+            restored+=usize::from(
+                fresh_full_episode(&mut rr,spec,goal_a,layout).acquired
+            );
+        }
+
+        // One irrelevant competing-branch lesion per seed.
+        let ic=fresh_transition_circuit(
+            &base,spec,sr.mid_b,mr.step_b,sr.goal_b
+        );
+        let mut irr=base.clone();
+        irr.perturb_phase_native_synapse_for_control(
+            ic.successor_synapse,0.0,0.0
+        ).unwrap();
+        irrelevant+=usize::from(
+            fresh_full_episode(
+                &mut irr,spec,true,spec.layouts[2]
+            ).acquired
+        );
+
+        per_seed.push(sub_full);
+        println!(
+            "FRESH_G18_SUB sub={} full={}/8 general_so_far={} roles={:?} motors={:?}",
+            sub,sub_full,general,sr_as_array(sr),spec.motor_roles
+        );
+    }
+
+    let (lo,hi)=fresh18_wilson95(full,80);
+    println!(
+        "FRESH_G18_RESULT full={}/80 wilson95=[{:.6},{:.6}] per_seed={:?} first={}/80 second={}/80 post_plan={}/80 general={}/80 no_goal={}/80 wrong_goal={}/80 broken_goal={}/20 broken_path={}/20 phase_path={}/20 restored={}/20 irrelevant={}/10 no_learning_plan={}/80 irrelevant_gain={} drive_violations={} endpoint_violations={} motor_mask={:#08b}",
+        full,lo,hi,per_seed,first,second,post_plan,general,no_goal,
+        wrong_goal,broken_goal,broken_path,phase_path,restored,irrelevant,
+        no_learning_plan,irrelevant_gain,drive_violations,
+        endpoint_violations,motor_mask
+    );
+
+    assert!(full>=76);
+    assert!(lo>=0.87);
+    assert!(per_seed.iter().all(|x|*x>=6));
+    assert!(first>=76);
+    assert!(second>=76);
+    assert!(post_plan>=76);
+    assert!(general<=48);
+    assert!(no_goal<=8);
+    assert!(wrong_goal>=72);
+    assert!(broken_goal<=4);
+    assert!(broken_path<=4);
+    assert!(phase_path<=4);
+    assert!(restored>=19);
+    assert!(irrelevant>=9);
+    assert_eq!(no_learning_plan,0);
+    assert_eq!(irrelevant_gain,0);
+    assert_eq!(drive_violations,0);
+    assert_eq!(endpoint_violations,0);
+    assert_eq!(motor_mask,0b11_1111);
+}
+
+fn sr_as_array(r:FreshStateRoles)->[usize;7]{
+    [r.start,r.hub_a,r.hub_b,r.mid_a,r.mid_b,r.goal_a,r.goal_b]
+}
