@@ -62,6 +62,7 @@ pub(super) struct PhaseNativeState {
     receptors: Vec<Receptor>,
     circuits: Vec<PhaseCircuitInfo>,
     drive: Option<PhaseDriveState>,
+    concepts: Option<PhaseConceptState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -105,6 +106,7 @@ impl EvoPhase {
             receptors: Vec::new(),
             circuits: Vec::new(),
             drive: None,
+            concepts: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -128,8 +130,10 @@ impl EvoPhase {
         let drive_synapse = state.drive.as_ref()
             .map(|drive| drive.weight_synapses.contains(&index))
             .unwrap_or(false);
+        let concept_synapse = self.is_native_concept_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
+            && !concept_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -541,3 +545,4 @@ impl EvoPhase {
 
 include!("phase_drive.rs");
 include!("phase_forward.rs");
+include!("phase_concept.rs");
