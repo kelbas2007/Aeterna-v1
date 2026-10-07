@@ -146,6 +146,14 @@ Fresh run `37605704724`: SIMPLE **40/40** with every seed stopping at L2 and zer
 
 The next gate is G15 abstract model-based planning: learned abstractions must become reusable states of the physical future model.
 
+### G15: abstract model-based planning
+
+G15 has a mechanism PASS connecting acquired physical abstractions to multi-step future-directed choice. Acquired L2 cells are direct endpoints of the same phase-native P1 transition/value circuits; no host graph planner is introduced.
+
+Workflow `37608846717`: FULL **8/8** with depth >=3 on every success, DEPTH1 **0/8**, NO_ABSTRACT_MODEL **0/8**, broken abstract-state/transition/pi-phase **0/8**, exact restore **8/8**, irrelevant lesion **2/2**. Full regressions and Release passed.
+
+The active evidence gate is FRESH-G15 across new hierarchies, raw bindings and delayed route lengths.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
