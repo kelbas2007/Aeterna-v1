@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G12 diagnostic rerun after incomplete promotion failure; no fresh pack.
+# Temporary G12 rerun after persistent-candidate learning fix; no fresh pack.
 
 on:
   workflow_dispatch:
