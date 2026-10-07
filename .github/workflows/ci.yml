@@ -1,5 +1,5 @@
 name: evo-ci
-# Final G16 mechanism rerun plus Human Protection mechanism; no fresh packs.
+# One-use G16 fresh qualification plus Human Protection regression; source/spec frozen.
 
 on:
   workflow_dispatch:
@@ -64,6 +64,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g16:
+        description: 'Consume a new one-use G16 autonomous abstract model qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -74,7 +79,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g16: run autonomous abstract model mechanism'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g16: execute frozen fresh autonomous abstract model qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -215,6 +220,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G15_ABSTRACT_MODEL_PLANNING_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test g15_abstract_model_planning g15_fresh_abstract_model_planning_pack -- --ignored --nocapture | tee g15-evidence.log
+      - name: Explicit one-use fresh G16 autonomous abstract model qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g16 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G16_AUTONOMOUS_ABSTRACT_MODEL_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g16_autonomous_abstract_model g16_fresh_autonomous_abstract_model_pack -- --ignored --nocapture | tee g16-evidence.log
+      - name: Preserve G16 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g16-execution-evidence
+          path: g16-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve G15 execution log
         if: always()
         uses: actions/upload-artifact@v4
