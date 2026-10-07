@@ -169,19 +169,41 @@ impl EvoPhase {
 
             let frontier =
                 self.phase_drive_frontier_activity_for_cells(state, &state_cells);
-            let mut best: Option<(usize, f32, [f32; 2])> = None;
+            let min_support = u64::from(self.config.min_recruit_support);
+            let mut best: Option<(usize, f32, u64, [f32; 2])> = None;
             for action in 0..self.config.motor_cells {
                 let features =
                     self.phase_drive_features(state, entry.cell, action, &frontier);
                 let score = self.phase_drive_score(state, features)?;
+
+                // Evidence-order tie-break only. It does NOT change the two
+                // inherited P4 epistemic features or their learned weights.
+                // When two opaque actions have identical epistemic score,
+                // prefer the motor that already owns more supported physical
+                // transitions somewhere in the acquired abstract model.
+                // This reuses factual cross-state evidence and contains no
+                // route/depth/correct-action mapping.
+                let global_support = state
+                    .circuits
+                    .iter()
+                    .filter(|circuit| {
+                        circuit.support >= min_support
+                            && self.synapses[circuit.motor_synapse].to
+                                == self.config.sensory_cells + action
+                    })
+                    .map(|circuit| circuit.support)
+                    .sum::<u64>();
+
                 match best {
-                    None => best = Some((action, score, features)),
-                    Some((best_action, best_score, _)) => {
+                    None => best = Some((action, score, global_support, features)),
+                    Some((best_action, best_score, best_support, _)) => {
                         if score > best_score + 1.0e-6
                             || ((score - best_score).abs() <= 1.0e-6
-                                && action < best_action)
+                                && (global_support > best_support
+                                    || (global_support == best_support
+                                        && action < best_action)))
                         {
-                            best = Some((action, score, features));
+                            best = Some((action, score, global_support, features));
                         }
                     }
                 }
@@ -189,7 +211,7 @@ impl EvoPhase {
             best
         }?;
 
-        let (action, score, features) = best;
+        let (action, score, _, features) = best;
         if score <= 1.0e-8 {
             return self
                 .phase_native_decision_from_cell(entry.cell, None)
