@@ -254,7 +254,7 @@ impl EvoPhase {
                                     self.concept_memory
                                         .as_ref()
                                         .expect("concept memory")
-                                        .config_min_action_support(),
+                                        .min_action_support(),
                                 )
                             })
                     })
