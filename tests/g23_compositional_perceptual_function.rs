@@ -400,7 +400,9 @@ fn g23_composition_is_native_not_an_xor_answer_table(){
     }
     let host=include_str!("../src/scientific_runtime.rs");
     assert!(host.contains("phase_native_compositional_action"));
-    assert!(host.contains("observe_phase_native_compositional_result"));
+    assert!(host.contains("observe_phase_native_refinement_fanout_result"));
+    let fanout = include_str!("../src/phase_refinement_fanout.rs");
+    assert!(fanout.contains("phase_compositional_sidecar"));
     assert!(host.find("consume_permit(permit)").unwrap()
         < host.find("match execute(action)").unwrap());
 }
