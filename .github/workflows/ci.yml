@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use P5 continual-retention qualification trigger; algorithm/spec already frozen.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -29,17 +29,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'p5: execute frozen continual qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -97,7 +91,7 @@ jobs:
           set -o pipefail
           cargo test --release --test phase_native_learned_drive p4_fresh_learned_drive_transfer_pack -- --ignored --nocapture | tee p4-evidence.log
       - name: Explicit one-use fresh P5 continual-retention qualification
-        if: ${{ github.event_name == 'push' || inputs.qualify_p5 }}
+        if: ${{ inputs.qualify_p5 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
