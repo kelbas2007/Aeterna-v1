@@ -68,6 +68,7 @@ pub(super) struct PhaseNativeState {
     contextual: Option<PhaseContextState>,
     perceptual: Option<PhasePerceptState>,
     compositional: Option<PhaseCompositionState>,
+    meta_control: Option<PhaseMetaControlState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -117,6 +118,7 @@ impl EvoPhase {
             contextual: None,
             perceptual: None,
             compositional: None,
+            meta_control: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -145,6 +147,7 @@ impl EvoPhase {
         let context_synapse = self.is_native_context_synapse(index);
         let perceptual_synapse = self.is_native_perceptual_synapse(index);
         let composition_synapse = self.is_native_composition_synapse(index);
+        let meta_synapse = self.is_native_meta_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
@@ -152,6 +155,7 @@ impl EvoPhase {
             && !context_synapse
             && !perceptual_synapse
             && !composition_synapse
+            && !meta_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -204,6 +208,9 @@ impl EvoPhase {
         if let Some(compositional) = state.compositional.as_ref() {
             text.push_str(&format!("|{:?}|{:?}|{}", compositional.candidates,
                 compositional.discovery, compositional.factual_events));
+        }
+        if let Some(meta) = state.meta_control.as_ref() {
+            text.push_str(&format!("|{:?}", meta));
         }
         for byte in text.bytes() {
             h ^= u64::from(byte);
@@ -689,3 +696,4 @@ include!("phase_contextual.rs");
 include!("phase_perceptual.rs");
 include!("phase_compositional.rs");
 include!("phase_refinement_fanout.rs");
+include!("phase_meta_control.rs");
