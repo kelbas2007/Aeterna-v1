@@ -21,6 +21,7 @@ pub enum ReasoningMode {
     GoalDirectedAction,
     ContextualRefinement,
     PerceptualRefinement,
+    CompositionalRefinement,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -127,6 +128,12 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_perceptual_refinement()
     }
 
+    /// Enable bounded compositional perceptual function synthesis. The host
+    /// supplies no operator, descriptor identity or answer mapping.
+    pub fn enable_compositional_refinement(&mut self) -> bool {
+        self.organism.enable_phase_native_compositional_refinement()
+    }
+
     fn record(&mut self, kind: LifetimeEventKind) {
         self.sequence = self.sequence.checked_add(1)
             .expect("lifetime audit sequence exhausted");
@@ -194,9 +201,13 @@ impl ScientificRuntime {
     pub fn propose(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
         if self.goal_reached()? { return Ok(None); }
         let goal = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?.clone();
+        let compositional = self.organism.phase_native_compositional_action(&goal);
         let perceptual = self.organism.phase_native_perceptual_action(&goal);
         let contextual = self.organism.phase_native_context_action(&goal);
-        let (action, mode) = if perceptual.0 {
+        let (action, mode) = if compositional.0 {
+            (compositional.1.ok_or(RuntimeError::NoSupportedAction)?,
+                ReasoningMode::CompositionalRefinement)
+        } else if perceptual.0 {
             // A learned current-sensory distinction must not be bypassed using
             // the inherited ambiguous parent representation.
             (perceptual.1.ok_or(RuntimeError::NoSupportedAction)?,
@@ -283,7 +294,12 @@ impl ScientificRuntime {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
-        let suppressed = if self.organism.phase_native_perceptual_enabled() {
+        let suppressed = if self.organism.phase_native_compositional_enabled() {
+            match self.organism.observe_phase_native_compositional_result(action, &post) {
+                Some(count) => count,
+                None => return Ok(self.latch_fault("compositional factual update rejected".into())),
+            }
+        } else if self.organism.phase_native_perceptual_enabled() {
             match self.organism.observe_phase_native_perceptual_result(action, &post) {
                 Some(count) => count,
                 None => return Ok(self.latch_fault("perceptual factual update rejected".into())),
