@@ -1218,3 +1218,218 @@ fn g13_fresh_depth_generic_abstraction_pack() {
     assert!(lower_ok<=1);
     assert_eq!(motor_mask,0b11_1111);
 }
+
+
+const G14_L2_CONFIRM_LAYOUT:[(usize,usize);4]=[
+    (3,3),(13,3),(3,13),(13,13),
+];
+
+const G14_L2_HELDOUT_LAYOUTS:[[(usize,usize);4];2]=[
+    [(3,1),(13,1),(3,11),(13,11)],
+    [(1,3),(11,3),(1,13),(11,13)],
+];
+
+const G14_L3_CONFIRM_LAYOUT:[(usize,usize);8]=[
+    (13,7),(6,13),(1,4),(14,0),
+    (0,11),(7,3),(17,11),(9,1),
+];
+
+fn g14_highest_promoted_level(evo:&EvoPhase)->u8 {
+    evo.phase_native_deep_nodes().iter()
+        .filter(|node|node.promoted)
+        .map(|node|node.level)
+        .max()
+        .unwrap_or(1)
+}
+
+fn g14_confirm_l2(evo:&mut EvoPhase,l1_pairs:&[[usize;2];8]) {
+    for _ in 0..4 {
+        for target in 0..4usize {
+            let scene=l2_pair_scene(l1_pairs,target,G14_L2_CONFIRM_LAYOUT);
+            let correct=if target%2==0 {2}else{3};
+            for action in [2usize,3usize] {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==correct
+                ));
+            }
+        }
+    }
+}
+
+fn g14_score_l2(evo:&EvoPhase,l1_pairs:&[[usize;2];8])->usize {
+    let mut score=0usize;
+    for target in 0..4usize {
+        let expected=if target%2==0 {2}else{3};
+        let layout=G14_L2_HELDOUT_LAYOUTS[target%2];
+        let scene=l2_pair_scene(l1_pairs,target,layout);
+        score+=usize::from(
+            evo.choose_phase_native_depth_generic_action(&scene)==Some(expected)
+        );
+    }
+    score
+}
+
+fn g14_confirm_l3(evo:&mut EvoPhase,l1_pairs:&[[usize;2];8],swap:bool) {
+    for _ in 0..4 {
+        for target in 0..2usize {
+            let scene=l3_pair_scene(l1_pairs,target,G14_L3_CONFIRM_LAYOUT);
+            let class_one=target==1;
+            let correct=if class_one^swap {5}else{4};
+            for action in [4usize,5usize] {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==correct
+                ));
+            }
+        }
+    }
+}
+
+#[test]
+fn g14_open_depth_stops_when_sufficient_and_grows_when_needed() {
+    let mut stage1=carrier();
+    let l1_pairs=train_l1(&mut stage1);
+
+    let mut open_stage2=stage1.clone();
+    assert!(open_stage2.enable_phase_native_open_depth_abstraction());
+    assert!(
+        open_stage2.phase_native_deep_max_level().unwrap()>=8,
+        "open-depth safety ceiling must be architectural, not task depth"
+    );
+    train_l2(&mut open_stage2,&l1_pairs);
+    assert_eq!(open_stage2.phase_native_promoted_deep_count(2),4);
+    assert_eq!(open_stage2.phase_native_deep_candidate_count(3),0);
+
+    let mut simple=open_stage2.clone();
+    g14_confirm_l2(&mut simple,&l1_pairs);
+    assert_eq!(
+        simple.phase_native_deep_candidate_count(3),0,
+        "sufficient L2 explanation must not trigger needless L3"
+    );
+    assert_eq!(g14_highest_promoted_level(&simple),2);
+    freeze(&mut simple);
+    let simple_score=g14_score_l2(&simple,&l1_pairs);
+    assert_eq!(simple_score,4);
+
+    let mut deep_total=0usize;
+    let mut cap2_total=0usize;
+    let mut no_engine_total=0usize;
+    let mut lesion_total=0usize;
+    let mut phase_total=0usize;
+    let mut restored_total=0usize;
+    let mut lower_lesion_ok=0usize;
+
+    for swap in [false,true] {
+        let mut deep=open_stage2.clone();
+        train_l3(&mut deep,&l1_pairs,swap,true);
+        assert_eq!(deep.phase_native_promoted_deep_count(3),2);
+        g14_confirm_l3(&mut deep,&l1_pairs,swap);
+        assert_eq!(
+            deep.phase_native_deep_candidate_count(4),0,
+            "sufficient L3 explanation must not trigger needless L4"
+        );
+        assert_eq!(g14_highest_promoted_level(&deep),3);
+        freeze(&mut deep);
+        let baseline=score_l3(&deep,&l1_pairs,swap);
+        assert_eq!(baseline,4);
+        deep_total+=baseline;
+
+        let mut cap2=stage1.clone();
+        assert!(cap2.enable_phase_native_depth_generic_abstraction(2));
+        train_l2(&mut cap2,&l1_pairs);
+        train_l3(&mut cap2,&l1_pairs,swap,true);
+        freeze(&mut cap2);
+        cap2_total+=score_l3(&cap2,&l1_pairs,swap);
+
+        let mut no_engine=stage1.clone();
+        freeze(&mut no_engine);
+        no_engine_total+=score_l3(&no_engine,&l1_pairs,swap);
+
+        let target=l3_pair_scene(&l1_pairs,0,L3_HELDOUT_LAYOUTS[0]);
+        let node=l3_node_for_scene(&deep,&target);
+
+        let mut lesioned=deep.clone();
+        let saved=lesioned.perturb_phase_native_synapse_for_control(
+            node.child_synapses[0],0.0,0.0
+        ).expect("G14 necessary L2->L3 synapse");
+        lesion_total+=score_l3(&lesioned,&l1_pairs,swap);
+        lesioned.restore_phase_native_synapse_for_control(
+            node.child_synapses[0],saved
+        );
+        restored_total+=score_l3(&lesioned,&l1_pairs,swap);
+
+        let mut shifted=deep.clone();
+        shifted.perturb_phase_native_synapse_for_control(
+            node.child_synapses[0],1.0,std::f32::consts::PI
+        ).expect("G14 phase intervention");
+        phase_total+=score_l3(&shifted,&l1_pairs,swap);
+
+        let lower_ref=node.children[0];
+        let lower_node=deep.phase_native_deep_nodes().iter()
+            .find(|candidate|
+                candidate.promoted
+                    && candidate.level==2
+                    && candidate.id==lower_ref.id
+            )
+            .expect("G14 lower L2 node").clone();
+        let mut lower=deep.clone();
+        lower.perturb_phase_native_synapse_for_control(
+            lower_node.child_synapses[0],0.0,0.0
+        ).expect("G14 lower L1->L2 synapse");
+        let expected=if swap {5}else{4};
+        lower_lesion_ok+=usize::from(
+            lower.choose_phase_native_depth_generic_action(&target)==Some(expected)
+        );
+    }
+
+    println!(
+        "G14_SELF_DEPTH safety={} simple={}/4 simple_highest={} simple_l3_candidates={} deep={}/8 cap2={}/8 no_engine={}/8 lesion={}/8 phase_shift={}/8 restored={}/8 lower_lesion_success={}/2",
+        open_stage2.phase_native_deep_max_level().unwrap(),
+        simple_score,
+        g14_highest_promoted_level(&simple),
+        simple.phase_native_deep_candidate_count(3),
+        deep_total,
+        cap2_total,
+        no_engine_total,
+        lesion_total,
+        phase_total,
+        restored_total,
+        lower_lesion_ok
+    );
+
+    assert_eq!(simple_score,4);
+    assert_eq!(g14_highest_promoted_level(&simple),2);
+    assert_eq!(simple.phase_native_deep_candidate_count(3),0);
+    assert_eq!(deep_total,8);
+    assert!(cap2_total<=4);
+    assert!(no_engine_total<=4);
+    assert!(lesion_total<=6);
+    assert!(phase_total<=6);
+    assert_eq!(restored_total,8);
+    assert_eq!(lower_lesion_ok,0);
+}
+
+#[test]
+fn g14_open_depth_entrypoint_has_no_task_depth_argument_or_hidden_two_three() {
+    let source=include_str!("../src/phase_deep_abstraction.rs");
+    let start=source.find("pub fn enable_phase_native_open_depth_abstraction")
+        .expect("G14 open-depth entrypoint");
+    let end=source[start..].find("pub fn enable_phase_native_depth_generic_abstraction")
+        .map(|offset|start+offset)
+        .expect("legacy explicit-depth entrypoint follows G14");
+    let entry=&source[start..end];
+
+    for forbidden in [
+        "max_level:",
+        "(2)",
+        "(3)",
+        "G14_L2",
+        "G14_L3",
+        "correct_action",
+    ] {
+        assert!(
+            !entry.contains(forbidden),
+            "G14 open-depth entrypoint contains task-depth token {forbidden}"
+        );
+    }
+    assert!(entry.contains("OPEN_DEPTH_SAFETY_CEILING"));
+}
