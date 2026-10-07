@@ -158,7 +158,7 @@ The active evidence gate is FRESH-G15 across new hierarchies, raw bindings and d
 
 G16 has a mechanism PASS. A target starts with acquired abstract states and a transferred learned exploration drive but zero target transition circuits. It autonomously interacts, grows the physical abstract model, discovers delayed reward, freezes learning, plans correctly on held-out raw bindings, and retains the model across restart.
 
-Workflow `37614779191`: reward **12/12**, held-out plan **12/12**, restart plan **12/12**; ZERO_DRIVE/FRONTIER_LESION/DIRECT_ONLY **0/12**; mean first-delayed-reward cost **32.000** against frozen <=45. FRESH-G16 is the active evidence gate.
+Workflow `37614779191`: reward **12/12**, held-out plan **12/12**, restart plan **12/12**; ZERO_DRIVE/FRONTIER_LESION/DIRECT_ONLY **0/12**; mean first-delayed-reward cost **32.000** against frozen <=45. FRESH-G16 has now passed: delayed reward discovery **40/40**, held-out planning **80/80**, restart planning **40/40**, mean acquisition cost **31.575** vs frozen <=45; ZERO_DRIVE **0/40**, FRONTIER_LESION **1/40**, DIRECT_ONLY **1/40**, RANDOM **2/40**, with zero ownership/persistence violations. The next intelligence gate is goal-conditioned active reasoning.
 
 ### Human Protection v1
 
