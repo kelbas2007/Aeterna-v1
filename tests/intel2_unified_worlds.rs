@@ -997,7 +997,7 @@ fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
         }
 
         let current=foundation::scene(&l1,c_states[3],(4+i)%6);
-        let old=rt.organism().clone();
+        let mut old=rt.organism().clone();
         memoryless+=usize::from(
             old.plan_phase_native_abstract_goal(&current,&c_goal,None)
                 .map(|d|d.first_action)==Some(mc[side])
