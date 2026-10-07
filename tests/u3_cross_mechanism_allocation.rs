@@ -247,13 +247,15 @@ fn u3_both_meta_and_ecology_physics_are_causally_required(){
     let (mut evo,current,goal)=mixed::build();
     train_meta(&mut evo);
     register_ecology(&mut evo);
-    update(&mut evo,[1.0,0.0,0.0],16);
+    // Matched causal state: keep two hypotheses physically active so U1
+    // meta-control, rather than U2 dormancy alone, must resolve the winner.
+    update(&mut evo,[1.0,0.70,0.0],16);
     assert_eq!(choose(&evo,&current,&goal),Some(C));
 
     let meta_conf=evo.phase_native_meta_synapses().unwrap()[3];
     let records=evo.phase_native_hypothesis_records();
     let c_link=records.iter().find(|r|r.candidate_id==C).unwrap().utility_synapse;
-    let p_link=records.iter().find(|r|r.candidate_id==P).unwrap().utility_synapse;
+    let l_link=records.iter().find(|r|r.candidate_id==L).unwrap().utility_synapse;
 
     let mut meta_lesion=evo.clone();
     let meta_saved=meta_lesion.perturb_phase_native_synapse_for_control(
@@ -285,7 +287,7 @@ fn u3_both_meta_and_ecology_physics_are_causally_required(){
 
     let mut unrelated=evo.clone();
     unrelated.perturb_phase_native_synapse_for_control(
-        p_link,0.0,0.0
+        l_link,0.0,0.0
     ).unwrap();
     assert_eq!(choose(&unrelated,&current,&goal),Some(C));
 
