@@ -10,7 +10,7 @@ permissions:
 jobs:
   intel1:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel1: execute frozen-core verdict'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel1: execute repaired frozen-core verdict'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
