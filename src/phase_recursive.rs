@@ -359,12 +359,84 @@ impl EvoPhase {
             }
         }
 
+        self.reevaluate_recursive_promotions(
+            &mut physical,
+            min_composite_support,
+            min_action_support,
+            child_ceiling,
+            promotion_threshold,
+        );
         physical
             .recursive
             .sort_by_key(|circuit| circuit.concept_id);
         state.concepts = Some(physical);
         self.phase_native = Some(state);
         true
+    }
+
+    fn reevaluate_recursive_promotions(
+        &mut self,
+        physical: &mut PhaseConceptState,
+        min_composite_support: u32,
+        min_action_support: u32,
+        child_ceiling: f32,
+        promotion_threshold: f32,
+    ) {
+        for recursive_index in 0..physical.recursive.len() {
+            if physical.recursive[recursive_index].promoted
+                || physical.recursive[recursive_index].support < min_composite_support
+            {
+                continue;
+            }
+
+            let mut winning: Option<(usize, f32)> = None;
+            for motor in 0..self.config.motor_cells {
+                if physical.recursive[recursive_index].action_support[motor]
+                    < min_action_support
+                {
+                    continue;
+                }
+                let weight = self.synapses
+                    [physical.recursive[recursive_index].motor_synapses[motor]]
+                    .weight;
+                let centered = 2.0 * weight - 1.0;
+                if centered <= 0.0 {
+                    continue;
+                }
+                if winning.map(|(_, best)| centered > best).unwrap_or(true) {
+                    winning = Some((motor, centered));
+                }
+            }
+
+            let Some((winning_motor, evidence)) = winning else {
+                continue;
+            };
+            if evidence < promotion_threshold {
+                continue;
+            }
+
+            let children_weak = physical.recursive[recursive_index]
+                .child_concept_ids
+                .iter()
+                .all(|concept_id| {
+                    let child = physical
+                        .circuits
+                        .iter()
+                        .find(|circuit| {
+                            circuit.promoted && circuit.concept_id == *concept_id
+                        })
+                        .expect("recursive child concept");
+                    if child.action_support[winning_motor] < min_action_support {
+                        return false;
+                    }
+                    let weight = self.synapses[child.motor_synapses[winning_motor]].weight;
+                    (2.0 * weight - 1.0).abs() <= child_ceiling
+                });
+
+            if children_weak {
+                physical.recursive[recursive_index].promoted = true;
+            }
+        }
     }
 
     /// Physical recursive readout:
