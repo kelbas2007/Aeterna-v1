@@ -204,7 +204,26 @@ impl EvoPhase {
             return true;
         }
 
-        if !physical.auto_always_escalate && !children_supported_and_weak {
+        let allow_new_recursive =
+            physical.auto_always_escalate || children_supported_and_weak;
+        let has_existing_recursive = (0..active_level1.len()).any(|i| {
+            ((i + 1)..active_level1.len()).any(|j| {
+                let ids = ordered_recursive_pair(
+                    physical.circuits[active_level1[i]].concept_id,
+                    physical.circuits[active_level1[j]].concept_id,
+                );
+                physical
+                    .recursive
+                    .iter()
+                    .any(|circuit| circuit.child_concept_ids == ids)
+            })
+        });
+
+        // Weak supported child evidence is required to RECRUIT a higher
+        // structure. Once legitimately recruited, however, that physical
+        // candidate keeps learning from later co-activations even if a child
+        // temporarily looks strong again on the current action.
+        if !allow_new_recursive && !has_existing_recursive {
             state.concepts = Some(physical);
             self.phase_native = Some(state);
             return true;
@@ -218,18 +237,20 @@ impl EvoPhase {
             .count();
 
         let mut missing = 0usize;
-        for i in 0..active_level1.len() {
-            for j in (i + 1)..active_level1.len() {
-                let ids = ordered_recursive_pair(
-                    physical.circuits[active_level1[i]].concept_id,
-                    physical.circuits[active_level1[j]].concept_id,
-                );
-                if !physical
-                    .recursive
-                    .iter()
-                    .any(|circuit| circuit.child_concept_ids == ids)
-                {
-                    missing += 1;
+        if allow_new_recursive {
+            for i in 0..active_level1.len() {
+                for j in (i + 1)..active_level1.len() {
+                    let ids = ordered_recursive_pair(
+                        physical.circuits[active_level1[i]].concept_id,
+                        physical.circuits[active_level1[j]].concept_id,
+                    );
+                    if !physical
+                        .recursive
+                        .iter()
+                        .any(|circuit| circuit.child_concept_ids == ids)
+                    {
+                        missing += 1;
+                    }
                 }
             }
         }
@@ -264,6 +285,9 @@ impl EvoPhase {
                 {
                     index
                 } else {
+                    if !allow_new_recursive {
+                        continue;
+                    }
                     let child_cells = child_concept_ids.map(|concept_id| {
                         physical
                             .circuits
