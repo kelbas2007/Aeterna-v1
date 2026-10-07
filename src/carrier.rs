@@ -25,6 +25,7 @@ pub use phase_native::{
     PhaseEcologicalCognitiveProposal,
     PhaseHypothesisRecordInfo, HYPOTHESIS_CAPACITY,
     PhaseUnifiedCognitiveProposal, PhaseUnifiedDecision, PhaseUnifiedKnowledgeSnapshot,
+    PhaseUnifiedStateActionSnapshot,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
     PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
 };
