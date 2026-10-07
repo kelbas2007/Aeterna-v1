@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G10 phase-native concept mechanism trigger; no fresh pack.
+# Temporary G10 phase-native physical-promotion rerun; no fresh pack.
 
 on:
   workflow_dispatch:
