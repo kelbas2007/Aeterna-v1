@@ -1,0 +1,56 @@
+name: u3-cross-mechanism
+on:
+  workflow_dispatch:
+  push:
+    branches: [unified-cognition]
+    paths: ['.github/workflows/u3-cross-mechanism.yml']
+permissions:
+  contents: read
+jobs:
+  u3:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'u3: run cross-mechanism residual allocation gate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Exact source
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code
+      - name: U3 cross-mechanism allocation
+        run: |
+          set -o pipefail
+          cargo test --release --test u3_cross_mechanism_allocation -- --nocapture | tee u3-evidence.log
+      - name: U2 regression
+        run: cargo test --release --test u2_hypothesis_ecology -- --nocapture
+      - name: U1 regressions
+        run: |
+          cargo test --release --test u1_meta_control -- --nocapture
+          cargo test --release --test u1_runtime_integration -- --nocapture
+      - name: G20 persistent runtime regression
+        run: cargo test --release --test g20_continual_reasoning g20_ -- --nocapture
+      - name: G21 regression
+        run: cargo test --release --test g21_contextual_state_refinement g21_ -- --nocapture
+      - name: G22 regression
+        run: cargo test --release --test g22_perceptual_variable_invention -- --nocapture
+      - name: G23 regression
+        run: cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed_current_sensory_predicate_when_atoms_fail -- --nocapture
+      - name: Human Protection
+        run: cargo test --release --test human_protection -- --nocapture
+      - name: Release
+        run: cargo build --release
+      - name: Preserve U3 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: u3-evidence
+          path: u3-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Verify source unchanged
+        if: always()
+        run: git diff --exit-code
