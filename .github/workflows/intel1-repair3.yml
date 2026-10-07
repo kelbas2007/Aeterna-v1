@@ -1,5 +1,5 @@
 name: intel1-repair3
-# rerun after history witness goal/staging correction
+# rerun after Repair-2 target-name correction
 on:
   workflow_dispatch:
   push:
@@ -27,7 +27,7 @@ jobs:
       - name: Repair-1 bootstrap witness
         run: cargo test --release --test intel1_repair1_bootstrap -- --nocapture
       - name: Repair-2 frozen exploitation witness
-        run: cargo test --release --test intel1_repair2_exploitation -- --nocapture
+        run: cargo test --release --test intel1_repair2_frozen_exploitation -- --nocapture
       - name: G21 context regression
         run: cargo test --release --test g21_contextual_state_refinement g21_ -- --nocapture
       - name: G22 regression
