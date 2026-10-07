@@ -48,6 +48,7 @@ pub(super) struct PhaseMetaControlState {
     utility_cell: usize,
     weight_synapses: [usize; META_FIELD_COUNT],
     observations: u64,
+    ecology: Option<PhaseHypothesisEcologyState>,
 }
 
 #[derive(Debug, Clone)]
@@ -92,6 +93,7 @@ impl EvoPhase {
 
         native.meta_control=Some(PhaseMetaControlState{
             config,feature_cells,utility_cell,weight_synapses,observations:0,
+            ecology:None,
         });
         self.phase_native=Some(native);
         true
