@@ -21,6 +21,8 @@ pub use phase_native::{
     AutoAbstractionMetrics, PhaseAbstractStateRef, PhaseCircuitInfo, PhaseConceptCircuitInfo, PhaseDeepChildRef,
     PhaseCompositionWitness, PhaseDeepNodeInfo, PhaseDriveCheckpoint, PhaseDriveConfig,
     PhaseMetaControlCheckpoint, PhaseMetaControlConfig, PhaseMetaDecision, PhaseCognitiveProposal,
+    PhaseHypothesisEcologyConfig, PhaseHypothesisProposal, PhaseHypothesisDecision,
+    PhaseHypothesisRecordInfo, HYPOTHESIS_CAPACITY,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
     PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
 };
