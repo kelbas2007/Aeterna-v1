@@ -444,6 +444,340 @@ impl EvoPhase {
         frontier
     }
 
+    /// G19: choose a physical experiment that discriminates supported rival
+    /// transition predictions in a way that matters to the current raw goal.
+    ///
+    /// Rivals are ordinary supported phase-native transition circuits sharing
+    /// pre-cell + opaque motor but predicting distinct acquired successor cells.
+    pub fn choose_phase_native_goal_rival_probe(
+        &mut self,
+        goal_sensory: &[f32],
+    ) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        let goal = self.phase_native_abstract_state(goal_sensory)?;
+        if entry.level != goal.level || entry.cell == goal.cell {
+            return None;
+        }
+
+        let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        let state = self.phase_native.as_ref()?;
+        let relevance =
+            self.phase_goal_relevance_for_cells(state, goal.cell, &state_cells);
+
+        let mut best: Option<(usize, f32, u64)> = None;
+        for action in 0..self.config.motor_cells {
+            let score = self.phase_goal_rival_disagreement_score(
+                state,
+                entry.cell,
+                action,
+                &relevance,
+            );
+            if score <= 1.0e-8 {
+                continue;
+            }
+            let support = self.phase_action_global_support(state, action);
+            match best {
+                None => best = Some((action, score, support)),
+                Some((best_action, best_score, best_support)) => {
+                    if score > best_score + 1.0e-6
+                        || ((score - best_score).abs() <= 1.0e-6
+                            && (support > best_support
+                                || (support == best_support
+                                    && action < best_action)))
+                    {
+                        best = Some((action, score, support));
+                    }
+                }
+            }
+        }
+        best.map(|(action, _, _)| action)
+    }
+
+    /// G19 diagnostic control: physical successor disagreement without a goal
+    /// relevance field. Two equally-rival motors reduce to generic evidence /
+    /// opaque-index tie breaking.
+    #[doc(hidden)]
+    pub fn choose_phase_native_rival_probe_no_goal_for_control(
+        &self,
+    ) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        let state = self.phase_native.as_ref()?;
+
+        let mut best: Option<(usize, usize, u64)> = None;
+        for action in 0..self.config.motor_cells {
+            let rivals =
+                self.phase_supported_rival_successors(state, entry.cell, action);
+            if rivals.len() < 2 {
+                continue;
+            }
+            let support = self.phase_action_global_support(state, action);
+            match best {
+                None => best = Some((action, rivals.len(), support)),
+                Some((best_action, best_count, best_support)) => {
+                    if rivals.len() > best_count
+                        || (rivals.len() == best_count
+                            && (support > best_support
+                                || (support == best_support
+                                    && action < best_action)))
+                    {
+                        best = Some((action, rivals.len(), support));
+                    }
+                }
+            }
+        }
+        best.map(|(action, _, _)| action)
+    }
+
+    /// G19 matched novelty-only control: use the G18 goal-conditioned unknown
+    /// machinery, but do not fall through into ordinary exploitation when no
+    /// positive unknown/frontier score exists.
+    #[doc(hidden)]
+    pub fn choose_phase_native_goal_unknown_probe_only_for_control(
+        &self,
+        goal_sensory: &[f32],
+    ) -> Option<usize> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        let goal = self.phase_native_abstract_state(goal_sensory)?;
+        if entry.level != goal.level || entry.cell == goal.cell {
+            return None;
+        }
+        let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        let state = self.phase_native.as_ref()?;
+        let relevance =
+            self.phase_goal_relevance_for_cells(state, goal.cell, &state_cells);
+        let frontier = self.phase_goal_frontier_for_cells(
+            state,
+            goal.cell,
+            &state_cells,
+            &relevance,
+        );
+
+        let min_support = u64::from(self.config.min_recruit_support);
+        let mut best: Option<(usize, f32, u64)> = None;
+        for action in 0..self.config.motor_cells {
+            let features = if !self.phase_drive_action_known_at(
+                state,
+                entry.cell,
+                action,
+            ) {
+                [relevance[entry.cell].clamp(0.0, 1.0), 0.0]
+            } else {
+                let motor = self.config.sensory_cells + action;
+                let floor = state.config.coherence_floor;
+                let reachable = state
+                    .circuits
+                    .iter()
+                    .filter(|circuit| {
+                        circuit.support >= min_support
+                            && self.synapses[circuit.afferent_synapse].from
+                                == entry.cell
+                            && self.synapses[circuit.motor_synapse].to == motor
+                    })
+                    .map(|circuit| {
+                        let afferent =
+                            &self.synapses[circuit.afferent_synapse];
+                        let successor =
+                            &self.synapses[circuit.successor_synapse];
+                        conductance(&self.cells, afferent, floor)
+                            * conductance(&self.cells, successor, floor)
+                            * frontier[successor.to]
+                    })
+                    .fold(0.0_f32, f32::max);
+                [0.0, reachable.clamp(0.0, 1.0)]
+            };
+
+            let score = self.phase_drive_score(state, features)?;
+            if score <= 1.0e-8 {
+                continue;
+            }
+            let support = self.phase_action_global_support(state, action);
+            match best {
+                None => best = Some((action, score, support)),
+                Some((best_action, best_score, best_support)) => {
+                    if score > best_score + 1.0e-6
+                        || ((score - best_score).abs() <= 1.0e-6
+                            && (support > best_support
+                                || (support == best_support
+                                    && action < best_action)))
+                    {
+                        best = Some((action, score, support));
+                    }
+                }
+            }
+        }
+        best.map(|(action, _, _)| action)
+    }
+
+    /// Commit one factual G19 probe. Matching physical prediction is learned
+    /// normally; same-pre/same-action predictions with a different successor
+    /// receive a physical contradiction update rather than host-side deletion.
+    pub fn observe_phase_native_rival_probe_result(
+        &mut self,
+        action: usize,
+        post_sensory: &[f32],
+    ) -> Option<usize> {
+        assert!(action < self.config.motor_cells);
+        let pre_sensory = self.current_real.as_ref()?.sensory.clone();
+        let pre = self.phase_native_abstract_state(&pre_sensory)?;
+        let post = self.phase_native_abstract_state(post_sensory)?;
+        if pre.level != post.level {
+            return None;
+        }
+
+        if !self.observe_phase_native_abstract_transition(
+            &pre_sensory,
+            action,
+            post_sensory,
+            0.0,
+        ) {
+            return None;
+        }
+
+        let motor = self.motor_cell(action);
+        let min_support = u64::from(self.config.min_recruit_support);
+        let state = self.phase_native.as_ref()?;
+        let rivals = state
+            .circuits
+            .iter()
+            .enumerate()
+            .filter_map(|(index, circuit)| {
+                if circuit.support < min_support {
+                    return None;
+                }
+                let afferent = &self.synapses[circuit.afferent_synapse];
+                let successor = &self.synapses[circuit.successor_synapse];
+                let output = &self.synapses[circuit.motor_synapse];
+                (afferent.from == pre.cell
+                    && output.to == motor
+                    && successor.to != post.cell
+                    && afferent.weight > 0.25
+                    && successor.weight > 0.25)
+                    .then_some(index)
+            })
+            .collect::<Vec<_>>();
+
+        let mut state = self.phase_native.take()?;
+        for circuit_index in &rivals {
+            let circuit = &mut state.circuits[*circuit_index];
+            circuit.revision = circuit.revision.saturating_add(1);
+            circuit.counterexamples.push((circuit.support, 0.0));
+
+            // The contradicted prediction remains structurally present for
+            // provenance but loses executable successor conductance.
+            let successor = &mut self.synapses[circuit.successor_synapse];
+            successor.eligibility = 1.0;
+            successor.weight = 0.0;
+            successor.confidence = 0.0;
+        }
+        self.phase_native = Some(state);
+
+        self.observe_initial_real(post_sensory, false);
+        Some(rivals.len())
+    }
+
+    /// Diagnostic causal readout of G19's goal-relevant rival signal.
+    #[doc(hidden)]
+    pub fn phase_native_goal_rival_disagreement_for_control(
+        &self,
+        sensory: &[f32],
+        goal_sensory: &[f32],
+        action: usize,
+    ) -> Option<f32> {
+        let entry = self.phase_native_abstract_state(sensory)?;
+        let goal = self.phase_native_abstract_state(goal_sensory)?;
+        if entry.level != goal.level {
+            return None;
+        }
+        let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        let state = self.phase_native.as_ref()?;
+        let relevance =
+            self.phase_goal_relevance_for_cells(state, goal.cell, &state_cells);
+        Some(self.phase_goal_rival_disagreement_score(
+            state,
+            entry.cell,
+            action,
+            &relevance,
+        ))
+    }
+
+    fn phase_action_global_support(
+        &self,
+        state: &PhaseNativeState,
+        action: usize,
+    ) -> u64 {
+        let min_support = u64::from(self.config.min_recruit_support);
+        let motor = self.config.sensory_cells + action;
+        state
+            .circuits
+            .iter()
+            .filter(|circuit| {
+                circuit.support >= min_support
+                    && self.synapses[circuit.motor_synapse].to == motor
+            })
+            .map(|circuit| circuit.support)
+            .sum()
+    }
+
+    fn phase_supported_rival_successors(
+        &self,
+        state: &PhaseNativeState,
+        entry: usize,
+        action: usize,
+    ) -> Vec<usize> {
+        let min_support = u64::from(self.config.min_recruit_support);
+        let motor = self.config.sensory_cells + action;
+        let floor = state.config.coherence_floor;
+        let mut successors = state
+            .circuits
+            .iter()
+            .filter_map(|circuit| {
+                if circuit.support < min_support {
+                    return None;
+                }
+                let afferent = &self.synapses[circuit.afferent_synapse];
+                let successor = &self.synapses[circuit.successor_synapse];
+                let output = &self.synapses[circuit.motor_synapse];
+                if afferent.from != entry
+                    || output.to != motor
+                    || conductance(&self.cells, afferent, floor) <= 1.0e-8
+                    || conductance(&self.cells, successor, floor) <= 1.0e-8
+                {
+                    return None;
+                }
+                Some(successor.to)
+            })
+            .collect::<Vec<_>>();
+        successors.sort_unstable();
+        successors.dedup();
+        successors
+    }
+
+    fn phase_goal_rival_disagreement_score(
+        &self,
+        state: &PhaseNativeState,
+        entry: usize,
+        action: usize,
+        relevance: &[f32],
+    ) -> f32 {
+        let successors =
+            self.phase_supported_rival_successors(state, entry, action);
+        if successors.len() < 2 {
+            return 0.0;
+        }
+
+        let mut min_relevance = f32::INFINITY;
+        let mut max_relevance = f32::NEG_INFINITY;
+        for successor in successors {
+            let value = relevance.get(successor).copied().unwrap_or(0.0);
+            min_relevance = min_relevance.min(value);
+            max_relevance = max_relevance.max(value);
+        }
+        (max_relevance - min_relevance).max(0.0)
+    }
+
     /// Matched G16 diagnostic: explore only a locally unmodelled action at
     /// the current abstract state. It cannot deliberately navigate back to a
     /// deeper reachable frontier after a reset.
