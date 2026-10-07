@@ -260,12 +260,12 @@ impl EvoPhase {
                     +config.learning_rate*(1.0-syn.confidence))
                     .clamp(0.0,1.0);
             }
+            let observations=native.meta_control.as_ref().expect("meta")
+                .ecology.as_ref().expect("ecology")
+                .records[index].observations;
             native.meta_control.as_mut().expect("meta")
                 .ecology.as_mut().expect("ecology")
-                .records[index].observations=
-                native.meta_control.as_ref().expect("meta")
-                    .ecology.as_ref().expect("ecology")
-                    .records[index].observations.saturating_add(1);
+                .records[index].observations=observations.saturating_add(1);
         }
         self.phase_native=Some(native);
         true
