@@ -899,3 +899,19 @@ Run `37615561023` PASSed on source `ba984adbcb8be19828513d045e4aa3fce61dc69c`.
 This statistically qualifies bounded autonomous acquisition of a physical abstract transition model followed by restart-persistent abstract planning.
 
 Next intelligence gap: **goal-conditioned active reasoning** rather than general frontier expansion.
+
+
+## Human Protection v1.1
+
+Workflow `37616386983`: **MECHANISM PASS**.
+
+- 5/5 Human Protection tests PASS;
+- permit is opaque, non-Clone and non-Copy;
+- permit is action+sequence bound and consumed by the protection gate;
+- later screening invalidates an older unconsumed permit;
+- emergency-stop invalidates existing permits and latches;
+- low-confidence physical-effect evidence blocks even when human_present=false;
+- cognitive checkpoint restore cannot clear protection latch;
+- source guard, full regressions and Release PASS.
+
+This strengthens the software actuation boundary. Hardware/device access isolation and authenticated external reset remain deployment requirements.
