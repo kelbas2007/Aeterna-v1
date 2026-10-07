@@ -547,3 +547,4 @@ include!("phase_drive.rs");
 include!("phase_forward.rs");
 include!("phase_concept.rs");
 include!("phase_recursive.rs");
+include!("phase_auto_abstraction.rs");
