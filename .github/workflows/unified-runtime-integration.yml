@@ -1,4 +1,5 @@
 name: unified-runtime-integration
+# preflight-2: coalesced same-action supporters
 on:
   workflow_dispatch:
   push:
