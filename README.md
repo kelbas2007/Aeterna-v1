@@ -104,7 +104,7 @@ G10 now has a deterministic mechanism PASS. From raw scenes containing two local
 
 Workflow `37569651485`: FULL **8/8**, matched NO_CONSTRUCTION **4/8**, NO_READOUT **4/8**, with both opaque motor permutations. The composites store acquired child atom IDs rather than evaluator labels, and transfer to unseen absolute motif bindings. Full regressions and Release build passed.
 
-This is bounded concept construction, not unrestricted concept invention. Fresh statistical G10 qualification is the active evidence gate. See [G10 protocol](docs/G10_COMPOSITE_CONCEPT_PROTOCOL.md), [numeric freeze](docs/G10_COMPOSITE_CONCEPT_IMPLEMENTATION_SPEC.md), and [mechanism result](docs/G10_COMPOSITE_CONCEPT_RESULT.md).
+The subsequent one-use FRESH-G10 run `37570124870` qualified the bounded claim: FULL **80/80**, NO_CONSTRUCTION **40/80**, NO_READOUT **40/80**, zero atom-inventory mismatches, child evidence 0.0 and winning composite evidence 1.0 across 10 authority-sampled atom/pair packs. This is still bounded concept construction, not unrestricted concept invention. See [G10 protocol](docs/G10_COMPOSITE_CONCEPT_PROTOCOL.md), [numeric freeze](docs/G10_COMPOSITE_CONCEPT_IMPLEMENTATION_SPEC.md), [fresh protocol](docs/G10_COMPOSITE_CONCEPT_FRESH_PROTOCOL.md), [mechanism result](docs/G10_COMPOSITE_CONCEPT_RESULT.md), and [fresh result](docs/G10_COMPOSITE_CONCEPT_FRESH_RESULT.md).
 
 ## Non-negotiable rule
 
@@ -147,6 +147,6 @@ Development is on **`main`**, following the owner's merge of `genesis/full-evoph
 
 Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1–P5 result records document bounded phase-native checkpoints without rewriting that history.
 
-P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now has a fresh statistical qualification for bounded continual retention/revision in one persistent organism. G10 now has a mechanism PASS for autonomous composite-concept construction. The active evidence gate is **FRESH-G10**, which must reproduce the effect across authority-sampled relation atoms, pair assignments, opaque motors and held-out bindings.
+P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now has a fresh statistical qualification for bounded continual retention/revision in one persistent organism. G10 now has a fresh statistical PASS for bounded autonomous composite-concept construction. The next ownership gate is to make composite activation/readout causally depend on acquired physical phase cells/synapses rather than only a dedicated EvoPhase-owned concept structure.
 
 Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Any future fresh qualification requires a newly frozen source/spec and a new first-attempt authority run.
