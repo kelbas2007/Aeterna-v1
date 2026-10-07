@@ -1216,6 +1216,8 @@ fn g23_fresh2_compositional_perceptual_pack(){
 }
 
 
+#[test]
+#[ignore="requires independent one-use FRESH-G23-3 CI authority"]
 fn g23_fresh3_compositional_perceptual_pack(){
     let authority:u64=std::env::var("AETERNA_FRESH_SEED")
         .expect("AETERNA_FRESH_SEED required").parse().unwrap();
