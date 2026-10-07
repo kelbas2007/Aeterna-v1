@@ -1,0 +1,26 @@
+name: intel2 World C burned-pack diagnosis
+
+on:
+  push:
+    branches:
+      - post-intel2-c-diagnosis
+    paths:
+      - 'tests/intel2_unified_worlds.rs'
+      - '.github/workflows/intel2-c-diagnosis.yml'
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify cognitive source still matches frozen INTEL-2 baseline
+        shell: bash
+        run: |
+          git fetch origin 07b44fb8e00837568bc9655e760eb031d1944dff --depth=1 || true
+          git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+      - name: Reproduce burned World C and print proposal diagnostics
+        shell: bash
+        run: |
+          cargo test --release --test intel2_unified_worlds intel2_burned_world_c_diagnosis -- --nocapture
