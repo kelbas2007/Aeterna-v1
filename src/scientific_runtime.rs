@@ -303,22 +303,17 @@ impl ScientificRuntime {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
-        let suppressed = if self.organism.phase_native_compositional_enabled() {
-            match self.organism.observe_phase_native_compositional_result(action, &post) {
+        let any_refinement =
+            self.organism.phase_native_compositional_enabled()
+                || self.organism.phase_native_perceptual_enabled()
+                || self.organism.phase_native_context_enabled();
+        let suppressed = if any_refinement {
+            // Repair-3: one factual action/POST is inspected by every enabled
+            // representation learner, while the shared parent transition and
+            // REAL frame are committed exactly once.
+            match self.organism.observe_phase_native_refinement_fanout_result(action, &post) {
                 Some(count) => count,
-                None => return Ok(self.latch_fault("compositional factual update rejected".into())),
-            }
-        } else if self.organism.phase_native_perceptual_enabled() {
-            match self.organism.observe_phase_native_perceptual_result(action, &post) {
-                Some(count) => count,
-                None => return Ok(self.latch_fault("perceptual factual update rejected".into())),
-            }
-        } else if self.organism.phase_native_context_enabled() {
-            // The native API also advances factual short-term memory while
-            // frozen; only its learning flag controls acquired-state changes.
-            match self.organism.observe_phase_native_context_result(action, &post) {
-                Some(count) => count,
-                None => return Ok(self.latch_fault("contextual factual update rejected".into())),
+                None => return Ok(self.latch_fault("refinement factual fanout rejected".into())),
             }
         } else if self.model_learning_enabled {
             match self.organism.observe_phase_native_rival_probe_result(action, &post) {
