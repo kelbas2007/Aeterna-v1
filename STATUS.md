@@ -27,7 +27,8 @@ Date: 2026-10-06
 **P5 FRESH PASS — statistical continual retention/revision across 10 independent persistent lifetimes.**  
 **G10 MECHANISM PASS — autonomous composite concept construction from individually non-predictive acquired atoms.**  
 **G10 FRESH PASS — statistical composite-concept construction across authority-sampled relation atoms and bindings.**  
-**G10 PHASE OWNERSHIP AUDIT — NEGATIVE: current dedicated concept readout works without the physical phase network.**
+**G10 PHASE OWNERSHIP AUDIT — NEGATIVE: dedicated concept readout worked without the physical phase network.**  
+**G10-PHYS MECHANISM PASS — composite promotion/readout migrated to actual phase-sensitive cells/synapses.**
 
 No AGI claim. No production promotion.
 
@@ -575,3 +576,20 @@ Workflow `37570662521`: **NEGATIVE_PHASE_DEPENDENCY_WITNESS**.
 - full regressions and Release PASS.
 
 Thus G10 composite formation/readout is behaviorally qualified but not yet physically phase-native. G10-PHYS is the active architecture repair: instantiate acquired atom/composite state in actual carrier cells and synapses and require causal lesion/restoration evidence.
+
+
+## G10-PHYS physical concept result
+
+Run `37571372722` PASSed on source `9accdaf95f7df67f1a32aa9c704e96a54a86dd03`.
+
+- intact physical concept path: 8/8;
+- necessary synapse lesion: 6/8;
+- pi phase shift: 6/8;
+- exact restoration: 8/8;
+- unrelated lesion target preserved: 2/2;
+- ZERO_PHASE / ZERO_WEIGHT / NO_CAPACITY / NO_GROWTH: each 0/8;
+- dedicated table composite inventory/readout unused in the physical path;
+- source guard PASS;
+- full regressions and Release PASS.
+
+The negative phase-ownership audit remains preserved as the before-state. FRESH-G10-PHYS is now the active evidence gate.
