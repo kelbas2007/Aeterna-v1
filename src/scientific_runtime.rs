@@ -495,7 +495,7 @@ impl ScientificRuntime {
                 .map(|p|p.applicability)
                 .fold(0.0_f32,f32::max);
             let evidence_gain = after_app > before_app + 1.0e-6;
-            let selected = unified.persistent_candidate_id == Some(candidate_id);
+            let selected = unified.supporting_candidate_ids.contains(&candidate_id);
             let selected_gain = if selected {
                 task_outcome.max(if info_gain {1.0}else{0.0})
             } else {
