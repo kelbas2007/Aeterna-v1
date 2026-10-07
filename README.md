@@ -138,6 +138,14 @@ Workflow `37603203990`: FULL **8/8**, MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE
 
 The earlier 40x40 green run is retained as non-qualifying protocol drift. FRESH-G13 has passed: FULL **80/80**, MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH **0/80**, necessary lesion and pi phase shift **0/20**, exact restore **20/20**, with zero hierarchy-reference violations across 10 fresh authority-selected hierarchies. The next gate is self-selected abstraction depth rather than externally supplied task depth.
 
+### G14: self-selected abstraction depth
+
+G14 removes task-supplied abstraction depth from ordinary cognition. The same no-argument open-depth physical engine has safety ceiling 16 but stops at L2 when L2 is sufficient and grows to L3 only when evidence makes L2 insufficient.
+
+Fresh run `37605704724`: SIMPLE **40/40** with every seed stopping at L2 and zero L3 candidates; DEEP **80/80** with every seed growing to L3 and zero L4 candidates; CAP_LEVEL2 / NO_HIGHER_ENGINE **0/80**; necessary lesion and pi phase shift **0/20**; exact restore **20/20**.
+
+The next gate is G15 abstract model-based planning: learned abstractions must become reusable states of the physical future model.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
