@@ -1,0 +1,17 @@
+name: intel1-diagnostic-r1
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/intel1-diagnostic-r1.yml']
+permissions:
+  contents: read
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify repaired cognitive freeze unchanged
+        run: git diff --exit-code 397e57bcceae47b59275eac9fbfa865e2d6238da -- src Cargo.toml Cargo.lock
+      - name: Diagnose burned R1 W1 replay
+        run: cargo test --release --test intel1_unknown_worlds intel1_diagnose_w1_reuse_without_changing_cognition -- --ignored --nocapture
