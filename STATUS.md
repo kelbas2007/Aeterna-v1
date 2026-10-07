@@ -1046,3 +1046,22 @@ Workflow `37644349129` PASSed on source `3f606fd2ee76b647105d4462beb07376cd2ec49
 This is bounded current-sensory representation invention from a programmer-authored descriptor family, not arbitrary feature synthesis or AGI.
 
 Next evidence gate: **FRESH-G22** across independently sampled descriptor identities/types, nuisance features and motor/successor assignments.
+
+
+## G23 compositional perceptual function synthesis
+
+Workflow `37652805915` PASSed on source `6425ce20f947f07d57dfbefbf30b59e6020828b3`.
+
+- target XOR perceptual program promoted after 34 future-only facts;
+- logE **14.716294** vs frozen threshold 7.377759;
+- constituent atom effects **0.233333 / 0.233333** <=0.25;
+- competing Atom(B) and AND(A,B) remained unpromoted;
+- FULL **64/64 + 64/64**;
+- inherited/memoryless **32/64 + 32/64**;
+- learned single-atom comparator **32/64 + 32/64**;
+- every binary cue combination 16/16 in both motor permutations;
+- program-link weight/phase interventions, exact restore, unrelated candidate and checkpoint/restart controls PASS;
+- legacy graph transitions 0; table composites 0;
+- G22/G21/G20/Human Protection/full regressions and Release PASS.
+
+This qualifies the deterministic depth-2 composition mechanism only. Active evidence gate: **FRESH-G23** with authority-selected AND/XOR target worlds.
