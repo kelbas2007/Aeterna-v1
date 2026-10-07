@@ -188,7 +188,8 @@ impl EvoPhase {
 
         let (action, score, _) = best?;
         if score <= 1.0e-8 {
-            let decision = self.phase_native_decision_from_cell(entry.cell, None)?;
+            let mut probe = self.clone();
+            let decision = probe.phase_native_decision_from_cell(entry.cell, None)?;
             return self.unified_state_action_available(decision.first_action)
                 .then_some(decision.first_action);
         }
