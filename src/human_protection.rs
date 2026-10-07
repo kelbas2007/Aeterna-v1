@@ -43,11 +43,9 @@ pub struct HumanProtectionRecord {
     pub emergency_stop_latched: bool,
 }
 
-/// Opaque authorization proof returned only for an allowed proposal.
-///
-/// The private field prevents cognition from constructing a valid permit
-/// without passing through HumanProtection::screen.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Opaque, single-use authorization proof returned only for an allowed
+/// proposal. It is deliberately neither Clone nor Copy.
+#[derive(Debug, PartialEq, Eq)]
 pub struct HumanProtectionPermit {
     action: usize,
     sequence: u64,
@@ -64,7 +62,7 @@ impl HumanProtectionPermit {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum HumanProtectionDecision {
     Allowed {
         permit: HumanProtectionPermit,
@@ -81,12 +79,25 @@ impl HumanProtectionDecision {
         }
     }
 
-    pub fn permit(&self) -> Option<HumanProtectionPermit> {
+    pub fn is_allowed(&self) -> bool {
+        matches!(self, Self::Allowed { .. })
+    }
+
+    /// Consume the decision object to extract its non-cloneable permit.
+    pub fn into_permit(self) -> Option<HumanProtectionPermit> {
         match self {
-            Self::Allowed { permit, .. } => Some(*permit),
+            Self::Allowed { permit, .. } => Some(permit),
             Self::Blocked(_) => None,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HumanProtectionPermitError {
+    EmergencyStopLatched,
+    StaleOrUnknownPermit,
+    AlreadyConsumed,
+    RecordMismatch,
 }
 
 #[derive(Debug, Clone)]
@@ -94,6 +105,8 @@ pub struct HumanProtection {
     sequence: u64,
     emergency_stop_latched: bool,
     last_record: Option<HumanProtectionRecord>,
+    last_issued_sequence: Option<u64>,
+    last_consumed_sequence: Option<u64>,
 }
 
 impl Default for HumanProtection {
@@ -108,6 +121,8 @@ impl HumanProtection {
             sequence: 0,
             emergency_stop_latched: false,
             last_record: None,
+            last_issued_sequence: None,
+            last_consumed_sequence: None,
         }
     }
 
@@ -152,10 +167,11 @@ impl HumanProtection {
                 HumanProtectionVerdict::Block,
                 HumanProtectionReason::ExcessHumanHarmRisk,
             )
-        } else if evidence.human_present
-            && evidence.physical_effect_possible
+        } else if evidence.physical_effect_possible
             && evidence.hazard_confidence < HUMAN_HAZARD_CONFIDENCE_MIN
         {
+            // Fail closed even when the external presence estimate says false:
+            // low evidence confidence means absence itself is not trusted.
             (
                 HumanProtectionVerdict::Block,
                 HumanProtectionReason::InsufficientHazardConfidence,
@@ -178,6 +194,7 @@ impl HumanProtection {
         self.last_record = Some(record.clone());
 
         if verdict == HumanProtectionVerdict::Allow {
+            self.last_issued_sequence = Some(self.sequence);
             HumanProtectionDecision::Allowed {
                 permit: HumanProtectionPermit {
                     action: proposed_action,
@@ -187,8 +204,45 @@ impl HumanProtection {
                 record,
             }
         } else {
+            // Any later screen invalidates every older permit.
+            self.last_issued_sequence = None;
             HumanProtectionDecision::Blocked(record)
         }
+    }
+
+    /// Mandatory actuator-side consumption of a screened action permit.
+    ///
+    /// Safe Rust ownership makes the permit itself single-use, while sequence
+    /// validation prevents a previously issued but unconsumed permit from being
+    /// used after any later screening event.
+    pub fn consume_permit(
+        &mut self,
+        permit: HumanProtectionPermit,
+    ) -> Result<usize, HumanProtectionPermitError> {
+        if self.emergency_stop_latched {
+            return Err(HumanProtectionPermitError::EmergencyStopLatched);
+        }
+        if self.last_consumed_sequence == Some(permit.sequence) {
+            return Err(HumanProtectionPermitError::AlreadyConsumed);
+        }
+        if self.sequence != permit.sequence
+            || self.last_issued_sequence != Some(permit.sequence)
+        {
+            return Err(HumanProtectionPermitError::StaleOrUnknownPermit);
+        }
+        let Some(record) = self.last_record.as_ref() else {
+            return Err(HumanProtectionPermitError::RecordMismatch);
+        };
+        if record.sequence != permit.sequence
+            || record.proposed_action != permit.action
+            || record.verdict != HumanProtectionVerdict::Allow
+        {
+            return Err(HumanProtectionPermitError::RecordMismatch);
+        }
+
+        self.last_consumed_sequence = Some(permit.sequence);
+        self.last_issued_sequence = None;
+        Ok(permit.action)
     }
 
     /// Explicit external operator path.
@@ -198,6 +252,7 @@ impl HumanProtection {
     /// the actuator/runtime boundary.
     pub fn external_human_emergency_reset(&mut self) {
         self.emergency_stop_latched = false;
+        self.last_issued_sequence = None;
     }
 }
 
