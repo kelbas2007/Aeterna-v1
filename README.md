@@ -122,6 +122,14 @@ The first G11 preflight also exposed and preserved a useful architectural defect
 
 FRESH-G11 has now passed on 80/80 fresh recursive decisions: NO_RECURSION 0/80, LEVEL1_ONLY 40/80, ZERO_PHASE/ZERO_WEIGHT/NO_GROWTH 0/80, necessary lesions 0/20 and exact restores 20/20. The next architectural gap is no longer whether recursion works, but whether AETERNA can autonomously decide **when a new abstraction level is worth creating**.
 
+### G12: self-triggered abstraction
+
+G12 has a mechanism PASS: the ordinary factual concept-learning path can keep using a sufficient L1 explanation, allocate zero L2 structures while it remains adequate, then detect later supported residual failure and autonomously recruit/promote L2 physical concepts without an evaluator task-phase signal or explicit recursive-tuition call.
+
+Workflow `37590743597`: FULL_AUTO **8/8**, NO_ESCALATION **0/8**, FROZEN_SIMPLE **0/8**, ZERO_PHASE/ZERO_WEIGHT **0/8**, necessary lesion **6/8**, pi phase shift **6/8**, exact restore **8/8**. FULL used **0** pre-residual L2 candidates versus **4** for ALWAYS_ESCALATE.
+
+FRESH-G12 is the active evidence gate.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
