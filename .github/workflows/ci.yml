@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use G16 fresh qualification plus Human Protection regression; source/spec frozen.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -69,17 +69,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g16: execute frozen fresh autonomous abstract model qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -221,7 +215,7 @@ jobs:
           set -o pipefail
           cargo test --release --test g15_abstract_model_planning g15_fresh_abstract_model_planning_pack -- --ignored --nocapture | tee g15-evidence.log
       - name: Explicit one-use fresh G16 autonomous abstract model qualification
-        if: ${{ github.event_name == 'push' || inputs.qualify_g16 }}
+        if: ${{ inputs.qualify_g16 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
