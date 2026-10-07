@@ -18,6 +18,7 @@ mod foundation {
     }
 }
 
+#[derive(Debug)]
 struct Rng(u64);
 impl Rng {
     fn new(seed:u64)->Self{Self(seed^0x1A7E_1100_2026_1007)}
