@@ -5,6 +5,9 @@ use crate::epistemic::{EvoEpistemicState, WorldHypothesis};
 use crate::exploration::{EvoExplorationStrategy, ExplorationConfig, ProbeFeatures};
 use crate::hdc::PhaseVector;
 use crate::hierarchy::{EvoHierarchyMemory, HierarchyConfig, ParentMacro};
+use crate::human_protection::{
+    HumanProtection, HumanProtectionDecision, HumanProtectionEvidence, HumanProtectionRecord,
+};
 use crate::macro_memory::{EvoMacroMemory, MacroAssembly, MacroConfig};
 use crate::phase::{phase_similarity, signed_phase_error, wrap_phase};
 use crate::planning::{EvoImaginationPlanner, PlanDecision, PlanningConfig};
@@ -131,6 +134,7 @@ pub struct EvoPhase {
     imagination_planner: Option<EvoImaginationPlanner>,
     belief_state: Option<EvoBeliefState>,
     phase_native: Option<PhaseNativeState>,
+    human_protection: HumanProtection,
 }
 
 impl EvoPhase {
@@ -181,6 +185,7 @@ impl EvoPhase {
             imagination_planner: None,
             belief_state: None,
             phase_native: None,
+            human_protection: HumanProtection::new(),
         }
     }
 
@@ -210,6 +215,32 @@ impl EvoPhase {
 
     pub fn current_real(&self) -> Option<&FactualFrame> {
         self.current_real.as_ref()
+    }
+
+    /// Final mandatory authorization boundary for a proposed physical motor.
+    /// Cognition proposes; external hazard evidence decides whether actuation
+    /// may receive a sealed permit.
+    pub fn screen_physical_action(
+        &mut self,
+        proposed_action: usize,
+        evidence: HumanProtectionEvidence,
+    ) -> HumanProtectionDecision {
+        assert!(proposed_action < self.config.motor_cells);
+        self.human_protection.screen(proposed_action, evidence)
+    }
+
+    pub fn human_protection_last_record(&self) -> Option<&HumanProtectionRecord> {
+        self.human_protection.last_record()
+    }
+
+    pub fn human_protection_emergency_latched(&self) -> bool {
+        self.human_protection.emergency_stop_latched()
+    }
+
+    /// Explicit external human/operator reset path. Ordinary cognition,
+    /// planning and learning never call this method.
+    pub fn external_human_emergency_reset(&mut self) {
+        self.human_protection.external_human_emergency_reset();
     }
 
     pub fn branches(&self) -> &[DendriticBranch] {
