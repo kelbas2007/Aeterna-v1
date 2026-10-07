@@ -207,6 +207,14 @@ impl EvoConceptMemory {
         &self.composites
     }
 
+    pub fn raster_shape(&self) -> (usize, usize) {
+        (self.config.width, self.config.height)
+    }
+
+    pub fn inherited_local_radius(&self) -> usize {
+        self.config.local_radius
+    }
+
     pub fn active_atom_ids(&self, raster: &[f32]) -> Vec<u64> {
         self.assert_raster(raster);
         let traces = self.local_relation_traces(raster);
