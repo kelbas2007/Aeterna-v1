@@ -106,6 +106,14 @@ Workflow `37569651485`: FULL **8/8**, matched NO_CONSTRUCTION **4/8**, NO_READOU
 
 The subsequent one-use FRESH-G10 run `37570124870` qualified the bounded claim: FULL **80/80**, NO_CONSTRUCTION **40/80**, NO_READOUT **40/80**, zero atom-inventory mismatches, child evidence 0.0 and winning composite evidence 1.0 across 10 authority-sampled atom/pair packs. This is still bounded concept construction, not unrestricted concept invention. See [G10 protocol](docs/G10_COMPOSITE_CONCEPT_PROTOCOL.md), [numeric freeze](docs/G10_COMPOSITE_CONCEPT_IMPLEMENTATION_SPEC.md), [fresh protocol](docs/G10_COMPOSITE_CONCEPT_FRESH_PROTOCOL.md), [mechanism result](docs/G10_COMPOSITE_CONCEPT_RESULT.md), and [fresh result](docs/G10_COMPOSITE_CONCEPT_FRESH_RESULT.md).
 
+### G10-PHYS: physical composite execution
+
+The post-G10 ownership audit correctly found a gap: standalone concept memory and a zero-physical carrier still solved 8/8, so the original G10 readout was not physically phase-dependent. That negative witness is preserved.
+
+The strengthened G10-PHYS path moves pair evidence, promotion and action influence into actual EvoPhase cells/synapses. Workflow `37571372722` passed: intact **8/8**, necessary synapse lesion **6/8**, pi phase shift **6/8**, exact restoration **8/8**, unrelated target **2/2**, while ZERO_PHASE, ZERO_WEIGHT, NO_CAPACITY and NO_GROWTH were all **0/8**. The dedicated table composite inventory/readout is unused in this physical path.
+
+FRESH-G10-PHYS is the active evidence gate.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
