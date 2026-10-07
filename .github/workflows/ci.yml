@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G11 recursive-abstraction rerun after order-invariant promotion fix; no fresh pack.
+# Temporary G11 recursive-abstraction rerun after matched-control observer fix; no fresh pack.
 
 on:
   workflow_dispatch:
