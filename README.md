@@ -130,6 +130,14 @@ Workflow `37590743597`: FULL_AUTO **8/8**, NO_ESCALATION **0/8**, FROZEN_SIMPLE 
 
 FRESH-G12 has now passed: FULL_AUTO **80/80**, all four matched failure controls **0/80**, zero premature FULL L2 allocation across all 10 seeds, first L2 candidate exactly at the first supported-weak observation in every seed, necessary lesion/phase **0/20**, exact restore **20/20**. This statistically qualifies bounded evidence-driven self-triggered L1→L2 escalation.
 
+### G13: depth-generic physical abstraction
+
+G13 now has a qualifying mechanism PASS on the preregistered 20x20 substrate. One generic physical higher-abstraction engine is reused to build **16 raw relation atoms → 8 L1 concepts → 4 L2 nodes → 2 L3 nodes**.
+
+Workflow `37603203990`: FULL **8/8**, MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH **0/8**, necessary L2→L3 lesion **4/8**, pi phase shift **4/8**, exact restore **8/8**, lower L1→L2 lesion dependent success **0/2**. Full regressions and Release passed.
+
+The earlier 40x40 green run is retained as non-qualifying protocol drift. FRESH-G13 is the active evidence gate.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
