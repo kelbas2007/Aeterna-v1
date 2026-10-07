@@ -5,39 +5,64 @@ use aeterna_v1::carrier::{
 use aeterna_v1::scientific_runtime::ScientificRuntime;
 
 #[allow(dead_code)]
-mod g21fixture {
-    include!("g21_contextual_state_refinement.rs");
+mod mixedfixture {
+    include!("g19_rival_hypothesis_discrimination.rs");
 
     pub fn mixed_state()->(EvoPhase,Vec<f32>){
-        let (evo,mut world)=fixture::prepare(false);
-        let mut runtime=ScientificRuntime::new(evo).unwrap();
-        assert!(runtime.enable_context_refinement());
-        runtime.observe_external(&world.sense()).unwrap();
+        let drive=train_drive();
+        let mut evo=target(&drive);
+        let l1=train_abstraction(&mut evo);
+        assert!(evo.enable_phase_native_context_refinement());
 
-        for _ in 0..320usize{
-            set_current_goal(&mut runtime,&world);
-            let _=execute_step(&mut runtime,&mut world);
+        let scene=|state:usize,layout:usize|
+            state_scene(&l1,state,LAYOUTS[layout%LAYOUTS.len()]);
 
-            let candidates=runtime.organism().phase_native_context_witnesses();
-            if candidates.iter().any(|w|!w.promoted&&!w.retired){
-                let goal=world.requested_goal();
-                let evo=runtime.organism().clone();
+        // First factual history: predecessor S1 -> shared base S0,
+        // then anchor action4 -> goal-like S7.
+        evo.clear_phase_native_context_history();
+        evo.observe_initial_real(&scene(1,0),false);
+        assert!(evo.observe_phase_native_context_result(
+            5,&scene(0,0)
+        ).is_some());
+        assert!(evo.observe_phase_native_context_result(
+            4,&scene(7,0)
+        ).is_some());
 
-                let mut context_probe=evo.clone();
-                let context=context_probe.phase_native_context_action(&goal).1;
+        // Second factual history: S2 -> same S0, same action4 -> S8.
+        // This creates both a real G21 context collision and physical rival
+        // successors for G19. No other S0 action is taught.
+        evo.clear_phase_native_context_history();
+        evo.observe_initial_real(&scene(2,1),false);
+        assert!(evo.observe_phase_native_context_result(
+            5,&scene(0,1)
+        ).is_some());
+        assert!(evo.observe_phase_native_context_result(
+            4,&scene(8,1)
+        ).is_some());
 
-                let mut rival_probe=evo.clone();
-                let rival=rival_probe.choose_phase_native_goal_rival_probe(&goal);
+        let candidates=evo.phase_native_context_witnesses();
+        assert!(candidates.iter().any(|w|!w.promoted&&!w.retired));
 
-                let mut epistemic=evo.clone();
-                let general=epistemic.choose_phase_native_abstract_learned_drive_action();
+        // Re-enter the ambiguous base from S1. Context history is factual and
+        // action0 remains unknown at S0, so G16 can also emit a proposal.
+        evo.clear_phase_native_context_history();
+        evo.observe_initial_real(&scene(1,2),false);
+        assert!(evo.observe_phase_native_context_result(
+            5,&scene(0,2)
+        ).is_some());
 
-                if context.is_some()&&rival.is_some()&&general.is_some(){
-                    return (evo,goal);
-                }
-            }
-        }
-        panic!("failed to obtain simultaneous real cognitive proposals");
+        let goal=scene(7,3);
+
+        let mut context=evo.clone();
+        assert_eq!(context.phase_native_context_action(&goal).1,Some(4));
+
+        let mut rival=evo.clone();
+        assert_eq!(rival.choose_phase_native_goal_rival_probe(&goal),Some(4));
+
+        let mut general=evo.clone();
+        assert!(general.choose_phase_native_abstract_learned_drive_action().is_some());
+
+        (evo,goal)
     }
 }
 
@@ -67,7 +92,7 @@ fn bounded(x:f32)->f32{x.clamp(0.0,1.0)}
 
 #[test]
 fn u1_runtime_selects_same_winner_from_real_mechanisms_independent_of_order(){
-    let (evo,goal)=g21fixture::mixed_state();
+    let (evo,goal)=mixedfixture::mixed_state();
     let current=evo.current_real().unwrap().sensory.clone();
 
     let mut c=evo.clone();
