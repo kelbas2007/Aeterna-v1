@@ -1,4 +1,5 @@
 name: intel1-repair3
+# rerun after evaluator filter/diagnostic repair
 on:
   workflow_dispatch:
   push:
