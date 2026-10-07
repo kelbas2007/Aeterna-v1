@@ -22,7 +22,16 @@ mod intel {
                 let next=hw.step(a);
                 Ok(foundation::scene(&l1,next,layout))
             });
-            if outcome.is_err(){ break; }
+            if let Err(error)=outcome{
+                println!(
+                    "INTEL1_REPAIR3_STOP k={} state={} total={} error={:?} ctx={} percept={} comp={}",
+                    k,hw.state,hw.total,error,
+                    rt.organism().phase_native_context_witnesses().len(),
+                    rt.organism().phase_native_perceptual_witnesses().len(),
+                    rt.organism().phase_native_composition_witnesses().len()
+                );
+                break;
+            }
             if hw.total>=128 { break; }
         }
 
