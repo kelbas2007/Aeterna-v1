@@ -3,7 +3,7 @@ use aeterna_v1::scientific_runtime::{ReasoningMode, ScientificRuntime};
 #[allow(dead_code)]
 mod fixture {
     include!("g19_rival_hypothesis_discrimination.rs");
-    pub fn base()->(EvoPhase,[[usize;2];8]){
+    pub fn foundation_base()->(EvoPhase,[[usize;2];8]){
         let drive=train_drive();
         let mut evo=target(&drive);
         let l1=train_abstraction(&mut evo);
@@ -26,7 +26,7 @@ fn enable_all(rt:&mut ScientificRuntime){
 
 #[test]
 fn unknown_goal_bootstraps_with_existing_general_epistemic_drive(){
-    let (evo,l1)=fixture::base();
+    let (evo,l1)=fixture::foundation_base();
     let mut rt=ScientificRuntime::new(evo).unwrap();
     enable_all(&mut rt);
     rt.observe_external(&fixture::scene(&l1,0)).unwrap();
@@ -38,7 +38,7 @@ fn unknown_goal_bootstraps_with_existing_general_epistemic_drive(){
 
 #[test]
 fn known_goal_relevance_keeps_goal_conditioned_priority(){
-    let (mut evo,l1)=fixture::base();
+    let (mut evo,l1)=fixture::foundation_base();
     fixture::teach(&mut evo,&l1,0,2,1);
     fixture::teach(&mut evo,&l1,1,3,7);
     let mut rt=ScientificRuntime::new(evo).unwrap();
