@@ -66,6 +66,7 @@ pub(super) struct PhaseNativeState {
     concepts: Option<PhaseConceptState>,
     deep: Option<PhaseDeepState>,
     contextual: Option<PhaseContextState>,
+    perceptual: Option<PhasePerceptState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -113,6 +114,7 @@ impl EvoPhase {
             concepts: None,
             deep: None,
             contextual: None,
+            perceptual: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -139,11 +141,13 @@ impl EvoPhase {
         let concept_synapse = self.is_native_concept_synapse(index);
         let deep_synapse = self.is_native_deep_synapse(index);
         let context_synapse = self.is_native_context_synapse(index);
+        let perceptual_synapse = self.is_native_perceptual_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
             && !deep_synapse
             && !context_synapse
+            && !perceptual_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -188,6 +192,10 @@ impl EvoPhase {
             // observation's transient predecessor is not learned knowledge.
             text.push_str(&format!("|{:?}|{:?}|{}", context.candidates,
                 context.discovery, context.factual_events));
+        }
+        if let Some(perceptual) = state.perceptual.as_ref() {
+            text.push_str(&format!("|{:?}|{:?}|{}", perceptual.candidates,
+                perceptual.discovery, perceptual.factual_events));
         }
         for byte in text.bytes() {
             h ^= u64::from(byte);
@@ -670,3 +678,4 @@ include!("phase_auto_abstraction.rs");
 include!("phase_deep_abstraction.rs");
 include!("phase_abstract_planning.rs");
 include!("phase_contextual.rs");
+include!("phase_perceptual.rs");
