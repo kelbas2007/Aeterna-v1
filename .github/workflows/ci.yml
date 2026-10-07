@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G10 phase-native physical-promotion rerun; no fresh pack.
+# One-use G10-PHYS qualification trigger; production/spec already frozen.
 
 on:
   workflow_dispatch:
@@ -34,6 +34,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g10_phys:
+        description: 'Consume a new one-use G10-PHYS phase-native concept qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -44,7 +49,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g10: run phase-native concept mechanism'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g10: execute frozen fresh phase-native concept qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -123,6 +128,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G10_COMPOSITE_CONCEPT_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test g10_composite_concept g10_fresh_composite_concept_pack -- --ignored --nocapture | tee g10-evidence.log
+      - name: Explicit one-use fresh G10-PHYS qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g10_phys }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G10_PHASE_NATIVE_CONCEPT_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g10_phase_native_concept g10_fresh_phase_native_concept_pack -- --ignored --nocapture | tee g10-phys-evidence.log
+      - name: Preserve G10-PHYS execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g10-phys-execution-evidence
+          path: g10-phys-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve G10 execution log
         if: always()
         uses: actions/upload-artifact@v4
