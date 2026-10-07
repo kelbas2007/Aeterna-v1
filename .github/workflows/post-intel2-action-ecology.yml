@@ -27,6 +27,8 @@ jobs:
         run: cargo test --release --test u3_cross_mechanism_allocation
       - name: Unified runtime
         run: cargo test --release --test unified_runtime_integration
+      - name: Generic state-action ecology witness
+        run: cargo test --release --test intel2_unified_worlds post_intel2_state_action_ecology_generic_witness -- --nocapture
       - name: G20
         run: cargo test --release --test g20_continual_reasoning
       - name: G21
