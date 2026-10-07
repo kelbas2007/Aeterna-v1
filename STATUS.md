@@ -758,3 +758,20 @@ Run `37603829184` PASSed on source `0ba1e6ef8081dd5de3151aa903b1dcc230f9a61b`.
 This statistically qualifies one generic physical abstraction rule reused through L2 and L3 on fresh 20x20 hierarchies.
 
 Next gate: **self-selected abstraction depth** rather than an externally supplied task depth ceiling.
+
+
+## G14 self-selected abstraction depth
+
+Workflow `37604831999` PASSed on source `29f37f5b9d196533bbae205f8df91385a26d302d`.
+
+- open-depth safety ceiling: 16;
+- SIMPLE 4/4, highest level 2, L3 candidates 0;
+- DEEP 8/8, highest level 3, L4 candidates 0;
+- CAP_LEVEL2 / NO_HIGHER_ENGINE 0/8;
+- L2->L3 lesion 4/8;
+- pi phase shift 4/8;
+- exact restore 8/8;
+- lower L1->L2 lesion dependent success 0/2;
+- source guard, regressions and Release PASS.
+
+The ordinary cognition path no longer receives required task depth. Active evidence gate: FRESH-G14.
