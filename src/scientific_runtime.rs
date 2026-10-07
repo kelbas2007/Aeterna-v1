@@ -5,7 +5,10 @@
 //! single-use permission to invoke the external action callback. This wrapper
 //! has no world labels, route table or task-conditioned learning rules.
 
-use crate::carrier::{EvoPhase, PhaseNativeCheckpoint};
+use crate::carrier::{
+    EvoPhase, PhaseNativeCheckpoint, PhaseCognitiveProposal,
+    PhaseMetaControlCheckpoint, PhaseMetaDecision,
+};
 use crate::human_protection::{
     HumanProtection, HumanProtectionEvidence, HumanProtectionReason,
     HumanProtectionRecord,
@@ -115,6 +118,23 @@ impl ScientificRuntime {
     pub fn sequence(&self) -> u64 { self.sequence }
     pub fn emergency_latched(&self) -> bool {
         self.protection.emergency_stop_latched()
+    }
+
+    /// Opt-in unified-cognition transport. This wrapper does not rank proposal
+    /// sources; the native physical meta-control circuit sees only opaque
+    /// proposal IDs/actions and numeric carrier-derived fields.
+    pub fn restore_unified_meta_control(
+        &mut self,
+        checkpoint: PhaseMetaControlCheckpoint,
+    ) -> bool {
+        self.organism.restore_phase_native_meta_checkpoint(checkpoint)
+    }
+
+    pub fn select_unified_proposal(
+        &self,
+        proposals: &[PhaseCognitiveProposal],
+    ) -> Option<PhaseMetaDecision> {
+        self.organism.choose_phase_native_meta_proposal(proposals)
     }
 
     /// Enable the native residual-driven representation learner. No context,
