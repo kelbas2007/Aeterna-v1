@@ -1,0 +1,48 @@
+name: u2-hypothesis-ecology
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/u2-hypothesis-ecology.yml']
+permissions:
+  contents: read
+jobs:
+  u2:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'u2: run current-main hypothesis ecology gate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Exact source
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code
+      - name: U1 current-main meta-control
+        run: cargo test --release --test u1_meta_control -- --nocapture
+      - name: U2 hypothesis ecology
+        run: |
+          set -o pipefail
+          cargo test --release --test u2_hypothesis_ecology -- --nocapture | tee u2-evidence.log
+      - name: Current Repair-8 context consensus state
+        run: cargo test --release --test intel1_repair8_context_consensus intel1_repair8_ -- --nocapture
+      - name: G20 persistent runtime
+        run: cargo test --release --test g20_continual_reasoning g20_ -- --nocapture
+      - name: Human Protection
+        run: cargo test --release --test human_protection -- --nocapture
+      - name: Release build
+        run: cargo build --release
+      - name: Preserve U2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: u2-main-evidence
+          path: u2-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Verify source unchanged
+        if: always()
+        run: git diff --exit-code
