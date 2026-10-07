@@ -96,3 +96,69 @@ fn intel1_repair6_source_is_context_owned_not_world_keyed(){
             "task key in rival source: {forbidden}");
     }
 }
+
+
+#[allow(dead_code)]
+mod diag {
+    include!("intel1_unknown_worlds.rs");
+
+    pub fn trace(
+        evo:EvoPhase,
+        l1:[[usize;2];8],
+        seed:u64,
+    ){
+        let mut rt=ScientificRuntime::new(evo).unwrap();
+        let mut motors=[0usize,1,2,3,4,5];
+        let mut rng=Rng::new(seed^0xA66);
+        shuffle(&mut rng,&mut motors);
+        let mut hw=HistoryWorld::new(seed^0x66,[motors[4],motors[5]]);
+        rt.observe_external(&foundation::scene(&l1,hw.state,0)).unwrap();
+
+        let mut junctions=0usize;
+        for k in 0..320usize {
+            let before_state=hw.state;
+            let before_context=hw.context;
+            let goal_state=if hw.state==7 {5}else{7};
+            rt.set_goal(&foundation::scene(&l1,goal_state,1)).unwrap();
+            let layout=k%4;
+            let result=rt.step(|_|Some(safe()),|a|{
+                let next=hw.step(a);
+                Ok(foundation::scene(&l1,next,layout))
+            });
+            match result {
+                Ok(StepOutcome::Executed{proposal,..})=>{
+                    if before_state==0 {
+                        junctions+=1;
+                        if junctions<=40 {
+                            println!(
+                                "INTEL1_REPAIR6_DIAG j={} ctx={} action={} mode={:?} next={} candidates={}",
+                                junctions,before_context,proposal.action,proposal.mode,hw.state,
+                                rt.organism().phase_native_context_witnesses().len()
+                            );
+                        }
+                    }
+                }
+                Ok(other)=>{
+                    println!("INTEL1_REPAIR6_DIAG_STOP k={} outcome={:?}",k,other);
+                    break;
+                }
+                Err(error)=>{
+                    println!("INTEL1_REPAIR6_DIAG_STOP k={} error={:?}",k,error);
+                    break;
+                }
+            }
+            if junctions>=40 {break;}
+        }
+        println!(
+            "INTEL1_REPAIR6_DIAG_SUMMARY junctions={} witnesses={:?}",
+            junctions,rt.organism().phase_native_context_witnesses()
+        );
+    }
+}
+
+#[test]
+fn intel1_repair6_diagnose_junction_arbitration(){
+    let seed=0x1A7E_6600u64;
+    let (evo,l1)=r5::prepared();
+    diag::trace(evo,l1,seed);
+}
