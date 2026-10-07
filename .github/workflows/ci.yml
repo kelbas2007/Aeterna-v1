@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use G17 goal-conditioned planning qualification trigger; source/spec frozen.
+# Temporary G18 goal-conditioned active reasoning mechanism trigger; no fresh G18 pack.
 
 on:
   workflow_dispatch:
@@ -84,7 +84,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g17: execute frozen fresh goal-conditioned planning qualification'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g18: run goal-conditioned active reasoning mechanism'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -104,6 +104,8 @@ jobs:
         run: cargo test --release --test g16_autonomous_abstract_model -- --nocapture
       - name: G17 goal-conditioned abstract planning preflight
         run: cargo test --release --test g17_goal_conditioned_planning -- --nocapture
+      - name: G18 goal-conditioned active reasoning preflight
+        run: cargo test --release --test g18_goal_conditioned_active_reasoning -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
@@ -238,7 +240,7 @@ jobs:
           set -o pipefail
           cargo test --release --test g16_autonomous_abstract_model g16_fresh_autonomous_abstract_model_pack -- --ignored --nocapture | tee g16-evidence.log
       - name: Explicit one-use fresh G17 goal-conditioned planning qualification
-        if: ${{ github.event_name == 'push' || inputs.qualify_g17 }}
+        if: ${{ inputs.qualify_g17 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
