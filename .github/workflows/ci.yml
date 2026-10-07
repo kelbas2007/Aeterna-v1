@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary deterministic G10 mechanism trigger; no fresh qualification pack.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -29,17 +29,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g10: run composite concept mechanism preflight'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -53,8 +47,6 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
-      - name: G10 composite concept mechanism preflight
-        run: cargo test --release --test g10_composite_concept -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
