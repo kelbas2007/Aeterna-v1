@@ -1,5 +1,5 @@
 name: g23-composition
-# Temporary exact-source G23 mechanism verification; no fresh pack.
+# G23 mechanism rerun after evaluator candidate-pool repair; no fresh pack.
 on:
   workflow_dispatch:
   push:
