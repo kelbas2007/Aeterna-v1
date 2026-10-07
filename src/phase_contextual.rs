@@ -125,9 +125,63 @@ impl EvoPhase {
         counts
     }
 
-    /// Return (applicable, action). An applicable but unavailable contextual
-    /// state MUST NOT silently fall back to the ambiguous parent representation.
-    /// Goal information affects choice, never the stored evidence or split gate.
+    fn context_signature(
+        predecessor_a: usize,
+        successor_a: usize,
+        predecessor_b: usize,
+        successor_b: usize,
+    ) -> [(usize, usize); 2] {
+        let mut pairs = [
+            (predecessor_a, successor_a),
+            (predecessor_b, successor_b),
+        ];
+        pairs.sort_unstable();
+        pairs
+    }
+
+    fn context_witness_signature(w: &PhaseContextWitness) -> [(usize, usize); 2] {
+        Self::context_signature(
+            w.predecessor_cells[0],
+            w.successor_cells[0],
+            w.predecessor_cells[1],
+            w.successor_cells[1],
+        )
+    }
+
+    fn context_find_novel_collision(
+        ctx: &PhaseContextState,
+        base: usize,
+        action: usize,
+        previous: usize,
+        after: usize,
+    ) -> Option<ContextFact> {
+        ctx.discovery.iter().rev().find_map(|old| {
+            if old.base != base
+                || old.action != action
+                || old.predecessor == previous
+                || old.post == after
+            {
+                return None;
+            }
+            let signature = Self::context_signature(
+                old.predecessor,
+                old.post,
+                previous,
+                after,
+            );
+            let duplicate = ctx.candidates.iter().any(|w| {
+                !w.retired
+                    && w.base_cell == base
+                    && w.anchor_action == action
+                    && Self::context_witness_signature(w) == signature
+            });
+            (!duplicate).then_some(old.clone())
+        })
+    }
+
+    /// Return (applicable, action). Multiple bounded context hypotheses may
+    /// coexist on one acquired base. Only hypotheses whose factual predecessor
+    /// pair contains the current predecessor are applicable.
     pub fn phase_native_context_action(&mut self, goal_sensory: &[f32])
         -> (bool, Option<usize>)
     {
@@ -138,24 +192,37 @@ impl EvoPhase {
             else { return (false, None); };
         let Some(native) = self.phase_native.as_ref() else { return (false, None); };
         let Some(ctx) = native.contextual.as_ref() else { return (false, None); };
-        let Some(w) = ctx.candidates.iter()
-            .find(|w| w.base_cell == base.cell && !w.retired)
-            else { return (false, None); };
-        if !w.promoted {
-            // A selected diagnostic experiment, not an evaluator answer. Its
-            // discovery observations were excluded from the inference score.
-            if native.config.learning_enabled { return (true, Some(w.anchor_action)); }
+
+        let base_has_promoted = ctx.candidates.iter()
+            .any(|w| w.base_cell == base.cell && !w.retired && w.promoted);
+        let Some(previous) = ctx.previous_base else {
+            // Preserve the G21 restart invariant: a known context-dependent base
+            // without factual predecessor history must abstain.
+            return if base_has_promoted { (true, None) } else { (false, None) };
+        };
+
+        let matching = ctx.candidates.iter()
+            .filter(|w| {
+                w.base_cell == base.cell
+                    && !w.retired
+                    && w.predecessor_cells.contains(&previous)
+            })
+            .collect::<Vec<_>>();
+        if matching.is_empty() {
+            // An old hypothesis about another predecessor pair must not block
+            // ordinary reasoning in a later world/lifetime regime.
             return (false, None);
         }
-        let Some(previous) = ctx.previous_base else { return (true, None); };
+
         let floor = native.config.coherence_floor;
-        let mut active = None;
-        for side in 0..2 {
+        let mut active_states = Vec::new();
+        let mut has_promoted_match = false;
+        for w in matching.iter().copied().filter(|w| w.promoted) {
+            has_promoted_match = true;
+            let Some(side) = w.predecessor_cells.iter().position(|&p| p == previous)
+                else { continue; };
             let base_link = &self.synapses[w.input_synapses[side][0]];
             let memory_link = &self.synapses[w.input_synapses[side][1]];
-            // Current sensory state and actual previous-state activity must
-            // both arrive through learned physical links. Tags alone cannot
-            // make the context usable when the links are damaged.
             let sensory_current = if base_link.from == base.cell {
                 conductance(&self.cells, base_link, floor)
             } else { 0.0 };
@@ -163,20 +230,46 @@ impl EvoPhase {
                 conductance(&self.cells, memory_link, floor)
             } else { 0.0 };
             if sensory_current.min(memory_current) > 1.0e-8 {
-                if active.is_some() { return (true, None); }
-                active = Some(w.state_cells[side]);
+                if !active_states.contains(&w.state_cells[side]) {
+                    active_states.push(w.state_cells[side]);
+                }
             }
         }
-        let Some(entry) = active else { return (true, None); };
-        if native.config.learning_enabled {
-            // New contextual outgoing knowledge is acquired by actual actions,
-            // not transferred from a parent answer or a hypothetical POST.
-            let unknown = (0..self.config.motor_cells)
-                .find(|a| !self.phase_drive_action_known_at(native, entry, *a));
-            if let Some(action) = unknown { return (true, Some(action)); }
+
+        if active_states.len() > 1 {
+            // Competing promoted explanations disagree: do not choose one by a
+            // host-side tie-break.
+            return (true, None);
         }
-        (true, self.phase_native_goal_decision_from_cells(entry, goal.cell, None)
-            .map(|d| d.first_action))
+        if let Some(&entry) = active_states.first() {
+            if native.config.learning_enabled {
+                if let Some(action) = (0..self.config.motor_cells)
+                    .find(|a| !self.phase_drive_action_known_at(native, entry, *a))
+                {
+                    return (true, Some(action));
+                }
+            }
+            return (
+                true,
+                self.phase_native_goal_decision_from_cells(entry, goal.cell, None)
+                    .map(|d| d.first_action),
+            );
+        }
+        if has_promoted_match {
+            // A required physical context path exists but is damaged/unavailable.
+            return (true, None);
+        }
+
+        if native.config.learning_enabled {
+            if let Some(w) = matching.iter()
+                .copied()
+                .filter(|w| !w.promoted)
+                .min_by_key(|w| (w.born_fact, w.anchor_action))
+            {
+                return (true, Some(w.anchor_action));
+            }
+        }
+        (false, None)
     }
 
     /// Actual POST only. Existing G20 behavior is unchanged unless explicitly
@@ -196,19 +289,19 @@ impl EvoPhase {
         };
         let learning = native.config.learning_enabled;
         let predecessor = ctx.previous_base;
-        let mut born_now = false;
+        let mut born_index = None;
+
         if learning {
             ctx.factual_events = ctx.factual_events.saturating_add(1);
             if let Some(previous) = predecessor {
-                let no_candidate = !ctx.candidates.iter().any(|w| w.base_cell == pre.cell);
-                if no_candidate && ctx.candidates.len() < CONTEXT_CANDIDATE_CAP
+                if ctx.candidates.len() < CONTEXT_CANDIDATE_CAP
                     && self.config.structural_growth_enabled
                 {
-                    let opposing = ctx.discovery.iter().rev().find(|f|
-                        f.base == pre.cell && f.action == action
-                        && f.predecessor != previous && f.post != after.cell).cloned();
-                    if let Some(old) = opposing {
-                        let free = self.dormant_range().filter(|i| !self.cells[*i].recruited)
+                    if let Some(old) = Self::context_find_novel_collision(
+                        &ctx, pre.cell, action, previous, after.cell)
+                    {
+                        let free = self.dormant_range()
+                            .filter(|i| !self.cells[*i].recruited)
                             .take(2).collect::<Vec<_>>();
                         if free.len() == 2 {
                             for &cell in &free { self.cells[cell].recruited = true; }
@@ -221,78 +314,109 @@ impl EvoPhase {
                                  self.native_synapse(predecessors[1], states[1])],
                             ];
                             ctx.candidates.push(PhaseContextWitness {
-                                base_cell: pre.cell, predecessor_cells: predecessors,
-                                successor_cells: [old.post, after.cell], state_cells: states,
-                                input_synapses: inputs, anchor_action: action,
-                                promoted: false, retired: false, born_fact: ctx.factual_events,
-                                eligible_observations: 0, log_evidence: 0.0,
-                                context_switches: 0, last_context: None,
+                                base_cell: pre.cell,
+                                predecessor_cells: predecessors,
+                                successor_cells: [old.post, after.cell],
+                                state_cells: states,
+                                input_synapses: inputs,
+                                anchor_action: action,
+                                promoted: false,
+                                retired: false,
+                                born_fact: ctx.factual_events,
+                                eligible_observations: 0,
+                                log_evidence: 0.0,
+                                context_switches: 0,
+                                last_context: None,
                                 gate_observations: [0; 2],
                             });
-                            born_now = true;
+                            born_index = Some(ctx.candidates.len() - 1);
                         }
                     }
                 }
-                if !born_now {
-                    if let Some(index) = ctx.candidates.iter()
-                        .position(|w| w.base_cell == pre.cell && !w.retired)
-                    {
-                        let side = ctx.candidates[index].predecessor_cells.iter()
-                            .position(|&p| p == previous);
-                        if let Some(side) = side {
-                            let snapshot = ctx.candidates[index].clone();
-                            for synapse in snapshot.input_synapses[side] {
-                                self.learn_phase_concept_running_mean_synapse(
-                                    synapse, 1.0, snapshot.gate_observations[side]);
+
+                let indices = (0..ctx.candidates.len()).filter(|&index| {
+                    Some(index) != born_index
+                        && ctx.candidates[index].base_cell == pre.cell
+                        && !ctx.candidates[index].retired
+                        && ctx.candidates[index].predecessor_cells.contains(&previous)
+                }).collect::<Vec<_>>();
+
+                for index in indices {
+                    let snapshot = ctx.candidates[index].clone();
+                    let Some(side) = snapshot.predecessor_cells.iter()
+                        .position(|&p| p == previous) else { continue; };
+
+                    for synapse in snapshot.input_synapses[side] {
+                        self.learn_phase_concept_running_mean_synapse(
+                            synapse, 1.0, snapshot.gate_observations[side]);
+                    }
+                    ctx.candidates[index].gate_observations[side] =
+                        snapshot.gate_observations[side].saturating_add(1);
+
+                    let accepted = self.native_cell_observation(
+                        &mut native,
+                        snapshot.state_cells[side],
+                        action,
+                        after.cell,
+                        0.0,
+                    ).is_some();
+                    if !accepted {
+                        ctx.candidates[index].retired = true;
+                        continue;
+                    }
+
+                    if action == snapshot.anchor_action && !snapshot.promoted {
+                        if !snapshot.successor_cells.contains(&after.cell) {
+                            ctx.candidates[index].retired = true;
+                        } else {
+                            let counts = self.context_counts(&native, &snapshot);
+                            let w = &mut ctx.candidates[index];
+                            w.eligible_observations =
+                                w.eligible_observations.saturating_add(1);
+                            if w.last_context
+                                .map(|last| last != side).unwrap_or(false)
+                            {
+                                w.context_switches =
+                                    w.context_switches.saturating_add(1);
                             }
-                            ctx.candidates[index].gate_observations[side] =
-                                snapshot.gate_observations[side].saturating_add(1);
-                            let accepted = self.native_cell_observation(
-                                &mut native, snapshot.state_cells[side], action, after.cell, 0.0
-                            ).is_some();
-                            if !accepted { ctx.candidates[index].retired = true; }
-                            if action == snapshot.anchor_action && !snapshot.promoted {
-                                if !snapshot.successor_cells.contains(&after.cell) {
-                                    ctx.candidates[index].retired = true;
-                                } else if accepted {
-                                    let counts = self.context_counts(&native, &snapshot);
-                                    let w = &mut ctx.candidates[index];
-                                    w.eligible_observations += 1;
-                                    if w.last_context.map(|last| last != side).unwrap_or(false) {
-                                        w.context_switches += 1;
-                                    }
-                                    w.last_context = Some(side);
-                                    w.log_evidence = context_log_evidence(counts);
-                                    w.promoted = context_gate(counts, w.context_switches);
-                                    if !w.promoted && w.eligible_observations >= CONTEXT_MAX_SAMPLES {
-                                        w.retired = true;
-                                    }
-                                }
+                            w.last_context = Some(side);
+                            w.log_evidence = context_log_evidence(counts);
+                            w.promoted = context_gate(counts, w.context_switches);
+                            if !w.promoted
+                                && w.eligible_observations >= CONTEXT_MAX_SAMPLES
+                            {
+                                w.retired = true;
                             }
                         }
                     }
                 }
-                if ctx.discovery.len() == CONTEXT_DISCOVERY_CAP { ctx.discovery.remove(0); }
+
+                if ctx.discovery.len() == CONTEXT_DISCOVERY_CAP {
+                    ctx.discovery.remove(0);
+                }
                 ctx.discovery.push(ContextFact {
-                    predecessor: previous, base: pre.cell, action, post: after.cell,
+                    predecessor: previous,
+                    base: pre.cell,
+                    action,
+                    post: after.cell,
                 });
             }
         }
-        // Transient, factual short-term memory advances even when learning is
-        // frozen. It is cleared on external re-sensing and cognitive restart.
+
         ctx.previous_base = Some(pre.cell);
         let preserve_rivals = ctx.candidates.iter()
             .any(|w| w.base_cell == pre.cell && !w.retired);
         native.contextual = Some(ctx);
         self.phase_native = Some(native);
+
         if !learning {
             self.observe_initial_real(post, false);
             return Some(0);
         }
         if preserve_rivals {
-            // The unresolved/conditioned parent alternatives remain present.
-            // No last-observation-wins erasure is performed for this base.
-            if !self.observe_phase_native_abstract_transition(&pre_sensory, action, post, 0.0) {
+            if !self.observe_phase_native_abstract_transition(
+                &pre_sensory, action, post, 0.0)
+            {
                 return None;
             }
             self.observe_initial_real(post, false);
