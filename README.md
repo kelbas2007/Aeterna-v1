@@ -136,7 +136,7 @@ G13 now has a qualifying mechanism PASS on the preregistered 20x20 substrate. On
 
 Workflow `37603203990`: FULL **8/8**, MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH **0/8**, necessary L2→L3 lesion **4/8**, pi phase shift **4/8**, exact restore **8/8**, lower L1→L2 lesion dependent success **0/2**. Full regressions and Release passed.
 
-The earlier 40x40 green run is retained as non-qualifying protocol drift. FRESH-G13 is the active evidence gate.
+The earlier 40x40 green run is retained as non-qualifying protocol drift. FRESH-G13 has passed: FULL **80/80**, MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH **0/80**, necessary lesion and pi phase shift **0/20**, exact restore **20/20**, with zero hierarchy-reference violations across 10 fresh authority-selected hierarchies. The next gate is self-selected abstraction depth rather than externally supplied task depth.
 
 ## Non-negotiable rule
 
