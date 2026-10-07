@@ -1,4 +1,5 @@
 name: intel2-verdict
+# preflight-2 after full-history checkout
 on:
   workflow_dispatch:
   push:
