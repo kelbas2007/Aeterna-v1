@@ -1,0 +1,53 @@
+name: intel1-verdict
+# One-use frozen-core intelligence verdict. No cognitive source changes permitted.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/intel1-verdict.yml']
+permissions:
+  contents: read
+jobs:
+  intel1:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel1: execute frozen-core verdict'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Enforce cognitive freeze
+        run: |
+          git diff --exit-code 308aba7c06fa89613276ef90da725be963f2d25f -- src Cargo.toml Cargo.lock
+          git diff --name-only 308aba7c06fa89613276ef90da725be963f2d25f --             | grep -Ev '^(tests/intel1_|docs/INTEL1_|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH3_RESULT.md|docs/G23_COMPOSITIONAL_PERCEPTUAL_FUNCTION_FRESH2_INVALID.md|EXPERIMENT_LEDGER.md|STATUS.md|\.github/workflows/(intel1|g23-fresh3))'             | (! grep .)
+      - name: Verify historical regression before verdict
+        run: |
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed_current_sensory_predicate_when_atoms_fail -- --nocapture
+          cargo test --release --test g22_perceptual_variable_invention -- --nocapture
+          cargo test --release --test g21_contextual_state_refinement g21_ -- --nocapture
+          cargo test --release --test human_protection -- --nocapture
+      - name: INTEL-1 one-lifetime verdict
+        env:
+          AETERNA_INTEL1_SEED: ${{ github.run_id }}
+        run: |
+          set -o pipefail
+          cargo test --release --test intel1_unknown_worlds -- --nocapture | tee intel1-evidence.log
+      - name: Preserve INTEL-1 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intel1-evidence
+          path: intel1-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Release build
+        if: always()
+        run: cargo build --release
+      - name: Verify core remained frozen
+        if: always()
+        run: |
+          git diff --exit-code
+          git diff --exit-code 308aba7c06fa89613276ef90da725be963f2d25f -- src Cargo.toml Cargo.lock
