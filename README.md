@@ -166,6 +166,14 @@ A non-learned final physical-action authorization boundary is now integrated. Hu
 
 The protection layer produces a sealed permit only for allowed proposals. Human Protection v1.1 additionally makes that permit a **single-use actuator permit**: it is non-Clone/non-Copy, bound to the current screening sequence, invalidated by later screening or emergency stop, and consumed through the protection gate. It is independent of planner reward, exploration drive, concepts and learned transitions. The repository does not yet contain person-detection/collision sensors or an authenticated hardware actuator adapter; those remain deployment requirements.
 
+### G17: explicit goal-conditioned planning
+
+G17 has a mechanism PASS. A raw goal observation resolves to an acquired physical abstract goal cell; that cell is seeded only in imagined state and value propagates backward through the already learned zero-reward abstract transition model.
+
+Workflow `37617083481`: FULL **8/8**, DEPTH1 **0/8**, NO_GOAL **0/8**, opposite-goal cue follows the other goal **8/8**, broken goal/route/pi **0/4**, exact restore **8/8**. The same world-model therefore changes action when only the goal changes.
+
+FRESH-G17 is the active evidence gate.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
