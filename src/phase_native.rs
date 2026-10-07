@@ -419,59 +419,118 @@ impl EvoPhase {
         pre: CarrierTrace, action: usize, post: CarrierTrace, value: f32,
     ) -> Option<()> {
         let matched_pre = state.receptors.iter()
-            .find(|r| r.trace.similarity(&pre) >= state.config.match_threshold).map(|r| r.cell);
+            .find(|r| r.trace.similarity(&pre) >= state.config.match_threshold)
+            .map(|r| r.cell);
         let matched_post = state.receptors.iter()
-            .find(|r| r.trace.similarity(&post) >= state.config.match_threshold).map(|r| r.cell);
-        let motor = self.motor_cell(action);
-        let existing = state.circuits.iter().position(|c| {
-            Some(self.synapses[c.afferent_synapse].from) == matched_pre
-                && Some(self.synapses[c.successor_synapse].to) == matched_post
-                && self.synapses[c.motor_synapse].to == motor
-        });
-        if existing.is_none() {
+            .find(|r| r.trace.similarity(&post) >= state.config.match_threshold)
+            .map(|r| r.cell);
+
+        let existing = match (matched_pre, matched_post) {
+            (Some(from), Some(to)) => {
+                let motor = self.motor_cell(action);
+                state.circuits.iter().any(|c| {
+                    self.synapses[c.afferent_synapse].from == from
+                        && self.synapses[c.successor_synapse].to == to
+                        && self.synapses[c.motor_synapse].to == motor
+                })
+            }
+            _ => false,
+        };
+
+        if !existing {
             if !self.config.structural_growth_enabled { return None; }
-            // Conservative preflight prevents partial allocation on capacity failure.
             let required = usize::from(matched_pre.is_none())
                 + usize::from(matched_post.is_none()) + 1;
-            if self.dormant_range().filter(|i| !self.cells[*i].recruited).count() < required {
+            if self.dormant_range()
+                .filter(|i| !self.cells[*i].recruited)
+                .count() < required
+            {
                 return None;
             }
         }
+
         let from = self.native_receptor(state, pre)?;
         let to = self.native_receptor(state, post)?;
-        let ci = if let Some(index) = existing { index } else {
-            let relay = self.dormant_range().find(|i| !self.cells[*i].recruited)?;
+        self.native_cell_observation(state, from, action, to, value)
+    }
+
+    /// Shared P1 physical learning rule for already-existing carrier cells.
+    /// G15 uses this with acquired abstraction cells; raw P1 reaches the same
+    /// rule after receptor recognition/recruitment.
+    fn native_cell_observation(
+        &mut self,
+        state: &mut PhaseNativeState,
+        from: usize,
+        action: usize,
+        to: usize,
+        value: f32,
+    ) -> Option<()> {
+        assert!(action < self.config.motor_cells);
+        assert!(value.is_finite() && (0.0..=1.0).contains(&value));
+        if from >= self.cells.len() || to >= self.cells.len()
+            || !self.cells[from].recruited || !self.cells[to].recruited
+        {
+            return None;
+        }
+
+        let motor = self.motor_cell(action);
+        let existing = state.circuits.iter().position(|c| {
+            self.synapses[c.afferent_synapse].from == from
+                && self.synapses[c.successor_synapse].to == to
+                && self.synapses[c.motor_synapse].to == motor
+        });
+
+        let ci = if let Some(index) = existing {
+            index
+        } else {
+            if !self.config.structural_growth_enabled { return None; }
+            let relay = self.dormant_range()
+                .find(|i| !self.cells[*i].recruited)?;
             self.cells[relay].recruited = true;
             let afferent = self.native_synapse(from, relay);
             let successor = self.native_synapse(relay, to);
             let outcome = self.native_synapse(relay, self.need_cell());
             let motor_synapse = self.native_synapse(relay, motor);
             state.circuits.push(PhaseCircuitInfo {
-                relay_cell: relay, afferent_synapse: afferent,
-                successor_synapse: successor, outcome_synapse: outcome,
-                motor_synapse, support: 0, revision: 0, counterexamples: Vec::new(),
+                relay_cell: relay,
+                afferent_synapse: afferent,
+                successor_synapse: successor,
+                outcome_synapse: outcome,
+                motor_synapse,
+                support: 0,
+                revision: 0,
+                counterexamples: Vec::new(),
             });
             state.circuits.len() - 1
         };
+
         let circuit = &mut state.circuits[ci];
         let residual = (value - self.synapses[circuit.outcome_synapse].weight).abs();
         if circuit.support >= u64::from(self.config.min_recruit_support)
-            && residual >= self.config.residual_recruit_threshold {
+            && residual >= self.config.residual_recruit_threshold
+        {
             circuit.revision = circuit.revision.saturating_add(1);
             circuit.counterexamples.push((circuit.support, value));
         }
         circuit.support = circuit.support.saturating_add(1);
+
         for index in circuit.indices() {
             let syn = &mut self.synapses[index];
             if !syn.plastic { continue; }
             let target = if index == circuit.outcome_synapse { value } else { 1.0 };
             syn.eligibility = 1.0;
-            syn.weight += self.config.weight_learning_rate * syn.eligibility * (target - syn.weight);
-            let target_phase = wrap_phase(self.cells[syn.to].phase - self.cells[syn.from].phase);
-            syn.phase_offset = wrap_phase(syn.phase_offset
-                + self.config.phase_learning_rate * syn.eligibility
-                    * signed_phase_error(target_phase, syn.phase_offset));
-            syn.confidence += self.config.weight_learning_rate * (1.0 - syn.confidence);
+            syn.weight += self.config.weight_learning_rate
+                * syn.eligibility * (target - syn.weight);
+            let target_phase =
+                wrap_phase(self.cells[syn.to].phase - self.cells[syn.from].phase);
+            syn.phase_offset = wrap_phase(
+                syn.phase_offset
+                    + self.config.phase_learning_rate
+                        * syn.eligibility
+                        * signed_phase_error(target_phase, syn.phase_offset)
+            );
+            syn.confidence +=
+                self.config.weight_learning_rate * (1.0 - syn.confidence);
         }
         Some(())
     }
@@ -479,72 +538,111 @@ impl EvoPhase {
     pub(super) fn phase_native_decision(
         &mut self, trace: &CarrierTrace, depth: Option<usize>,
     ) -> Option<PlanDecision> {
+        let entry = {
+            let state = self.phase_native.as_ref()?;
+            state.receptors.iter()
+                .find(|r| r.trace.similarity(trace) >= state.config.match_threshold)?
+                .cell
+        };
+        self.phase_native_decision_from_cell(entry, depth)
+    }
+
+    /// Shared physical value recurrence beginning from an already-acquired
+    /// carrier cell. No graph, route list or transition table is introduced.
+    fn phase_native_decision_from_cell(
+        &mut self,
+        entry: usize,
+        depth: Option<usize>,
+    ) -> Option<PlanDecision> {
+        if entry >= self.cells.len() || !self.cells[entry].recruited {
+            return None;
+        }
+
         let state = self.phase_native.as_mut()?;
         state.last_local_updates = 0;
         state.last_motor_potentials.fill(0.0);
-        let entry = state.receptors.iter()
-            .find(|r| r.trace.similarity(trace) >= state.config.match_threshold)?.cell;
-        let horizon = depth.unwrap_or(state.config.horizon).min(state.config.horizon).max(1);
+        let horizon = depth
+            .unwrap_or(state.config.horizon)
+            .min(state.config.horizon)
+            .max(1);
         let floor = state.config.coherence_floor;
-        // Mode-isolated membranes indexed by the SAME physical cell IDs.
-        // No new task topology, synthetic transitions, graph paths or action scripts.
+
         let mut membranes = self.cells.clone();
         for cell in &mut membranes { cell.charge = 0.0; }
         let mut latency = vec![0usize; membranes.len()];
+
         for _ in 0..horizon {
             let old = membranes.clone();
             let old_latency = latency.clone();
             for cell in &mut membranes { cell.charge = 0.0; }
             latency.fill(0);
-            for c in &state.circuits {
+
+            for circuit in &state.circuits {
                 state.last_local_updates += 1;
-                if c.support < u64::from(self.config.min_recruit_support) { continue; }
-                let afferent = &self.synapses[c.afferent_synapse];
-                let successor = &self.synapses[c.successor_synapse];
-                let outcome = &self.synapses[c.outcome_synapse];
+                if circuit.support < u64::from(self.config.min_recruit_support) {
+                    continue;
+                }
+                let afferent = &self.synapses[circuit.afferent_synapse];
+                let successor = &self.synapses[circuit.successor_synapse];
+                let outcome = &self.synapses[circuit.outcome_synapse];
+
                 let future = state.config.discount
-                    * conductance(&old, successor, floor) * old[successor.to].charge;
-                let immediate = outcome.weight.clamp(0.0, 1.0) * coherence(&old, outcome, floor);
-                let current = conductance(&old, afferent, floor) * (immediate + future);
-                membranes[c.relay_cell].charge = current;
-                let delay = if future > 1.0e-8 { old_latency[successor.to] + 1 } else { 1 };
-                latency[c.relay_cell] = delay;
-                // Fixed local dendritic competition, not route comparison.
+                    * conductance(&old, successor, floor)
+                    * old[successor.to].charge;
+                let immediate =
+                    outcome.weight.clamp(0.0, 1.0) * coherence(&old, outcome, floor);
+                let current =
+                    conductance(&old, afferent, floor) * (immediate + future);
+
+                membranes[circuit.relay_cell].charge = current;
+                let delay =
+                    if future > 1.0e-8 { old_latency[successor.to] + 1 } else { 1 };
+                latency[circuit.relay_cell] = delay;
+
                 if current > membranes[afferent.from].charge {
                     membranes[afferent.from].charge = current;
                     latency[afferent.from] = delay;
                 }
             }
         }
+
         let mut motor_latency = vec![0usize; self.config.motor_cells];
-        for c in &state.circuits {
-            if self.synapses[c.afferent_synapse].from != entry { continue; }
-            let output = &self.synapses[c.motor_synapse];
+        for circuit in &state.circuits {
+            if self.synapses[circuit.afferent_synapse].from != entry {
+                continue;
+            }
+            let output = &self.synapses[circuit.motor_synapse];
             let action = output.to.checked_sub(self.config.sensory_cells)?;
             if action >= self.config.motor_cells { return None; }
-            let current = membranes[c.relay_cell].charge * conductance(&membranes, output, floor);
+            let current = membranes[circuit.relay_cell].charge
+                * conductance(&membranes, output, floor);
             if current > state.last_motor_potentials[action] {
                 state.last_motor_potentials[action] = current;
-                motor_latency[action] = latency[c.relay_cell];
+                motor_latency[action] = latency[circuit.relay_cell];
             }
         }
+
         let mut selected = None;
         let mut peak = 1.0e-8;
-        for (motor, potential) in state.last_motor_potentials.iter().copied().enumerate() {
+        for (motor, potential) in
+            state.last_motor_potentials.iter().copied().enumerate()
+        {
             if potential > peak {
                 peak = potential;
                 selected = Some(motor);
             }
         }
         let action = selected?;
+
         Some(PlanDecision {
-            first_action: action, predicted_value: peak,
+            first_action: action,
+            predicted_value: peak,
             selected_depth: motor_latency[action],
-            // Compatibility field: local relay updates, NOT graph nodes in native mode.
             expanded_nodes: state.last_local_updates,
             authority: Authority::Imagined,
         })
     }
+
 }
 
 include!("phase_drive.rs");
