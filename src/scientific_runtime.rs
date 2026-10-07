@@ -19,6 +19,7 @@ const AUDIT_CAPACITY: usize = 256;
 pub enum ReasoningMode {
     RivalDiscrimination,
     GoalDirectedAction,
+    ContextualRefinement,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -113,6 +114,12 @@ impl ScientificRuntime {
         self.protection.emergency_stop_latched()
     }
 
+    /// Enable the native residual-driven representation learner. No context,
+    /// split location, outcome mapping or threshold is accepted from the host.
+    pub fn enable_context_refinement(&mut self) -> bool {
+        self.organism.enable_phase_native_context_refinement()
+    }
+
     fn record(&mut self, kind: LifetimeEventKind) {
         self.sequence = self.sequence.checked_add(1)
             .expect("lifetime audit sequence exhausted");
@@ -138,6 +145,7 @@ impl ScientificRuntime {
     /// must come from outside cognition; this method performs no model tuition.
     pub fn observe_external(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
         self.validate_raster(raster)?;
+        self.organism.clear_phase_native_context_history();
         self.organism.observe_initial_real(raster, false);
         self.fresh_observation_required = false;
         self.record(LifetimeEventKind::ExternalObservation);
@@ -179,7 +187,13 @@ impl ScientificRuntime {
     pub fn propose(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
         if self.goal_reached()? { return Ok(None); }
         let goal = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?.clone();
-        let (action, mode) = if let Some(action) =
+        let contextual = self.organism.phase_native_context_action(&goal);
+        let (action, mode) = if contextual.0 {
+            // A missing/damaged required context must not be bypassed using
+            // the old ambiguous parent model.
+            (contextual.1.ok_or(RuntimeError::NoSupportedAction)?,
+                ReasoningMode::ContextualRefinement)
+        } else if let Some(action) =
             self.organism.choose_phase_native_goal_rival_probe(&goal)
         {
             (action, ReasoningMode::RivalDiscrimination)
@@ -256,7 +270,14 @@ impl ScientificRuntime {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
-        let suppressed = if self.model_learning_enabled {
+        let suppressed = if self.organism.phase_native_context_enabled() {
+            // The native API also advances factual short-term memory while
+            // frozen; only its learning flag controls acquired-state changes.
+            match self.organism.observe_phase_native_context_result(action, &post) {
+                Some(count) => count,
+                None => return Ok(self.latch_fault("contextual factual update rejected".into())),
+            }
+        } else if self.model_learning_enabled {
             match self.organism.observe_phase_native_rival_probe_result(action, &post) {
                 Some(count) => count,
                 None => {
