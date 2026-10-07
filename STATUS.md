@@ -837,3 +837,39 @@ Run `37609743908` PASSed on source `bebd479389bad814093a459c59f60df691442181`.
 - regressions and Release PASS.
 
 This statistically qualifies bounded abstract model-based planning. Next gap: autonomous goal-directed acquisition of missing abstract transitions.
+
+
+## G16 autonomous abstract model acquisition
+
+Workflow `37614779191` PASSed on source `2f4bf80edf230778bac4c36080db66757e674a4d`.
+
+- FULL reward discovery 12/12;
+- frozen delayed plan 12/12;
+- restart delayed plan 12/12;
+- ZERO_DRIVE / FRONTIER_LESION / DIRECT_ONLY 0/12;
+- RANDOM 1/12;
+- NO_TRANSITION_LEARNING / NO_GROWTH plans 0/12;
+- endpoint violations 0;
+- legacy graph transitions 0;
+- mean acquisition cost **32.000** vs frozen <=45;
+- source guard, full regressions and Release PASS.
+
+Earlier G16 failures are preserved, including the real episodic-continuation gap and the scientific 45.667 efficiency FAIL.
+
+Active evidence gate: **FRESH-G16**.
+
+## Human Protection v1
+
+Workflow `37614779191`: **MECHANISM PASS**.
+
+- hard harm-risk threshold: 0.01;
+- minimum hazard confidence when a human can be affected: 0.90;
+- high risk / low confidence / invalid evidence block;
+- emergency stop blocks and latches;
+- cognitive checkpoint restore cannot clear the latch;
+- only explicit external human reset clears it;
+- deterministic audit record with monotonic sequence;
+- no planner/drive/concept/reward override dependency;
+- full regressions and Release PASS.
+
+This is an authorization boundary, not a person detector or hardware safety controller. Real actuator integration must require the sealed HumanProtectionPermit and authenticate external reset.
