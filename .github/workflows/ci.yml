@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G19 rival-hypothesis mechanism trigger; no fresh G19 pack.
+# One-use G19 rival-hypothesis qualification trigger; source/spec frozen.
 
 on:
   workflow_dispatch:
@@ -79,6 +79,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g19:
+        description: 'Consume a new one-use G19 rival-hypothesis qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -89,7 +94,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g19: run physical rival hypothesis mechanism'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g19: execute frozen fresh rival hypothesis qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -264,6 +269,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G18_GOAL_CONDITIONED_ACTIVE_REASONING_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test g18_goal_conditioned_active_reasoning g18_fresh_goal_conditioned_active_reasoning_pack -- --ignored --nocapture | tee g18-evidence.log
+      - name: Explicit one-use fresh G19 rival-hypothesis qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g19 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G19_RIVAL_HYPOTHESIS_DISCRIMINATION_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g19_rival_hypothesis_discrimination g19_fresh_rival_hypothesis_discrimination_pack -- --ignored --nocapture | tee g19-evidence.log
+      - name: Preserve G19 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g19-execution-evidence
+          path: g19-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve G18 execution log
         if: always()
         uses: actions/upload-artifact@v4
