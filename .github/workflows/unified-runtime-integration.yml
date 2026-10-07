@@ -1,5 +1,5 @@
 name: unified-runtime-integration
-# preflight-2: coalesced same-action supporters
+# preflight-3: diagnose stale applicability after residual resolution
 on:
   workflow_dispatch:
   push:
