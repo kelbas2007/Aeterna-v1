@@ -22,6 +22,7 @@ pub enum ReasoningMode {
     ContextualRefinement,
     PerceptualRefinement,
     CompositionalRefinement,
+    GeneralEpistemic,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -221,10 +222,18 @@ impl ScientificRuntime {
             self.organism.choose_phase_native_goal_rival_probe(&goal)
         {
             (action, ReasoningMode::RivalDiscrimination)
-        } else {
-            let action = self.organism.choose_phase_native_goal_active_action(&goal)
-                .ok_or(RuntimeError::NoSupportedAction)?;
+        } else if let Some(action) =
+            self.organism.choose_phase_native_goal_active_action(&goal)
+        {
             (action, ReasoningMode::GoalDirectedAction)
+        } else {
+            // INTEL-1 Repair-1: a goal that is not yet connected to the known
+            // physical model cannot create a goal-relevance gradient. Bootstrap
+            // only with the already-qualified G16 general epistemic drive.
+            let action = self.organism
+                .choose_phase_native_abstract_learned_drive_action()
+                .ok_or(RuntimeError::NoSupportedAction)?;
+            (action, ReasoningMode::GeneralEpistemic)
         };
         let proposal = ActionProposal {
             action, mode, goal_epoch: self.goal_epoch,
