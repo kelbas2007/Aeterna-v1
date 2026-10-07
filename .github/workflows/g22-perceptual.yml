@@ -1,5 +1,5 @@
 name: g22-perceptual
-# Temporary exact-source G22 mechanism verification; no fresh pack.
+# G22 mechanism rerun after fixture-visibility repair; no fresh pack.
 on:
   workflow_dispatch:
   push:
