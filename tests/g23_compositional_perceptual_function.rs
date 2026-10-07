@@ -77,12 +77,34 @@ fn fact(evo:&mut EvoPhase,pre:&[f32],action:usize,post:&[f32]){
 
 fn outcome_for_x(a:bool,b:bool)->bool{a^b}
 
+#[derive(Clone,Copy,Default)]
+struct AtomStats {
+    counts: [[usize;2];2],
+}
+
+impl AtomStats {
+    fn observe(&mut self,present:bool,goal:bool){
+        self.counts[usize::from(present)][usize::from(goal)] += 1;
+    }
+    fn predict_goal(&self,present:bool)->bool{
+        let c=self.counts[usize::from(present)];
+        c[1] >= c[0]
+    }
+}
+
+#[derive(Clone,Copy,Default)]
+struct TrainingStats {
+    a: AtomStats,
+    b: AtomStats,
+}
+
 fn train(
     evo:&mut EvoPhase,
     l1:&[[usize;2];8],
     swap:bool,
-){
+)->TrainingStats{
     let (x,y)=fixture::action_pair(swap);
+    let mut stats=TrainingStats::default();
     assert!(evo.enable_phase_native_compositional_refinement());
     assert!(evo.phase_native_composition_witnesses().is_empty());
 
@@ -119,6 +141,8 @@ fn train(
             let nuisance=(cycle+index)%2==0;
             let pre=raw(l1,layout,a,b,nuisance);
             let x_good=outcome_for_x(a,b);
+            stats.a.observe(a,x_good);
+            stats.b.observe(b,x_good);
             let post_x=if x_good{goal(l1,layout)}else{dead(l1,layout)};
             let post_y=if x_good{dead(l1,layout)}else{goal(l1,layout)};
             fact(evo,&pre,x,&post_x);
@@ -142,6 +166,45 @@ fn train(
     assert!(!atom.promoted);
     assert!(!and.promoted);
     assert!(and.atom_effects.iter().all(|e|*e<=0.25+1e-12));
+    stats
+}
+
+fn train_irrelevant_composition(
+    evo:&mut EvoPhase,
+    l1:&[[usize;2];8],
+    swap:bool,
+){
+    let (x,_)=fixture::action_pair(swap);
+    let c=0.10f32;
+    let d=0.30f32;
+    let positions=[396usize,376,356,336];
+
+    let make=|layout:usize,c_on:bool,d_on:bool| {
+        let mut weak=Vec::new();
+        if c_on { weak.push((positions[layout%4],c)); }
+        if d_on { weak.push((positions[(layout+1)%4],d)); }
+        fixture::scene(l1,1,layout,&weak)
+    };
+
+    // Discovery collision at another base state.
+    fact(evo,&make(0,true,false),x,&goal(l1,0));
+    fact(evo,&make(1,true,true),x,&dead(l1,1));
+
+    // Future evidence is deliberately nonpredictive for every simple/composed
+    // program: outcome alternates independently of the raw pair.
+    for i in 0..40usize {
+        let c_on=i%2==0;
+        let d_on=(i/2)%2==0;
+        let good=(i/4)%2==0;
+        let pre=make(i%4,c_on,d_on);
+        let post=if good{goal(l1,i%4)}else{dead(l1,i%4)};
+        fact(evo,&pre,x,&post);
+    }
+    let base=evo.phase_native_abstract_state(&make(0,false,false)).unwrap().cell;
+    let ws=evo.phase_native_composition_witnesses().into_iter()
+        .filter(|w|w.base_cell==base).collect::<Vec<_>>();
+    assert!(!ws.is_empty());
+    assert!(ws.iter().all(|w|!w.promoted));
 }
 
 fn xor_witness(evo:&EvoPhase)->PhaseCompositionWitness{
@@ -174,6 +237,7 @@ fn score(
     evo:&mut EvoPhase,
     l1:&[[usize;2];8],
     swap:bool,
+    stats:TrainingStats,
 )->(usize,usize,usize,[usize;4]){
     evo.set_planning_learning_enabled(false);
     let (x,y)=fixture::action_pair(swap);
@@ -210,20 +274,20 @@ fn score(
                     .map(|d|d.first_action)==Some(expected)
             );
 
-            // Best possible single-atom polarity on balanced XOR scoring cannot
-            // exceed chance: evaluate both cue polarities and count the better.
-            let atom_a_action=if a{x}else{y};
-            let atom_b_action=if b{x}else{y};
-            best_atom+=usize::from(
-                atom_a_action==expected || atom_b_action==expected
-            )/2; // replaced below by exact aggregate comparator
+            let pa=stats.a.predict_goal(a);
+            let pb=stats.b.predict_goal(b);
+            let action_a=if pa{x}else{y};
+            let action_b=if pb{x}else{y};
+            // Report the stronger one-atom learner after scoring both on the
+            // same held-out frames.
+            best_atom += usize::from(action_a==expected) << 16;
+            best_atom += usize::from(action_b==expected);
         }
     }
 
-    // Exact matched single-atom comparator over the same 64 frames:
-    // each single cue agrees with XOR on exactly two of four combinations.
-    best_atom=32;
-    (full,memoryless,best_atom,combos)
+    let a_score=best_atom>>16;
+    let b_score=best_atom & 0xFFFF;
+    (full,memoryless,a_score.max(b_score),combos)
 }
 
 fn causal(
@@ -257,6 +321,17 @@ fn causal(
     ).unwrap();
     assert_eq!(shifted.phase_native_compositional_action(&target),(true,None));
 
+    let base1=evo.phase_native_abstract_state(
+        &fixture::scene(l1,1,0,&[])
+    ).unwrap().cell;
+    let unrelated_w=evo.phase_native_composition_witnesses().into_iter()
+        .find(|w|w.base_cell==base1).expect("irrelevant composition witness");
+    let mut unrelated=intact.clone();
+    unrelated.perturb_phase_native_synapse_for_control(
+        unrelated_w.input_synapses[0][1],0.0,0.0
+    ).unwrap();
+    assert_eq!(unrelated.phase_native_compositional_action(&target),(true,Some(x)));
+
     let checkpoint=intact.phase_native_checkpoint().unwrap();
     let mut restarted=EvoPhase::new(fixture::cfg(&intact));
     assert!(restarted.restore_phase_native_checkpoint(checkpoint));
@@ -270,9 +345,10 @@ fn g23_synthesizes_composed_current_sensory_predicate_when_atoms_fail(){
         let drive=fixture::drive();
         let mut evo=fixture::organism(&drive);
         let l1=fixture::train_rep(&mut evo);
-        train(&mut evo,&l1,swap);
+        let stats=train(&mut evo,&l1,swap);
+        train_irrelevant_composition(&mut evo,&l1,swap);
 
-        let (full,memoryless,single,combos)=score(&mut evo,&l1,swap);
+        let (full,memoryless,single,combos)=score(&mut evo,&l1,swap,stats);
         causal(&evo,&l1,swap);
         let witnesses=evo.phase_native_composition_witnesses();
         println!(
