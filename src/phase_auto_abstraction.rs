@@ -156,8 +156,21 @@ impl EvoPhase {
             physical.auto_observations.saturating_add(1);
         let observation_index = physical.auto_observations;
 
-        // Revision of the existing explanation happens before deciding whether
-        // a more abstract structure is justified.
+        let children_supported_and_weak_before =
+            active_level1.len() >= 2
+                && active_level1.iter().all(|index| {
+                    let child = &physical.circuits[*index];
+                    if child.action_support[action] < min_action_support {
+                        return false;
+                    }
+                    let weight =
+                        self.synapses[child.motor_synapses[action]].weight;
+                    (2.0 * weight - 1.0).abs() <= child_ceiling
+                });
+
+        // Revise the existing explanation with the factual result only after
+        // measuring whether the PRE-update child state already failed to
+        // explain this action.
         if physical.auto_child_revision_enabled {
             for &index in &active_level1 {
                 let support_before =
@@ -182,7 +195,7 @@ impl EvoPhase {
             return true;
         }
 
-        let children_supported_and_weak = active_level1.iter().all(|index| {
+        let children_supported_and_weak_after = active_level1.iter().all(|index| {
             let child = &physical.circuits[*index];
             if child.action_support[action] < min_action_support {
                 return false;
@@ -191,6 +204,9 @@ impl EvoPhase {
                 self.synapses[child.motor_synapses[action]].weight;
             (2.0 * weight - 1.0).abs() <= child_ceiling
         });
+        let children_supported_and_weak =
+            children_supported_and_weak_before
+                || children_supported_and_weak_after;
 
         if children_supported_and_weak
             && physical.auto_first_weak_observation.is_none()
