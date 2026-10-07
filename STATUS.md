@@ -29,7 +29,8 @@ Date: 2026-10-06
 **G10 FRESH PASS — statistical composite-concept construction across authority-sampled relation atoms and bindings.**  
 **G10 PHASE OWNERSHIP AUDIT — NEGATIVE: dedicated concept readout worked without the physical phase network.**  
 **G10-PHYS MECHANISM PASS — composite promotion/readout migrated to actual phase-sensitive cells/synapses.**  
-**G10-PHYS FRESH PASS — statistical physical concept promotion/execution with causal synapse interventions.**
+**G10-PHYS FRESH PASS — statistical physical concept promotion/execution with causal synapse interventions.**  
+**G11 MECHANISM PASS — acquired physical concepts become children of new physical concepts at abstraction depth 2.**
 
 No AGI claim. No production promotion.
 
@@ -617,3 +618,23 @@ Run `37571774016` PASSed on source `7dd0985588abced43e26905330e5d12c95ff3122`.
 - full regressions and Release PASS.
 
 This closes the previously demonstrated G10 physical ownership gap for the bounded binary-composite family.
+
+
+## G11 recursive abstraction mechanism
+
+Workflow `37577562551` PASSed on source `5f0423ea7f98a74024e42570c00cbc00994b605e`.
+
+- FULL_RECURSIVE 8/8;
+- NO_RECURSION 0/8;
+- LEVEL1_ONLY 4/8;
+- L1->L2 necessary lesion 6/8;
+- pi phase shift 6/8;
+- exact restore 8/8;
+- unrelated L2 lesion 2/2 preserved;
+- lower atom->L1 lesion dependent success 0/2;
+- ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH all 0/8;
+- max individual L1 top evidence 0.0;
+- min winning L2 joint evidence 1.0;
+- full regressions and Release PASS.
+
+PREFLIGHT-1 exposed order-sensitive promotion and was preserved; promotion was made evidence-order invariant. PREFLIGHT-2 exposed a NO_GROWTH observer assertion bug and was preserved separately. The active evidence gate is FRESH-G11.
