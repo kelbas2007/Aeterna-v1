@@ -1,16 +1,11 @@
 name: g22-perceptual
-# G22 mechanism rerun after fixture-visibility repair; no fresh pack.
+# Manual-only after completed G22 mechanism verification; no fresh pack.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/g22-perceptual.yml']
 permissions:
   contents: read
 jobs:
   perceptual:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g22: run perceptual variable mechanism'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
