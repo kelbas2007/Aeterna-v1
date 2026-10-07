@@ -31,7 +31,8 @@ Date: 2026-10-06
 **G10-PHYS MECHANISM PASS — composite promotion/readout migrated to actual phase-sensitive cells/synapses.**  
 **G10-PHYS FRESH PASS — statistical physical concept promotion/execution with causal synapse interventions.**  
 **G11 MECHANISM PASS — acquired physical concepts become children of new physical concepts at abstraction depth 2.**  
-**G11 FRESH PASS — statistical depth-2 recursive physical abstraction across fresh relation/hierarchy/motor assignments.**
+**G11 FRESH PASS — statistical depth-2 recursive physical abstraction across fresh relation/hierarchy/motor assignments.**  
+**G12 MECHANISM PASS — self-triggered abstraction escalation from physical evidence insufficiency.**
 
 No AGI claim. No production promotion.
 
@@ -665,3 +666,25 @@ Run `37578375117` PASSed on source `2b43c9fa44398c9031f444461345e912e2b8d14a`.
 - full regressions and Release PASS.
 
 This qualifies bounded depth-2 recursive physical abstraction. It does not establish arbitrary recursion depth or autonomous discovery that abstraction is needed.
+
+
+## G12 self-triggered abstraction mechanism
+
+Workflow `37590743597` PASSed on source `62e26c5cbe4934545b8cbb19ab8e9ece04bad04b`.
+
+- FULL_AUTO 8/8;
+- NO_ESCALATION 0/8;
+- FROZEN_SIMPLE 0/8;
+- ZERO_PHASE / ZERO_WEIGHT 0/8;
+- necessary L1->L2 lesion 6/8;
+- pi phase shift 6/8;
+- exact restore 8/8;
+- unrelated lesion 2/2;
+- lower atom->L1 lesion dependent-target success 0/2;
+- FULL pre-residual L2 candidates 0 vs ALWAYS_ESCALATE 4;
+- first candidate appears at the first supported-weak observation (115/115 and 116/116);
+- final recursive candidates/promoted = 4/4;
+- max L1 evidence 0.157895;
+- full regressions and Release PASS.
+
+G12 closes the development mechanism for evidence-driven self-triggered escalation from L1 to L2. Active evidence gate: **FRESH-G12**.
