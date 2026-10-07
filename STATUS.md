@@ -30,7 +30,8 @@ Date: 2026-10-06
 **G10 PHASE OWNERSHIP AUDIT — NEGATIVE: dedicated concept readout worked without the physical phase network.**  
 **G10-PHYS MECHANISM PASS — composite promotion/readout migrated to actual phase-sensitive cells/synapses.**  
 **G10-PHYS FRESH PASS — statistical physical concept promotion/execution with causal synapse interventions.**  
-**G11 MECHANISM PASS — acquired physical concepts become children of new physical concepts at abstraction depth 2.**
+**G11 MECHANISM PASS — acquired physical concepts become children of new physical concepts at abstraction depth 2.**  
+**G11 FRESH PASS — statistical depth-2 recursive physical abstraction across fresh relation/hierarchy/motor assignments.**
 
 No AGI claim. No production promotion.
 
@@ -638,3 +639,29 @@ Workflow `37577562551` PASSed on source `5f0423ea7f98a74024e42570c00cbc00994b605
 - full regressions and Release PASS.
 
 PREFLIGHT-1 exposed order-sensitive promotion and was preserved; promotion was made evidence-order invariant. PREFLIGHT-2 exposed a NO_GROWTH observer assertion bug and was preserved separately. The active evidence gate is FRESH-G11.
+
+
+## G11 FRESH recursive-abstraction result
+
+Run `37578375117` PASSed on source `2b43c9fa44398c9031f444461345e912e2b8d14a`.
+
+- spec SHA: `aa575097c44c5d56afd778a7aff3cf8bf7594db4`;
+- authority seed: `37578375117`;
+- burned pack digest: `aa06228ae6032c44`;
+- FULL_RECURSIVE: **80/80**, Wilson95 [0.954182,1.000000];
+- every seed: **8/8**;
+- NO_RECURSION: **0/80**;
+- LEVEL1_ONLY: **40/80**;
+- ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH: **0/80 each**;
+- necessary L1->L2 lesion: **0/20**;
+- pi phase shift: **0/20**;
+- exact restore: **20/20**;
+- unrelated L2 lesion: **10/10** preserved;
+- lower atom->L1 lesion dependent success: **0/20**;
+- atom/L1/L2/reference violations: **0**;
+- max individual L1 evidence: 0.0;
+- min winning L2 joint evidence: 1.0;
+- all four opaque motor IDs participated;
+- full regressions and Release PASS.
+
+This qualifies bounded depth-2 recursive physical abstraction. It does not establish arbitrary recursion depth or autonomous discovery that abstraction is needed.
