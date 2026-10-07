@@ -199,9 +199,14 @@ impl EvoPhase {
         })
     }
 
-    /// Generic physical frontier field. The feature exists independently of
-    /// its learned behavioral weight.
-    fn phase_drive_frontier_activity(&self, state: &PhaseNativeState) -> Vec<f32> {
+    /// Generic physical frontier field over an explicit set of state cells.
+    /// P4 passes receptor cells; G16 passes acquired abstract cells. The
+    /// propagation rule and learned feature weights are identical.
+    pub(super) fn phase_drive_frontier_activity_for_cells(
+        &self,
+        state: &PhaseNativeState,
+        state_cells: &[usize],
+    ) -> Vec<f32> {
         let motor_cells = self.config.motor_cells;
         let min_support = u64::from(self.config.min_recruit_support);
         let floor = state.config.coherence_floor;
@@ -211,14 +216,14 @@ impl EvoPhase {
             cell.charge = 0.0;
         }
         let mut intrinsic = vec![0.0_f32; membranes.len()];
-        for receptor in &state.receptors {
+        for &state_cell in state_cells {
             let unknown = (0..motor_cells)
                 .filter(|action| {
-                    !self.phase_drive_action_known_at(state, receptor.cell, *action)
+                    !self.phase_drive_action_known_at(state, state_cell, *action)
                 })
                 .count();
-            intrinsic[receptor.cell] = unknown as f32 / motor_cells as f32;
-            membranes[receptor.cell].charge = intrinsic[receptor.cell];
+            intrinsic[state_cell] = unknown as f32 / motor_cells as f32;
+            membranes[state_cell].charge = intrinsic[state_cell];
         }
 
         for _ in 0..state.config.horizon {
@@ -248,7 +253,16 @@ impl EvoPhase {
         membranes.iter().map(|cell| cell.charge).collect()
     }
 
-    fn phase_drive_features(
+    fn phase_drive_frontier_activity(&self, state: &PhaseNativeState) -> Vec<f32> {
+        let receptor_cells = state
+            .receptors
+            .iter()
+            .map(|receptor| receptor.cell)
+            .collect::<Vec<_>>();
+        self.phase_drive_frontier_activity_for_cells(state, &receptor_cells)
+    }
+
+    pub(super) fn phase_drive_features(
         &self,
         state: &PhaseNativeState,
         entry: usize,
@@ -282,7 +296,7 @@ impl EvoPhase {
         [0.0, reachable.clamp(0.0, 1.0)]
     }
 
-    fn phase_drive_score(
+    pub(super) fn phase_drive_score(
         &self,
         state: &PhaseNativeState,
         features: [f32; 2],
@@ -382,16 +396,12 @@ impl EvoPhase {
         Some(action)
     }
 
-    /// Local TD update from internal structural information gain after a real
-    /// P2 transition. Hidden world labels and evaluator route data are absent.
-    pub(super) fn phase_native_drive_after_fact(
+    pub(super) fn phase_native_drive_after_cell_fact(
         &mut self,
-        post_sensory: &[f32],
+        post_cell: usize,
+        state_cells: &[usize],
         structural_gain: bool,
     ) {
-        let Some(post_trace) = self.encode_high_level_trace(post_sensory) else {
-            return;
-        };
         let mut state = match self.phase_native.take() {
             Some(state) => state,
             None => return,
@@ -415,23 +425,19 @@ impl EvoPhase {
         }
 
         let predicted = self.phase_drive_score(&state, features).unwrap_or(0.0);
-        let next_value = state
-            .receptors
-            .iter()
-            .find(|receptor| {
-                receptor.trace.similarity(&post_trace) >= state.config.match_threshold
-            })
-            .map(|receptor| {
-                let frontier = self.phase_drive_frontier_activity(&state);
-                (0..self.config.motor_cells)
-                    .filter_map(|action| {
-                        let next_features =
-                            self.phase_drive_features(&state, receptor.cell, action, &frontier);
-                        self.phase_drive_score(&state, next_features)
-                    })
-                    .fold(0.0_f32, f32::max)
-            })
-            .unwrap_or(0.0);
+        let next_value = if state_cells.contains(&post_cell) {
+            let frontier =
+                self.phase_drive_frontier_activity_for_cells(&state, state_cells);
+            (0..self.config.motor_cells)
+                .filter_map(|action| {
+                    let next_features =
+                        self.phase_drive_features(&state, post_cell, action, &frontier);
+                    self.phase_drive_score(&state, next_features)
+                })
+                .fold(0.0_f32, f32::max)
+        } else {
+            0.0
+        };
 
         let target = ((if structural_gain { 1.0 } else { 0.0 })
             + config.discount * next_value)
@@ -468,5 +474,46 @@ impl EvoPhase {
         let observations = state.drive.as_ref().expect("drive").observations;
         state.drive.as_mut().expect("drive").observations = observations.saturating_add(1);
         self.phase_native = Some(state);
+    }
+
+    /// Local TD update from internal structural information gain after a real
+    /// P2 transition. Hidden world labels and evaluator route data are absent.
+    pub(super) fn phase_native_drive_after_fact(
+        &mut self,
+        post_sensory: &[f32],
+        structural_gain: bool,
+    ) {
+        let Some(post_trace) = self.encode_high_level_trace(post_sensory) else {
+            return;
+        };
+        let Some(state) = self.phase_native.as_ref() else {
+            return;
+        };
+        let receptor_cells = state
+            .receptors
+            .iter()
+            .map(|receptor| receptor.cell)
+            .collect::<Vec<_>>();
+        let Some(post_cell) = state
+            .receptors
+            .iter()
+            .find(|receptor| {
+                receptor.trace.similarity(&post_trace) >= state.config.match_threshold
+            })
+            .map(|receptor| receptor.cell)
+        else {
+            // Still clear any staged feature through the generic path.
+            self.phase_native_drive_after_cell_fact(
+                usize::MAX,
+                &receptor_cells,
+                structural_gain,
+            );
+            return;
+        };
+        self.phase_native_drive_after_cell_fact(
+            post_cell,
+            &receptor_cells,
+            structural_gain,
+        );
     }
 }
