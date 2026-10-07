@@ -915,3 +915,22 @@ Workflow `37616386983`: **MECHANISM PASS**.
 - source guard, full regressions and Release PASS.
 
 This strengthens the software actuation boundary. Hardware/device access isolation and authenticated external reset remain deployment requirements.
+
+
+## G17 goal-conditioned abstract planning
+
+Workflow `37617083481` PASSed on source `9f87bc44d71209942a9f35735f68ebad707fd3cb`.
+
+- FULL 8/8;
+- DEPTH1 0/8;
+- NO_GOAL 0/8;
+- opposite-goal cue follows the other goal 8/8;
+- broken goal recognition / route / pi phase: 0/4 each;
+- exact restore 8/8;
+- irrelevant competing-route lesion 2/2;
+- all transition outcome values were 0;
+- Human Protection v1.1, G16, full regressions and Release PASS.
+
+One unchanged physical world-model now chooses different actions from different raw goal observations.
+
+Active evidence gate: **FRESH-G17**.
