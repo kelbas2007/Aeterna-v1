@@ -294,6 +294,41 @@ impl EvoPhase {
         (false, None)
     }
 
+    /// Repair-6: G19 may independently probe a rival action only while that
+    /// same action still lacks balanced contextual anchor evidence for the
+    /// current factual predecessor. If no contextual hypothesis owns the
+    /// current base/predecessor/action, rival behavior remains unchanged.
+    pub(super) fn phase_context_rival_probe_allowed(
+        &self,
+        base_cell: usize,
+        action: usize,
+    ) -> bool {
+        let Some(native) = self.phase_native.as_ref() else { return true; };
+        let Some(ctx) = native.contextual.as_ref() else { return true; };
+        let Some(previous) = ctx.previous_base else { return true; };
+
+        let matching = ctx.candidates.iter().filter(|w| {
+            w.base_cell == base_cell
+                && w.anchor_action == action
+                && !w.retired
+                && !w.promoted
+                && w.predecessor_cells.contains(&previous)
+        }).collect::<Vec<_>>();
+
+        if matching.is_empty() {
+            return true;
+        }
+
+        matching.into_iter().any(|w| {
+            let Some(side) = w.predecessor_cells.iter()
+                .position(|&p| p == previous) else { return false; };
+            let counts = self.context_counts(native, w);
+            let current = counts[side][0] + counts[side][1];
+            let opposite = counts[1 - side][0] + counts[1 - side][1];
+            current <= opposite
+        })
+    }
+
     /// Actual POST only. Existing G20 behavior is unchanged unless explicitly
     /// enabled. Context discovery/recruitment and transition learning are native
     /// carrier operations; the host never receives a split or context-ID API.
