@@ -187,6 +187,26 @@ impl EvoPhase {
         &self.config
     }
 
+    /// Diagnostic matched-control intervention. It changes only generic
+    /// substrate plasticity rates and carries no task/world information.
+    #[doc(hidden)]
+    pub fn set_learning_rates_for_control(
+        &mut self,
+        weight_learning_rate: f32,
+        phase_learning_rate: f32,
+    ) {
+        assert!((0.0..=1.0).contains(&weight_learning_rate));
+        assert!((0.0..=1.0).contains(&phase_learning_rate));
+        self.config.weight_learning_rate = weight_learning_rate;
+        self.config.phase_learning_rate = phase_learning_rate;
+    }
+
+    /// Diagnostic matched-control intervention on generic structural capacity.
+    #[doc(hidden)]
+    pub fn set_structural_growth_for_control(&mut self, enabled: bool) {
+        self.config.structural_growth_enabled = enabled;
+    }
+
     pub fn current_real(&self) -> Option<&FactualFrame> {
         self.current_real.as_ref()
     }
