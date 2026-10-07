@@ -14,10 +14,11 @@ mod intel {
         shuffle(&mut rng,&mut motors);
         let mut hw=HistoryWorld::new(seed^0x33,[motors[4],motors[5]]);
         rt.observe_external(&foundation::scene(&l1,hw.state,0)).unwrap();
-        rt.set_goal(&foundation::scene(&l1,7,1)).unwrap();
 
         for k in 0..1200usize {
             let layout=k%4;
+            let goal_state=if hw.state==7 {5} else {7};
+            rt.set_goal(&foundation::scene(&l1,goal_state,1)).unwrap();
             let outcome=rt.step(|_|Some(safe()),|a|{
                 let next=hw.step(a);
                 Ok(foundation::scene(&l1,next,layout))
