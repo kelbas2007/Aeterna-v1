@@ -873,3 +873,29 @@ Workflow `37614779191`: **MECHANISM PASS**.
 - full regressions and Release PASS.
 
 This is an authorization boundary, not a person detector or hardware safety controller. Real actuator integration must require the sealed HumanProtectionPermit and authenticate external reset.
+
+
+## G16 FRESH autonomous abstract model acquisition
+
+Run `37615561023` PASSed on source `ba984adbcb8be19828513d045e4aa3fce61dc69c`.
+
+- spec SHA: `adb3bf9259716faf5c3fe097489eca35a98adb22`;
+- authority seed: `37615561023`;
+- burned pack: `ed19e91187055bea`;
+- autonomous delayed reward discovery: **40/40**;
+- held-out delayed planning: **80/80**, Wilson95 [0.954182,1.000000];
+- restart delayed planning: **40/40**;
+- every seed acquisition 4/4 and held-out planning 8/8;
+- mean acquisition cost **31.575**, SD 16.958;
+- ZERO_DRIVE 0/40;
+- FRONTIER_LESION 1/40;
+- DIRECT_ONLY 1/40;
+- RANDOM 2/40, mean cost 78.550;
+- NO_TRANSITION_LEARNING / NO_GROWTH plans 0/80;
+- drive-weight / endpoint / legacy / restart violations all 0;
+- all six opaque motors exercised;
+- Human Protection regression, full regressions and Release PASS.
+
+This statistically qualifies bounded autonomous acquisition of a physical abstract transition model followed by restart-persistent abstract planning.
+
+Next intelligence gap: **goal-conditioned active reasoning** rather than general frontier expansion.
