@@ -9,6 +9,7 @@ use std::collections::BTreeSet;
 
 #[allow(dead_code)]
 mod foundation {
+    use std::collections::BTreeSet;
     include!("g19_rival_hypothesis_discrimination.rs");
 
     pub const PAIRS24:[[usize;2];24]=[
