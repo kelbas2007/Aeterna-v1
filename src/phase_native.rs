@@ -65,6 +65,7 @@ pub(super) struct PhaseNativeState {
     drive: Option<PhaseDriveState>,
     concepts: Option<PhaseConceptState>,
     deep: Option<PhaseDeepState>,
+    contextual: Option<PhaseContextState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -111,6 +112,7 @@ impl EvoPhase {
             drive: None,
             concepts: None,
             deep: None,
+            contextual: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -136,10 +138,12 @@ impl EvoPhase {
             .unwrap_or(false);
         let concept_synapse = self.is_native_concept_synapse(index);
         let deep_synapse = self.is_native_deep_synapse(index);
+        let context_synapse = self.is_native_context_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
             && !deep_synapse
+            && !context_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -177,8 +181,14 @@ impl EvoPhase {
         for cell in &mut learned_cells {
             cell.charge = 0.0;
         }
-        let text = format!("{:?}|{:?}|{:?}|{:?}",
+        let mut text = format!("{:?}|{:?}|{:?}|{:?}",
             state.receptors, state.circuits, learned_cells, self.synapses);
+        if let Some(context) = state.contextual.as_ref() {
+            // Acquired split/evidence metadata is protected too. The last raw
+            // observation's transient predecessor is not learned knowledge.
+            text.push_str(&format!("|{:?}|{:?}|{}", context.candidates,
+                context.discovery, context.factual_events));
+        }
         for byte in text.bytes() {
             h ^= u64::from(byte);
             h = h.wrapping_mul(1_099_511_628_211);
@@ -198,6 +208,9 @@ impl EvoPhase {
         let mut state = self.phase_native.as_ref()?.clone();
         state.last_motor_potentials.fill(0.0);
         state.last_local_updates = 0;
+        if let Some(context) = state.contextual.as_mut() {
+            context.previous_base = None;
+        }
         let mut cells = self.cells.clone();
         for cell in &mut cells {
             cell.charge = 0.0;
@@ -545,7 +558,7 @@ impl EvoPhase {
         let entry = {
             let state = self.phase_native.as_ref()?;
             state.receptors.iter()
-                .find(|r| r.trace.similarity(trace) >= state.config.match_threshold)?
+                .find(|r| r.trace.similarity(&trace) >= state.config.match_threshold)?
                 .cell
         };
         self.phase_native_decision_from_cell(entry, depth)
@@ -656,3 +669,4 @@ include!("phase_recursive.rs");
 include!("phase_auto_abstraction.rs");
 include!("phase_deep_abstraction.rs");
 include!("phase_abstract_planning.rs");
+include!("phase_contextual.rs");
