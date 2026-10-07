@@ -454,3 +454,5 @@ After the fix, one persistent organism acquired four distinct worlds, retained e
 | G15 | TRIGGER-TECH-1 | TECHNICAL_FAIL_WORKFLOW_PARSE | Workflow 37608815206 created no valid cognitive job because the temporary YAML trigger was malformed. G15 source/protocol/test unchanged; no scientific pack consumed. |
 
 | G15 | MECHANISM-1 | PASS_ABSTRACT_PHASE_NATIVE_MODEL_PLANNING | Workflow 37608846717 at source `156421b208b59591d6addffed3f8ce913471b7b6`: FULL 8/8, depth>=3 8/8, DEPTH1 0/8, NO_MODEL 0/8, BROKEN_STATE 0/8, BROKEN_TRANSITION 0/8, PI_PHASE 0/8, exact restore 8/8, irrelevant 2/2; REAL/fingerprint unchanged; regressions and Release PASS. |
+
+| G15 | FRESH-1 | PASS_FRESH_ABSTRACT_MODEL_PLANNING | Run 37609743908 at source `bebd479389bad814093a459c59f60df691442181`, spec `89589201d28b078bb326c41be7f53c7d08ab59a1`, pack `84dffac8bcb36171`: FULL 80/80, Wilson95 [0.954182,1.000000], every seed 8/8; route lengths 2..4; depth1/no-model 0/80; broken state/transition/pi 0/20; restore 20/20; irrelevant 10/10; structure/endpoint/REAL/fingerprint/legacy violations 0; motor mask 0b111111. Regressions and Release PASS; pack burned. |
