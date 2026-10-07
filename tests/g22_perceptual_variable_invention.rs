@@ -5,11 +5,8 @@ use aeterna_v1::carrier::{PhasePerceptFeature};
 mod fixture {
     include!("g19_rival_hypothesis_discrimination.rs");
 
-    pub fn prepare() -> (PhaseDriveCheckpoint, [[usize;2];8]) {
-        let drive=train_drive();
-        let mut evo=target(&drive);
-        let l1=train_abstraction(&mut evo);
-        (drive,l1)
+    pub fn drive() -> PhaseDriveCheckpoint {
+        train_drive()
     }
 
     pub fn organism(drive:&PhaseDriveCheckpoint)->EvoPhase {
@@ -242,7 +239,7 @@ fn causal_checks(
 #[test]
 fn g22_current_raw_signal_becomes_new_operational_perceptual_variable(){
     for swap in [false,true] {
-        let drive=fixture::train_drive();
+        let drive=fixture::drive();
         let mut evo=fixture::organism(&drive);
         let l1=fixture::train_rep(&mut evo);
         train_useful(&mut evo,&l1,swap);
