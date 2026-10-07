@@ -6,6 +6,7 @@ pub mod epistemic;
 pub mod exploration;
 pub mod hdc;
 pub mod hierarchy;
+pub mod human_protection;
 pub mod macro_memory;
 pub mod phase;
 pub mod planning;
@@ -21,6 +22,11 @@ pub use epistemic::{
 };
 pub use exploration::{EvoExplorationStrategy, ExplorationConfig, ProbeFeatures};
 pub use hierarchy::{EvoHierarchyMemory, HierarchyConfig, ParentMacro};
+pub use human_protection::{
+    HumanProtection, HumanProtectionDecision, HumanProtectionEvidence, HumanProtectionPermit,
+    HumanProtectionReason, HumanProtectionRecord, HumanProtectionVerdict,
+    HUMAN_HARM_BLOCK_THRESHOLD, HUMAN_HAZARD_CONFIDENCE_MIN,
+};
 pub use macro_memory::{
     EvoMacroMemory, MacroAssembly, MacroBranch, MacroConfig, MacroCounterexample,
 };
