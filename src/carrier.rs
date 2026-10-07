@@ -20,8 +20,9 @@ mod phase_native;
 pub use phase_native::{
     AutoAbstractionMetrics, PhaseAbstractStateRef, PhaseCircuitInfo, PhaseConceptCircuitInfo, PhaseDeepChildRef,
     PhaseCompositionWitness, PhaseDeepNodeInfo, PhaseDriveCheckpoint, PhaseDriveConfig,
+    PhaseMetaControlCheckpoint, PhaseMetaControlConfig, PhaseMetaDecision, PhaseCognitiveProposal,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
-    PhasePerceptWitness, PhaseRecursiveConceptInfo,
+    PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
 };
 use phase_native::PhaseNativeState;
 
