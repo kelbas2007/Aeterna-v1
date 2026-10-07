@@ -1,5 +1,5 @@
 name: evo-ci
-# Manual-only between sealed qualification checkpoints.
+# One-use G10 composite-concept qualification trigger; algorithm/spec already frozen.
 
 on:
   workflow_dispatch:
@@ -29,11 +29,21 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g10:
+        description: 'Consume a new one-use G10 composite-concept qualification pack'
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ci.yml']
 permissions:
   contents: read
 
 jobs:
   rust:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g10: execute frozen fresh composite qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -47,6 +57,8 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
+      - name: G10 composite concept mechanism preflight
+        run: cargo test --release --test g10_composite_concept g10_constructs_new_composite_concepts_when_children_are_not_predictive -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
@@ -100,6 +112,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/PHASE_NATIVE_P5_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test phase_native_continual p5_fresh_continual_retention_pack -- --ignored --nocapture | tee p5-evidence.log
+      - name: Explicit one-use fresh G10 composite-concept qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g10 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G10_COMPOSITE_CONCEPT_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g10_composite_concept g10_fresh_composite_concept_pack -- --ignored --nocapture | tee g10-evidence.log
+      - name: Preserve G10 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g10-execution-evidence
+          path: g10-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve P5 execution log
         if: always()
         uses: actions/upload-artifact@v4
