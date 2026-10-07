@@ -975,3 +975,32 @@ Workflow `37627583024` PASSed on source `c60e518c233f7333330922c9e15a8c22a567a1d
 The current raw goal now selects which missing abstract transition is worth acquiring.
 
 Active evidence gate: **FRESH-G18**.
+
+
+## G18 FRESH goal-conditioned active reasoning
+
+Run `37628961906` PASSed on source `dfeaf2d7b7dc93b84d871d5cfef95bdbb30dbb60`.
+
+- spec SHA: `f989f7edf553bb2cef2345843ab9fca258a5e345`;
+- authority seed: `37628961906`;
+- burned pack: `36b1d1f2340622c7`;
+- FULL requested shortcut **80/80**, Wilson95 [0.954182,1.000000];
+- every seed 8/8;
+- first goal-relevant navigation **80/80**;
+- second requested unknown probe **80/80**;
+- post-acquisition goal plan **80/80**;
+- GENERAL_FRONTIER **40/80**;
+- NO_GOAL **0/80**;
+- wrong/opposite goal follows opposite shortcut **80/80**;
+- broken goal / goal route / pi phase **0/20** each;
+- exact restore **20/20**;
+- irrelevant branch lesion **10/10**;
+- no-transition-learning post-plan **0/80**;
+- irrelevant unknown acquisition before requested shortcut: **0**;
+- drive/endpoint violations: 0;
+- all six motors exercised;
+- Human Protection, regressions and Release PASS.
+
+This statistically qualifies bounded goal-conditioned active information acquisition.
+
+Next intelligence gate: **G19 physical rival-hypothesis discrimination and causal experiment selection**.
