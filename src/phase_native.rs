@@ -5,6 +5,7 @@
 
 use super::{EvoPhase, PhaseCell, PhaseSynapse};
 use crate::authority::Authority;
+use crate::concept::EvoConceptMemory;
 use crate::phase::{signed_phase_error, wrap_phase};
 use crate::planning::PlanDecision;
 use crate::trace::CarrierTrace;
