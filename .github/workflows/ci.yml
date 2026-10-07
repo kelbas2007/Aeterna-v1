@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use G11 recursive-abstraction qualification rerun after evaluator type annotation; mechanism/spec unchanged.
+# Manual-only between sealed qualification checkpoints.
 
 on:
   workflow_dispatch:
@@ -44,17 +44,11 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths: ['.github/workflows/ci.yml']
-
 permissions:
   contents: read
 
 jobs:
   rust:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g11: execute frozen fresh recursive qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -68,8 +62,6 @@ jobs:
           git diff --exit-code
       - name: P5 fast continual diagnostic
         run: cargo test --release --test phase_native_continual -- --nocapture
-      - name: G11 recursive abstraction causal preflight
-        run: cargo test --release --test g11_recursive_abstraction -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
@@ -144,7 +136,7 @@ jobs:
           set -o pipefail
           cargo test --release --test g10_phase_native_concept g10_fresh_phase_native_concept_pack -- --ignored --nocapture | tee g10-phys-evidence.log
       - name: Explicit one-use fresh G11 recursive-abstraction qualification
-        if: ${{ github.event_name == 'push' || inputs.qualify_g11 }}
+        if: ${{ inputs.qualify_g11 }}
         env:
           AETERNA_FRESH_SEED: ${{ github.run_id }}
           AETERNA_SOURCE_SHA: ${{ github.sha }}
