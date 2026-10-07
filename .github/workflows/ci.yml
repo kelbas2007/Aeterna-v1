@@ -1,5 +1,5 @@
 name: evo-ci
-# One-use G11 recursive-abstraction qualification trigger; mechanism/spec already frozen.
+# One-use G11 recursive-abstraction qualification rerun after evaluator type annotation; mechanism/spec unchanged.
 
 on:
   workflow_dispatch:
