@@ -249,7 +249,9 @@ fn u3_both_meta_and_ecology_physics_are_causally_required(){
     register_ecology(&mut evo);
     // Matched causal state: keep two hypotheses physically active so U1
     // meta-control, rather than U2 dormancy alone, must resolve the winner.
-    update(&mut evo,[1.0,0.70,0.0],16);
+    // P remains above U2 dormancy but below C after ecology-modulated
+    // confidence enters the same U1 score.
+    update(&mut evo,[1.0,0.07,0.0],16);
     assert_eq!(choose(&evo,&current,&goal),Some(C));
 
     let meta_conf=evo.phase_native_meta_synapses().unwrap()[3];
