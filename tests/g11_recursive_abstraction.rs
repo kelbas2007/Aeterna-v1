@@ -705,13 +705,17 @@ fn fresh_g11_blocks(authority: u64) -> (Vec<FreshG11Block>, u64) {
 
         let mut pair_bindings = FRESH_PAIR_BINDING_BANK.to_vec();
         g11_shuffle(&mut rng, &mut pair_bindings);
-        let target_bindings = pair_bindings[..4].try_into().unwrap();
-        let negative_bindings = pair_bindings[4..8].try_into().unwrap();
+        let target_bindings: [((usize, usize), (usize, usize)); 4] =
+            pair_bindings[..4].try_into().unwrap();
+        let negative_bindings: [((usize, usize), (usize, usize)); 4] =
+            pair_bindings[4..8].try_into().unwrap();
 
         let mut top_layouts = FRESH_TOP_LAYOUT_BANK.to_vec();
         g11_shuffle(&mut rng, &mut top_layouts);
-        let top_tuition = top_layouts[..4].try_into().unwrap();
-        let top_heldout = top_layouts[4..12].try_into().unwrap();
+        let top_tuition: [[(usize, usize); 4]; 4] =
+            top_layouts[..4].try_into().unwrap();
+        let top_heldout: [[(usize, usize); 4]; 8] =
+            top_layouts[4..12].try_into().unwrap();
 
         digest = g11_mix(digest, sub);
         for (dx, dy) in offsets {
