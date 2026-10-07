@@ -794,3 +794,24 @@ Run `37605704724` PASSed on source `6f015be57cbf81edc6b0b61ee30ebeec78c621c5`.
 - regressions and Release PASS.
 
 This qualifies bounded self-selected representational depth. Next gate: G15 abstract model-based planning.
+
+
+## G15 abstract model-based planning mechanism
+
+Workflow `37608846717` PASSed on source `156421b208b59591d6addffed3f8ce913471b7b6`.
+
+- FULL abstract delayed planning: **8/8**;
+- selected depth >=3: **8/8**;
+- DEPTH1 delayed: **0/8**;
+- NO_ABSTRACT_MODEL: **0/8**;
+- BROKEN_ABSTRACT_STATE: **0/8**;
+- BROKEN_TRANSITION: **0/8**;
+- PI_PHASE_TRANSITION: **0/8**;
+- exact restore: **8/8**;
+- irrelevant lesion: **2/2**;
+- REAL/fingerprint unchanged during planning;
+- source guard, regressions and Release PASS.
+
+Acquired physical concepts now serve as states of a learned phase-native multi-step future model.
+
+Active evidence gate: **FRESH-G15 abstract model-based planning**.
