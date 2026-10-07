@@ -37,6 +37,7 @@ This ledger is append-only in meaning: failures are never silently rewritten int
 | P5 | DIAG-SYNAPSE | FAIL_NO_OLD_PARAMETER_OVERWRITE | Workflow 37534252495: 0/606 tracked pre-existing A/drive/decoder synapses changed after B; A forward readout still failed. |
 | P5 | DIAG-COMPONENT | FAIL_SHARED_CELL_REFERENCE | Workflow 37534474528: zeroing newly added B synapses did not recover A forward readout, localizing failure to shared cell substrate state. |
 | P5 | PREFLIGHT-2 | PASS_PERSISTENT_CONTINUAL_RETENTION_AND_REVISION | Workflow 37534699260 at source `de2f931b5a6b03995f62f8723011cfca89581be0` after production fix `797e366d64a186bc7c36d283f84fff3dfe57e8f7`: persistent acquisition costs [9,24,12,20], retention actions 34, changed-B repair 9, receptors [4,9,13,18], circuits [7,19,27,38], ZERO_DRIVE 0/4, NO_GROWTH 0/4, whole-lifetime checkpoint restore PASS, full regressions and Release PASS. |
+| P5 | FRESH-1 | PASS_FRESH_CONTINUAL_RETENTION | Run 37569003124 at source `d7e33bb53cf63b1e21a96463bc1eea5b728f45e7`, spec `a2bc2717f94e3840576015265116a4c7b646234b`, pack `f7d409553cf1de82`: primary 80/80, Wilson95 [0.954182,1.000000], every sub-seed 8/8; acquisition 40/40, intermediate revisits 100/100, pre/post retention 40/40 + 40/40, repair 10/10, checkpoint 40/40; FROZEN_CHANGED 0/10, RESET_BETWEEN earlier retention 0/30, ZERO_DRIVE 1/40, NO_GROWTH 0/40. Mean acquisition 14.875, repair 9.400. Full regressions and Release PASS; pack burned. |
 
 
 ## What G0 PASS establishes
