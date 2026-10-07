@@ -325,3 +325,61 @@ fn intel1_frozen_core_unknown_world_lifetime(){
     assert_eq!(rt.organism().planning_transition_count(),0);
     assert!(rt.organism().composite_concepts().is_empty());
 }
+
+
+#[test]
+#[ignore="post-failure diagnostic for burned INTEL-1R1 pack"]
+fn intel1_diagnose_w1_reuse_without_changing_cognition(){
+    let motors=[5usize,3,4,2,1,0]; // burned R1 authority pack
+    let (evo,l1)=foundation::build();
+    let mut rt=ScientificRuntime::new(evo).unwrap();
+    assert!(rt.enable_context_refinement());
+    assert!(rt.enable_perceptual_refinement());
+    assert!(rt.enable_compositional_refinement());
+    let path=vec![(0,motors[0],1),(1,motors[1],2),(2,motors[2],7)];
+    let mut world=ChainWorld{state:0,goal:7,calls:0,path:path.clone()};
+    rt.observe_external(&foundation::scene(&l1,0,0)).unwrap();
+    rt.set_goal(&foundation::scene(&l1,7,1)).unwrap();
+    for k in 0..80usize{
+        if world.state==7{break;}
+        let result=rt.step(|_|Some(safe()),|a|{
+            let next=world.step(a);
+            Ok(foundation::scene(&l1,next,k%6))
+        }).unwrap();
+        if let StepOutcome::Executed{proposal,..}=result{
+            println!("DIAG_W1_LEARN k={} action={} mode={:?} state={}",
+                k,proposal.action,proposal.mode,world.state);
+        }
+    }
+    assert_eq!(world.state,7);
+    println!("DIAG_W1_MODEL circuits={} fp={}",
+        rt.organism().phase_native_circuits().len(),
+        rt.organism().phase_native_learned_fingerprint());
+
+    rt.set_model_learning_enabled(false);
+    world=ChainWorld{state:0,goal:7,calls:0,path};
+    rt.observe_external(&foundation::scene(&l1,0,4)).unwrap();
+    rt.set_goal(&foundation::scene(&l1,7,5)).unwrap();
+
+    for k in 0..20usize{
+        if world.state==7{break;}
+        let current=rt.organism().current_real().unwrap().sensory.clone();
+        let goal=foundation::scene(&l1,7,5);
+        let mut probe=rt.organism().clone();
+        let direct=probe.plan_phase_native_abstract_goal(&current,&goal,None);
+        println!("DIAG_W1_REPLAY_PRE k={} state={} direct={:?} comp={} percept={} context={}",
+            k,world.state,direct,
+            rt.organism().phase_native_composition_witnesses().len(),
+            rt.organism().phase_native_perceptual_witnesses().len(),
+            rt.organism().phase_native_context_witnesses().len());
+        let result=rt.step(|_|Some(safe()),|a|{
+            let next=world.step(a);
+            Ok(foundation::scene(&l1,next,(4+k)%6))
+        }).unwrap();
+        if let StepOutcome::Executed{proposal,..}=result{
+            println!("DIAG_W1_REPLAY k={} action={} mode={:?} state={}",
+                k,proposal.action,proposal.mode,world.state);
+        }
+    }
+    println!("DIAG_W1_REPLAY_RESULT goal={} calls={}",world.state==7,world.calls);
+}
