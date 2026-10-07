@@ -26,7 +26,8 @@ Date: 2026-10-06
 **P5 MECHANISM PASS — one persistent organism retains multiple worlds and selectively repairs one changed world.**  
 **P5 FRESH PASS — statistical continual retention/revision across 10 independent persistent lifetimes.**  
 **G10 MECHANISM PASS — autonomous composite concept construction from individually non-predictive acquired atoms.**  
-**G10 FRESH PASS — statistical composite-concept construction across authority-sampled relation atoms and bindings.**
+**G10 FRESH PASS — statistical composite-concept construction across authority-sampled relation atoms and bindings.**  
+**G10 PHASE OWNERSHIP AUDIT — NEGATIVE: current dedicated concept readout works without the physical phase network.**
 
 No AGI claim. No production promotion.
 
@@ -563,3 +564,14 @@ Run `37570124870` PASSed on source `4bc42dfc670689842619661d0e13ea54b3689048`.
 - full regressions and Release PASS.
 
 This statistically qualifies bounded composite predicate construction. The current concept state is EvoPhase-owned but dedicated; physical phase-cell/synapse execution of concept formation/readout is the next ownership gate.
+
+
+## G10 physical ownership audit
+
+Workflow `37570662521`: **NEGATIVE_PHASE_DEPENDENCY_WITNESS**.
+
+- standalone `EvoConceptMemory`: 8/8;
+- zero-dormant / no-growth / zero-phase / zero-weight `EvoPhase`: 8/8;
+- full regressions and Release PASS.
+
+Thus G10 composite formation/readout is behaviorally qualified but not yet physically phase-native. G10-PHYS is the active architecture repair: instantiate acquired atom/composite state in actual carrier cells and synapses and require causal lesion/restoration evidence.
