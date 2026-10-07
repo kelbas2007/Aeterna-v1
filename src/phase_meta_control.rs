@@ -4,9 +4,6 @@
 //! proposal. It learns one physical utility projection and selects a unique
 //! proposal by that projection.
 
-use super::{EvoPhase, PhaseSynapse};
-use crate::phase::{signed_phase_error, wrap_phase};
-
 pub const META_FIELD_COUNT: usize = 5;
 
 #[derive(Debug, Clone)]
