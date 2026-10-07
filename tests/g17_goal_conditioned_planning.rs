@@ -532,3 +532,582 @@ fn g17_goal_planner_has_no_goal_id_graph_or_answer_fallback(){
         );
     }
 }
+
+
+#[derive(Debug, Clone)]
+struct FreshG17Spec {
+    selected_atoms: [usize;8],
+    l1_pairs: [[usize;2];4],
+    state_pairs: [[usize;2];6],
+    roles: [usize;6],
+    motors: [usize;6],
+    layouts: [[(usize,usize);4];6],
+    transition_order: [usize;12],
+}
+
+struct FreshG17Rng(u64);
+
+impl FreshG17Rng {
+    fn new(seed:u64)->Self{Self(seed^0xA37E_1717_C011_2026)}
+    fn next(&mut self)->u64{
+        let mut x=self.0;
+        x^=x>>12;
+        x^=x<<25;
+        x^=x>>27;
+        self.0=x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+    fn range(&mut self,upper:usize)->usize{
+        (self.next()%upper as u64) as usize
+    }
+}
+
+fn fresh17_shuffle<T>(rng:&mut FreshG17Rng,values:&mut [T]){
+    for i in (1..values.len()).rev(){
+        let j=rng.range(i+1);
+        values.swap(i,j);
+    }
+}
+
+fn fresh17_fnv(mut h:u64,value:u64)->u64{
+    const PRIME:u64=1_099_511_628_211;
+    for byte in value.to_le_bytes(){
+        h^=byte as u64;
+        h=h.wrapping_mul(PRIME);
+    }
+    h
+}
+
+fn fresh17_specs(authority:u64)->(Vec<FreshG17Spec>,u64){
+    let mut specs=Vec::new();
+    let mut digest=14_695_981_039_346_656_037u64;
+    let factors=factorization_8();
+
+    for sub in 0..10u64 {
+        let mut rng=FreshG17Rng::new(
+            authority
+                ^ sub.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                ^ 0x1717_5EED_D1B5_4A32
+        );
+
+        let mut selected_atoms=[0usize,1,2,3,4,5,6,7];
+        fresh17_shuffle(&mut rng,&mut selected_atoms);
+
+        let l1_pairs=factors[0].map(|p|{
+            let mut pair=[selected_atoms[p[0]],selected_atoms[p[1]]];
+            pair.sort_unstable();
+            pair
+        });
+
+        let mut state_pairs=[
+            [0usize,1usize],[0,2],[0,3],[1,2],[1,3],[2,3],
+        ];
+        fresh17_shuffle(&mut rng,&mut state_pairs);
+
+        let mut roles=[0usize,1,2,3,4,5];
+        fresh17_shuffle(&mut rng,&mut roles);
+
+        let mut motors=[0usize,1,2,3,4,5];
+        fresh17_shuffle(&mut rng,&mut motors);
+
+        let mut layouts=LAYOUTS;
+        fresh17_shuffle(&mut rng,&mut layouts);
+
+        let mut transition_order=[0usize;12];
+        for (index,slot) in transition_order.iter_mut().enumerate(){
+            *slot=index;
+        }
+        fresh17_shuffle(&mut rng,&mut transition_order);
+
+        let spec=FreshG17Spec {
+            selected_atoms,l1_pairs,state_pairs,roles,motors,layouts,
+            transition_order,
+        };
+
+        digest=fresh17_fnv(digest,sub);
+        for value in spec.selected_atoms {
+            digest=fresh17_fnv(digest,value as u64);
+        }
+        for pair in spec.l1_pairs {
+            for value in pair {digest=fresh17_fnv(digest,value as u64);}
+        }
+        for pair in spec.state_pairs {
+            for value in pair {digest=fresh17_fnv(digest,value as u64);}
+        }
+        for value in spec.roles {digest=fresh17_fnv(digest,value as u64);}
+        for value in spec.motors {digest=fresh17_fnv(digest,value as u64);}
+        for layout in spec.layouts {
+            for (x,y) in layout {
+                digest=fresh17_fnv(digest,x as u64);
+                digest=fresh17_fnv(digest,y as u64);
+            }
+        }
+        for value in spec.transition_order {
+            digest=fresh17_fnv(digest,value as u64);
+        }
+
+        specs.push(spec);
+    }
+
+    (specs,digest)
+}
+
+fn fresh17_pair_scene(
+    pair:[usize;2],
+    layout:[(usize,usize);4],
+)->Vec<f32>{
+    pair_scene(pair,layout)
+}
+
+fn fresh17_state_scene(
+    spec:&FreshG17Spec,
+    state:usize,
+    layout:[(usize,usize);4],
+)->Vec<f32>{
+    state_scene(&spec.l1_pairs,&spec.state_pairs,state,layout)
+}
+
+fn fresh17_train_abstraction(spec:&FreshG17Spec)->EvoPhase{
+    let factors=factorization_8();
+    let mut evo=carrier();
+
+    let foundation_good=spec.motors[0];
+    let foundation_bad=spec.motors[1];
+
+    for pair in spec.l1_pairs {
+        for layout in spec.layouts[..4].iter().copied(){
+            let scene=fresh17_pair_scene(pair,layout);
+            for action in [foundation_good,foundation_bad] {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &scene,action,action==foundation_good
+                ));
+            }
+        }
+    }
+
+    for (round_index,round) in factors[1..5].iter().enumerate(){
+        let layout=spec.layouts[(round_index+2)%6];
+        for raw_pair in *round {
+            let mut pair=[
+                spec.selected_atoms[raw_pair[0]],
+                spec.selected_atoms[raw_pair[1]],
+            ];
+            pair.sort_unstable();
+            let scene=fresh17_pair_scene(pair,layout);
+            for action in [foundation_good,foundation_bad] {
+                assert!(evo.observe_phase_native_concept_factual(
+                    &scene,action,action==foundation_bad
+                ));
+            }
+        }
+    }
+
+    assert_eq!(evo.concept_atoms().len(),8);
+    assert_eq!(evo.phase_native_promoted_concept_count(),4);
+    assert!(evo.composite_concepts().is_empty());
+
+    assert!(evo.enable_phase_native_depth_generic_abstraction(2));
+    let stage2_a=spec.motors[2];
+    let stage2_b=spec.motors[3];
+
+    for l1 in 0..4usize {
+        let scene=fresh17_pair_scene(
+            spec.l1_pairs[l1],
+            spec.layouts[l1%6],
+        );
+        for rep in 0..4usize {
+            let a_wins=rep%2==0;
+            assert!(evo.observe_phase_native_depth_generic_factual(
+                &scene,stage2_a,a_wins
+            ));
+            assert!(evo.observe_phase_native_depth_generic_factual(
+                &scene,stage2_b,!a_wins
+            ));
+        }
+    }
+    assert_eq!(evo.phase_native_deep_candidate_count(2),0);
+
+    for cycle in 0..4usize {
+        for state in 0..6usize {
+            let scene=fresh17_state_scene(
+                spec,state,spec.layouts[cycle%6]
+            );
+            for action in [stage2_a,stage2_b] {
+                assert!(evo.observe_phase_native_depth_generic_factual(
+                    &scene,action,action==stage2_a
+                ));
+            }
+            for child in spec.state_pairs[state] {
+                let single=fresh17_pair_scene(
+                    spec.l1_pairs[child],
+                    spec.layouts[(cycle+child+2)%6],
+                );
+                for action in [stage2_a,stage2_b] {
+                    assert!(evo.observe_phase_native_depth_generic_factual(
+                        &single,action,action==stage2_b
+                    ));
+                }
+            }
+        }
+    }
+
+    assert_eq!(evo.phase_native_promoted_deep_count(2),6);
+    evo.set_concept_learning_enabled(false);
+
+    let mut cells=std::collections::BTreeSet::new();
+    for state in 0..6usize {
+        let first=evo.phase_native_abstract_state(
+            &fresh17_state_scene(spec,state,spec.layouts[0])
+        ).expect("fresh G17 L2 state");
+        assert_eq!(first.level,2);
+        assert!(cells.insert(first.cell));
+        for layout in spec.layouts {
+            let other=evo.phase_native_abstract_state(
+                &fresh17_state_scene(spec,state,layout)
+            ).expect("fresh G17 held state");
+            assert_eq!(other,first);
+        }
+    }
+    assert_eq!(cells.len(),6);
+    evo
+}
+
+#[derive(Clone,Copy)]
+struct FreshG17Fact {
+    pre:usize,
+    action:usize,
+    post:usize,
+}
+
+fn fresh17_facts(spec:&FreshG17Spec)->[FreshG17Fact;12]{
+    let start=spec.roles[0];
+    let mid_a=spec.roles[1];
+    let mid_b=spec.roles[2];
+    let goal_a=spec.roles[3];
+    let goal_b=spec.roles[4];
+    let distractor=spec.roles[5];
+    let a=spec.motors[4];
+    let b=spec.motors[5];
+
+    [
+        FreshG17Fact{pre:start,action:a,post:mid_a},
+        FreshG17Fact{pre:start,action:b,post:mid_b},
+        FreshG17Fact{pre:mid_a,action:a,post:goal_a},
+        FreshG17Fact{pre:mid_a,action:b,post:distractor},
+        FreshG17Fact{pre:mid_b,action:a,post:distractor},
+        FreshG17Fact{pre:mid_b,action:b,post:goal_b},
+        FreshG17Fact{pre:goal_a,action:a,post:goal_a},
+        FreshG17Fact{pre:goal_a,action:b,post:goal_a},
+        FreshG17Fact{pre:goal_b,action:a,post:goal_b},
+        FreshG17Fact{pre:goal_b,action:b,post:goal_b},
+        FreshG17Fact{pre:distractor,action:a,post:distractor},
+        FreshG17Fact{pre:distractor,action:b,post:distractor},
+    ]
+}
+
+fn fresh17_learn_model(evo:&mut EvoPhase,spec:&FreshG17Spec){
+    let facts=fresh17_facts(spec);
+    let tuition=spec.layouts[0];
+    for index in spec.transition_order {
+        let fact=facts[index];
+        let pre=fresh17_state_scene(spec,fact.pre,tuition);
+        let post=fresh17_state_scene(spec,fact.post,tuition);
+        assert!(evo.observe_phase_native_abstract_transition(
+            &pre,fact.action,&post,0.0
+        ));
+    }
+    assert_eq!(evo.phase_native_circuits().len(),12);
+}
+
+fn fresh17_ref(
+    evo:&EvoPhase,spec:&FreshG17Spec,state:usize
+)->PhaseAbstractStateRef{
+    evo.phase_native_abstract_state(
+        &fresh17_state_scene(spec,state,spec.layouts[0])
+    ).expect("fresh G17 state ref")
+}
+
+fn fresh17_transition(
+    evo:&EvoPhase,
+    from:PhaseAbstractStateRef,
+    action:usize,
+    to:PhaseAbstractStateRef,
+)->PhaseCircuitInfo{
+    transition_circuit(evo,from,action,to)
+}
+
+fn fresh17_l2_node(
+    evo:&EvoPhase,state:PhaseAbstractStateRef
+)->PhaseDeepNodeInfo{
+    l2_node(evo,state)
+}
+
+fn fresh17_wilson95(success:usize,n:usize)->(f64,f64){
+    let z=1.959_963_984_540_054_f64;
+    let n=n as f64;
+    let p=success as f64/n;
+    let denom=1.0+z*z/n;
+    let center=(p+z*z/(2.0*n))/denom;
+    let half=z*(p*(1.0-p)/n+z*z/(4.0*n*n)).sqrt()/denom;
+    (center-half,center+half)
+}
+
+#[test]
+#[ignore = "requires one-use AETERNA_FRESH_SEED from first-attempt CI"]
+fn g17_fresh_goal_conditioned_planning_pack(){
+    let authority:u64=std::env::var("AETERNA_FRESH_SEED")
+        .expect("AETERNA_FRESH_SEED required")
+        .parse().expect("fresh G17 seed must be u64");
+    let source_sha=std::env::var("AETERNA_SOURCE_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+    let spec_sha=std::env::var("AETERNA_SPEC_SHA")
+        .unwrap_or_else(|_|"unknown".into());
+
+    let (specs,digest)=fresh17_specs(authority);
+    println!(
+        "FRESH_G17_SEAL source_sha={} spec_sha={} authority_seed={} pack_digest={:016x}",
+        source_sha,spec_sha,authority,digest
+    );
+    for (sub,spec) in specs.iter().enumerate(){
+        println!("FRESH_G17_BLOCK sub={} {:?}",sub,spec);
+    }
+
+    let mut full=0usize;
+    let mut per_seed=Vec::new();
+    let mut switch_violations=0usize;
+    let mut depth1=0usize;
+    let mut no_goal=0usize;
+    let mut wrong_goal=0usize;
+    let mut broken_goal=0usize;
+    let mut broken_route=0usize;
+    let mut phase_shift=0usize;
+    let mut restored=0usize;
+    let mut irrelevant=0usize;
+    let mut structure_violations=0usize;
+    let mut outcome_violations=0usize;
+    let mut endpoint_violations=0usize;
+    let mut real_mutations=0usize;
+    let mut fingerprint_mutations=0usize;
+    let mut legacy_violations=0usize;
+    let mut motor_mask=0u8;
+
+    for (sub,spec) in specs.iter().enumerate(){
+        for motor in spec.motors {motor_mask|=1u8<<motor;}
+
+        let mut evo=fresh17_train_abstraction(spec);
+        if evo.concept_atoms().len()!=8
+            || evo.phase_native_promoted_concept_count()!=4
+            || evo.phase_native_promoted_deep_count(2)!=6
+            || !evo.composite_concepts().is_empty()
+        {
+            structure_violations+=1;
+        }
+
+        fresh17_learn_model(&mut evo,spec);
+
+        let refs=(0..6usize)
+            .map(|state|fresh17_ref(&evo,spec,state))
+            .collect::<Vec<_>>();
+        let cells=refs.iter()
+            .map(|r|r.cell)
+            .collect::<std::collections::BTreeSet<_>>();
+        for circuit in evo.phase_native_circuits(){
+            let aff=evo.phase_native_synapse(circuit.afferent_synapse).unwrap();
+            let succ=evo.phase_native_synapse(circuit.successor_synapse).unwrap();
+            let outcome=evo.phase_native_synapse(circuit.outcome_synapse).unwrap();
+            if !cells.contains(&aff.from) || !cells.contains(&succ.to) {
+                endpoint_violations+=1;
+            }
+            if outcome.weight.abs()>1.0e-7 {
+                outcome_violations+=1;
+            }
+        }
+        if evo.planning_transition_count()!=0 {legacy_violations+=1;}
+
+        evo.set_planning_learning_enabled(false);
+
+        let start=spec.roles[0];
+        let goal_a=spec.roles[3];
+        let goal_b=spec.roles[4];
+        let mid_a=spec.roles[1];
+        let mid_b=spec.roles[2];
+        let action_a=spec.motors[4];
+        let action_b=spec.motors[5];
+
+        let mut sub_full=0usize;
+        let mut goal_a_actions=Vec::new();
+        let mut goal_b_actions=Vec::new();
+
+        for goal in [goal_a,goal_b] {
+            let expected=if goal==goal_a {action_a}else{action_b};
+            for layout in spec.layouts[1..5].iter().copied(){
+                let current=fresh17_state_scene(spec,start,layout);
+                let goal_scene=fresh17_state_scene(spec,goal,layout);
+                evo.observe_initial_real(&current,false);
+                let real_before=evo.current_real().unwrap().clone();
+                let fp_before=evo.phase_native_learned_fingerprint();
+
+                let decision=evo.plan_phase_native_abstract_goal(
+                    &current,&goal_scene,None
+                );
+
+                let real_after=evo.current_real().unwrap();
+                let fp_after=evo.phase_native_learned_fingerprint();
+                if real_after.sensory!=real_before.sensory
+                    || real_after.need!=real_before.need
+                    || real_after.tick!=real_before.tick
+                {real_mutations+=1;}
+                if fp_after!=fp_before {fingerprint_mutations+=1;}
+
+                let action=decision.map(|d|d.first_action);
+                let ok=action==Some(expected);
+                full+=usize::from(ok);
+                sub_full+=usize::from(ok);
+                if goal==goal_a {goal_a_actions.push(action);}
+                else {goal_b_actions.push(action);}
+
+                let mut shallow=evo.clone();
+                depth1+=usize::from(
+                    shallow.plan_phase_native_abstract_goal(
+                        &current,&goal_scene,Some(1)
+                    ).map(|d|d.first_action)==Some(expected)
+                );
+
+                no_goal+=usize::from(
+                    evo.plan_phase_native_abstract(&current,None)
+                        .map(|d|d.first_action)==Some(expected)
+                );
+
+                let other=if goal==goal_a {goal_b}else{goal_a};
+                let other_expected=if other==goal_a {action_a}else{action_b};
+                let wrong=fresh17_state_scene(spec,other,layout);
+                wrong_goal+=usize::from(
+                    evo.plan_phase_native_abstract_goal(
+                        &current,&wrong,None
+                    ).map(|d|d.first_action)==Some(other_expected)
+                );
+            }
+        }
+
+        if goal_a_actions.iter().any(|a|*a!=Some(action_a))
+            || goal_b_actions.iter().any(|a|*a!=Some(action_b))
+            || action_a==action_b
+        {
+            switch_violations+=1;
+        }
+        per_seed.push(sub_full);
+
+        let s0=refs[start];
+        let mid_a_ref=refs[mid_a];
+        let mid_b_ref=refs[mid_b];
+        let goal_a_ref=refs[goal_a];
+
+        let goal_node=fresh17_l2_node(&evo,goal_a_ref);
+        let mut bg=evo.clone();
+        bg.perturb_phase_native_synapse_for_control(
+            goal_node.child_synapses[0],0.0,0.0
+        ).expect("fresh G17 goal-recognition synapse");
+        for layout in spec.layouts[1..3].iter().copied(){
+            let current=fresh17_state_scene(spec,start,layout);
+            let goal=fresh17_state_scene(spec,goal_a,layout);
+            broken_goal+=usize::from(
+                bg.plan_phase_native_abstract_goal(
+                    &current,&goal,None
+                ).map(|d|d.first_action)==Some(action_a)
+            );
+        }
+
+        let selected=fresh17_transition(
+            &evo,s0,action_a,mid_a_ref
+        );
+        let mut br=evo.clone();
+        let saved=br.perturb_phase_native_synapse_for_control(
+            selected.successor_synapse,0.0,0.0
+        ).expect("fresh G17 route synapse");
+        for layout in spec.layouts[1..3].iter().copied(){
+            let current=fresh17_state_scene(spec,start,layout);
+            let goal=fresh17_state_scene(spec,goal_a,layout);
+            broken_route+=usize::from(
+                br.plan_phase_native_abstract_goal(
+                    &current,&goal,None
+                ).map(|d|d.first_action)==Some(action_a)
+            );
+        }
+
+        br.restore_phase_native_synapse_for_control(
+            selected.successor_synapse,saved.clone()
+        );
+        for layout in spec.layouts[1..3].iter().copied(){
+            let current=fresh17_state_scene(spec,start,layout);
+            let goal=fresh17_state_scene(spec,goal_a,layout);
+            restored+=usize::from(
+                br.plan_phase_native_abstract_goal(
+                    &current,&goal,None
+                ).map(|d|d.first_action)==Some(action_a)
+            );
+        }
+
+        let mut shifted=evo.clone();
+        shifted.perturb_phase_native_synapse_for_control(
+            selected.successor_synapse,1.0,std::f32::consts::PI
+        ).expect("fresh G17 phase route");
+        for layout in spec.layouts[1..3].iter().copied(){
+            let current=fresh17_state_scene(spec,start,layout);
+            let goal=fresh17_state_scene(spec,goal_a,layout);
+            phase_shift+=usize::from(
+                shifted.plan_phase_native_abstract_goal(
+                    &current,&goal,None
+                ).map(|d|d.first_action)==Some(action_a)
+            );
+        }
+
+        let competing=fresh17_transition(
+            &evo,s0,action_b,mid_b_ref
+        );
+        let mut unrelated_evo=evo.clone();
+        unrelated_evo.perturb_phase_native_synapse_for_control(
+            competing.successor_synapse,0.0,0.0
+        ).expect("fresh G17 competing route");
+        let current=fresh17_state_scene(spec,start,spec.layouts[1]);
+        let goal=fresh17_state_scene(spec,goal_a,spec.layouts[1]);
+        irrelevant+=usize::from(
+            unrelated_evo.plan_phase_native_abstract_goal(
+                &current,&goal,None
+            ).map(|d|d.first_action)==Some(action_a)
+        );
+
+        println!(
+            "FRESH_G17_SUB sub={} full={}/8 start={} goal_a={} goal_b={} actions=[{},{}]",
+            sub,sub_full,start,goal_a,goal_b,action_a,action_b
+        );
+    }
+
+    let (lo,hi)=fresh17_wilson95(full,80);
+    println!(
+        "FRESH_G17_RESULT full={}/80 wilson95=[{:.6},{:.6}] per_seed={:?} switch_violations={} depth1={}/80 no_goal={}/80 wrong_goal={}/80 broken_goal={}/20 broken_route={}/20 phase_shift={}/20 restored={}/20 irrelevant={}/10 structure_violations={} outcome_violations={} endpoint_violations={} real_mutations={} fingerprint_mutations={} legacy_violations={} motor_mask={:#08b}",
+        full,lo,hi,per_seed,switch_violations,depth1,no_goal,wrong_goal,
+        broken_goal,broken_route,phase_shift,restored,irrelevant,
+        structure_violations,outcome_violations,endpoint_violations,
+        real_mutations,fingerprint_mutations,legacy_violations,motor_mask
+    );
+
+    assert!(full>=76);
+    assert!(lo>=0.87);
+    assert!(per_seed.iter().all(|score|*score>=6));
+    assert_eq!(switch_violations,0);
+    assert!(depth1<=10);
+    assert!(no_goal<=20);
+    assert!(wrong_goal>=70);
+    assert!(broken_goal<=4);
+    assert!(broken_route<=4);
+    assert!(phase_shift<=4);
+    assert!(restored>=19);
+    assert!(irrelevant>=9);
+    assert_eq!(structure_violations,0);
+    assert_eq!(outcome_violations,0);
+    assert_eq!(endpoint_violations,0);
+    assert_eq!(real_mutations,0);
+    assert_eq!(fingerprint_mutations,0);
+    assert_eq!(legacy_violations,0);
+    assert_eq!(motor_mask,0b11_1111);
+}
