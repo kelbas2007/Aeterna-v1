@@ -182,7 +182,7 @@ impl EvoPhase {
                 // prefer the motor that already owns more supported physical
                 // transitions somewhere in the acquired abstract model.
                 // This reuses factual cross-state evidence and contains no
-                // route/depth/correct-action mapping.
+                // evaluator task mapping or target-depth knowledge.
                 let global_support = state
                     .circuits
                     .iter()
