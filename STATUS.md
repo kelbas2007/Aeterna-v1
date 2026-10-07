@@ -934,3 +934,22 @@ Workflow `37617083481` PASSed on source `9f87bc44d71209942a9f35735f68ebad707fd3c
 One unchanged physical world-model now chooses different actions from different raw goal observations.
 
 Active evidence gate: **FRESH-G17**.
+
+
+## G17 FRESH goal-conditioned planning
+
+Run `37617665614` PASSed on source `0fcb57f69eca1316c76fd77dcc55b89536a6e507`.
+
+- FULL **80/80**, Wilson95 [0.954182,1.000000];
+- every seed 8/8;
+- goal-switch violations 0;
+- DEPTH1 / NO_GOAL 0/80;
+- opposite valid goal followed the other goal 80/80;
+- broken goal / route / pi phase 0/20 each;
+- exact restore 20/20;
+- irrelevant lesion 10/10;
+- structure/outcome/endpoint/REAL/fingerprint/legacy violations 0;
+- all six motor roles exercised;
+- Human Protection v1.1, regressions and Release PASS.
+
+Next intelligence gate: **G18 goal-conditioned active information acquisition**.
