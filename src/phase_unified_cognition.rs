@@ -20,6 +20,14 @@ pub struct PhaseUnifiedDecision {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PhaseUnifiedStateActionSnapshot {
+    pub base_cell: usize,
+    pub action: usize,
+    pub circuit_count: u64,
+    pub revisions: u64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhaseUnifiedKnowledgeSnapshot {
     pub circuits: u64,
     pub revisions: u64,
@@ -96,6 +104,60 @@ impl EvoPhase {
             confidence,
             economy,
         ])
+    }
+
+    fn unified_state_action_snapshot_for(
+        &self,
+        base_cell: usize,
+        action: usize,
+    ) -> Option<PhaseUnifiedStateActionSnapshot> {
+        if action >= self.config.motor_cells { return None; }
+        let state = self.phase_native.as_ref()?;
+        let motor = self.config.sensory_cells + action;
+        let matching = state.circuits.iter().filter(|circuit| {
+            self.synapses[circuit.afferent_synapse].from == base_cell
+                && self.synapses[circuit.motor_synapse].to == motor
+        });
+        let mut circuit_count = 0u64;
+        let mut revisions = 0u64;
+        for circuit in matching {
+            circuit_count = circuit_count.saturating_add(1);
+            revisions = revisions.saturating_add(circuit.revision);
+        }
+        Some(PhaseUnifiedStateActionSnapshot {
+            base_cell,
+            action,
+            circuit_count,
+            revisions,
+        })
+    }
+
+    pub fn phase_native_unified_state_action_snapshot(
+        &self,
+        action: usize,
+    ) -> Option<PhaseUnifiedStateActionSnapshot> {
+        let sensory = self.current_real.as_ref()?.sensory.clone();
+        let entry = self.phase_native_abstract_state(&sensory)?;
+        self.unified_state_action_snapshot_for(entry.cell, action)
+    }
+
+    pub fn phase_native_unified_state_action_progress_since(
+        &self,
+        before: PhaseUnifiedStateActionSnapshot,
+    ) -> bool {
+        self.unified_state_action_snapshot_for(before.base_cell, before.action)
+            .map(|after| {
+                after.circuit_count > before.circuit_count
+                    || after.revisions > before.revisions
+            })
+            .unwrap_or(false)
+    }
+
+    pub fn phase_native_unified_state_action_candidate_id(
+        &self,
+        action: usize,
+    ) -> Option<u64> {
+        self.unified_state_action_candidate(action).map(|(id,_)|id)
     }
 
     fn unified_state_action_candidate(
