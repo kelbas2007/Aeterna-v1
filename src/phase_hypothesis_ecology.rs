@@ -193,6 +193,14 @@ impl EvoPhase {
         }).collect()
     }
 
+    pub fn phase_native_hypothesis_registered(&self,candidate_id:u64)->bool{
+        self.phase_native.as_ref()
+            .and_then(|n|n.meta_control.as_ref())
+            .and_then(|m|m.ecology.as_ref())
+            .map(|e|e.records.iter().any(|r|r.candidate_id==candidate_id))
+            .unwrap_or(false)
+    }
+
     pub fn phase_native_hypothesis_dormant(
         &self,
         candidate_id:u64,
