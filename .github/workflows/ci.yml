@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary G11 recursive-abstraction rerun after matched-control observer fix; no fresh pack.
+# One-use G11 recursive-abstraction qualification trigger; mechanism/spec already frozen.
 
 on:
   workflow_dispatch:
@@ -39,6 +39,11 @@ on:
         required: false
         default: false
         type: boolean
+      qualify_g11:
+        description: 'Consume a new one-use G11 recursive-abstraction qualification pack'
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths: ['.github/workflows/ci.yml']
@@ -49,7 +54,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g11: run recursive abstraction mechanism'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g11: execute frozen fresh recursive qualification'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -138,6 +143,24 @@ jobs:
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G10_PHASE_NATIVE_CONCEPT_FRESH_PROTOCOL.md)"
           set -o pipefail
           cargo test --release --test g10_phase_native_concept g10_fresh_phase_native_concept_pack -- --ignored --nocapture | tee g10-phys-evidence.log
+      - name: Explicit one-use fresh G11 recursive-abstraction qualification
+        if: ${{ github.event_name == 'push' || inputs.qualify_g11 }}
+        env:
+          AETERNA_FRESH_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/G11_RECURSIVE_ABSTRACTION_FRESH_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test g11_recursive_abstraction g11_fresh_recursive_abstraction_pack -- --ignored --nocapture | tee g11-evidence.log
+      - name: Preserve G11 execution log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g11-execution-evidence
+          path: g11-evidence.log
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve G10-PHYS execution log
         if: always()
         uses: actions/upload-artifact@v4
