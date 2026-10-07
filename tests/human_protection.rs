@@ -1,7 +1,7 @@
 use aeterna_v1::{
     EvoConfig, EvoPhase, HumanProtection, HumanProtectionDecision, HumanProtectionEvidence,
-    HumanProtectionReason, HumanProtectionVerdict, HUMAN_HARM_BLOCK_THRESHOLD,
-    HUMAN_HAZARD_CONFIDENCE_MIN,
+    HumanProtectionPermitError, HumanProtectionReason, HumanProtectionVerdict,
+    HUMAN_HARM_BLOCK_THRESHOLD, HUMAN_HAZARD_CONFIDENCE_MIN,
 };
 use aeterna_v1::carrier::PhaseNativeConfig;
 
@@ -23,11 +23,14 @@ fn human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop()
     let mut gate = HumanProtection::new();
 
     let allow = gate.screen(2, safe());
-    let permit = allow.permit().expect("safe proposal must receive sealed permit");
-    assert_eq!(permit.action(), 2);
-    assert_eq!(permit.sequence(), 1);
     assert_eq!(allow.record().verdict, HumanProtectionVerdict::Allow);
     assert_eq!(allow.record().reason, HumanProtectionReason::SafeEvidence);
+    let permit = allow
+        .into_permit()
+        .expect("safe proposal must receive sealed permit");
+    assert_eq!(permit.action(), 2);
+    assert_eq!(permit.sequence(), 1);
+    assert_eq!(gate.consume_permit(permit), Ok(2));
 
     let high_risk = gate.screen(
         2,
@@ -36,7 +39,7 @@ fn human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop()
             ..safe()
         },
     );
-    assert!(high_risk.permit().is_none());
+    assert!(!high_risk.is_allowed());
     assert_eq!(high_risk.record().verdict, HumanProtectionVerdict::Block);
     assert_eq!(
         high_risk.record().reason,
@@ -51,7 +54,7 @@ fn human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop()
             ..safe()
         },
     );
-    assert!(uncertain.permit().is_none());
+    assert!(!uncertain.is_allowed());
     assert_eq!(
         uncertain.record().reason,
         HumanProtectionReason::InsufficientHazardConfidence
@@ -64,7 +67,7 @@ fn human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop()
             ..safe()
         },
     );
-    assert!(invalid.permit().is_none());
+    assert!(!invalid.is_allowed());
     assert_eq!(
         invalid.record().reason,
         HumanProtectionReason::InvalidEvidence
@@ -77,7 +80,7 @@ fn human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop()
             ..safe()
         },
     );
-    assert!(emergency.permit().is_none());
+    assert!(!emergency.is_allowed());
     assert_eq!(
         emergency.record().verdict,
         HumanProtectionVerdict::EmergencyStop
@@ -85,7 +88,7 @@ fn human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop()
     assert!(gate.emergency_stop_latched());
 
     let safe_but_latched = gate.screen(2, safe());
-    assert!(safe_but_latched.permit().is_none());
+    assert!(!safe_but_latched.is_allowed());
     assert_eq!(
         safe_but_latched.record().reason,
         HumanProtectionReason::EmergencyStopLatched
@@ -96,8 +99,81 @@ fn human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop()
     assert!(!gate.emergency_stop_latched());
 
     let allow_after_external_reset = gate.screen(2, safe());
-    assert!(allow_after_external_reset.permit().is_some());
     assert_eq!(allow_after_external_reset.record().sequence, 7);
+    let permit = allow_after_external_reset
+        .into_permit()
+        .expect("external reset permits a new safe screening");
+    assert_eq!(gate.consume_permit(permit), Ok(2));
+}
+
+#[test]
+fn human_protection_permits_are_single_use_current_sequence_tokens() {
+    let mut gate = HumanProtection::new();
+
+    let old = gate.screen(1, safe()).into_permit().unwrap();
+    let current = gate.screen(2, safe()).into_permit().unwrap();
+
+    assert_eq!(
+        gate.consume_permit(old),
+        Err(HumanProtectionPermitError::StaleOrUnknownPermit),
+        "later screening must invalidate an older unconsumed permit"
+    );
+    assert_eq!(gate.consume_permit(current), Ok(2));
+
+    let before_emergency = gate.screen(1, safe()).into_permit().unwrap();
+    let emergency = gate.screen(
+        0,
+        HumanProtectionEvidence {
+            emergency_stop: true,
+            ..safe()
+        },
+    );
+    assert!(!emergency.is_allowed());
+    assert_eq!(
+        gate.consume_permit(before_emergency),
+        Err(HumanProtectionPermitError::EmergencyStopLatched)
+    );
+
+    gate.external_human_emergency_reset();
+
+    let after_reset = gate.screen(0, safe()).into_permit().unwrap();
+    assert_eq!(gate.consume_permit(after_reset), Ok(0));
+}
+
+#[test]
+fn human_absence_requires_confident_external_evidence() {
+    let mut gate = HumanProtection::new();
+
+    let uncertain_absence = gate.screen(
+        0,
+        HumanProtectionEvidence {
+            human_present: false,
+            physical_effect_possible: true,
+            predicted_harm_probability: 0.0,
+            hazard_confidence: 0.20,
+            emergency_stop: false,
+        },
+    );
+    assert!(!uncertain_absence.is_allowed());
+    assert_eq!(
+        uncertain_absence.record().reason,
+        HumanProtectionReason::InsufficientHazardConfidence
+    );
+
+    let confident_absence = gate.screen(
+        0,
+        HumanProtectionEvidence {
+            human_present: false,
+            physical_effect_possible: true,
+            predicted_harm_probability: 0.90,
+            hazard_confidence: 0.99,
+            emergency_stop: false,
+        },
+    );
+    let permit = confident_absence
+        .into_permit()
+        .expect("confident external evidence of human absence may authorize");
+    assert_eq!(gate.consume_permit(permit), Ok(0));
 }
 
 #[test]
@@ -147,7 +223,7 @@ fn human_protection_is_deterministic_and_cognitive_checkpoint_cannot_clear_latch
     assert!(evo.human_protection_emergency_latched());
 
     let still_blocked = evo.screen_physical_action(0, safe());
-    assert!(still_blocked.permit().is_none());
+    assert!(!still_blocked.is_allowed());
     assert_eq!(
         still_blocked.record().reason,
         HumanProtectionReason::EmergencyStopLatched
@@ -155,7 +231,10 @@ fn human_protection_is_deterministic_and_cognitive_checkpoint_cannot_clear_latch
 
     evo.external_human_emergency_reset();
     assert!(!evo.human_protection_emergency_latched());
-    assert!(evo.screen_physical_action(0, safe()).permit().is_some());
+
+    let allowed = evo.screen_physical_action(0, safe());
+    let permit = allowed.into_permit().expect("safe permit after external reset");
+    assert_eq!(evo.consume_physical_action_permit(permit), Ok(0));
 }
 
 #[test]
@@ -180,11 +259,20 @@ fn human_protection_source_has_no_cognitive_override_dependency() {
         );
     }
 
+    assert!(
+        source.contains(
+            "#[derive(Debug, PartialEq, Eq)]\npub struct HumanProtectionPermit"
+        ),
+        "permit must not derive Clone or Copy"
+    );
+
     for required in [
         "HUMAN_HARM_BLOCK_THRESHOLD",
         "HUMAN_HAZARD_CONFIDENCE_MIN",
         "emergency_stop_latched",
         "external_human_emergency_reset",
+        "consume_permit",
+        "last_issued_sequence",
         "InvalidEvidence",
         "ExcessHumanHarmRisk",
         "InsufficientHazardConfidence",
