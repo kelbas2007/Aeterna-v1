@@ -1041,3 +1041,113 @@ fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
     assert!(c_side_correct[0]>=13&&c_side_correct[1]>=13);
     assert!(memoryless<=20);
 }
+
+
+#[test]
+fn post_intel2_state_action_ecology_generic_witness(){
+    // Prospective generic witness from POST_INTEL2_ACTION_ECOLOGY_PROTOCOL.
+    // No burned-pack state/motor mapping is used here.
+    let (evo,l1)=foundation::build24();
+    let meta=meta_checkpoint();
+    let mut rt=ScientificRuntime::new(evo).unwrap();
+    assert!(rt.enable_unified_cognition(
+        meta,
+        PhaseHypothesisEcologyConfig{
+            learning_rate:0.35,
+            dormancy_threshold:0.05,
+            learning_enabled:true,
+            phase_learning_enabled:true,
+        }
+    ));
+
+    let start=foundation::scene(&l1,0,0);
+    let frontier=foundation::scene(&l1,1,1);
+    let goal=foundation::scene(&l1,2,2);
+    rt.observe_external(&start).unwrap();
+    rt.set_goal(&goal).unwrap();
+
+    let initial=rt.organism().collect_phase_native_unified_proposals(&goal);
+    let initial_decision=rt.organism()
+        .choose_phase_native_unified_proposal(&initial)
+        .expect("initial generic action");
+    let stale_action=initial_decision.action;
+    let stale_id=initial.iter()
+        .find(|p|p.proposal.action==stale_action)
+        .and_then(|p|p.persistent_candidate_id)
+        .expect("generic state-action candidate id");
+
+    let reversed={
+        let mut p=initial.clone();
+        p.reverse();
+        rt.organism().choose_phase_native_unified_proposal(&p)
+            .expect("reversed proposal order")
+    };
+    assert_eq!(reversed.action,stale_action);
+
+    let mut stale_executions=0usize;
+    let mut switched=None;
+    for round in 0..16usize{
+        let proposals=rt.organism().collect_phase_native_unified_proposals(&goal);
+        let decision=rt.organism()
+            .choose_phase_native_unified_proposal(&proposals)
+            .expect("generic unified decision");
+        if decision.action!=stale_action{
+            switched=Some((round,decision.action));
+            break;
+        }
+
+        let outcome=rt.step_unified(
+            |_|Some(safe()),
+            |_|Ok((frontier.clone(),0.0))
+        ).unwrap();
+        assert!(matches!(outcome,StepOutcome::Executed{..}));
+        stale_executions+=1;
+
+        // Exogenous episode boundary: no cognitive reset and no transition
+        // tuition for the return to start.
+        rt.observe_external(&start).unwrap();
+    }
+
+    let switched=switched.expect(
+        "stale reachable-frontier action must lose authority and yield"
+    );
+    let stale_record=rt.organism().phase_native_hypothesis_records()
+        .into_iter()
+        .find(|r|r.candidate_id==stale_id)
+        .expect("stale state-action record");
+    assert!(stale_record.dormant);
+    assert!(stale_executions>=2);
+    assert!(switched.1!=stale_action);
+
+    // Matched no-state-action-ecology control: the qualified G16 selector
+    // ignores U2 dormancy and therefore still chooses the same stale
+    // reachable-frontier action from the identical learned carrier state.
+    let mut legacy_probe=rt.organism().clone();
+    let legacy_action=legacy_probe
+        .choose_phase_native_abstract_learned_drive_action()
+        .expect("legacy learned-drive action");
+    assert_eq!(legacy_action,stale_action);
+
+    // Candidate provenance/address survives dormancy. Generic positive factual
+    // usefulness through the same U2 local rule can reactivate it without
+    // re-registration.
+    let before=stale_record.clone();
+    let mut reactivate=rt.organism().clone();
+    for _ in 0..8usize{
+        assert!(reactivate.observe_phase_native_hypothesis_utility(stale_id,1.0));
+    }
+    let after=reactivate.phase_native_hypothesis_records()
+        .into_iter()
+        .find(|r|r.candidate_id==stale_id)
+        .expect("reactivated state-action record");
+    assert_eq!(after.candidate_cell,before.candidate_cell);
+    assert_eq!(after.utility_synapse,before.utility_synapse);
+    assert!(!after.dormant);
+    assert!(after.authority_at_full_applicability>before.authority_at_full_applicability);
+
+    println!(
+        "POST_INTEL2_ACTION_ECOLOGY stale_action={} stale_exec={} switch_round={} switch_action={} dormant_weight={} reactivated_weight={} legacy_control_action={}",
+        stale_action,stale_executions,switched.0,switched.1,
+        before.weight,after.weight,legacy_action
+    );
+}
