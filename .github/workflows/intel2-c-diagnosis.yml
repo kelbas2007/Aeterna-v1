@@ -23,4 +23,4 @@ jobs:
       - name: Reproduce burned World C and print proposal diagnostics
         shell: bash
         run: |
-          cargo test --release --test intel2_unified_worlds intel2_burned_world_c_diagnosis -- --nocapture
+          cargo test --release --test intel2_unified_worlds intel2_burned_world_c_with_environment_terminal_reset_diagnosis -- --nocapture
