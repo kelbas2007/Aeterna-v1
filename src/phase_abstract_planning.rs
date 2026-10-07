@@ -475,12 +475,22 @@ impl EvoPhase {
         }
 
         let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        // Repair-6 arbitration is computed before borrowing the native model:
+        // only contextual hypotheses that actually own this current
+        // base/predecessor/action can temporarily suppress a redundant G19
+        // probe. All unrelated rival actions are unchanged.
+        let context_probe_allowed = (0..self.config.motor_cells)
+            .map(|action| self.phase_context_rival_probe_allowed(entry.cell, action))
+            .collect::<Vec<_>>();
         let state = self.phase_native.as_ref()?;
         let relevance =
             self.phase_goal_relevance_for_cells(state, goal.cell, &state_cells);
 
         let mut best: Option<(usize, f32, u64)> = None;
         for action in 0..self.config.motor_cells {
+            if !context_probe_allowed[action] {
+                continue;
+            }
             let score = self.phase_goal_rival_disagreement_score(
                 state,
                 entry.cell,
