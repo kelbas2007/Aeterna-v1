@@ -1,5 +1,5 @@
 name: evo-ci
-# Manual-only between sealed qualification checkpoints.
+# Temporary G19 rival-hypothesis mechanism trigger; no fresh G19 pack.
 
 on:
   workflow_dispatch:
@@ -79,11 +79,17 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ci.yml']
+
 permissions:
   contents: read
 
 jobs:
   rust:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g19: run physical rival hypothesis mechanism'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -103,6 +109,8 @@ jobs:
         run: cargo test --release --test g16_autonomous_abstract_model -- --nocapture
       - name: G17 goal-conditioned abstract planning preflight
         run: cargo test --release --test g17_goal_conditioned_planning -- --nocapture
+      - name: G19 rival-hypothesis discrimination preflight
+        run: cargo test --release --test g19_rival_hypothesis_discrimination -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
