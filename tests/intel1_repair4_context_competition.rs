@@ -101,18 +101,21 @@ fn train_target_candidate(
     feed(evo,l1,5,7,5);
 }
 
-fn target_witness(
+fn target_stats(
     evo:&EvoPhase,
     l1:&[[usize;2];8],
-)->aeterna_v1::carrier::PhaseContextWitness{
+)->(bool,u64,u64){
     let base=evo.phase_native_abstract_state(&fixture::scene(l1,0,0)).unwrap().cell;
     let p1=evo.phase_native_abstract_state(&fixture::scene(l1,1,0)).unwrap().cell;
     let p2=evo.phase_native_abstract_state(&fixture::scene(l1,2,0)).unwrap().cell;
-    evo.phase_native_context_witnesses().into_iter().find(|w|
+    let witnesses=evo.phase_native_context_witnesses();
+    let w=witnesses.iter().find(|w|
         w.base_cell==base && w.anchor_action==1
             && w.predecessor_cells.contains(&p1)
             && w.predecessor_cells.contains(&p2)
-    ).expect("target context witness")
+    ).expect("target context witness");
+    println!("INTEL1_REPAIR4_TARGET {:?}",w);
+    (w.promoted,w.eligible_observations,w.context_switches)
 }
 
 fn score_target(
@@ -148,11 +151,10 @@ fn intel1_repair4_old_same_base_candidate_does_not_block_new_context(){
     let control=evo.clone();
 
     train_target_candidate(&mut evo,&l1);
-    let w=target_witness(&evo,&l1);
-    println!("INTEL1_REPAIR4_TARGET {:?}",w);
-    assert!(w.promoted);
-    assert!(w.eligible_observations>=32);
-    assert!(w.context_switches>=4);
+    let (promoted,evidence,switches)=target_stats(&evo,&l1);
+    assert!(promoted);
+    assert!(evidence>=32);
+    assert!(switches>=4);
 
     let base=evo.phase_native_abstract_state(&fixture::scene(&l1,0,0)).unwrap().cell;
     let same_base=evo.phase_native_context_witnesses().into_iter()
