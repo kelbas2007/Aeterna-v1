@@ -114,6 +114,14 @@ The strengthened G10-PHYS path moves pair evidence, promotion and action influen
 
 FRESH-G10-PHYS is the active evidence gate.
 
+### G11: recursive physical abstraction
+
+G11 now has a mechanism PASS: a physical concept acquired at level 1 can itself become a physical child of a newly acquired level-2 concept. Workflow `37577562551` produced FULL **8/8**, NO_RECURSION **0/8**, LEVEL1_ONLY **4/8**, with causal loss under both L1->L2 and lower atom->L1 lesions. ZERO_PHASE, ZERO_WEIGHT and NO_GROWTH were **0/8**.
+
+The first G11 preflight also exposed and preserved a useful architectural defect: concept promotion was dependent on curriculum order. The substrate now re-evaluates supported candidates after every new fact, so late evidence can trigger abstraction without replaying the candidate itself.
+
+FRESH-G11 is the active evidence gate.
+
 ## Non-negotiable rule
 
 EvoPhase is the cognitive substrate, not a planner plugin.
