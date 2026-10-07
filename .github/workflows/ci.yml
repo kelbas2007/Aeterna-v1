@@ -1,5 +1,5 @@
 name: evo-ci
-# Temporary Human Protection v1.1 actuator-permit qualification trigger.
+# Temporary G17 goal-conditioned planning mechanism trigger.
 
 on:
   workflow_dispatch:
@@ -79,7 +79,7 @@ permissions:
 jobs:
   rust:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'safety: run single-use Human Protection permits'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'g17: run goal-conditioned abstract planning mechanism'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -97,6 +97,8 @@ jobs:
         run: cargo test --release --test human_protection -- --nocapture
       - name: G16 autonomous abstract model causal preflight
         run: cargo test --release --test g16_autonomous_abstract_model -- --nocapture
+      - name: G17 goal-conditioned abstract planning preflight
+        run: cargo test --release --test g17_goal_conditioned_planning -- --nocapture
       - name: Full optimized regression suite including P1 and P2 interventions
         run: cargo test --release --all --all-targets -- --nocapture
       - name: Release build
