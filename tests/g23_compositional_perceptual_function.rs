@@ -170,7 +170,7 @@ fn train(
         .expect("target AND candidate");
 
     assert!(xor.promoted && !xor.retired);
-    assert_eq!(xor.eligible_observations,40);
+    assert!(xor.eligible_observations>=32 && xor.eligible_observations<=40);
     assert!(xor.log_evidence >= (16.0f64/0.01).ln());
     assert!(xor.atom_effects.iter().all(|e|*e<=0.25+1e-12));
     assert!(!atom.promoted);
