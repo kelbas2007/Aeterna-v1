@@ -815,3 +815,25 @@ Workflow `37608846717` PASSed on source `156421b208b59591d6addffed3f8ce913471b7b
 Acquired physical concepts now serve as states of a learned phase-native multi-step future model.
 
 Active evidence gate: **FRESH-G15 abstract model-based planning**.
+
+
+## G15 FRESH abstract model-based planning
+
+Run `37609743908` PASSed on source `bebd479389bad814093a459c59f60df691442181`.
+
+- spec SHA: `89589201d28b078bb326c41be7f53c7d08ab59a1`;
+- authority seed: `37609743908`;
+- burned pack: `84dffac8bcb36171`;
+- FULL **80/80**, Wilson95 [0.954182,1.000000];
+- every seed 8/8;
+- route lengths 2..4 after first delayed action;
+- depth violations 0;
+- DEPTH1 / NO_MODEL **0/80**;
+- broken abstract state / transition / pi phase **0/20** each;
+- exact restore **20/20**;
+- irrelevant lesion **10/10**;
+- structure / endpoint / REAL / fingerprint / legacy violations all 0;
+- all six motor roles exercised;
+- regressions and Release PASS.
+
+This statistically qualifies bounded abstract model-based planning. Next gap: autonomous goal-directed acquisition of missing abstract transitions.
