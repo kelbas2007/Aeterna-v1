@@ -11,9 +11,9 @@ pub struct PhaseUnifiedCognitiveProposal {
     pub proposal: PhaseCognitiveProposal,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PhaseUnifiedDecision {
-    pub persistent_candidate_id: Option<u64>,
+    pub supporting_candidate_ids: Vec<u64>,
     pub proposal_id: u64,
     pub action: usize,
     pub score: f32,
@@ -321,7 +321,11 @@ impl EvoPhase {
         if proposals.is_empty(){return None;}
         let native=self.phase_native.as_ref()?;
         let ecology=native.meta_control.as_ref()?.ecology.as_ref()?;
-        let mut adjusted=Vec::new();
+
+        // Distinct explanations that request the SAME external motor are not
+        // competing operations. Coalesce them into one action-level proposal.
+        // This rule is source/class agnostic and invariant to enumeration/IDs.
+        let mut groups:Vec<(usize,[f32;META_FIELD_COUNT],Vec<u64>)>=Vec::new();
 
         for item in proposals {
             if !item.applicability.is_finite()
@@ -329,28 +333,57 @@ impl EvoPhase {
                 || !Self::valid_meta_fields(item.proposal.fields)
             {return None;}
 
-            let mut proposal=item.proposal;
+            let mut fields=item.proposal.fields;
+            let mut supporter=None;
             if let Some(id)=item.persistent_candidate_id {
                 if self.phase_native_hypothesis_registered(id) {
                     let authority=self.phase_hypothesis_authority_with_state(
                         native,id,item.applicability
                     )?;
                     if authority<=ecology.config.dormancy_threshold{continue;}
-                    proposal.fields[3]=(proposal.fields[3]*authority).clamp(0.0,1.0);
+                    fields[3]=(fields[3]*authority).clamp(0.0,1.0);
                 }else{
-                    // Probation before the first factual usefulness update.
-                    proposal.fields[3]=(proposal.fields[3]*item.applicability)
-                        .clamp(0.0,1.0);
+                    // Probation before first factual usefulness update.
+                    fields[3]=(fields[3]*item.applicability).clamp(0.0,1.0);
                 }
+                supporter=Some(id);
             }
-            adjusted.push(proposal);
+
+            if let Some((_,group_fields,supporters))=groups.iter_mut()
+                .find(|(action,_,_)|*action==item.proposal.action)
+            {
+                for index in 0..META_FIELD_COUNT {
+                    group_fields[index]=group_fields[index].max(fields[index]);
+                }
+                if let Some(id)=supporter {
+                    if !supporters.contains(&id){supporters.push(id);}
+                }
+            }else{
+                groups.push((
+                    item.proposal.action,
+                    fields,
+                    supporter.into_iter().collect(),
+                ));
+            }
         }
 
+        if groups.is_empty(){return None;}
+        for (_,_,supporters) in &mut groups {supporters.sort_unstable();}
+
+        let adjusted=groups.iter().map(|(action,fields,_)|
+            PhaseCognitiveProposal{
+                proposal_id:unified_hash(&[0xAC710_u64,*action as u64]),
+                action:*action,
+                fields:*fields,
+            }
+        ).collect::<Vec<_>>();
+
         let meta=self.choose_phase_native_meta_proposal(&adjusted)?;
-        let original=proposals.iter()
-            .find(|p|p.proposal.proposal_id==meta.proposal_id)?;
+        let (_,_,supporters)=groups.iter()
+            .find(|(action,_,_)|*action==meta.action)?;
+
         Some(PhaseUnifiedDecision{
-            persistent_candidate_id:original.persistent_candidate_id,
+            supporting_candidate_ids:supporters.clone(),
             proposal_id:meta.proposal_id,
             action:meta.action,
             score:meta.score,
