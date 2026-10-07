@@ -1076,3 +1076,21 @@ All other fresh criteria passed, including FULL 80/80, AND 5/5, XOR 5/5, target 
 Post-failure analysis found the single-atom threshold was incompatible with the balanced AND truth table: the no-composition majority/single-atom ceiling is 6/8 per AND seed and 4/8 per XOR seed, exactly 50/80 over the 5+5 pack. This does not retroactively change FRESH-1.
 
 Next gate: a new independently seeded **FRESH-G23-2** protocol with operator-specific no-composition ceilings fixed before its evaluator/run.
+
+
+## Unified-cognition U1
+
+Branch: `unified-cognition` from clean R4 cognitive core `b811b59a5777b59b4ab640ef4ac2ebf75a53c45d`.
+
+U1 carrier-owned meta-control: **PASS**.
+
+Run `37676727090`, source `974ce3cd7cc3518aa42625eef26f9e269fac23bc`.
+
+- target proposal arbitration 12/12;
+- fixed-priority and ID baselines 4/12;
+- zero meta control 0/12;
+- physical lesion/pi/restore/unrelated controls 4/4 each;
+- real contextual/rival/general-epistemic proposal integration PASS;
+- G20-G23, Human Protection and Release PASS.
+
+Next architectural gate: **U2 lifetime hypothesis ecology**.
