@@ -953,3 +953,25 @@ Run `37617665614` PASSed on source `0fcb57f69eca1316c76fd77dcc55b89536a6e507`.
 - Human Protection v1.1, regressions and Release PASS.
 
 Next intelligence gate: **G18 goal-conditioned active information acquisition**.
+
+
+## G18 goal-conditioned active reasoning
+
+Workflow `37627583024` PASSed on source `c60e518c233f7333330922c9e15a8c22a567a1d5`.
+
+- FULL requested shortcut 8/8;
+- correct first goal-relevant navigation 8/8;
+- correct second unknown probe 8/8;
+- post-acquisition shortcut plan 8/8;
+- GENERAL_FRONTIER 4/8;
+- NO_GOAL 0/8;
+- opposite goal targets opposite shortcut 8/8;
+- broken goal / goal-route / pi-phase 0/8;
+- exact restore 8/8;
+- irrelevant branch lesion 8/8;
+- no-transition-learning shortcut plan 0/8;
+- source guard, Human Protection, regressions and Release PASS.
+
+The current raw goal now selects which missing abstract transition is worth acquiring.
+
+Active evidence gate: **FRESH-G18**.
