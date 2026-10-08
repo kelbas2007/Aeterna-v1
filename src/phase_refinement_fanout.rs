@@ -280,18 +280,13 @@ impl EvoPhase {
         if learning {
             comp.factual_events = comp.factual_events.saturating_add(1);
 
-            let no_base_candidates = !comp.candidates.iter()
-                .any(|w| w.base_cell == pre_cell);
-            if no_base_candidates && self.config.structural_growth_enabled {
-                let opposing = comp.discovery.iter().rev().find(|fact|
-                    fact.base == pre_cell
-                        && fact.action == action
-                        && fact.post != after_cell
-                ).cloned();
-                if let Some(old) = opposing {
-                    let programs = Self::candidate_programs(&old.features, raw);
-                    for program in programs {
-                        if comp.candidates.len() >= COMPOSITION_CANDIDATE_CAP { break; }
+            let no_active_base_candidates = !comp.candidates.iter()
+                .any(|w| w.base_cell == pre_cell && !w.retired);
+            if no_active_base_candidates && self.config.structural_growth_enabled {
+                let proposed = Self::composition_untried_hypotheses(
+                    &comp, pre_cell, action, after_cell, raw
+                );
+                for (program, old_post) in proposed {
                         let free = self.dormant_range()
                             .filter(|i| !self.cells[*i].recruited)
                             .take(4).collect::<Vec<_>>();
@@ -309,7 +304,7 @@ impl EvoPhase {
                             base_cell: pre_cell,
                             program,
                             program_cells,
-                            successor_cells: [old.post, after_cell],
+                            successor_cells: [old_post, after_cell],
                             state_cells: states,
                             input_synapses: inputs,
                             anchor_action: action,
@@ -325,7 +320,6 @@ impl EvoPhase {
                             atom_counts: [[[0; 2]; 2]; 2],
                         });
                     }
-                }
             } else {
                 for index in 0..comp.candidates.len() {
                     if comp.candidates[index].base_cell != pre_cell
