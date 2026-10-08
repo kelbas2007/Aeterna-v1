@@ -469,6 +469,12 @@ impl ScientificRuntime {
         // do NOT count another copy of the same cue as new information.
         if self.organism.phase_native_temporal_evidence_enabled() {
             if self.model_learning_enabled {
+                // TE5: real terminal-like POST + factual bounded outcome is
+                // credited against PRE-action carrier belief, never to a
+                // host-given hidden class or a prepared correct-motor table.
+                let _=self.organism.observe_phase_native_temporal_outcome(
+                    action,&post,task_outcome
+                );
                 let _=self.organism.observe_phase_native_sensing_affordance(
                     action,&factual_pre,&post
                 );
