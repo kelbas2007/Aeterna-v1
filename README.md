@@ -1,3 +1,15 @@
+# AETERNA v1 — EvoPhase Cognitive Runtime
+
+**Current qualified baseline:** **INTEL-4 PASS** on one independently seeded five-world deterministic synthetic family, **not** open-world AGI. Same frozen no-LLM EvoPhase organism acquired, revised and reused physical knowledge across A/B/C/D/E and retained it after restart. See [verified INTEL-4 report](docs/INTEL4_RESULT_PASS.md) and [protocol](docs/INTEL4_PROTOCOL.md).
+
+**Where everything is:** [PROJECT_MAP.md](PROJECT_MAP.md). Default `main` is the working qualified baseline after source-preserving integration; frozen experiment origin remains `intel4-frozen-unified`. `archive/evidence-20261008` anchors every previous branch head. New research goes to `research/beyond-intel4`. **Separate mature Codex-AETERNA is unaffected.**
+
+**Precise distinction:** Early G8/G10 audits below identified host-execution gaps that led to the phase-native ownership program. Those dated negative findings are preserved as historical records; they do **not** supersede the later qualified P1–P5/G20–G23/U1–U3 and INTEL-4 results. Nor does INTEL-4 prove all cognition is free of inherited generic algorithms.
+
+---
+
+## Historical development documentation
+
 # AETERNA v1
 
 A clean no-LLM intelligence research line targeting **full EvoPhase cognitive ownership**.
