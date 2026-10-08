@@ -1,0 +1,127 @@
+name: INTEL-2 edge-cost development check
+on:
+  push:
+    branches: [post-intel2-c-diagnosis]
+    paths: ['.github/workflows/intel2-edge-cost-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: intel2-edge-cost-development
+  cancel-in-progress: false
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6f754b4e97fc0a65f09321bb4eb170b3363e8eef
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify baseline cognition unchanged
+        run: git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+      - name: Confirm generic starvation witness fails before correction
+        shell: bash
+        run: |
+          set +e
+          cargo test --release --test intel2_exploration_edge_cost exploration_edge_cost_ -- --nocapture > baseline.log 2>&1
+          status=$?
+          set -e
+          cat baseline.log
+          test "$status" -ne 0
+          grep -q 'exploration_edge_cost_does_not_starve_immediately_unknown_actions ... FAILED' baseline.log
+          grep -q 'exploration_edge_cost_preserves_travel_to_remote_unknown_actions ... ok' baseline.log
+          echo 'BASELINE_STARVATION_REPRODUCED=true'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: edge-cost-baseline
+          path: baseline.log
+          retention-days: 7
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify bounded committed source difference
+        shell: bash
+        run: |
+          git diff --name-only 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock > changed-source.txt
+          test "$(cat changed-source.txt)" = 'src/phase_drive.rs'
+          git diff 07b44fb8e00837568bc9655e760eb031d1944dff -- src/phase_drive.rs
+      - name: Motor-permuted starvation and remote-frontier controls
+        id: local
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --release --test intel2_exploration_edge_cost exploration_edge_cost_ -- --nocapture 2>&1 | tee local.log
+      - name: Unchanged burned World C episodic diagnostic
+        id: world_c
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --release --test intel2_unified_worlds intel2_burned_world_c_with_environment_terminal_reset_diagnosis -- --exact --nocapture 2>&1 | tee world-c.log
+      - name: Historical mechanisms and library regressions
+        id: regressions
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p regression-logs
+          failed=0
+          cargo test --release --lib > regression-logs/library.log 2>&1 || failed=1
+          printf 'library_exit_failure=%s\n' "$failed" | tee regression-summary.txt
+          for file in tests/*.rs; do
+            target=$(basename "$file" .rs)
+            case "$target" in intel1_*|intel2_*) continue ;; esac
+            if cargo test --release --test "$target" -- --nocapture > "regression-logs/$target.log" 2>&1; then
+              echo "$target PASS" | tee -a regression-summary.txt
+            else
+              echo "$target FAIL" | tee -a regression-summary.txt
+              tail -n 25 "regression-logs/$target.log"
+              failed=1
+            fi
+          done
+          # Existing assembly test target names are discovered from committed files.
+          for file in tests/intel2*assembly*.rs tests/intel2*runtime*.rs; do
+            test -f "$file" || continue
+            target=$(basename "$file" .rs)
+            if cargo test --release --test "$target" intel2_ -- --nocapture > "regression-logs/$target.log" 2>&1; then
+              echo "$target PASS" | tee -a regression-summary.txt
+            else
+              echo "$target FAIL" | tee -a regression-summary.txt
+              tail -n 25 "regression-logs/$target.log"
+              failed=1
+            fi
+          done
+          exit "$failed"
+      - name: Release build
+        id: release
+        continue-on-error: true
+        run: cargo build --release
+      - name: Exact source and development result
+        if: always()
+        shell: bash
+        run: |
+          git diff --exit-code -- src tests Cargo.toml Cargo.lock
+          echo 'DEVELOPMENT_ONLY local=${{ steps.local.outcome }} world_c=${{ steps.world_c.outcome }} regressions=${{ steps.regressions.outcome }} release=${{ steps.release.outcome }}'
+          test '${{ steps.local.outcome }}' = success
+          test '${{ steps.world_c.outcome }}' = success
+          test '${{ steps.regressions.outcome }}' = success
+          test '${{ steps.release.outcome }}' = success
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: edge-cost-candidate-evidence
+          path: |
+            local.log
+            world-c.log
+            regression-summary.txt
+            regression-logs/
+            changed-source.txt
+          retention-days: 7
