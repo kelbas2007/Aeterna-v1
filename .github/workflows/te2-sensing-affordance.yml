@@ -1,0 +1,36 @@
+name: TE2 generic physical active-sensing affordance
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/beyond-intel4]
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'tests/te2_sensing_affordance.rs'
+      - '.github/workflows/te2-sensing-affordance.yml'
+
+jobs:
+  physical-affordance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Six opaque-motor factual sensing worlds and physical lesion/phase controls
+        run: cargo test --release --test te2_sensing_affordance te2_opaque_sensing_action_is_acquired_physically_in_six_permutations -- --nocapture
+      - name: Original TE1 structural physical evidence
+        run: cargo test --release --test te1_temporal_evidence te1_physically_accumulates_contradictory_raw_cues_and_restores
+      - name: C context and G20-G23
+        run: |
+          cargo test --release --test intel2_refined_state_controls refined_state_controls_preserve_context_through_unified_competition
+          cargo test --release --test g20_continual_reasoning
+          cargo test --release --test g21_contextual_state_refinement
+          cargo test --release --test g22_perceptual_variable_invention
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+      - name: U1-U3 and Human Protection
+        run: |
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+          cargo test --release --test human_protection
+      - name: Release
+        run: cargo build --release
