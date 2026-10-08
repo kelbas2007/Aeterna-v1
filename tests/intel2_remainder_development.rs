@@ -137,10 +137,15 @@ fn remainder_development_one_organism() {
     let mut d_actions = [[0usize; 6]; 4];
     let mut d_stop = None;
     let mut d_steps = 0usize;
+    let mut d_first_promotion = None;
     for i in 0..1200 {
         let promoted = rt.organism().phase_native_composition_witnesses().iter()
             .any(|w| w.promoted && w.base_cell == d_base_cell);
-        if promoted && i >= 160 { break; }
+        if promoted && d_first_promotion.is_none() {
+            d_first_promotion = Some(i);
+        }
+        // Development diagnostic: continue real self-selected action learning
+        // after a program promotes, up to the original 1200-action ceiling.
         let combo = schedule[i % schedule.len()];
         let [a, b] = [combo&2 != 0, combo&1 != 0];
         let truth = if op_xor { a ^ b } else { a && b };
@@ -162,6 +167,7 @@ fn remainder_development_one_organism() {
     let d_witnesses = rt.organism().phase_native_composition_witnesses().into_iter()
         .filter(|w| w.base_cell == d_base_cell).collect::<Vec<_>>();
     let d_promoted = d_witnesses.iter().any(|w| w.promoted);
+    println!("REMAINDER_D_FIRST_PROMOTED {:?}",d_first_promotion);
     println!("REMAINDER_D_TRAIN actions={d_steps} histogram={d_actions:?} stop={d_stop:?} witnesses={d_witnesses:?}");
     rt.set_model_learning_enabled(false);
     let mut d_correct = 0usize;
