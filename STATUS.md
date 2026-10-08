@@ -1,5 +1,25 @@
 # Aeterna-v1 status
 
+## Latest frozen independent system verdict — 2026-10-08
+
+**INTEL-4 PASS (bounded unified autonomous developing intelligence in the tested deterministic world family).**
+Branch: `intel4-frozen-unified`; workflow: `37821849040` (SUCCESS); exact frozen cognitive SHA: `c7b5455ba006b297288fa8d16ef6300c8a19ceca`; authority seed: `37821849040`; sealed evidence artifact: `intel4-evidence` ID `11569492702`.
+
+One uninterrupted EvoPhase lifetime:
+- A unknown transport PASS (15 actions, frozen translated reuse 2);
+- B causal 3-stage skill and switched goal PASS (13+3);
+- C history-dependent alias PASS (40/40, both sides 20/20; memoryless 20/40);
+- D self-formed AND composition PASS (40/40, best one-cue 30/40);
+- E genuine factual changed-law revision PASS (four initial successful fast routes, drift observed, alternative recovery in 2 actions, model counterexample/revision);
+- final frozen A/B retention 2/2, Human Protection PASS, checkpoint/restart, U1 weights unchanged, legacy graph and answer tables 0;
+- G20–G23, U1–U3, generic causal lesion/phase/restore, Human Protection, Release all qualified on frozen cognitive source.
+
+Authority documentation: `docs/INTEL4_PROTOCOL.md`, `docs/INTEL4_CORE_FREEZE.md`, `docs/INTEL4_RESULT_PASS.md`.
+
+**Scope:** confirmed only for the predefined bounded synthetic deterministic world families. This is NOT human/open-world AGI, stochastic generality, natural language, or real-world safety. Rejected/burned INTEL-1/2/2R1/3 verdicts remain historical truth. Source is not merged into `main` or the separate mature Codex-AETERNA.
+
+## Historical status retained below
+
 Date: 2026-10-06
 
 ## Current state
