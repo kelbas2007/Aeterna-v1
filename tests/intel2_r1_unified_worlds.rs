@@ -757,7 +757,8 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
 fn intel2_r1_evaluator_uses_only_unified_external_runtime(){
     let source=include_str!("intel2_r1_unified_worlds.rs");
     assert!(source.contains("step_unified"));
-    assert!(!source.contains(".step(|"));
+    let legacy_step=[".step(", "|"].concat();
+    assert!(!source.contains(&legacy_step));
     assert!(!source.contains("ReasoningMode::"));
     assert!(!source.contains("correct_explanation"));
     assert!(!source.contains("world_id"));
