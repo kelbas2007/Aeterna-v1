@@ -1,0 +1,6 @@
+FRONTIER-1 one-use authority trigger
+Protocol: docs/FRONTIER1_PROTOCOL.md
+Evaluator frozen at: 851bdb40660046434b2e3c887903d23e74a1b521
+Core frozen at: c7b5455ba006b297288fa8d16ef6300c8a19ceca
+Target seed: GitHub Actions run_id, never chosen manually
+Preflight PASS: 37831760265
