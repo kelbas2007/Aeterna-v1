@@ -1,0 +1,89 @@
+name: INTEL-2 representation-preserving field check
+on:
+  push:
+    branches: [post-intel2-c-diagnosis]
+    paths: ['.github/workflows/intel2-refined-field-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 924a566b4d3f1125fa67e73bc1f68c4ba53bdbd3
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify bounded production diff and preserve source record
+        shell: bash
+        run: |
+          git diff --name-only 01cd01bda8ccad07a8a5c81b90bfd7af3b2d167e -- src Cargo.toml Cargo.lock > source-paths.txt
+          printf 'src/phase_unified_cognition.rs\nsrc/phase_unified_representation.rs\n' > expected-paths.txt
+          diff -u expected-paths.txt source-paths.txt
+          git diff 01cd01bda8ccad07a8a5c81b90bfd7af3b2d167e -- src > source.patch
+      - name: Run development checks and regressions without masking test outcomes
+        shell: bash
+        run: |
+          mkdir -p evidence
+          failed=0
+          if cargo test --release --test intel2_exploration_edge_cost exploration_edge_cost_ -- --nocapture > evidence/edge-cost.log 2>&1; then
+            echo 'EDGE_COST_CONTROLS=PASS' | tee -a evidence/summary.txt
+          else
+            echo 'EDGE_COST_CONTROLS=FAIL' | tee -a evidence/summary.txt
+            tail -n 40 evidence/edge-cost.log
+            failed=1
+          fi
+          if cargo test --release --test intel2_unified_worlds intel2_burned_world_c_with_environment_terminal_reset_diagnosis -- --exact --nocapture > evidence/world-c.log 2>&1; then
+            grep -q 'running 1 test' evidence/world-c.log
+            echo 'UNCHANGED_BURNED_C=PASS' | tee -a evidence/summary.txt
+          else
+            echo 'UNCHANGED_BURNED_C=FAIL' | tee -a evidence/summary.txt
+            failed=1
+          fi
+          grep -E 'INTEL2_C_RESET_DIAG|INTEL2_C_RESET_SCORE|test result:|panicked|assertion failed' evidence/world-c.log || true
+          if cargo test --release --test intel2_refined_state_controls refined_state_controls_preserve_context_through_unified_competition -- --exact --nocapture > evidence/refined-controls.log 2>&1; then
+            grep -q 'running 1 test' evidence/refined-controls.log
+            echo 'REFINED_CAUSAL_CONTROLS=PASS' | tee -a evidence/summary.txt
+          else
+            echo 'REFINED_CAUSAL_CONTROLS=FAIL' | tee -a evidence/summary.txt
+            failed=1
+          fi
+          grep -E 'REFINED_STATE_|test result:|panicked|assertion failed' evidence/refined-controls.log || true
+          targets=()
+          for file in tests/*.rs; do
+            target=$(basename "$file" .rs)
+            case "$target" in intel1_*|intel2_*) continue ;; esac
+            targets+=(--test "$target")
+            echo "$target" >> evidence/regression-targets.txt
+          done
+          if cargo test --release --lib "${targets[@]}" -- --nocapture > evidence/regressions.log 2>&1; then
+            echo 'HISTORICAL_REGRESSIONS=PASS' | tee -a evidence/summary.txt
+          else
+            echo 'HISTORICAL_REGRESSIONS=FAIL' | tee -a evidence/summary.txt
+            tail -n 60 evidence/regressions.log
+            failed=1
+          fi
+          if cargo build --release > evidence/release.log 2>&1; then
+            echo 'RELEASE=PASS' | tee -a evidence/summary.txt
+          else
+            echo 'RELEASE=FAIL' | tee -a evidence/summary.txt
+            failed=1
+          fi
+          git diff --exit-code -- src tests Cargo.toml Cargo.lock
+          echo 'No independent INTEL verdict was run or claimed.' | tee -a evidence/summary.txt
+          cat evidence/summary.txt
+          exit "$failed"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: refined-field-development-evidence
+          path: |
+            evidence/
+            source-paths.txt
+            source.patch
+          retention-days: 7
