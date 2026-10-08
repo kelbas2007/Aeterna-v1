@@ -966,6 +966,7 @@ fn intel2_burned_world_c_with_environment_terminal_reset_diagnosis(){
             let mut rival_probe=rt.organism().clone();
             let mut goal_probe=rt.organism().clone();
             let mut general_probe=rt.organism().clone();
+            println!("INTEL2_C_DRIVE_WEIGHTS {:?}",rt.organism().phase_native_drive_weights());
             println!(
                 "INTEL2_C_JUNCTION_TRACE trial={} side={} direct_unknown={:?} context={:?} percept={:?} composition={:?} rival={:?} goal={:?} general={:?} selected={:?} proposals={:?}",
                 wc.trials,side,
