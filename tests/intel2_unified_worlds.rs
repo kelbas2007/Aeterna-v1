@@ -512,6 +512,13 @@ fn intel2_frozen_unified_unknown_world_lifetime(){
         {break;}
         monitor.before(&rt,&c_goal);
         let layout=k%4;
+        let diagnostic_goal_reached=rt.goal_reached().unwrap_or(false);
+        if diagnostic_goal_reached {
+            println!(
+                "INTEL2_POSTMORTEM_C_GOAL_REACHED k={} state={} target={} trials={}",
+                k,wc.state,c_states[4],wc.trials
+            );
+        }
         let diagnostic_proposals=rt.organism()
             .collect_phase_native_unified_proposals(&c_goal);
         let diagnostic_decision=rt.organism()
