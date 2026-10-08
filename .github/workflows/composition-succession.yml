@@ -1,0 +1,25 @@
+name: EvoPhase composition hypothesis succession
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [developmental-candidate-succession]
+    paths:
+      - 'src/phase_compositional.rs'
+      - 'src/phase_refinement_fanout.rs'
+      - 'tests/composition_succession.rs'
+      - '.github/workflows/composition-succession.yml'
+jobs:
+  succession:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: New alternative-hypothesis mechanism controls
+        run: cargo test --release --test composition_succession composition_replaces_rejected -- --nocapture
+      - name: Existing native G23 composition regression
+        run: cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed -- --nocapture
+      - name: Existing G23 source guard
+        run: cargo test --release --test g23_compositional_perceptual_function g23_composition_is_native -- --nocapture
+      - name: Release
+        run: cargo build --release
