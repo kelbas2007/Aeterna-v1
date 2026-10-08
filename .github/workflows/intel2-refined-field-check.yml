@@ -1,8 +1,5 @@
 name: INTEL-2 representation-preserving field check
 on:
-  push:
-    branches: [post-intel2-c-diagnosis]
-    paths: ['.github/workflows/intel2-refined-field-check.yml']
   workflow_dispatch:
 permissions:
   contents: read
