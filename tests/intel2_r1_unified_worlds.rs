@@ -755,7 +755,10 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
 
 #[test]
 fn intel2_r1_evaluator_uses_only_unified_external_runtime(){
-    let source=include_str!("intel2_r1_unified_worlds.rs");
+    let full_source=include_str!("intel2_r1_unified_worlds.rs");
+    let marker="fn intel2_r1_evaluator_uses_only_unified_external_runtime";
+    let end=full_source.find(marker).expect("guard function marker");
+    let source=&full_source[..end];
     assert!(source.contains("step_unified"));
     let legacy_step=[".step(", "|"].concat();
     assert!(!source.contains(&legacy_step));
