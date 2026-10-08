@@ -29,6 +29,14 @@ Exact old branch SHAs and their recovery procedure: [ARCHIVE_MANIFEST.md](https:
 
 ## Next scientific boundary
 
-INTEL-4 established bounded adaptive behavior across deterministic A–E families. It did **not** qualify long noisy inference. The first different-family test **FRONTIER-1** independently failed: 40/80 correct latent decisions, zero repeated sensing, last noisy-cue oracle 56/80 and 8-cue majority oracle 69/80. Do not relabel or patch its consumed authority seed. The next architecture question is carrier-owned **uncertainty reduction, active-sensing authority, and persistent evidence integration across multiple noisy samples**, not another permutation of A–E.
+INTEL-4 established bounded adaptive behavior across deterministic A–E families. It did **not** qualify long noisy inference. The first different-family test **FRONTIER-1** independently failed: 40/80 correct latent decisions, zero repeated sensing, last noisy-cue oracle 56/80 and 8-cue majority oracle 69/80. Do not relabel or patch its consumed authority seed. The research branch now has three physically tested components:
+
+- **[TE1 physical temporal evidence](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE1_RESULT.md):** causal phase-synapse memory, but strict noisy holdout **FAIL 63/80** versus a predeclared 70/80 threshold; 11 tied-evidence abstentions.
+- **[TE2 sensory affordance](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE2_RESULT.md):** learned the observation-producing opaque motor from balanced factual experience in 6/6 assignments; physical lesion/π/checkpoint controls.
+- **[TE3 unified sensing](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE3_RESULT.md):** learned U1 selected that physically grounded sensing motor in an actual protected step in 6/6 assignments. Final workflow [37837182177](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37837182177) **SUCCESS** with C/G20–G23/U1–U3/Human Protection/Release regressions.
+
+**Not yet solved:** untrained cold discovery of the sensor action, physical delayed credit for seeking information, and learning the final response from stochastic observations. No end-to-end new-world stochastic qualification has passed. Do not convert the burned FRONTIER-1 FAIL or the TE1 strict noisy FAIL into PASS. TE1–TE3 remain opted-in experimental research, not merged into qualified `main`.
+
+The next architecture question is carrier-owned **uncertainty reduction and self-initiated active sensing from cold experience**, not another permutation of A–E.
 
 The scientific runtime still uses a trusted physical-action protection callback, not qualified real-world human-safety hardware. No changes to the separate mature Codex-AETERNA have been made.
