@@ -78,6 +78,7 @@ mod old_g23_fixture {
             .expect("promoted new candidate");
         let current=raw(&l1,5,false,true,false);
         let target=goal(&l1,5);
+        evo.set_planning_learning_enabled(false);
         evo.observe_initial_real(&current,false);
         let intact=evo.phase_native_compositional_action(&target);
         assert_eq!(intact,(true,Some(anchor)),
