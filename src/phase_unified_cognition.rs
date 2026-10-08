@@ -277,6 +277,37 @@ impl EvoPhase {
         }
         let mut out=Vec::new();
 
+        // A confirmed operational representation is learned knowledge, not
+        // the investigation project that once assembled it. Dormancy in U2
+        // can suppress a project probe, but must not erase a physically
+        // supported native goal plan. This path is representation-class
+        // agnostic: every uniquely applicable promoted refinement is resolved
+        // by the same native operational-state function.
+        if let (Some(base),Some(goal)) = (
+            self.phase_native_abstract_state(&sensory),
+            self.phase_native_abstract_state(goal_sensory),
+        ) {
+            if base.level == goal.level {
+                if let Some(operational) =
+                    self.unified_operational_entry(&sensory, base.cell)
+                {
+                    if operational != base.cell {
+                        let mut planner = self.clone();
+                        if let Some(decision) =
+                            planner.phase_native_goal_decision_from_cells(
+                                operational, goal.cell, None
+                            )
+                        {
+                            self.push_unified_proposal(
+                                &mut out, &sensory, goal_sensory,
+                                decision.first_action, None, 0x0AE5,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
         let mut context=self.clone();
         if let (true,Some(action))=context.phase_native_context_action(goal_sensory){
             self.push_unified_proposal(
