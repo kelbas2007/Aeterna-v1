@@ -264,9 +264,13 @@ impl EvoPhase {
             return Vec::new();
         }
         let mut out=Vec::new();
+        let mut refinement_claimed=false;
 
         let mut context=self.clone();
-        if let (true,Some(action))=context.phase_native_context_action(goal_sensory){
+        let (context_applicable,context_action)=
+            context.phase_native_context_action(goal_sensory);
+        refinement_claimed|=context_applicable;
+        if let Some(action)=context_action {
             self.push_unified_proposal(
                 &mut out,&sensory,goal_sensory,action,
                 self.unified_context_candidate(action),0xC071,
@@ -274,7 +278,10 @@ impl EvoPhase {
         }
 
         let mut percept=self.clone();
-        if let (true,Some(action))=percept.phase_native_perceptual_action(goal_sensory){
+        let (percept_applicable,percept_action)=
+            percept.phase_native_perceptual_action(goal_sensory);
+        refinement_claimed|=percept_applicable;
+        if let Some(action)=percept_action {
             self.push_unified_proposal(
                 &mut out,&sensory,goal_sensory,action,
                 self.unified_perceptual_candidate(action),0xA221,
@@ -282,33 +289,43 @@ impl EvoPhase {
         }
 
         let mut composition=self.clone();
-        if let (true,Some(action))=composition.phase_native_compositional_action(goal_sensory){
+        let (composition_applicable,composition_action)=
+            composition.phase_native_compositional_action(goal_sensory);
+        refinement_claimed|=composition_applicable;
+        if let Some(action)=composition_action {
             self.push_unified_proposal(
                 &mut out,&sensory,goal_sensory,action,
                 self.unified_composition_candidate(action),0xC023,
             );
         }
 
-        let mut rival=self.clone();
-        if let Some(action)=rival.choose_phase_native_goal_rival_probe(goal_sensory){
-            self.push_unified_proposal(
-                &mut out,&sensory,goal_sensory,action,
-                self.unified_rival_candidate(action,goal_sensory),0xBEEF,
-            );
-        }
+        // A physically applicable refinement says that the inherited parent
+        // representation is insufficient for the current fact. Several
+        // refinements may still compete through U1/U2, but coarse parent
+        // reasoning cannot bypass them merely because one refined path has no
+        // supported action yet.
+        if !refinement_claimed {
+            let mut rival=self.clone();
+            if let Some(action)=rival.choose_phase_native_goal_rival_probe(goal_sensory){
+                self.push_unified_proposal(
+                    &mut out,&sensory,goal_sensory,action,
+                    self.unified_rival_candidate(action,goal_sensory),0xBEEF,
+                );
+            }
 
-        let mut goal_active=self.clone();
-        if let Some(action)=goal_active.choose_phase_native_goal_active_action(goal_sensory){
-            self.push_unified_proposal(
-                &mut out,&sensory,goal_sensory,action,None,0x60A1,
-            );
-        }
+            let mut goal_active=self.clone();
+            if let Some(action)=goal_active.choose_phase_native_goal_active_action(goal_sensory){
+                self.push_unified_proposal(
+                    &mut out,&sensory,goal_sensory,action,None,0x60A1,
+                );
+            }
 
-        let mut general=self.clone();
-        if let Some(action)=general.choose_phase_native_abstract_learned_drive_action(){
-            self.push_unified_proposal(
-                &mut out,&sensory,goal_sensory,action,None,0xE915,
-            );
+            let mut general=self.clone();
+            if let Some(action)=general.choose_phase_native_abstract_learned_drive_action(){
+                self.push_unified_proposal(
+                    &mut out,&sensory,goal_sensory,action,None,0xE915,
+                );
+            }
         }
 
         out
