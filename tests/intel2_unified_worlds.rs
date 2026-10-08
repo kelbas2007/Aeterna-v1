@@ -542,6 +542,21 @@ fn intel2_frozen_unified_unknown_world_lifetime(){
             |_|Ok((foundation::scene(&l1,c_states[3],(4+i)%6),0.0))
         ).unwrap();
         assert!(matches!(outcome,StepOutcome::Executed{..}));
+        if i < 6 {
+            let proposals=rt.organism().collect_phase_native_unified_proposals(&c_goal);
+            let selected=rt.organism().choose_phase_native_unified_proposal(&proposals);
+            let mut context_probe=rt.organism().clone();
+            let mut goal_probe=rt.organism().clone();
+            let mut general_probe=rt.organism().clone();
+            println!(
+                "INTEL2_C_HELDOUT_TRACE i={} side={} expected={} context={:?} goal={:?} general={:?} selected={:?} proposals={:?}",
+                i,side,mc[side],
+                context_probe.phase_native_context_action(&c_goal),
+                goal_probe.choose_phase_native_goal_active_action(&c_goal),
+                general_probe.choose_phase_native_abstract_learned_drive_action(),
+                selected,proposals
+            );
+        }
         let proposal=rt.propose_unified().unwrap().expect("context readout");
         c_side[side]+=1;
         if proposal.action==mc[side]{
