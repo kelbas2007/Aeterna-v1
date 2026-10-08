@@ -472,8 +472,17 @@ impl EvoPhase {
             if let Some(mut fields)=self.unified_action_fields(
                 &sensory,goal_sensory,sensing.action
             ){
-                fields[1]=fields[1].max(
+                let physical_information_debt=(
                     sensing.learned_affordance*sensing.missing_evidence
+                ).clamp(0.0,1.0);
+                fields[1]=fields[1].max(
+                    physical_information_debt
+                ).clamp(0.0,1.0);
+                // Contradictory physical cue paths constitute a distinct
+                // epistemic gap. A learned sensory action can reduce it;
+                // untested motors cannot claim that factual capability.
+                fields[2]=fields[2].max(
+                    physical_information_debt
                 ).clamp(0.0,1.0);
                 out.push(PhaseUnifiedCognitiveProposal{
                     persistent_candidate_id:None,
