@@ -15,7 +15,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Target-independent carrier model validity and route diversity
-        run: cargo test --release --test e_model_revalidation e_ -- --nocapture
+        run: |
+          cargo test --release --test e_model_revalidation e_model_revalidation_depends_on_factual_local_support -- --nocapture
+          cargo test --release --test e_model_revalidation e_goal_route_coverage_comes_from_acquired_physical_successors -- --nocapture
       - name: Negative-evidence hypothesis succession
         run: cargo test --release --test composition_succession composition_replaces_rejected
       - name: G20–G23 physical regressions
