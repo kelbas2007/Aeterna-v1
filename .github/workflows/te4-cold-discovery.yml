@@ -1,0 +1,28 @@
+name: TE4 cold independent discovery diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/beyond-intel4]
+    paths:
+      - 'tests/te4_cold_discovery.rs'
+      - '.github/workflows/te4-cold-discovery.yml'
+
+jobs:
+  cold-autonomy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cold lifetime — no seeded motor experience
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --release --test te4_cold_discovery te4_cold_no_tuition_one_lifetime_four_independent_worlds -- --nocapture | tee te4-cold.log
+      - name: Preserve diagnostic stdout on PASS or FAIL
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: te4-cold-diagnostic
+          path: te4-cold.log
+          if-no-files-found: warn
