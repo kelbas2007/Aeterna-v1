@@ -1,0 +1,35 @@
+name: EvoPhase law revision physical controls
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [developmental-law-revision]
+    paths:
+      - 'tests/e_model_revalidation.rs'
+      - 'src/phase_unified_cognition.rs'
+      - '.github/workflows/e-physical-qualification.yml'
+jobs:
+  physical:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Target-independent carrier model validity and route diversity
+        run: cargo test --release --test e_model_revalidation e_ -- --nocapture
+      - name: Negative-evidence hypothesis succession
+        run: cargo test --release --test composition_succession composition_replaces_rejected
+      - name: G20–G23 physical regressions
+        run: |
+          cargo test --release --test g20_continual_reasoning
+          cargo test --release --test g21_contextual_state_refinement
+          cargo test --release --test g22_perceptual_variable_invention
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+      - name: Unified meta-control, hypothesis ecology and mixed residuals
+        run: |
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+      - name: Human Protection
+        run: cargo test --release --test human_protection
+      - name: Release
+        run: cargo build --release
