@@ -1,5 +1,7 @@
 # Aeterna-v1 status
 
+**Primary development source: `main`**, promoted from the original successful INTEL-4 branch by a non-squashed two-parent history-preserving integration. Evidence remains pinned to its exact frozen cognitive source; later documentation/branch changes do not create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) for branch purposes and archival records.
+
 ## Latest frozen independent system verdict — 2026-10-08
 
 **INTEL-4 PASS (bounded unified autonomous developing intelligence in the tested deterministic world family).**
@@ -16,7 +18,7 @@ One uninterrupted EvoPhase lifetime:
 
 Authority documentation: `docs/INTEL4_PROTOCOL.md`, `docs/INTEL4_CORE_FREEZE.md`, `docs/INTEL4_RESULT_PASS.md`.
 
-**Scope:** confirmed only for the predefined bounded synthetic deterministic world families. This is NOT human/open-world AGI, stochastic generality, natural language, or real-world safety. Rejected/burned INTEL-1/2/2R1/3 verdicts remain historical truth. Source is not merged into `main` or the separate mature Codex-AETERNA.
+**Scope:** confirmed only for the predefined bounded synthetic deterministic world families. This is NOT human/open-world AGI, stochastic generality, natural language, or real-world safety. Rejected/burned INTEL-1/2/2R1/3 verdicts remain historical truth. The successful frozen source is qualified and its tree has been integrated for the new `main` baseline; the **separate mature Codex-AETERNA** remains untouched.
 
 ## Historical status retained below
 
