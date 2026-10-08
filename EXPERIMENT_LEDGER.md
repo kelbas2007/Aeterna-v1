@@ -527,3 +527,14 @@ After the fix, one persistent organism acquired four distinct worlds, retained e
 | Administrative branch audit | run `37832467225` | **SUCCESS 12 deleted / 0 skipped** | Branch history retained by one Git octopus archive, no cognition/source change. **Not scientific evidence.** |
 
 Follow-up design **must not modify the consumed FRONTIER-1 scoring pack or relabel any earlier PASS/FAIL**. See [research result](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/FRONTIER1_RESULT_FAIL1.md), [branch cleanup](docs/BRANCH_CLEANUP_RESULT.md) and [project map](PROJECT_MAP.md).
+
+
+## Physical temporal evidence research — post FRONTIER-1 (2026-10-08)
+
+| Research gate | Workflow | Scientific status | Strict limitation |
+|---|---|---|---|
+| TE1 phase-synapse evidence accumulation | `37834819483` | **PHYSICAL MECHANISM PASS; PREDECLARED NOISY SCORE FAIL**: 63/80 versus ≥70, last-only 56/80, 11 tied abstentions | Equivalent to physical eight-cue majority without active acquisition; not a noisy AGI pass |
+| TE2 learned opaque active-sensing affordance | `37835527034` | **MECHANISM PASS**, 6/6 randomized motor assignments; causal lesions/π/restore, old regression PASS | Sensor motor learned from *balanced factual exploration*, not a cold self-initiated policy |
+| TE3 opt-in unified protected sensory choice | `37837182177` | **MECHANISM PASS**, U1 chose a previously acquired sensor motor in all 6/6 verified protected action/fact cases; C/G20–G23/U1–U3/Human Protection/Release PASS | No independently qualified cold discovery/hidden-mode commitment or full stochastic generalization |
+
+The original FRONTIER-1 sealed FAIL (40/80; zero sensing) remains unchanged. TE1–TE3 live only on `research/beyond-intel4`; qualified `main` still uses the frozen INTEL-4 cognitive source. Full TE3 report: https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE3_RESULT.md.
