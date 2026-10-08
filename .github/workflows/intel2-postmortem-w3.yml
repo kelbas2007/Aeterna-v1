@@ -10,7 +10,7 @@ permissions:
 jobs:
   diagnose:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: execute frozen W3 postmortem full-history'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: execute exact frozen W3 postmortem'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -21,8 +21,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Restore frozen INTEL-2 cognitive source for diagnosis
         run: |
-          git checkout 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
-          git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+          git checkout 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml
+          if git cat-file -e 07b44fb8e00837568bc9655e760eb031d1944dff:Cargo.lock 2>/dev/null; then
+            git checkout 07b44fb8e00837568bc9655e760eb031d1944dff -- Cargo.lock
+          fi
+          git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml
       - name: Replay burned pack for diagnosis only
         env:
           AETERNA_INTEL2_SEED: "37687243350"
