@@ -1,9 +1,6 @@
 name: INTEL-2 same-lifetime remainder development
 on:
   workflow_dispatch:
-  push:
-    branches: [post-intel2-c-diagnosis]
-    paths: ['.github/workflows/intel2-remainder-development.yml']
 permissions:
   contents: read
 concurrency:
@@ -11,7 +8,6 @@ concurrency:
   cancel-in-progress: false
 jobs:
   diagnostic:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[tail-dev-run]')
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
