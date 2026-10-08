@@ -503,6 +503,8 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
     let mut wc=WorldC::new(c_states,[mc[0],mc[1]],seed^0xC0FFEE);
     set_world(&mut rt,&l1,wc.state,c_states[4],0);
     let c_goal=foundation::scene(&l1,c_states[4],1);
+    let mut c_action_hist=[[0usize;6];2];
+    let mut c_junction_visits=[0usize;2];
     for k in 0..1800usize{
         let base=rt.organism().phase_native_abstract_state(
             &foundation::scene(&l1,c_states[3],0)
@@ -512,10 +514,16 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
         {break;}
         monitor.before(&rt,&c_goal);
         let layout=k%4;
-        step_u(&mut rt,&mut monitor,|a|{
+        let before_state=wc.state;
+        let before_side=usize::from(wc.next_side==1);
+        let chosen=step_u(&mut rt,&mut monitor,|a|{
             let (next,value)=wc.step(a);
             (foundation::scene(&l1,next,layout),value)
         }).expect("World C unified action");
+        if before_state==c_states[3] {
+            c_junction_visits[before_side]+=1;
+            if chosen<6 { c_action_hist[before_side][chosen]+=1; }
+        }
 
         // R1 evaluator correction: goal/dead are terminal outcomes of one
         // history trial. Start the next episode from reset by external sensing.
@@ -568,6 +576,12 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
     rt.set_model_learning_enabled(true);
     println!("INTEL2_R1_C promoted={} score={}/32 sides={:?}/{:?} memoryless={}/32",
         c_promoted,c_correct,c_side_correct,c_side,memoryless);
+    println!(
+        "INTEL2_R1_POST_C action_hist={:?} junction_visits={:?} contexts={:?} ecology={:?}",
+        c_action_hist,c_junction_visits,
+        rt.organism().phase_native_context_witnesses(),
+        rt.organism().phase_native_hypothesis_records()
+    );
 
     // Required protected cognitive restart after C.
     let fp_before_restart=rt.organism().phase_native_learned_fingerprint();
@@ -628,6 +642,7 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
     shuffle(&mut rng,&mut schedule);
     rt.set_goal(&d_goal).unwrap();
     let d_base_cell=rt.organism().phase_native_abstract_state(&d_base).unwrap().cell;
+    let mut d_action_hist=[[0usize;6];4];
     for i in 0..1200usize{
         let promoted=rt.organism().phase_native_composition_witnesses()
             .iter().any(|w|w.promoted&&w.base_cell==d_base_cell);
@@ -650,7 +665,14 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
                 ))
             }
         );
-        if outcome.is_err(){break;}
+        match outcome {
+            Ok(StepOutcome::Executed{proposal,..}) => {
+                if proposal.action<6 { d_action_hist[combo][proposal.action]+=1; }
+            }
+            Ok(StepOutcome::GoalReached) => {}
+            Ok(other) => panic!("unexpected D outcome: {:?}",other),
+            Err(_) => break,
+        }
     }
     let d_promoted=rt.organism().phase_native_composition_witnesses()
         .iter().any(|w|w.promoted&&w.base_cell==d_base_cell);
@@ -683,24 +705,46 @@ fn intel2_r1_frozen_unified_unknown_world_lifetime(){
     }).max().unwrap();
     println!("INTEL2_R1_D op={} promoted={} full={}/32 best_single={}/32",
         if op_xor{"XOR"}else{"AND"},d_promoted,d_correct,best_single);
+    println!(
+        "INTEL2_R1_POST_D action_hist={:?} compositions={:?} percepts={:?} ecology={:?}",
+        d_action_hist,
+        rt.organism().phase_native_composition_witnesses(),
+        rt.organism().phase_native_perceptual_witnesses(),
+        rt.organism().phase_native_hypothesis_records()
+    );
 
     // WORLD E: nonstationary law.
     let mut we=WorldE::new(e6,me);
     set_world(&mut rt,&l1,we.state,e6[3],2);
     let e_goal=foundation::scene(&l1,e6[3],3);
+    let mut e_action_hist=[[0usize;6];6];
     for k in 0..1200usize{
         if we.changed_seen&&we.first_recovery.is_some(){break;}
         monitor.before(&rt,&e_goal);
         let layout=k%6;
-        if step_u(&mut rt,&mut monitor,|a|{
+        let before_state=we.state;
+        match step_u(&mut rt,&mut monitor,|a|{
             let (next,value)=we.step(a);
             (foundation::scene(&l1,next,layout),value)
-        }).is_err(){break;}
+        }) {
+            Ok(action) => {
+                if let Some(slot)=e6.iter().position(|s|*s==before_state) {
+                    if action<6 { e_action_hist[slot][action]+=1; }
+                }
+            }
+            Err(_) => break,
+        }
     }
     let e_recovery=we.first_recovery;
     println!(
         "INTEL2_R1_E shortcut_successes={} changed={} changed_seen={} recovery={:?} fallback_after_change={}",
         we.shortcut_successes,we.changed,we.changed_seen,e_recovery,we.fallback_after_change
+    );
+    println!(
+        "INTEL2_R1_POST_E action_hist={:?} ecology={:?} circuits={:?}",
+        e_action_hist,
+        rt.organism().phase_native_hypothesis_records(),
+        rt.organism().phase_native_circuits()
     );
 
     // Final retention with target representation/transition learning frozen.
