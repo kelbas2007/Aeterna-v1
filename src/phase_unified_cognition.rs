@@ -98,6 +98,53 @@ impl EvoPhase {
         ])
     }
 
+    fn unified_promoted_context_owns_current(&self) -> bool {
+        let Some(sensory)=self.current_real.as_ref().map(|r|r.sensory.clone())
+            else{return false;};
+        let Some(base)=self.phase_native_abstract_state(&sensory)
+            else{return false;};
+        let Some(ctx)=self.phase_native.as_ref()
+            .and_then(|n|n.contextual.as_ref()) else{return false;};
+
+        match ctx.previous_base {
+            Some(previous)=>ctx.candidates.iter().any(|w|
+                w.base_cell==base.cell
+                    && w.promoted
+                    && !w.retired
+                    && w.predecessor_cells.contains(&previous)
+            ),
+            None=>ctx.candidates.iter().any(|w|
+                w.base_cell==base.cell && w.promoted && !w.retired
+            ),
+        }
+    }
+
+    fn unified_promoted_perceptual_owns_current(&self) -> bool {
+        let Some(sensory)=self.current_real.as_ref().map(|r|r.sensory.clone())
+            else{return false;};
+        let Some(base)=self.phase_native_abstract_state(&sensory)
+            else{return false;};
+        self.phase_native.as_ref()
+            .and_then(|n|n.perceptual.as_ref())
+            .map(|p|p.candidates.iter().any(|w|
+                w.base_cell==base.cell && w.promoted && !w.retired
+            ))
+            .unwrap_or(false)
+    }
+
+    fn unified_promoted_composition_owns_current(&self) -> bool {
+        let Some(sensory)=self.current_real.as_ref().map(|r|r.sensory.clone())
+            else{return false;};
+        let Some(base)=self.phase_native_abstract_state(&sensory)
+            else{return false;};
+        self.phase_native.as_ref()
+            .and_then(|n|n.compositional.as_ref())
+            .map(|p|p.candidates.iter().any(|w|
+                w.base_cell==base.cell && w.promoted && !w.retired
+            ))
+            .unwrap_or(false)
+    }
+
     fn unified_context_candidate(
         &self,
         action: usize,
@@ -264,12 +311,14 @@ impl EvoPhase {
             return Vec::new();
         }
         let mut out=Vec::new();
-        let mut refinement_claimed=false;
+        let refinement_claimed=
+            self.unified_promoted_context_owns_current()
+                || self.unified_promoted_perceptual_owns_current()
+                || self.unified_promoted_composition_owns_current();
 
         let mut context=self.clone();
-        let (context_applicable,context_action)=
+        let (_context_applicable,context_action)=
             context.phase_native_context_action(goal_sensory);
-        refinement_claimed|=context_applicable;
         if let Some(action)=context_action {
             self.push_unified_proposal(
                 &mut out,&sensory,goal_sensory,action,
@@ -278,9 +327,8 @@ impl EvoPhase {
         }
 
         let mut percept=self.clone();
-        let (percept_applicable,percept_action)=
+        let (_percept_applicable,percept_action)=
             percept.phase_native_perceptual_action(goal_sensory);
-        refinement_claimed|=percept_applicable;
         if let Some(action)=percept_action {
             self.push_unified_proposal(
                 &mut out,&sensory,goal_sensory,action,
@@ -289,9 +337,8 @@ impl EvoPhase {
         }
 
         let mut composition=self.clone();
-        let (composition_applicable,composition_action)=
+        let (_composition_applicable,composition_action)=
             composition.phase_native_compositional_action(goal_sensory);
-        refinement_claimed|=composition_applicable;
         if let Some(action)=composition_action {
             self.push_unified_proposal(
                 &mut out,&sensory,goal_sensory,action,
