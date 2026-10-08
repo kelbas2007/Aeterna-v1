@@ -380,23 +380,6 @@ impl ScientificRuntime {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
-        // Commit sensory affordance only after one permitted and executed
-        // motor returned a validated FACTUAL POST. Non-sensing no-op actions
-        // do NOT count another copy of the same cue as new information.
-        if self.organism.phase_native_temporal_evidence_enabled() {
-            if self.model_learning_enabled {
-                let _=self.organism.observe_phase_native_sensing_affordance(
-                    action,&factual_pre,&post
-                );
-            }
-            if self.organism.phase_native_temporal_source_count()==2
-                && self.organism.phase_native_temporal_action_affordance(action)
-                    .unwrap_or(0.0)>1.0e-8
-            {
-                let _=self.organism.observe_phase_native_temporal_signal(&post);
-            }
-        }
-
         let any_refinement =
             self.organism.phase_native_compositional_enabled()
                 || self.organism.phase_native_perceptual_enabled()
@@ -479,6 +462,23 @@ impl ScientificRuntime {
         }
         if let Err(error) = self.validate_raster(&post) {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
+        }
+
+        // Commit sensory affordance only after one permitted and executed
+        // motor returned a validated FACTUAL POST. Non-sensing no-op actions
+        // do NOT count another copy of the same cue as new information.
+        if self.organism.phase_native_temporal_evidence_enabled() {
+            if self.model_learning_enabled {
+                let _=self.organism.observe_phase_native_sensing_affordance(
+                    action,&factual_pre,&post
+                );
+            }
+            if self.organism.phase_native_temporal_source_count()==2
+                && self.organism.phase_native_temporal_action_affordance(action)
+                    .unwrap_or(0.0)>1.0e-8
+            {
+                let _=self.organism.observe_phase_native_temporal_signal(&post);
+            }
         }
 
         let any_refinement =
