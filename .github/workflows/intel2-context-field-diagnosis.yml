@@ -1,8 +1,5 @@
 name: INTEL-2 refined-context field diagnosis
 on:
-  push:
-    branches: [post-intel2-c-diagnosis]
-    paths: ['.github/workflows/intel2-context-field-diagnosis.yml']
   workflow_dispatch:
 permissions:
   contents: read
