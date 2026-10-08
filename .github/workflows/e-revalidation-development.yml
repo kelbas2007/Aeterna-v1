@@ -1,0 +1,40 @@
+name: EvoPhase causal law revalidation development
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [developmental-law-revision]
+    paths:
+      - 'src/phase_unified_cognition.rs'
+      - 'tests/intel2_remainder_development.rs'
+      - '.github/workflows/e-revalidation-development.yml'
+
+jobs:
+  law-development:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: E model revalidation — already exposed development world
+        shell: bash
+        run: |
+          set +e
+          cargo test --release --test intel2_remainder_development remainder_development_one_organism -- --ignored --nocapture > e-development.log 2>&1
+          code=$?
+          set -e
+          grep -E '^REMAINDER_(START|C |D_FIRST_PROMOTED|D promoted|E actions|RETENTION|SUMMARY)|E_CAUSAL_STOP' e-development.log || true
+          grep -Fq 'REMAINDER_SUMMARY' e-development.log || { tail -120 e-development.log; exit 1; }
+          echo "Exposed development test exit: $code (not a fresh qualification)"
+      - name: Existing refined context and causality
+        run: cargo test --release --test intel2_refined_state_controls refined_state_controls_preserve_context_through_unified_competition
+      - name: G23 composition
+        run: cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+      - name: U1 U2 U3 regressions
+        run: |
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+      - name: Human Protection
+        run: cargo test --release --test human_protection
+      - name: Release
+        run: cargo build --release
