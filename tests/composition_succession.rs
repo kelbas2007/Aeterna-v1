@@ -71,6 +71,54 @@ mod old_g23_fixture {
             w.program==old.program && w.born_fact==old.born_fact && w.retired)),
             "rejected provenance must not be deleted");
         assert!(later.len()<=16,"bounded capacity must hold");
+
+        // The new representation must be physically causal for an action:
+        // remove its learned program pathway, then restore it exactly.
+        let promoted=later.iter().find(|w|w.promoted&&!w.retired)
+            .expect("promoted new candidate");
+        let current=raw(&l1,5,false,true,false);
+        let target=goal(&l1,5);
+        evo.observe_initial_real(&current,false);
+        let intact=evo.phase_native_compositional_action(&target);
+        assert_eq!(intact,(true,Some(anchor)),
+            "promoted alternative must drive action readout");
+        let fingerprint=evo.phase_native_learned_fingerprint();
+        let mut causal_side=None;
+        for side in 0..2usize {
+            let link=promoted.input_synapses[side][1];
+            let mut lesioned=evo.clone();
+            let old=lesioned.perturb_phase_native_synapse_for_control(
+                link,0.0,0.0
+            ).expect("real native synapse");
+            if lesioned.phase_native_compositional_action(&target)!=intact {
+                lesioned.restore_phase_native_synapse_for_control(link,old);
+                assert_eq!(lesioned.phase_native_learned_fingerprint(),fingerprint);
+                assert_eq!(lesioned.phase_native_compositional_action(&target),intact);
+                let mut shifted=evo.clone();
+                shifted.perturb_phase_native_synapse_for_control(
+                    link,1.0,std::f32::consts::PI
+                ).unwrap();
+                assert_ne!(shifted.phase_native_compositional_action(&target),intact);
+                causal_side=Some(side);
+                break;
+            }
+        }
+        assert!(causal_side.is_some(),"no causal physical program pathway found");
+
+        // A retired candidate stays stored but does not control the winner.
+        let retired=rejected.first().unwrap();
+        let mut unrelated=evo.clone();
+        unrelated.perturb_phase_native_synapse_for_control(
+            retired.input_synapses[0][1],0.0,0.0
+        ).unwrap();
+        assert_eq!(unrelated.phase_native_compositional_action(&target),intact);
+
+        let checkpoint=evo.phase_native_checkpoint().unwrap();
+        let mut restarted=EvoPhase::new(fixture::cfg(&evo));
+        assert!(restarted.restore_phase_native_checkpoint(checkpoint));
+        restarted.observe_initial_real(&current,false);
+        assert_eq!(restarted.phase_native_compositional_action(&target),intact);
+
         for (i,a) in later.iter().enumerate(){
             for b in &later[i+1..] {
                 if a.program==b.program && a.anchor_action==b.anchor_action {
