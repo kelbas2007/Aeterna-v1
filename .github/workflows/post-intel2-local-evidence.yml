@@ -6,6 +6,10 @@ on:
       - unified-operation-competition
   workflow_dispatch:
 
+concurrency:
+  group: post-intel2-unified-operation-competition
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
