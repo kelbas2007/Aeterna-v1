@@ -1,0 +1,57 @@
+name: FRONTIER-1 frozen stochastic evidence verdict
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/beyond-intel4
+    paths:
+      - '.frontier1_authority_trigger'
+
+concurrency:
+  group: frontier1-one-use-authority
+  cancel-in-progress: false
+
+jobs:
+  frontier1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify frozen INTEL-4 cognition and evaluator version
+        shell: bash
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          git fetch origin c7b5455ba006b297288fa8d16ef6300c8a19ceca --depth=1 || true
+          git fetch origin 851bdb40660046434b2e3c887903d23e74a1b521 --depth=1 || true
+          git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
+          git diff --exit-code 851bdb40660046434b2e3c887903d23e74a1b521 -- tests/frontier1_noisy_latent.rs
+      - name: Preseal fresh evaluator and core sanity
+        run: |
+          cargo test --release --test frontier1_noisy_latent frontier1_source_guard
+          cargo test --release --test e_model_revalidation e_goal_route_coverage_comes_from_acquired_physical_successors
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u3_cross_mechanism_allocation
+          cargo test --release --test human_protection
+          cargo build --release
+      - name: One-use authority target interaction
+        shell: bash
+        env:
+          AETERNA_FRONTIER1_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/FRONTIER1_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test frontier1_noisy_latent frontier1_frozen_stochastic_latent_evidence_lifetime -- --nocapture | tee frontier1-evidence.log
+      - name: Preserve burned pack evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontier1-evidence
+          path: frontier1-evidence.log
+          if-no-files-found: warn
+      - name: Verify source still frozen
+        if: always()
+        run: |
+          git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
+          git diff --exit-code 851bdb40660046434b2e3c887903d23e74a1b521 -- tests/frontier1_noisy_latent.rs
