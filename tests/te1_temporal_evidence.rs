@@ -15,6 +15,26 @@ mod fixture {
 use aeterna_v1::{EvoPhase};
 use aeterna_v1::carrier::{PhaseTemporalEvidenceConfig};
 
+// Same preregistered deterministic xorshift sampler as the generic fixture,
+// declared locally because the included test fixture keeps its helper private.
+struct GateRng(u64);
+impl GateRng {
+    fn new(seed:u64)->Self{Self(seed^0x1A7E_2200_2026_1007)}
+    fn next(&mut self)->u64{
+        let mut x=self.0;
+        x^=x>>12;x^=x<<25;x^=x>>27;self.0=x;
+        x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+    }
+    fn range(&mut self,n:usize)->usize{(self.next()%n as u64) as usize}
+}
+fn shuffle_gate<T>(rng:&mut GateRng, items:&mut[T]){
+    for i in (1..items.len()).rev(){
+        let j=rng.range(i+1);
+        items.swap(i,j);
+    }
+}
+
+
 fn qualified_episode_memory(
     evo:&mut EvoPhase,l1:&[[usize;2];8],classes:[usize;2]
 )->[usize;2]{
@@ -119,9 +139,9 @@ fn te1_fresh_balanced_noisy_series_vs_last_only(){
     let classes=[19usize,8usize];
     let addresses=qualified_episode_memory(&mut evo,&l1,classes);
     // This PRNG and class mapping are unrelated to FRONTIER-1's burned pack.
-    let mut rng=fixture::Rng::new(0x711E_2026_1008_2026);
+    let mut rng=GateRng::new(0x711E_2026_1008_2026);
     let mut latent=(0..80).map(|i|i%2).collect::<Vec<_>>();
-    fixture::shuffle(&mut rng,&mut latent);
+    shuffle_gate(&mut rng,&mut latent);
     let mut full=0usize;
     let mut last_only=0usize;
     let mut abstentions=0usize;
