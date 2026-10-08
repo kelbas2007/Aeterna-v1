@@ -110,6 +110,63 @@ impl EvoPhase {
         ])
     }
 
+    // Model validity remains a live epistemic question even when every
+    // local motor owns an old supported transition. If a fresh raw goal is
+    // unreachable using the physical learned recurrence and all ordinary
+    // cognition abstains, revisit the weakest *factual* local model edge.
+    // This is a carrier-based pressure, not a world label or answer lookup.
+    fn unified_exhausted_model_revalidation(
+        &self,
+        sensory: &[f32],
+        goal_sensory: &[f32],
+    ) -> Option<(usize, f32)> {
+        let entry = self.phase_native_abstract_state(sensory)?;
+        let goal = self.phase_native_abstract_state(goal_sensory)?;
+        if entry.level != goal.level || entry.cell == goal.cell {
+            return None;
+        }
+        let native = self.phase_native.as_ref()?;
+        if !native.config.learning_enabled
+            || native.drive.as_ref().map(|d|d.config.readout_enabled) != Some(true)
+        {
+            return None;
+        }
+        let mut known_path_probe = self.clone();
+        if known_path_probe.phase_native_goal_decision_from_cells(
+            entry.cell, goal.cell, None
+        ).is_some() {
+            return None;
+        }
+        let motor_count = self.config.motor_cells;
+        let min_support = u64::from(self.config.min_recruit_support);
+        let mut weakest: Option<(usize, u64)> = None;
+        for action in 0..motor_count {
+            if !self.phase_drive_action_known_at(native, entry.cell, action) {
+                // Ordinary frontier learning, not model revalidation, owns
+                // genuinely unmodelled actions at this state.
+                return None;
+            }
+            let target_motor = self.config.sensory_cells + action;
+            let support = native.circuits.iter()
+                .filter(|c| {
+                    self.synapses[c.afferent_synapse].from == entry.cell
+                        && self.synapses[c.motor_synapse].to == target_motor
+                        && c.support >= min_support
+                })
+                .map(|c| c.support)
+                .sum::<u64>();
+            if support == 0 {
+                return None;
+            }
+            if weakest.map(|(_, old)| support < old).unwrap_or(true) {
+                weakest = Some((action, support));
+            }
+        }
+        let (action, support) = weakest?;
+        let epistemic_debt = 1.0 / (1.0 + support as f32);
+        Some((action, epistemic_debt))
+    }
+
     fn unified_context_candidate(
         &self,
         action: usize,
@@ -354,6 +411,34 @@ impl EvoPhase {
             );
         }
 
+        // Only when no qualified cognitive proposal survives: the physical
+        // model may be complete but no longer useful for the current raw goal.
+        // A bounded uncertainty-bearing revalidation operation then enters
+        // the SAME U1 competition as every other external motor proposal.
+        if out.is_empty() {
+            if let Some((action, debt)) =
+                self.unified_exhausted_model_revalidation(
+                    &sensory, goal_sensory
+                )
+            {
+                if let Some(mut fields) =
+                    self.unified_action_fields(&sensory, goal_sensory, action)
+                {
+                    fields[1] = fields[1].max(debt).clamp(0.0, 1.0);
+                    out.push(PhaseUnifiedCognitiveProposal {
+                        persistent_candidate_id: None,
+                        applicability: 1.0,
+                        proposal: PhaseCognitiveProposal {
+                            proposal_id: unified_hash(&[
+                                0xC0DEu64, action as u64
+                            ]),
+                            action,
+                            fields,
+                        },
+                    });
+                }
+            }
+        }
         out
     }
 
