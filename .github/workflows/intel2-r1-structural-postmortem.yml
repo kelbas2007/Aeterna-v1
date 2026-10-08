@@ -1,0 +1,41 @@
+name: intel2-r1-structural-postmortem
+# Diagnostic replay of burned INTEL-2R1 pack. Never a scoring verdict.
+on:
+  workflow_dispatch:
+  push:
+    branches: [intel2-r1-postmortem]
+    paths: ['.github/workflows/intel2-r1-structural-postmortem.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2-r1: run structural postmortem'
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify cognitive source is frozen
+        run: git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml
+      - name: Replay burned R1 pack for diagnosis
+        env:
+          AETERNA_INTEL2_R1_SEED: "37728670318"
+          AETERNA_SOURCE_SHA: "POSTMORTEM_ONLY"
+          AETERNA_SPEC_SHA: "POSTMORTEM_ONLY"
+        run: |
+          set +e
+          set -o pipefail
+          cargo test --release --test intel2_r1_unified_worlds intel2_r1_frozen_unified_unknown_world_lifetime -- --nocapture | tee intel2-r1-postmortem.log
+          exit 0
+      - name: Preserve diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intel2-r1-structural-postmortem
+          path: intel2-r1-postmortem.log
+          if-no-files-found: error
+          retention-days: 30
