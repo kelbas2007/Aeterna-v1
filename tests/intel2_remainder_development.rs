@@ -235,6 +235,47 @@ fn remainder_development_one_organism() {
         }
         let before_state = we.state;
         let already_changed = we.changed;
+        // Read-only diagnostic of the already-burned E scenario.
+        // Only the evaluator prints world roles. EvoPhase receives no hints.
+        let observation = rt.organism().current_real().unwrap().sensory.clone();
+        let phys_state = rt.organism().phase_native_abstract_state(&observation);
+        let phys_goal = rt.organism().phase_native_abstract_state(
+            &foundation::scene(&l1,e6[3],3)
+        );
+        let proposals = rt.organism().collect_phase_native_unified_proposals(
+            &foundation::scene(&l1,e6[3],3)
+        );
+        let winner = rt.organism().choose_phase_native_unified_proposal(&proposals);
+        let mut context = rt.organism().clone();
+        let mut percept = rt.organism().clone();
+        let mut comp = rt.organism().clone();
+        let mut rival = rt.organism().clone();
+        let mut active = rt.organism().clone();
+        let mut general = rt.organism().clone();
+        let goal_raw = foundation::scene(&l1,e6[3],3);
+        let outgoing = phys_state.map(|st|rt.organism().phase_native_circuits()
+            .iter().filter_map(|c|{
+                let aff=rt.organism().phase_native_synapse(c.afferent_synapse)?;
+                if aff.from != st.cell {return None;}
+                let motor=rt.organism().phase_native_synapse(c.motor_synapse)?;
+                let successor=rt.organism().phase_native_synapse(c.successor_synapse)?;
+                Some((motor.to,successor.to,c.support,c.revision))
+            }).collect::<Vec<_>>());
+        println!(
+            "E_CAUSAL_PRE n={} world_state={} goal_state={} observed={:?} goal={:?} proposals={:?} winner={:?} outgoing={:?} drive={:?} sources=(context={:?},percept={:?},comp={:?},rival={:?},active={:?},general={:?}) u2={:?} contexts={} percs={} comps={}",
+            e_actions,before_state,e6[3],phys_state,phys_goal,proposals,winner,
+            outgoing,rt.organism().phase_native_drive_weights(),
+            context.phase_native_context_action(&goal_raw),
+            percept.phase_native_perceptual_action(&goal_raw),
+            comp.phase_native_compositional_action(&goal_raw),
+            rival.choose_phase_native_goal_rival_probe(&goal_raw),
+            active.choose_phase_native_goal_active_action(&goal_raw),
+            general.choose_phase_native_abstract_learned_drive_action(),
+            rt.organism().phase_native_hypothesis_records(),
+            rt.organism().phase_native_context_witnesses().len(),
+            rt.organism().phase_native_perceptual_witnesses().len(),
+            rt.organism().phase_native_composition_witnesses().len()
+        );
         let layout = e_actions%6;
         let before_revisions = rt.organism().phase_native_circuits().iter()
             .map(|c| (c.revision,c.counterexamples.len() as u64)).fold((0u64,0u64), |a,b| (a.0+b.0,a.1+b.1));
@@ -259,6 +300,7 @@ fn remainder_development_one_organism() {
             Ok((foundation::scene(&l1, next, layout),value))
         });
         if !matches!(result, Ok(StepOutcome::Executed{..})) {
+            println!("E_CAUSAL_STOP action={} before_world={} now_world={} last_outcome={:?} reset={} changed={}", e_actions,before_state,we.state,result,e_resets,we.changed);
             e_stop = Some(format!("at_action={e_actions} state={} result={result:?}",we.state));
             break;
         }
