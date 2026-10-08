@@ -4,6 +4,8 @@
 // operation. Authority is not: every emitted action receives the SAME generic
 // action-level fields, and the winner is selected by U1/U2/U3.
 
+include!("phase_unified_representation.rs");
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PhaseUnifiedCognitiveProposal {
     pub persistent_candidate_id: Option<u64>,
@@ -61,11 +63,21 @@ impl EvoPhase {
         let goal = self.phase_native_abstract_state(goal_sensory)?;
         if entry.level != goal.level { return None; }
         let state = self.phase_native.as_ref()?;
-        let state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        // A acquired refinement is the operational state, not merely the name
+        // of the source that suggested an action. Every competing action must
+        // be evaluated in the same physically supported representation.
+        let operational = self.unified_operational_entry(sensory, entry.cell)?;
+        let mut state_cells = self.phase_native_abstract_cells_at_level(entry.level);
+        if !state_cells.contains(&operational) { state_cells.push(operational); }
 
         let goal_value = {
             let mut probe = self.clone();
-            match probe.plan_phase_native_abstract_goal(sensory, goal_sensory, None) {
+            let decision = if operational == entry.cell {
+                probe.plan_phase_native_abstract_goal(sensory, goal_sensory, None)
+            } else {
+                probe.phase_native_goal_decision_from_cells(operational, goal.cell, None)
+            };
+            match decision {
                 Some(decision) if decision.first_action == action =>
                     decision.predicted_value.clamp(0.0,1.0),
                 _ => 0.0,
@@ -73,13 +85,13 @@ impl EvoPhase {
         };
 
         let frontier = self.phase_drive_frontier_activity_for_cells(state, &state_cells);
-        let drive_features = self.phase_drive_features(state, entry.cell, action, &frontier);
+        let drive_features = self.phase_drive_features(state, operational, action, &frontier);
         let epistemic_value = drive_features[0].max(drive_features[1]).clamp(0.0,1.0);
 
         let relevance =
             self.phase_goal_relevance_for_cells(state, goal.cell, &state_cells);
         let contradiction = self.phase_goal_rival_disagreement_score(
-            state, entry.cell, action, &relevance
+            state, operational, action, &relevance
         ).clamp(0.0,1.0);
 
         let support = self.phase_action_global_support(state, action) as f32;
