@@ -1,8 +1,5 @@
 name: INTEL-2 edge-cost development check
 on:
-  push:
-    branches: [post-intel2-c-diagnosis]
-    paths: ['.github/workflows/intel2-edge-cost-check.yml']
   workflow_dispatch:
 permissions:
   contents: read
