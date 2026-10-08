@@ -1,9 +1,6 @@
 name: post-INTEL2 local evidence coverage
 
 on:
-  push:
-    branches:
-      - unified-operation-competition
   workflow_dispatch:
 
 concurrency:
