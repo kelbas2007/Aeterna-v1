@@ -10,13 +10,14 @@ permissions:
 jobs:
   diagnose:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: execute frozen W3 postmortem'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: execute frozen W3 postmortem full-history'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - name: Restore frozen INTEL-2 cognitive source for diagnosis
         run: |
