@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/composition-remainder-diagnostic.yml'
       - 'tests/intel2_remainder_development.rs'
+      - 'src/phase_unified_cognition.rs'
 jobs:
   development:
     runs-on: ubuntu-latest
