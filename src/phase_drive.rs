@@ -199,6 +199,31 @@ impl EvoPhase {
         })
     }
 
+    /// Factual support owned by one opaque action at one physical state.
+    ///
+    /// This is deliberately local. It contains no world/task identity and is
+    /// used only to break equal learned epistemic scores in favor of missing
+    /// local evidence before lifetime-global motor popularity.
+    pub(super) fn phase_drive_local_action_support(
+        &self,
+        state: &PhaseNativeState,
+        cell: usize,
+        action: usize,
+    ) -> u64 {
+        let motor = self.config.sensory_cells + action;
+        let min_support = u64::from(self.config.min_recruit_support);
+        state.circuits.iter()
+            .filter(|circuit| {
+                circuit.support >= min_support
+                    && self.synapses[circuit.afferent_synapse].from == cell
+                    && self.synapses[circuit.motor_synapse].to == motor
+                    && self.synapses[circuit.afferent_synapse].weight > 0.25
+                    && self.synapses[circuit.successor_synapse].weight > 0.25
+            })
+            .map(|circuit| circuit.support)
+            .sum()
+    }
+
     /// Generic physical frontier field over an explicit set of state cells.
     /// P4 passes receptor cells; G16 passes acquired abstract cells. The
     /// propagation rule and learned feature weights are identical.
@@ -373,24 +398,28 @@ impl EvoPhase {
         };
         let frontier = self.phase_drive_frontier_activity(&state);
 
-        let mut best: Option<(usize, f32, [f32; 2])> = None;
+        let mut best: Option<(usize, f32, u64, [f32; 2])> = None;
         for action in 0..self.config.motor_cells {
             let features = self.phase_drive_features(&state, entry, action, &frontier);
             let score = self.phase_drive_score(&state, features)?;
+            let local_support =
+                self.phase_drive_local_action_support(&state, entry, action);
             match best {
-                None => best = Some((action, score, features)),
-                Some((best_action, best_score, _)) => {
+                None => best = Some((action, score, local_support, features)),
+                Some((best_action, best_score, best_local_support, _)) => {
                     if score > best_score + 1.0e-6
                         || ((score - best_score).abs() <= 1.0e-6
-                            && action < best_action)
+                            && (local_support < best_local_support
+                                || (local_support == best_local_support
+                                    && action < best_action)))
                     {
-                        best = Some((action, score, features));
+                        best = Some((action, score, local_support, features));
                     }
                 }
             }
         }
 
-        let (action, _, features) = best?;
+        let (action, _, _, features) = best?;
         state.drive.as_mut().expect("drive").pending_features = Some(features);
         self.phase_native = Some(state);
         Some(action)
