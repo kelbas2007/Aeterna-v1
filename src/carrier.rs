@@ -26,7 +26,7 @@ pub use phase_native::{
     PhaseHypothesisRecordInfo, HYPOTHESIS_CAPACITY,
     PhaseUnifiedCognitiveProposal, PhaseUnifiedDecision, PhaseUnifiedKnowledgeSnapshot,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
-    PhaseTemporalEvidenceConfig, PhaseTemporalEvidenceReadout,
+    PhaseTemporalEvidenceConfig, PhaseTemporalEvidenceReadout, PhaseTemporalSensingDecision,
     PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
 };
 use phase_native::PhaseNativeState;
