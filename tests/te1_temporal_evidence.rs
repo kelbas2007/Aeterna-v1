@@ -148,9 +148,8 @@ fn te1_fresh_balanced_noisy_series_vs_last_only(){
             None => abstentions+=1,
         }
         last_only+=usize::from(last==hidden);
-        past_majority+=usize::from(
-            if ones>4{1}else if ones<4{0}else{2}==hidden
-        );
+        let majority=if ones>4{Some(1)}else if ones<4{Some(0)}else{None};
+        past_majority+=usize::from(majority==Some(hidden));
     }
     println!("TE1_NOISY full={full}/80 last_only={last_only}/80 majority={past_majority}/80 abstain={abstentions}/80 zero_accumulator=0");
     assert!(full>=70,"TE1 preregistered evidence integration criterion missed");
