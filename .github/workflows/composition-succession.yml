@@ -30,6 +30,10 @@ jobs:
         run: cargo test --release --test u2_hypothesis_ecology
       - name: U3 mixed explanation allocation regression
         run: cargo test --release --test u3_cross_mechanism_allocation
+      - name: G21 contextual state regression
+        run: cargo test --release --test g21_contextual_state_refinement
+      - name: G22 perceptual variable regression
+        run: cargo test --release --test g22_perceptual_variable_invention
       - name: G20 persistent organism regression
         run: cargo test --release --test g20_continual_reasoning
       - name: Human Protection regression
