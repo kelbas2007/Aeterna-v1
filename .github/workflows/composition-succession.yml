@@ -7,6 +7,7 @@ on:
     paths:
       - 'src/phase_compositional.rs'
       - 'src/phase_refinement_fanout.rs'
+      - 'src/phase_unified_cognition.rs'
       - 'tests/composition_succession.rs'
       - '.github/workflows/composition-succession.yml'
 jobs:
@@ -21,5 +22,17 @@ jobs:
         run: cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed -- --nocapture
       - name: Existing G23 source guard
         run: cargo test --release --test g23_compositional_perceptual_function g23_composition_is_native -- --nocapture
+      - name: Refined unified runtime regression
+        run: cargo test --release --test intel2_refined_state_controls -- --nocapture
+      - name: U1 meta-control regression
+        run: cargo test --release --test u1_meta_control
+      - name: U2 physical hypothesis ecology regression
+        run: cargo test --release --test u2_hypothesis_ecology
+      - name: U3 mixed explanation allocation regression
+        run: cargo test --release --test u3_cross_mechanism_allocation
+      - name: G20 persistent organism regression
+        run: cargo test --release --test g20_continual_reasoning
+      - name: Human Protection regression
+        run: cargo test --release --test human_protection
       - name: Release
         run: cargo build --release
