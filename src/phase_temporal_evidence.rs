@@ -295,6 +295,33 @@ impl EvoPhase {
         })
     }
 
+    pub fn phase_native_temporal_evidence_enabled(&self)->bool{
+        self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref()).is_some()
+    }
+
+    pub fn phase_native_temporal_source_count(&self)->usize{
+        self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref())
+            .map(|e|e.cues.len()).unwrap_or(0)
+    }
+
+    /// Phase-native sensing affordance for a given actually executed opaque
+    /// motor. Even an unchanged cue can be a fresh independent observation
+    /// when a motor has acquired a verified sensory-difference pathway.
+    pub fn phase_native_temporal_action_affordance(
+        &self,action:usize
+    )->Option<f32>{
+        let n=self.phase_native.as_ref()?;
+        let p=n.temporal_evidence.as_ref()?;
+        let motor=p.samplers.iter().find(|m|m.motor_action==action
+            && m.distinctions>0)?;
+        Some(conductance(
+            &self.cells,&self.synapses[motor.sensory_synapse],
+            n.config.coherence_floor
+        ))
+    }
+
     /// Explicit generic NEW EPISODE boundary resets the transient physical
     /// evidence without destroying the acquired receptor identities/synapses.
     /// It does not alter ordinary native transition learning or the goal.
