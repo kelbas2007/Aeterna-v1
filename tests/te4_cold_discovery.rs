@@ -3,9 +3,7 @@
 // in a noisy hidden-cause world. This does NOT reuse the FRONTIER-1 sealed
 // authority seed, classes or motor mapping and supplies no matched tuition.
 include!("intel2_unified_worlds.rs");
-use aeterna_v1::carrier::{
-    PhaseTemporalEvidenceConfig, PhaseHypothesisEcologyConfig,
-};
+use aeterna_v1::carrier::PhaseTemporalEvidenceConfig;
 
 #[derive(Debug, Clone, Copy)]
 struct TE4Roles {
