@@ -463,6 +463,32 @@ impl EvoPhase {
             );
         }
 
+        // TE3: a genuinely acquired sensory motor can compete for authority
+        // while two temporally integrated raw hypotheses remain unresolved.
+        // Physical uncertainty and phase-conducting affordance determine the
+        // evidence value. This does NOT authorize actuation; U1 and Human
+        // Protection remain unchanged.
+        if let Some(sensing)=self.choose_phase_native_temporal_sensing_action(){
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,sensing.action
+            ){
+                fields[1]=fields[1].max(
+                    sensing.learned_affordance*sensing.missing_evidence
+                ).clamp(0.0,1.0);
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[
+                            0x7E30u64,sensing.action as u64
+                        ]),
+                        action:sensing.action,
+                        fields,
+                    }
+                });
+            }
+        }
+
         let mut rival=self.clone();
         if let Some(action)=rival.choose_phase_native_goal_rival_probe(goal_sensory){
             self.push_unified_proposal(
