@@ -29,11 +29,28 @@ struct PhaseTemporalCue {
     evidence_synapse: usize,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PhaseTemporalSampler {
+    motor_action: usize,
+    sensory_synapse: usize,
+    trials: u32,
+    distinctions: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseTemporalSensingDecision {
+    pub action: usize,
+    pub synapse: usize,
+    pub learned_affordance: f32,
+    pub missing_evidence: f32,
+}
+
 #[derive(Debug, Clone)]
 pub(super) struct PhaseTemporalEvidenceState {
     config: PhaseTemporalEvidenceConfig,
     hub_cell: usize,
     cues: Vec<PhaseTemporalCue>,
+    samplers: Vec<PhaseTemporalSampler>,
     observations: u32,
     episodes: u64,
 }
@@ -84,6 +101,7 @@ impl EvoPhase {
             config,
             hub_cell,
             cues: Vec::new(),
+            samplers: Vec::new(),
             observations: 0,
             episodes: 0,
         });
@@ -97,7 +115,8 @@ impl EvoPhase {
     ) -> bool {
         self.phase_native.as_ref()
             .and_then(|state| state.temporal_evidence.as_ref())
-            .map(|p|p.cues.iter().any(|c|c.evidence_synapse==synapse_index))
+            .map(|p|p.cues.iter().any(|c|c.evidence_synapse==synapse_index)
+                || p.samplers.iter().any(|m|m.sensory_synapse==synapse_index))
             .unwrap_or(false)
     }
 
@@ -160,6 +179,120 @@ impl EvoPhase {
         native.temporal_evidence = Some(evidence);
         self.phase_native = Some(native);
         true
+    }
+
+    /// Learn an observation-producing motor only from factual PRE/action/POST.
+    /// An observable contrast between two previously acquired cue cells is
+    /// positive sensor evidence; a no-op/terminal/unrelated successor is not.
+    /// No evaluator reward, action semantics or hidden variable is passed.
+    pub fn observe_phase_native_sensing_affordance(
+        &mut self,
+        action: usize,
+        pre_sensory: &[f32],
+        post_sensory: &[f32],
+    ) -> bool {
+        if action>=self.config.motor_cells { return false; }
+        let Some(pre)=self.phase_native_abstract_state(pre_sensory) else {
+            return false;
+        };
+        let Some(post)=self.phase_native_abstract_state(post_sensory) else {
+            return false;
+        };
+        let Some(mut native)=self.phase_native.take() else {
+            return false;
+        };
+        let Some(mut evidence)=native.temporal_evidence.take() else {
+            self.phase_native=Some(native);
+            return false;
+        };
+        if !native.config.learning_enabled
+            || evidence.cues.len()!=2
+            || !evidence.cues.iter().any(|c|c.source_cell==pre.cell)
+        {
+            native.temporal_evidence=Some(evidence);
+            self.phase_native=Some(native);
+            return false;
+        }
+        let sampler_index = if let Some(i)=evidence.samplers.iter()
+            .position(|m|m.motor_action==action) {
+            i
+        }else{
+            let link=self.native_synapse(
+                self.motor_cell(action),evidence.hub_cell
+            );
+            let syn=&mut self.synapses[link];
+            syn.phase_offset=wrap_phase(
+                self.cells[syn.to].phase-self.cells[syn.from].phase
+            );
+            syn.confidence=1.0;
+            evidence.samplers.push(PhaseTemporalSampler{
+                motor_action:action,
+                sensory_synapse:link,
+                trials:0,
+                distinctions:0,
+            });
+            evidence.samplers.len()-1
+        };
+        let changed=pre.cell!=post.cell
+            && evidence.cues.iter().any(|c|c.source_cell==post.cell);
+        let sampler=&mut evidence.samplers[sampler_index];
+        sampler.trials=sampler.trials.saturating_add(1);
+        if changed {
+            sampler.distinctions=sampler.distinctions.saturating_add(1);
+            let syn=&mut self.synapses[sampler.sensory_synapse];
+            // A repeatable sensor is an ACQUIRED physical motor->hub path.
+            // The count only audits factual experience; the action winner
+            // depends on the phase-sensitive synaptic conductance itself.
+            syn.weight=(syn.weight
+                +1.0/evidence.config.max_observations as f32).min(1.0);
+            syn.eligibility=1.0;
+        }
+        native.temporal_evidence=Some(evidence);
+        self.phase_native=Some(native);
+        true
+    }
+
+    /// When the physical cue evidence is ambiguous, propose ONLY a sensor
+    /// action whose own positive sensory affordance was acquired from real
+    /// transitions. An action with no factual distinctions cannot win.
+    /// The proposal is NOT an actuator permit or an action forced on U1.
+    pub fn choose_phase_native_temporal_sensing_action(
+        &self,
+    ) -> Option<PhaseTemporalSensingDecision> {
+        let belief=self.phase_native_temporal_evidence()?;
+        if !belief.needs_more{return None;}
+        let native=self.phase_native.as_ref()?;
+        let state=native.temporal_evidence.as_ref()?;
+        let floor=native.config.coherence_floor;
+        let mut best:Option<(usize,usize,f32)>=None;
+        let mut tied=false;
+        for model in &state.samplers {
+            if model.distinctions==0 {continue;}
+            let confidence=conductance(
+                &self.cells,&self.synapses[model.sensory_synapse],floor
+            );
+            if confidence<=1.0e-8 {continue;}
+            match best {
+                None=>{
+                    best=Some((model.motor_action,model.sensory_synapse,confidence));
+                    tied=false;
+                }
+                Some((_,_,score)) if confidence>score+1.0e-6=>{
+                    best=Some((model.motor_action,model.sensory_synapse,confidence));
+                    tied=false;
+                }
+                Some((_,_,score)) if (confidence-score).abs()<=1.0e-6=>{
+                    tied=true;
+                }
+                _=>{}
+            }
+        }
+        if tied {return None;}
+        let (action,synapse,learned_affordance)=best?;
+        Some(PhaseTemporalSensingDecision{
+            action,synapse,learned_affordance,
+            missing_evidence:(1.0-belief.evidence_margin).clamp(0.0,1.0),
+        })
     }
 
     /// Explicit generic NEW EPISODE boundary resets the transient physical
