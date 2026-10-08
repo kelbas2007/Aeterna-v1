@@ -1,0 +1,5 @@
+INTEL-4 first one-use authority trigger.
+Frozen cognitive SHA: c7b5455ba006b297288fa8d16ef6300c8a19ceca.
+Evaluator source commit: a31e815a6565d1719028cd4e585c52b78759e323.
+Do not modify the evaluator, protocol or cognitive source after target seal.
+Target seed is the new GitHub Actions run_id, NOT any previous INTEL or development seed.
