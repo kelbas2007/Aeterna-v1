@@ -2,6 +2,11 @@ name: intel3 frozen unified system verdict
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - unified-operation-competition
+    paths:
+      - '.intel3_authority_trigger'
 
 jobs:
   intel3:
