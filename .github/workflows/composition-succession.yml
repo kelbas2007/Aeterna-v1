@@ -23,7 +23,7 @@ jobs:
       - name: Existing G23 source guard
         run: cargo test --release --test g23_compositional_perceptual_function g23_composition_is_native -- --nocapture
       - name: Refined unified runtime regression
-        run: cargo test --release --test intel2_refined_state_controls -- --nocapture
+        run: cargo test --release --test intel2_refined_state_controls refined_state_controls_preserve_context_through_unified_competition -- --nocapture
       - name: U1 meta-control regression
         run: cargo test --release --test u1_meta_control
       - name: U2 physical hypothesis ecology regression
