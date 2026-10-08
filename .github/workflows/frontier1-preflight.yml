@@ -1,0 +1,27 @@
+name: FRONTIER-1 outcome-free technical preflight
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/beyond-intel4]
+    paths:
+      - 'tests/frontier1_noisy_latent.rs'
+      - '.github/workflows/frontier1-preflight.yml'
+
+jobs:
+  preseal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify unchanged frozen qualified cognition
+        shell: bash
+        run: |
+          git fetch origin c7b5455ba006b297288fa8d16ef6300c8a19ceca --depth=1 || true
+          git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
+      - name: Compile only, no target interaction
+        run: cargo test --release --test frontier1_noisy_latent --no-run
+      - name: Evaluator source guard only
+        run: cargo test --release --test frontier1_noisy_latent frontier1_source_guard -- --nocapture
+      - name: Release
+        run: cargo build --release
