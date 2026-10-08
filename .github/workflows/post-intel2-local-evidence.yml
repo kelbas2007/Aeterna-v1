@@ -1,0 +1,48 @@
+name: post-INTEL2 local evidence coverage
+
+on:
+  push:
+    branches:
+      - unified-operation-competition
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: P4 learned-drive regression
+        run: cargo test --release --test phase_native_learned_drive p4_learned_physical_drive_transfers_to_cold_longer_worlds -- --nocapture
+
+      - name: G16 abstract learned-drive regression
+        run: cargo test --release --test g16_autonomous_abstract_model g16_learned_drive_autonomously_acquires_abstract_world_model -- --nocapture
+
+      - name: Burned INTEL-2 World C diagnostic only
+        run: cargo test --release --test intel2_unified_worlds intel2_burned_world_c_with_environment_terminal_reset_diagnosis -- --nocapture
+
+      - name: U1 regression
+        run: cargo test --release --test u1_meta_control
+
+      - name: U1 runtime integration regression
+        run: cargo test --release --test u1_runtime_integration
+
+      - name: U2 regression
+        run: cargo test --release --test u2_hypothesis_ecology
+
+      - name: U3 regression
+        run: cargo test --release --test u3_cross_mechanism_allocation
+
+      - name: G20-G23 regressions
+        run: |
+          cargo test --release --test g20_continual_reasoning
+          cargo test --release --test g21_contextual_state_refinement
+          cargo test --release --test g22_perceptual_variable_invention
+          cargo test --release --test g23_compositional_perceptual_function
+
+      - name: Human Protection
+        run: cargo test --release --test human_protection
+
+      - name: Release build
+        run: cargo build --release
