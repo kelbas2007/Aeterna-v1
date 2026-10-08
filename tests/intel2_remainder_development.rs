@@ -45,14 +45,11 @@ fn remainder_development_one_organism() {
     let [ma, mb, mc, md, me] = motors;
     let op_xor = rng.next() & 1 == 1;
     let bins = if rng.next() & 1 == 0 { [0.20f32, 0.40] } else { [0.15f32, 0.35] };
-
     let (mut rt, l1, c_states, fixture_mc) = refined_context_fixture();
     assert_eq!(fixture_mc, mc);
     let original_meta = rt.organism().phase_native_meta_weights().unwrap();
     let mut monitor = Monitor::default();
     println!("REMAINDER_START burned_seed={seed} cognitive_baseline=924a566b4d3f1125fa67e73bc1f68c4ba53bdbd3 A_B_acquisition_reuse=PASS D={d_states:?}/{md:?} op_xor={op_xor} bins={bins:?} E={e6:?}/{me:?}");
-
-    // Score C without altering the already qualified learning schedule.
     let mut c_score = [0usize; 2];
     let mut memoryless = 0usize;
     for i in 0..32 {
@@ -70,7 +67,6 @@ fn remainder_development_one_organism() {
     let c_pass = c_score.iter().sum::<usize>() >= 28
         && c_score.iter().all(|&n| n >= 13) && memoryless <= 20;
     println!("REMAINDER_C sides={c_score:?}/[16,16] memoryless={memoryless}/32 pass={c_pass}");
-
     let before_restart = rt.organism().phase_native_learned_fingerprint();
     rt.restart_cognition().unwrap();
     assert!(rt.organism().current_real().is_none());
@@ -82,7 +78,7 @@ fn remainder_development_one_organism() {
     }
     println!("REMAINDER_RESTART preserved=true fresh_sensing_required=true C_reuse=2/2");
 
-    // Simulated software protection boundary; no physical device is involved.
+    // Simulated software protection boundary, not a real physical device.
     let calls = Cell::new(0usize);
     let safety_fp = rt.organism().phase_native_learned_fingerprint();
     let harmless_post = foundation::scene(&l1, c_states[4], 0);
@@ -203,7 +199,7 @@ fn remainder_development_one_organism() {
     println!("REMAINDER_D promoted={d_promoted} score={d_correct}/32 unavailable={d_unavailable} combo_scores={d_combo_scores:?} single_oracle_ceiling={single_ceiling}/32 pass={d_pass}");
     rt.set_model_learning_enabled(true);
 
-    // E continues even after D failure, on the SAME resulting organism.
+    // E continues after D failure, on the SAME resulting organism.
     let mut we = WorldE::new(e6, me);
     set_world(&mut rt, &l1, we.state, e6[3], 2);
     let mut e_actions = 0usize;
@@ -257,25 +253,25 @@ fn remainder_development_one_organism() {
         .map(|c| (c.revision,c.counterexamples.len() as u64)).fold((0u64,0u64), |a,b| (a.0+b.0,a.1+b.1));
     let revision_evidence = pre_change_record.map(|b| after_revisions.0>b.0 && after_revisions.1>b.1).unwrap_or(false);
     rt.set_model_learning_enabled(false);
-    set_world(&mut rt, &l1, e6[5], e6[3], 5);
+    // Transport the environment, not only its rendered observation.
+    we.state = e6[5];
+    set_world(&mut rt, &l1, we.state, e6[3], 5);
     let mut stable_arrived = false;
     for i in 0..6 {
-        if rt.goal_reached().unwrap_or(false) { stable_arrived=true; break; }
+        if we.state == e6[3] { stable_arrived=true; break; }
         let result = rt.step_unified(|_| Some(safe()), |action| {
             let (next,value)=we.step(action);
             Ok((foundation::scene(&l1,next,(5+i)%6),value))
         });
         if !matches!(result, Ok(StepOutcome::Executed{..})) { break; }
     }
-    // The physical environment must match its newly supplied start observation.
-    // See the explicit stable probe below; this first draft sets we.state before use.
+    stable_arrived |= we.state == e6[3];
     let e_pass = we.changed && first_changed_action.is_some()
         && recovery.map(|n| n<=16).unwrap_or(false) && revision_evidence
         && stable_acquired_before_change && stable_arrived && e_stop.is_none();
     let drift_status = if first_changed_action.is_none() {"NOT_EXERCISED"}
         else if e_pass {"PASS"} else {"FAIL"};
     println!("REMAINDER_E actions={e_actions} resets={e_resets} goals={e_goals} shortcut_successes={} changed={} first_changed={first_changed_action:?} recovery={recovery:?} revision_evidence={revision_evidence} stable_preacquired={stable_acquired_before_change} stable_reuse={stable_arrived} stop={e_stop:?} histogram={e_histogram:?} status={drift_status}",we.shortcut_successes,we.changed);
-
     let before_retention = remainder_target_records(&rt);
     let mut fa = WorldA::new(a_states,[ma[0],ma[1],ma[2],ma[3],ma[4]]);
     let final_a=run_a(&mut rt,&l1,&mut monitor,&mut fa,6,5,None);
