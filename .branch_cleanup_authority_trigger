@@ -1,0 +1,8 @@
+AETERNA-v1 branch-list cleanup authority
+2026-10-08
+Archive verified: archive/evidence-20261008 @ 46c8e64562de7b9e300cb65ddcacc89b4e652d1f
+Main INTEL-4 promotion CI PASS: 37831043806
+Old PR #3 closed without merge; head archived
+Delete only the twelve exact stale refs enumerated in docs/BRANCH_CLEANUP_PROTOCOL.md
+Keep: main, intel4-frozen-unified, archive/evidence-20261008, research/beyond-intel4
+All deletions protected by exact SHA lease and Git ancestry checks
