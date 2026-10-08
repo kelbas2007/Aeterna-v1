@@ -66,8 +66,15 @@ fn trained_runtime(
 
 #[test]
 fn te3_physical_sensing_project_competes_in_unified_without_host_priority(){
-    for sensor in [1usize,4usize]{
-        let classes=if sensor==1{[2,9,15]}else{[10,3,21]};
+    let arms=[
+        (0usize,[2usize,9usize,15usize]),
+        (1usize,[10usize,3usize,21usize]),
+        (2usize,[7usize,14usize,23usize]),
+        (3usize,[13usize,4usize,19usize]),
+        (4usize,[17usize,11usize,0usize]),
+        (5usize,[6usize,20usize,16usize]),
+    ];
+    for (sensor,classes) in arms {
         let (mut rt,l1,goal)=trained_runtime(sensor,classes);
         let belief=rt.organism().phase_native_temporal_evidence().unwrap();
         assert_eq!(belief.observations,1);
@@ -131,6 +138,8 @@ fn te3_physical_sensing_project_competes_in_unified_without_host_priority(){
         ).unwrap();
         assert!(matches!(answer,StepOutcome::Executed{..}));
         let motor=used_motor.unwrap();
+        assert_eq!(motor,sensor,
+            "the physical uncertain-evidence operation must win ordinary U1");
         let observed=rt.organism().phase_native_temporal_evidence().unwrap();
         assert_eq!(observed.observations,if motor==sensor{2}else{1},
             "no-op motor must not count as an independent fresh cue");
