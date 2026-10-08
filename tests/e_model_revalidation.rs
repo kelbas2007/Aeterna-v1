@@ -130,6 +130,22 @@ fn e_goal_route_coverage_comes_from_acquired_physical_successors(){
             && p.proposal.fields[0]>=expected.fields[0]
             && p.proposal.fields[1]>=expected.fields[1]));
     lesion.restore_phase_native_synapse_for_control(circuit.successor_synapse,old);
+    let mut phase_shifted=original.clone();
+    let phase_saved=phase_shifted.perturb_phase_native_synapse_for_control(
+        circuit.successor_synapse,1.0,std::f32::consts::PI
+    ).unwrap();
+    assert!(!phase_shifted.collect_phase_native_unified_proposals(&goal)
+        .iter().any(|p|p.proposal.proposal_id==expected.proposal_id
+            && p.proposal.fields[0]>=expected.fields[0]
+            && p.proposal.fields[1]>=expected.fields[1]),
+        "pi shifted native route must not retain the same goal-valued proposal");
+    phase_shifted.restore_phase_native_synapse_for_control(
+        circuit.successor_synapse,phase_saved
+    );
+    assert_eq!(phase_shifted.phase_native_learned_fingerprint(),
+        original.phase_native_learned_fingerprint());
+    assert_eq!(phase_shifted.collect_phase_native_unified_proposals(&goal),
+        proposals);
     assert_eq!(lesion.phase_native_learned_fingerprint(),
         original.phase_native_learned_fingerprint());
     assert_eq!(lesion.collect_phase_native_unified_proposals(&goal),proposals);
