@@ -9,6 +9,7 @@ use crate::carrier::{
     EvoPhase, PhaseNativeCheckpoint, PhaseCognitiveProposal,
     PhaseMetaControlCheckpoint, PhaseMetaDecision,
     PhaseHypothesisEcologyConfig, PhaseUnifiedDecision, PhaseUnifiedCognitiveProposal,
+    PhaseTemporalEvidenceConfig,
 };
 use crate::human_protection::{
     HumanProtection, HumanProtectionEvidence, HumanProtectionReason,
@@ -157,6 +158,14 @@ impl ScientificRuntime {
         true
     }
 
+    /// TE3 optional native temporal-evidence project. Source/goal/answer
+    /// identities stay entirely inside EvoPhase and are never supplied here.
+    pub fn enable_temporal_evidence(
+        &mut self, config: PhaseTemporalEvidenceConfig
+    )->bool{
+        self.organism.enable_phase_native_temporal_evidence(config)
+    }
+
     fn select_unified_internal(
         &mut self,
     ) -> Result<Option<(ActionProposal, PhaseUnifiedDecision, Vec<PhaseUnifiedCognitiveProposal>)>, RuntimeError> {
@@ -223,6 +232,12 @@ impl ScientificRuntime {
     pub fn observe_external(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
         self.validate_raster(raster)?;
         self.organism.clear_phase_native_context_history();
+        // A new external real observation begins a fresh evidence episode,
+        // while preserving acquired cue and motor synapses across the lifetime.
+        if self.organism.phase_native_temporal_evidence_enabled() {
+            let _=self.organism.begin_phase_native_temporal_episode();
+            let _=self.organism.observe_phase_native_temporal_signal(raster);
+        }
         self.organism.observe_initial_real(raster, false);
         self.fresh_observation_required = false;
         self.record(LifetimeEventKind::ExternalObservation);
@@ -365,6 +380,23 @@ impl ScientificRuntime {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
+        // Commit sensory affordance only after one permitted and executed
+        // motor returned a validated FACTUAL POST. Non-sensing no-op actions
+        // do NOT count another copy of the same cue as new information.
+        if self.organism.phase_native_temporal_evidence_enabled() {
+            if self.model_learning_enabled {
+                let _=self.organism.observe_phase_native_sensing_affordance(
+                    action,&factual_pre,&post
+                );
+            }
+            if self.organism.phase_native_temporal_source_count()==2
+                && self.organism.phase_native_temporal_action_affordance(action)
+                    .unwrap_or(0.0)>1.0e-8
+            {
+                let _=self.organism.observe_phase_native_temporal_signal(&post);
+            }
+        }
+
         let any_refinement =
             self.organism.phase_native_compositional_enabled()
                 || self.organism.phase_native_perceptual_enabled()
@@ -435,6 +467,9 @@ impl ScientificRuntime {
         };
 
         let before_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
+        let factual_pre = self.organism.current_real()
+            .ok_or(RuntimeError::FreshObservationRequired)?
+            .sensory.clone();
         let (post, task_outcome) = match execute(action) {
             Ok(result) => result,
             Err(error) => return Ok(self.latch_fault(error)),
