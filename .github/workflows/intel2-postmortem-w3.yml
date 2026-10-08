@@ -10,7 +10,7 @@ permissions:
 jobs:
   diagnose:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: execute exact frozen W3 postmortem'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: confirm frozen W3 goal-reached evaluator bug'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
