@@ -69,6 +69,7 @@ pub(super) struct PhaseNativeState {
     perceptual: Option<PhasePerceptState>,
     compositional: Option<PhaseCompositionState>,
     meta_control: Option<PhaseMetaControlState>,
+    temporal_evidence: Option<PhaseTemporalEvidenceState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -119,6 +120,7 @@ impl EvoPhase {
             perceptual: None,
             compositional: None,
             meta_control: None,
+            temporal_evidence: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -149,6 +151,7 @@ impl EvoPhase {
         let composition_synapse = self.is_native_composition_synapse(index);
         let meta_synapse = self.is_native_meta_synapse(index);
         let hypothesis_synapse = self.is_native_hypothesis_synapse(index);
+        let temporal_synapse = self.is_native_temporal_evidence_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
@@ -158,6 +161,7 @@ impl EvoPhase {
             && !composition_synapse
             && !meta_synapse
             && !hypothesis_synapse
+            && !temporal_synapse
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -213,6 +217,9 @@ impl EvoPhase {
         }
         if let Some(meta) = state.meta_control.as_ref() {
             text.push_str(&format!("|{:?}", meta));
+        }
+        if let Some(evidence) = state.temporal_evidence.as_ref() {
+            text.push_str(&format!("|{:?}", evidence));
         }
         for byte in text.bytes() {
             h ^= u64::from(byte);
@@ -702,3 +709,4 @@ include!("phase_meta_control.rs");
 
 include!("phase_hypothesis_ecology.rs");
 include!("phase_unified_cognition.rs");
+include!("phase_temporal_evidence.rs");
