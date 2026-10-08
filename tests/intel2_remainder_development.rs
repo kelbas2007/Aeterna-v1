@@ -182,6 +182,13 @@ fn remainder_development_one_organism() {
         rt.observe_external(&current).unwrap();
         rt.set_goal(&d_goal).unwrap();
         let before = rt.organism().phase_native_learned_fingerprint();
+        if i < 4 {
+            let mut compositional = rt.organism().clone();
+            let component = compositional.phase_native_compositional_action(&d_goal);
+            let candidates = rt.organism().collect_phase_native_unified_proposals(&d_goal);
+            let selected = rt.organism().choose_phase_native_unified_proposal(&candidates);
+            println!("REMAINDER_D_ARBITRATION combo={combo} compositional={component:?} selected={selected:?} candidates={candidates:?}");
+        }
         match rt.propose_unified() {
             Ok(Some(p)) => {
                 let ok = remainder_d_success(p.action, x, y, truth);
