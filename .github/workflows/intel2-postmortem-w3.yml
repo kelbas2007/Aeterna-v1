@@ -18,8 +18,10 @@ jobs:
         with:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
-      - name: Verify cognitive source still equals frozen INTEL-2 core
-        run: git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+      - name: Restore frozen INTEL-2 cognitive source for diagnosis
+        run: |
+          git checkout 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+          git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
       - name: Replay burned pack for diagnosis only
         env:
           AETERNA_INTEL2_SEED: "37687243350"
