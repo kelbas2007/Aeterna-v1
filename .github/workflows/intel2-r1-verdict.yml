@@ -1,4 +1,5 @@
 name: intel2-r1-verdict
+# preflight-2 after source-guard self-match repair
 # One-use corrected frozen-core system verdict.
 on:
   workflow_dispatch:
