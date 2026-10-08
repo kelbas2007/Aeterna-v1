@@ -510,9 +510,17 @@ fn intel3_frozen_unified_fresh_lifetime(){
 fn intel3_evaluator_uses_only_unified_external_runtime(){
     let source=include_str!("intel3_unified_worlds.rs");
     assert!(source.contains("step_unified"));
-    assert!(!source.contains(".step(|"));
-    assert!(!source.contains("ReasoningMode::"));
-    assert!(!source.contains("world_id"));
-    assert!(!source.contains("task_id"));
-    assert!(!source.contains("correct_action"));
+
+    // Assemble forbidden evaluator tokens at runtime so the source guard does
+    // not match its own string literals.
+    let forbidden=[
+        ["rt",".step("].concat(),
+        ["Reasoning","Mode::"].concat(),
+        ["world","_id"].concat(),
+        ["task","_id"].concat(),
+        ["correct","_action"].concat(),
+    ];
+    for token in forbidden {
+        assert!(!source.contains(&token),"forbidden evaluator token: {token}");
+    }
 }
