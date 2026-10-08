@@ -148,6 +148,46 @@ impl EvoPhase {
         programs
     }
 
+    // Choose an untried explanation from factual contradictory observations.
+    // Retired hypotheses remain in the provenance ledger and cannot be reborn
+    // with an identical (base, action, program, unordered successor pair).
+    fn composition_untried_hypotheses(
+        comp: &PhaseCompositionState,
+        base: usize,
+        action: usize,
+        after: usize,
+        raw: &[PhasePerceptFeature],
+    ) -> Vec<(PhasePerceptProgram, usize)> {
+        let prior_on_base = comp.candidates.iter().any(|w| w.base_cell == base);
+        for old in comp.discovery.iter().rev() {
+            if old.base != base || old.action != action || old.post == after {
+                continue;
+            }
+            let mut untried = Self::candidate_programs(&old.features, raw)
+                .into_iter()
+                .filter(|program| !comp.candidates.iter().any(|w| {
+                    w.base_cell == base
+                        && w.anchor_action == action
+                        && w.program == *program
+                        && ((w.successor_cells[0] == old.post
+                            && w.successor_cells[1] == after)
+                            || (w.successor_cells[0] == after
+                                && w.successor_cells[1] == old.post))
+                }))
+                .map(|program| (program, old.post))
+                .collect::<Vec<_>>();
+            if !untried.is_empty() {
+                // Continue a failed hypothesis search incrementally, instead
+                // of allocating the entire bounded carrier for one collision.
+                if prior_on_base {
+                    untried.truncate(1);
+                }
+                return untried;
+            }
+        }
+        Vec::new()
+    }
+
     fn composition_counts(
         &self,
         native: &PhaseNativeState,
@@ -282,16 +322,13 @@ impl EvoPhase {
         if learning {
             comp.factual_events = comp.factual_events.saturating_add(1);
 
-            let no_base_candidates = !comp.candidates.iter()
-                .any(|w| w.base_cell == pre.cell);
-            if no_base_candidates && self.config.structural_growth_enabled {
-                let opposing = comp.discovery.iter().rev().find(|fact|
-                    fact.base == pre.cell && fact.action == action
-                        && fact.post != after.cell).cloned();
-                if let Some(old) = opposing {
-                    let programs = Self::candidate_programs(&old.features, &raw);
-                    for program in programs {
-                        if comp.candidates.len() >= COMPOSITION_CANDIDATE_CAP { break; }
+            let no_active_base_candidates = !comp.candidates.iter()
+                .any(|w| w.base_cell == pre.cell && !w.retired);
+            if no_active_base_candidates && self.config.structural_growth_enabled {
+                let proposed = Self::composition_untried_hypotheses(
+                    &comp, pre.cell, action, after.cell, &raw
+                );
+                for (program, old_post) in proposed {
                         let free = self.dormant_range()
                             .filter(|i| !self.cells[*i].recruited)
                             .take(4).collect::<Vec<_>>();
@@ -309,7 +346,7 @@ impl EvoPhase {
                             base_cell: pre.cell,
                             program,
                             program_cells,
-                            successor_cells: [old.post, after.cell],
+                            successor_cells: [old_post, after.cell],
                             state_cells: states,
                             input_synapses: inputs,
                             anchor_action: action,
@@ -325,7 +362,6 @@ impl EvoPhase {
                             atom_counts: [[[0; 2]; 2]; 2],
                         });
                     }
-                }
             } else {
                 for index in 0..comp.candidates.len() {
                     if comp.candidates[index].base_cell != pre.cell
