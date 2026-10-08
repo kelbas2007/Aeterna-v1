@@ -62,3 +62,10 @@ Workflow **37817361772**: SUCCESS on `963549fbdc799e2f4dca97918a451e76d36b990b`.
 - Release build.
 
 This evidence does not claim human AGI, new independent INTEL qualification or an E revision success. The next unclosed architectural task is E's inability to reliably acquire/exercise the law across repeated experience; it is separate from the now-demonstrated D repair.
+
+
+## Final expanded regression completion
+
+Workflow **37817640887**: **SUCCESS**, head SHA `4d7ffb19f73cc5c87d509926dcee3921f0776b16`; cognitive code unchanged since the preceding successful mechanism and D-diagnostic runs.
+
+All explicit steps passed: candidate succession direct/fanout; native G23 and source guard; unified refined C; U1; U2; U3; **G21** contextual refinement; **G22** perceptual invention; G20 persistent lifetime; Human Protection; Release build. This satisfies the listed non-regression set for the new architectural mechanism. It does not alter the separate failed E diagnostic.
