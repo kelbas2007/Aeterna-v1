@@ -1,0 +1,53 @@
+name: TE1 phase-native temporal evidence qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/beyond-intel4]
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/phase_native.rs'
+      - 'src/carrier.rs'
+      - 'tests/te1_temporal_evidence.rs'
+      - '.github/workflows/te1-temporal-evidence.yml'
+
+jobs:
+  physical:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Carrier causal evidence integration, lesion, pi shift, restart, reset
+        run: cargo test --release --test te1_temporal_evidence te1_physically_accumulates_contradictory_raw_cues_and_restores -- --nocapture
+      - name: Existing C context regression
+        run: cargo test --release --test intel2_refined_state_controls refined_state_controls_preserve_context_through_unified_competition
+      - name: G20-G23 and U1-U3 regressions
+        run: |
+          cargo test --release --test g20_continual_reasoning
+          cargo test --release --test g21_contextual_state_refinement
+          cargo test --release --test g22_perceptual_variable_invention
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+          cargo test --release --test human_protection
+      - name: Optimized build
+        run: cargo build --release
+
+  noisy-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Independently generated noisy raw temporal series
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --release --test te1_temporal_evidence te1_fresh_balanced_noisy_series_vs_last_only -- --nocapture | tee te1-evidence.log
+      - name: Preserve scored and failed evidence alike
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: te1-noisy-evidence
+          path: te1-evidence.log
+          if-no-files-found: warn
