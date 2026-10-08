@@ -1,0 +1,59 @@
+name: intel3 frozen unified system verdict
+
+on:
+  workflow_dispatch:
+
+jobs:
+  intel3:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify frozen cognitive source
+        shell: bash
+        run: |
+          git fetch origin 2c71da210357cb9452d5bd2071faab2f38d2f352 --depth=1 || true
+          git diff --exit-code 2c71da210357cb9452d5bd2071faab2f38d2f352 -- src Cargo.toml Cargo.lock
+
+      - name: Pre-seal evaluator compile and source guard
+        shell: bash
+        run: |
+          cargo test --release --test intel3_unified_worlds intel3_evaluator_uses_only_unified_external_runtime -- --nocapture
+
+      - name: Frozen architecture pre-gate
+        shell: bash
+        run: |
+          cargo test --release --test phase_native_learned_drive p4_learned_physical_drive_transfers_to_cold_longer_worlds -- --nocapture
+          cargo test --release --test g16_autonomous_abstract_model g16_learned_drive_autonomously_acquires_abstract_world_model -- --nocapture
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u1_runtime_integration
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+          cargo test --release --test human_protection
+          cargo build --release
+
+      - name: Execute one-use INTEL-3 verdict
+        shell: bash
+        env:
+          AETERNA_INTEL3_SEED: \${{ github.run_id }}
+          AETERNA_SOURCE_SHA: \${{ github.sha }}
+        run: |
+          export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/INTEL3_PROTOCOL.md)"
+          set -o pipefail
+          cargo test --release --test intel3_unified_worlds intel3_frozen_unified_fresh_lifetime -- --nocapture | tee intel3-evidence.log
+
+      - name: Preserve INTEL-3 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intel3-evidence
+          path: intel3-evidence.log
+          if-no-files-found: warn
+
+      - name: Verify cognitive source still frozen
+        if: always()
+        shell: bash
+        run: |
+          git diff --exit-code 2c71da210357cb9452d5bd2071faab2f38d2f352 -- src Cargo.toml Cargo.lock
