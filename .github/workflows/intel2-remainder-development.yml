@@ -1,0 +1,82 @@
+name: INTEL-2 same-lifetime remainder development
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: intel2-remainder-development
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CARGO_TERM_COLOR: never
+      TESTED_SOURCE: 624aa1c835440244a32c407b621aa266b8435dd2
+      COGNITIVE_BASELINE: 924a566b4d3f1125fa67e73bc1f68c4ba53bdbd3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 624aa1c835440244a32c407b621aa266b8435dd2
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify unchanged cognitive source and historical tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          test "$(git rev-parse HEAD)" = "$TESTED_SOURCE"
+          git diff --exit-code "$COGNITIVE_BASELINE" -- src Cargo.toml Cargo.lock
+          git diff --exit-code da1f17aed33ffc7fc76c09222d872c6db7a7b498 -- tests/intel2_unified_worlds.rs tests/intel2_refined_state_controls.rs
+          printf 'tested_source=%s\ncognitive_baseline=%s\nrun_id=%s\n' "$TESTED_SOURCE" "$COGNITIVE_BASELINE" "$GITHUB_RUN_ID" > evidence/source.txt
+      - name: Generate dependency-free build lock offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo generate-lockfile --offline
+          cp Cargo.lock evidence/generated-Cargo.lock
+          sha256sum Cargo.lock > evidence/lock.sha256
+          cargo metadata --locked --offline --no-deps --format-version 1 > evidence/metadata.json
+      - name: Check strict six-motor evaluator contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --offline --release --test intel2_remainder_development remainder_evaluator_checks_all_six_motors -- --exact --nocapture 2>&1 | tee evidence/evaluator.log
+          grep -q '1 passed; 0 failed' evidence/evaluator.log
+          grep -q 'REMAINDER_EVALUATOR six_motor_truth_table=PASS' evidence/evaluator.log
+      - name: Execute one persistent A B C D E retention diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --offline --release --test intel2_remainder_development remainder_development_one_organism -- --exact --ignored --nocapture 2>&1 | tee evidence/remainder.log
+          grep -q '1 passed; 0 failed' evidence/remainder.log
+          grep -q 'REMAINDER_SUMMARY.*verdict=DEVELOPMENT_CHAIN_PASS' evidence/remainder.log
+      - name: Release build
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          cargo build --locked --offline --release 2>&1 | tee evidence/release.log
+      - name: Record observed stage summaries
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p evidence
+          grep '^REMAINDER_' evidence/remainder.log > evidence/summary.txt || true
+          cat evidence/source.txt evidence/summary.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify checked-out source unchanged
+        if: always()
+        shell: bash
+        run: |
+          git diff --exit-code HEAD -- src tests Cargo.toml Cargo.lock
+          sha256sum -c evidence/lock.sha256
+      - name: Preserve diagnostic evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intel2-remainder-development-evidence
+          path: evidence/
+          retention-days: 14
+          if-no-files-found: error

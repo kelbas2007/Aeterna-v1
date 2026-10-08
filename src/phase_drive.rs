@@ -81,6 +81,7 @@ impl EvoPhase {
             pending_features: None,
             observations: 0,
         });
+
         self.phase_native = Some(state);
         true
     }
@@ -169,7 +170,7 @@ impl EvoPhase {
         for i in 0..2 {
             let index = drive.weight_synapses[i];
             let learned = &checkpoint.learned_synapses[i];
-            let synapse = &mut self.synapses[index];
+            let synapse = &mut self.synapses[drive.weight_synapses[i]];
             synapse.weight = learned.weight;
             synapse.phase_offset = learned.phase_offset;
             synapse.eligibility = 0.0;
@@ -287,7 +288,10 @@ impl EvoPhase {
             .map(|circuit| {
                 let afferent = &self.synapses[circuit.afferent_synapse];
                 let successor = &self.synapses[circuit.successor_synapse];
-                conductance(&self.cells, afferent, floor)
+                // Charge this final model edge just like every edge in the
+                // frontier recurrence. Remote novelty is not immediate gain.
+                state.config.discount
+                    * conductance(&self.cells, afferent, floor)
                     * conductance(&self.cells, successor, floor)
                     * frontier[successor.to]
             })

@@ -1,16 +1,11 @@
 name: u1-meta-control
-# Rerun after comment-only include fix; U1 protocol unchanged.
+# Clean U1 rerun with genuine simultaneous mixed-proposal integration witness.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/u1-meta-control.yml']
 permissions:
   contents: read
 jobs:
   u1:
-    if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'u1: run carrier-owned meta-control gate'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -26,6 +21,8 @@ jobs:
         run: |
           set -o pipefail
           cargo test --release --test u1_meta_control -- --nocapture | tee u1-evidence.log
+      - name: U1 real-mechanism runtime integration
+        run: cargo test --release --test u1_runtime_integration u1_runtime_ -- --nocapture
       - name: G20 persistent runtime regression
         run: cargo test --release --test g20_continual_reasoning g20_ -- --nocapture
       - name: G21 regression

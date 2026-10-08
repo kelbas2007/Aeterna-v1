@@ -1,0 +1,24 @@
+name: intel2 historical World C burned-pack diagnosis
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 92b812b8ad54bac16f8e133bc8916076972dc2f1
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify historical cognition exactly matches frozen INTEL-2 baseline
+        run: git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+      - name: Reproduce historical burned World C failure (not a new verdict)
+        shell: bash
+        run: |
+          cargo test --release --test intel2_unified_worlds intel2_burned_world_c_with_environment_terminal_reset_diagnosis -- --exact --nocapture

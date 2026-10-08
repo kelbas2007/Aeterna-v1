@@ -5,7 +5,11 @@
 //! single-use permission to invoke the external action callback. This wrapper
 //! has no world labels, route table or task-conditioned learning rules.
 
-use crate::carrier::{EvoPhase, PhaseNativeCheckpoint};
+use crate::carrier::{
+    EvoPhase, PhaseNativeCheckpoint, PhaseCognitiveProposal,
+    PhaseMetaControlCheckpoint, PhaseMetaDecision,
+    PhaseHypothesisEcologyConfig, PhaseUnifiedDecision, PhaseUnifiedCognitiveProposal,
+};
 use crate::human_protection::{
     HumanProtection, HumanProtectionEvidence, HumanProtectionReason,
     HumanProtectionRecord,
@@ -23,6 +27,7 @@ pub enum ReasoningMode {
     PerceptualRefinement,
     CompositionalRefinement,
     GeneralEpistemic,
+    UnifiedCompetition,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -115,6 +120,63 @@ impl ScientificRuntime {
     pub fn sequence(&self) -> u64 { self.sequence }
     pub fn emergency_latched(&self) -> bool {
         self.protection.emergency_stop_latched()
+    }
+
+    /// Opt-in unified-cognition transport. This wrapper does not rank proposal
+    /// sources; the native physical meta-control circuit sees only opaque
+    /// proposal IDs/actions and numeric carrier-derived fields.
+    pub fn restore_unified_meta_control(
+        &mut self,
+        checkpoint: PhaseMetaControlCheckpoint,
+    ) -> bool {
+        self.organism.restore_phase_native_meta_checkpoint(checkpoint)
+    }
+
+    pub fn select_unified_proposal(
+        &self,
+        proposals: &[PhaseCognitiveProposal],
+    ) -> Option<PhaseMetaDecision> {
+        self.organism.choose_phase_native_meta_proposal(proposals)
+    }
+
+    /// INTEL-2 assembly: restore the learned U1 meta-control and attach a cold
+    /// U2 hypothesis ecology. Meta weights are frozen during the target
+    /// lifetime; hypothesis authority remains plastic from factual usefulness.
+    pub fn enable_unified_cognition(
+        &mut self,
+        checkpoint: PhaseMetaControlCheckpoint,
+        ecology: PhaseHypothesisEcologyConfig,
+    ) -> bool {
+        if !self.organism.restore_phase_native_meta_checkpoint(checkpoint) {
+            return false;
+        }
+        if !self.organism.enable_phase_native_hypothesis_ecology(ecology) {
+            return false;
+        }
+        self.organism.set_phase_native_meta_learning_enabled(false);
+        true
+    }
+
+    fn select_unified_internal(
+        &mut self,
+    ) -> Result<Option<(ActionProposal, PhaseUnifiedDecision, Vec<PhaseUnifiedCognitiveProposal>)>, RuntimeError> {
+        if self.goal_reached()? { return Ok(None); }
+        let goal = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?.clone();
+        let proposals = self.organism.collect_phase_native_unified_proposals(&goal);
+        let decision = self.organism.choose_phase_native_unified_proposal(&proposals)
+            .ok_or(RuntimeError::NoSupportedAction)?;
+        let proposal = ActionProposal {
+            action: decision.action,
+            mode: ReasoningMode::UnifiedCompetition,
+            goal_epoch: self.goal_epoch,
+            learned_fingerprint: self.organism.phase_native_learned_fingerprint(),
+        };
+        self.record(LifetimeEventKind::Proposal(proposal.clone()));
+        Ok(Some((proposal,decision,proposals)))
+    }
+
+    pub fn propose_unified(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        Ok(self.select_unified_internal()?.map(|(proposal,_,_)|proposal))
     }
 
     /// Enable the native residual-driven representation learner. No context,
@@ -333,6 +395,136 @@ impl ScientificRuntime {
         });
         Ok(StepOutcome::Executed {
             proposal, suppressed, learned: self.model_learning_enabled,
+        })
+    }
+
+    /// Unified INTEL-2 execution path. The evaluator supplies only raw factual
+    /// POST plus bounded task outcome. No reasoning-class credit label exists.
+    pub fn step_unified<Assess, Execute>(
+        &mut self,
+        assess: Assess,
+        execute: Execute,
+    ) -> Result<StepOutcome, RuntimeError>
+    where
+        Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
+        Execute: FnOnce(usize) -> Result<(Vec<f32>, f32), String>,
+    {
+        if self.protection.emergency_stop_latched() {
+            let decision = self.protection.screen(0, Self::absent_evidence());
+            let record = decision.record().clone();
+            self.record(LifetimeEventKind::Blocked(record.clone()));
+            return Ok(StepOutcome::Blocked(record));
+        }
+
+        let Some((proposal, unified, pre_proposals)) = self.select_unified_internal()? else {
+            return Ok(StepOutcome::GoalReached);
+        };
+
+        let evidence = assess(&proposal).unwrap_or_else(Self::absent_evidence);
+        let decision = self.protection.screen(proposal.action, evidence);
+        let screening = decision.record().clone();
+        let Some(permit) = decision.into_permit() else {
+            self.record(LifetimeEventKind::Blocked(screening.clone()));
+            return Ok(StepOutcome::Blocked(screening));
+        };
+        let action = match self.protection.consume_permit(permit) {
+            Ok(action) => action,
+            Err(error) => {
+                return Ok(self.latch_fault(format!("permit consumption: {:?}", error)));
+            }
+        };
+
+        let before_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
+        let (post, task_outcome) = match execute(action) {
+            Ok(result) => result,
+            Err(error) => return Ok(self.latch_fault(error)),
+        };
+        if !task_outcome.is_finite() || !(0.0..=1.0).contains(&task_outcome) {
+            return Ok(self.latch_fault("invalid bounded task outcome".into()));
+        }
+        if let Err(error) = self.validate_raster(&post) {
+            return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
+        }
+
+        let any_refinement =
+            self.organism.phase_native_compositional_enabled()
+                || self.organism.phase_native_perceptual_enabled()
+                || self.organism.phase_native_context_enabled();
+        let suppressed = if any_refinement {
+            match self.organism.observe_phase_native_refinement_fanout_result(action, &post) {
+                Some(count) => count,
+                None => return Ok(self.latch_fault(
+                    "unified factual refinement fanout rejected".into()
+                )),
+            }
+        } else if self.model_learning_enabled {
+            match self.organism.observe_phase_native_rival_probe_result(action, &post) {
+                Some(count) => count,
+                None => return Ok(self.latch_fault(
+                    "unified native factual update rejected".into()
+                )),
+            }
+        } else {
+            self.organism.observe_initial_real(&post, false);
+            0
+        };
+
+        let after_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
+        let info_gain = after_knowledge.gained_since(before_knowledge);
+
+        // U2 ecology receives generic factual credit for every persistent
+        // proposal that was applicable around this fact. No reasoning-class
+        // label is present. Increased structure applicability is passive
+        // supporting evidence; selected proposal also receives task/info gain.
+        let goal_now = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?.clone();
+        let post_proposals = self.organism.collect_phase_native_unified_proposals(&goal_now);
+        let mut candidate_ids = pre_proposals.iter()
+            .chain(post_proposals.iter())
+            .filter_map(|p|p.persistent_candidate_id)
+            .collect::<Vec<_>>();
+        candidate_ids.sort_unstable();
+        candidate_ids.dedup();
+
+        for candidate_id in candidate_ids {
+            let before_app = pre_proposals.iter()
+                .filter(|p|p.persistent_candidate_id==Some(candidate_id))
+                .map(|p|p.applicability)
+                .fold(0.0_f32,f32::max);
+            let after_app = post_proposals.iter()
+                .filter(|p|p.persistent_candidate_id==Some(candidate_id))
+                .map(|p|p.applicability)
+                .fold(0.0_f32,f32::max);
+            let evidence_gain = after_app > before_app + 1.0e-6;
+            let selected = unified.supporting_candidate_ids.contains(&candidate_id);
+            let selected_gain = if selected {
+                task_outcome.max(if info_gain {1.0}else{0.0})
+            } else {
+                0.0
+            };
+            let usefulness = selected_gain.max(if evidence_gain {1.0}else{0.0});
+
+            if (selected || evidence_gain)
+                && !self.organism.phase_native_hypothesis_registered(candidate_id)
+            {
+                let _ = self.organism.register_phase_native_hypothesis(candidate_id);
+            }
+            if self.organism.phase_native_hypothesis_registered(candidate_id) {
+                let _ = self.organism.observe_phase_native_hypothesis_utility(
+                    candidate_id,
+                    usefulness,
+                );
+            }
+        }
+
+        self.record(LifetimeEventKind::Executed {
+            action,
+            suppressed,
+            learned: self.model_learning_enabled,
+        });
+        Ok(StepOutcome::Executed {
+            proposal,
+            suppressed,
+            learned: self.model_learning_enabled,
         })
     }
 

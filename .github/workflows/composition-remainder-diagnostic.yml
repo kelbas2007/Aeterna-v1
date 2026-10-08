@@ -1,0 +1,20 @@
+name: EvoPhase burned-remainder development diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [developmental-candidate-succession]
+    paths:
+      - '.github/workflows/composition-remainder-diagnostic.yml'
+      - 'tests/intel2_remainder_development.rs'
+      - 'src/phase_unified_cognition.rs'
+jobs:
+  development:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Six-motor outcome scoring control
+        run: cargo test --release --test intel2_remainder_development remainder_evaluator_checks_all_six_motors -- --nocapture
+      - name: Burned one-organism remainder — diagnostic only
+        run: cargo test --release --test intel2_remainder_development remainder_development_one_organism -- --ignored --nocapture

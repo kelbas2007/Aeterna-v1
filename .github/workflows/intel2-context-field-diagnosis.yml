@@ -1,0 +1,31 @@
+name: INTEL-2 refined-context field diagnosis
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feaa9e7063acb2f6267262f2d043e200a4f9820e
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify exact previously tested production source
+        run: git diff --exit-code 01cd01bda8ccad07a8a5c81b90bfd7af3b2d167e -- src Cargo.toml Cargo.lock
+      - name: Print direct contextual and unified decisions
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --release --test intel2_context_field_diagnosis context_field_diagnosis_after_edge_cost_correction -- --exact --nocapture 2>&1 | tee context-fields.log
+          grep -q 'running 1 test' context-fields.log
+          grep -q 'CONTEXT_FIELD_SIDE side=1' context-fields.log
+          git diff --exit-code -- src tests Cargo.toml Cargo.lock
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-field-diagnostic
+          path: context-fields.log
+          retention-days: 7

@@ -193,6 +193,14 @@ impl EvoPhase {
         }).collect()
     }
 
+    pub fn phase_native_hypothesis_registered(&self,candidate_id:u64)->bool{
+        self.phase_native.as_ref()
+            .and_then(|n|n.meta_control.as_ref())
+            .and_then(|m|m.ecology.as_ref())
+            .map(|e|e.records.iter().any(|r|r.candidate_id==candidate_id))
+            .unwrap_or(false)
+    }
+
     pub fn phase_native_hypothesis_dormant(
         &self,
         candidate_id:u64,
@@ -300,5 +308,52 @@ impl EvoPhase {
             candidate_id:proposal.candidate_id,
             authority:*authority,
         })
+    }
+}
+
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseEcologicalCognitiveProposal {
+    pub candidate_id: u64,
+    pub applicability: f32,
+    pub proposal: PhaseCognitiveProposal,
+}
+
+impl EvoPhase {
+    /// U3 generic bridge: hypothesis ecology contributes only carrier-owned
+    /// evidence authority to U1's confidence field. The scorer never sees a
+    /// hypothesis/module class or authored class priority.
+    pub fn choose_phase_native_ecological_meta_proposal(
+        &self,
+        proposals: &[PhaseEcologicalCognitiveProposal],
+    ) -> Option<PhaseMetaDecision> {
+        if proposals.is_empty() { return None; }
+        let native = self.phase_native.as_ref()?;
+        let ecology = native.meta_control.as_ref()?.ecology.as_ref()?;
+        let mut adjusted = Vec::with_capacity(proposals.len());
+
+        for item in proposals {
+            if !item.applicability.is_finite()
+                || !(0.0..=1.0).contains(&item.applicability)
+            {
+                return None;
+            }
+            let authority = self.phase_hypothesis_authority_with_state(
+                native,
+                item.candidate_id,
+                item.applicability,
+            )?;
+            if authority <= ecology.config.dormancy_threshold {
+                continue;
+            }
+            let mut proposal = item.proposal;
+            if !Self::valid_meta_fields(proposal.fields) {
+                return None;
+            }
+            proposal.fields[3] = (proposal.fields[3] * authority).clamp(0.0, 1.0);
+            adjusted.push(proposal);
+        }
+
+        self.choose_phase_native_meta_proposal(&adjusted)
     }
 }

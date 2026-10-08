@@ -2,7 +2,7 @@
 
 Status: **PRE-REGISTERED BEFORE U2 IMPLEMENTATION**
 Date: 2026-10-07
-Prerequisite: U1 physical meta-control is present on current `main`. The clean-branch U1 PASS is supporting mechanism evidence only; current `main` must pass U1/U2 together with its current post-INTEL Repair-5–8 state before U2 can be qualified.
+Prerequisite: U1 PASS on `unified-cognition`.
 
 ## Question
 

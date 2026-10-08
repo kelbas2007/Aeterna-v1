@@ -1,5 +1,25 @@
 # Aeterna-v1 status
 
+## Latest frozen independent system verdict — 2026-10-08
+
+**INTEL-4 PASS (bounded unified autonomous developing intelligence in the tested deterministic world family).**
+Branch: `intel4-frozen-unified`; workflow: `37821849040` (SUCCESS); exact frozen cognitive SHA: `c7b5455ba006b297288fa8d16ef6300c8a19ceca`; authority seed: `37821849040`; sealed evidence artifact: `intel4-evidence` ID `11569492702`.
+
+One uninterrupted EvoPhase lifetime:
+- A unknown transport PASS (15 actions, frozen translated reuse 2);
+- B causal 3-stage skill and switched goal PASS (13+3);
+- C history-dependent alias PASS (40/40, both sides 20/20; memoryless 20/40);
+- D self-formed AND composition PASS (40/40, best one-cue 30/40);
+- E genuine factual changed-law revision PASS (four initial successful fast routes, drift observed, alternative recovery in 2 actions, model counterexample/revision);
+- final frozen A/B retention 2/2, Human Protection PASS, checkpoint/restart, U1 weights unchanged, legacy graph and answer tables 0;
+- G20–G23, U1–U3, generic causal lesion/phase/restore, Human Protection, Release all qualified on frozen cognitive source.
+
+Authority documentation: `docs/INTEL4_PROTOCOL.md`, `docs/INTEL4_CORE_FREEZE.md`, `docs/INTEL4_RESULT_PASS.md`.
+
+**Scope:** confirmed only for the predefined bounded synthetic deterministic world families. This is NOT human/open-world AGI, stochastic generality, natural language, or real-world safety. Rejected/burned INTEL-1/2/2R1/3 verdicts remain historical truth. Source is not merged into `main` or the separate mature Codex-AETERNA.
+
+## Historical status retained below
+
 Date: 2026-10-06
 
 ## Current state
@@ -1078,18 +1098,35 @@ Post-failure analysis found the single-atom threshold was incompatible with the 
 Next gate: a new independently seeded **FRESH-G23-2** protocol with operator-specific no-composition ceilings fixed before its evaluator/run.
 
 
-## FINAL INTEL-1 verdict for AETERNA-v1
+## Unified-cognition U1
 
-Canonical final evidence-line verdict: **FAIL**.
+Branch: `unified-cognition` from clean R4 cognitive core `b811b59a5777b59b4ab640ef4ac2ebf75a53c45d`.
 
-- frozen core: `b811b59a5777b59b4ab640ef4ac2ebf75a53c45d`;
-- run: `37669439298`;
-- W1 acquisition/reuse PASS: 11 / 3 actions;
-- W2 acquisition/reuse PASS: 10 / 3 actions;
-- W3 FAIL: no useful contextual promotion, 0/32 scored;
-- later Repair-5/6/7/8 are post-verdict diagnostics and do not alter INTEL-1.
+U1 carrier-owned meta-control: **PASS**.
 
-Current architecture diagnosis: **host-authored meta-control fragmentation between otherwise real acquired cognitive mechanisms**.
+Run `37676727090`, source `974ce3cd7cc3518aa42625eef26f9e269fac23bc`.
 
-AETERNA-v1 evidence line is closed. No G24 or Repair-9.
-Any future work should be a new architecture line centered on carrier-owned unified cognitive competition, followed by a new INTEL-2 rather than continued INTEL-1 patching.
+- target proposal arbitration 12/12;
+- fixed-priority and ID baselines 4/12;
+- zero meta control 0/12;
+- physical lesion/pi/restore/unrelated controls 4/4 each;
+- real contextual/rival/general-epistemic proposal integration PASS;
+- G20-G23, Human Protection and Release PASS.
+
+Next architectural gate: **U2 lifetime hypothesis ecology**.
+
+
+## INTEL-2 frozen unified verdict
+
+Canonical first INTEL-2 verdict: **FAIL**.
+
+Run `37687243350`, burned authority seed `37687243350`.
+
+Frozen cognitive core `07b44fb8e00837568bc9655e760eb031d1944dff` passed source-freeze, unified runtime, U1-U3, Human Protection and Release pre-gates.
+
+- World A: PASS, 14 actions; translated frozen reuse 2 actions.
+- World B: PASS, 10 actions; switched goal 2 additional actions.
+- World C: FAIL before useful context promotion: unified runtime returned `NoSupportedAction`.
+- Worlds D/E/final retention: not scored after earliest frozen failure.
+
+U1-U3 remain qualified. No immediate Repair-N belongs to the INTEL-2 verdict cycle. Next step is read-only architecture diagnosis of why unified proposal generation/competition can become empty or unsupported during history-dependent bootstrap.

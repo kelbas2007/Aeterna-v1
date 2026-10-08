@@ -1,17 +1,18 @@
-name: u2-hypothesis-ecology
+name: u3-cross-mechanism
+# preflight-3: calibrated two-active U1/U2 causal controls
 on:
   workflow_dispatch:
   push:
     branches: [unified-cognition]
-    paths: ['.github/workflows/u2-hypothesis-ecology.yml']
+    paths: ['.github/workflows/u3-cross-mechanism.yml']
 permissions:
   contents: read
 jobs:
-  u2:
+  u3:
     if: >-
-      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'u2: run carrier-owned hypothesis ecology gate'
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'u3: run cross-mechanism residual allocation gate'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 14
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,11 +22,13 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --exit-code
-      - name: U2 lifetime hypothesis ecology
+      - name: U3 cross-mechanism allocation
         run: |
           set -o pipefail
-          cargo test --release --test u2_hypothesis_ecology -- --nocapture | tee u2-evidence.log
-      - name: U1 meta-control regression
+          cargo test --release --test u3_cross_mechanism_allocation -- --nocapture | tee u3-evidence.log
+      - name: U2 regression
+        run: cargo test --release --test u2_hypothesis_ecology -- --nocapture
+      - name: U1 regressions
         run: |
           cargo test --release --test u1_meta_control -- --nocapture
           cargo test --release --test u1_runtime_integration -- --nocapture
@@ -41,12 +44,12 @@ jobs:
         run: cargo test --release --test human_protection -- --nocapture
       - name: Release
         run: cargo build --release
-      - name: Preserve U2 evidence
+      - name: Preserve U3 evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: u2-evidence
-          path: u2-evidence.log
+          name: u3-evidence
+          path: u3-evidence.log
           if-no-files-found: ignore
           retention-days: 30
       - name: Verify source unchanged

@@ -1,0 +1,32 @@
+name: E burned law-world causal diagnostic
+on:
+  workflow_dispatch:
+  push:
+    branches: [developmental-law-revision]
+    paths:
+      - 'tests/intel2_remainder_development.rs'
+      - '.github/workflows/e-law-diagnostic.yml'
+jobs:
+  e-causal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Six-motor truth control
+        run: cargo test --release --test intel2_remainder_development remainder_evaluator_checks_all_six_motors -- --nocapture
+      - name: Diagnostic — E failure expected, capture factual trace
+        shell: bash
+        run: |
+          set +e
+          cargo test --release --test intel2_remainder_development remainder_development_one_organism -- --ignored --nocapture > e-diagnostic.log 2>&1
+          result=$?
+          set -e
+          grep -E 'E_CAUSAL_|REMAINDER_(START|C |D promoted|E actions|RETENTION|SUMMARY)' e-diagnostic.log || true
+          if [[ $result -eq 0 ]]; then
+            echo 'Unexpected complete remainder success; inspect evidence independently'
+            exit 1
+          fi
+          grep -Fq 'REMAINDER_SUMMARY C=true D=true E=false retention=2/2' e-diagnostic.log
+          grep -Fq 'E_CAUSAL_STOP' e-diagnostic.log
+      - name: Release
+        run: cargo build --release

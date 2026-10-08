@@ -179,31 +179,6 @@ impl EvoPhase {
         })
     }
 
-    fn context_uncovered_action(
-        ctx: &PhaseContextState,
-        base: usize,
-        previous: usize,
-        motor_cells: usize,
-    ) -> Option<usize> {
-        // Coverage becomes meaningful only after this base has actually been
-        // encountered from some other factual predecessor. Ordinary chain
-        // states with a single predecessor are left to the existing explorer.
-        let has_other_predecessor = ctx.discovery.iter().any(|fact| {
-            fact.base == base && fact.predecessor != previous
-        });
-        if !has_other_predecessor {
-            return None;
-        }
-
-        (0..motor_cells).find(|action| {
-            !ctx.discovery.iter().any(|fact| {
-                fact.base == base
-                    && fact.predecessor == previous
-                    && fact.action == *action
-            })
-        })
-    }
-
     /// Return (applicable, action). Multiple bounded context hypotheses may
     /// coexist on one acquired base. Only hypotheses whose factual predecessor
     /// pair contains the current predecessor are applicable.
@@ -235,19 +210,7 @@ impl EvoPhase {
             .collect::<Vec<_>>();
         if matching.is_empty() {
             // An old hypothesis about another predecessor pair must not block
-            // ordinary reasoning. But once this same base is known to have
-            // multiple factual predecessors, an action unseen under the
-            // current predecessor remains a context-coverage frontier.
-            if native.config.learning_enabled {
-                if let Some(action) = Self::context_uncovered_action(
-                    ctx,
-                    base.cell,
-                    previous,
-                    self.config.motor_cells,
-                ) {
-                    return (true, Some(action));
-                }
-            }
+            // ordinary reasoning in a later world/lifetime regime.
             return (false, None);
         }
 
@@ -274,25 +237,9 @@ impl EvoPhase {
         }
 
         if active_states.len() > 1 {
-            // Repair-8: distinct promoted hypotheses may be complementary
-            // explanations of the same factual history. They may jointly act
-            // only when their independently learned physical goal recurrences
-            // agree on exactly one first action. Any disagreement or missing
-            // supported plan remains fail-closed.
-            let mut consensus: Option<usize> = None;
-            for &entry in &active_states {
-                let Some(decision) =
-                    self.phase_native_goal_decision_from_cells(entry, goal.cell, None)
-                else {
-                    return (true, None);
-                };
-                match consensus {
-                    None => consensus = Some(decision.first_action),
-                    Some(action) if action == decision.first_action => {}
-                    Some(_) => return (true, None),
-                }
-            }
-            return (true, consensus);
+            // Competing promoted explanations disagree: do not choose one by a
+            // host-side tie-break.
+            return (true, None);
         }
         if let Some(&entry) = active_states.first() {
             if native.config.learning_enabled {
@@ -314,80 +261,15 @@ impl EvoPhase {
         }
 
         if native.config.learning_enabled {
-            // Repair-5: an unfinished hypothesis may request its anchor only
-            // when the currently observed predecessor side is not already more
-            // sampled than its opposite side. Repeating an over-sampled side
-            // cannot reduce the hypothesis's missing information, so ordinary
-            // epistemic reasoning must get a chance instead.
-            let experiment = matching.iter()
+            if let Some(w) = matching.iter()
                 .copied()
                 .filter(|w| !w.promoted)
-                .filter_map(|w| {
-                    let side = w.predecessor_cells.iter()
-                        .position(|&p| p == previous)?;
-                    let counts = self.context_counts(native, w);
-                    let current = counts[side][0] + counts[side][1];
-                    let opposite = counts[1 - side][0] + counts[1 - side][1];
-                    (current <= opposite).then_some((
-                        current,
-                        current + opposite,
-                        w.born_fact,
-                        w.anchor_action,
-                    ))
-                })
-                .min();
-
-            if let Some((_, _, _, action)) = experiment {
-                return (true, Some(action));
-            }
-
-            if let Some(action) = Self::context_uncovered_action(
-                ctx,
-                base.cell,
-                previous,
-                self.config.motor_cells,
-            ) {
-                return (true, Some(action));
+                .min_by_key(|w| (w.born_fact, w.anchor_action))
+            {
+                return (true, Some(w.anchor_action));
             }
         }
-        // No currently informative context experiment or predecessor-specific
-        // coverage gap is available. Lower-priority reasoning may continue.
         (false, None)
-    }
-
-    /// Repair-6: G19 may independently probe a rival action only while that
-    /// same action still lacks balanced contextual anchor evidence for the
-    /// current factual predecessor. If no contextual hypothesis owns the
-    /// current base/predecessor/action, rival behavior remains unchanged.
-    pub(super) fn phase_context_rival_probe_allowed(
-        &self,
-        base_cell: usize,
-        action: usize,
-    ) -> bool {
-        let Some(native) = self.phase_native.as_ref() else { return true; };
-        let Some(ctx) = native.contextual.as_ref() else { return true; };
-        let Some(previous) = ctx.previous_base else { return true; };
-
-        let matching = ctx.candidates.iter().filter(|w| {
-            w.base_cell == base_cell
-                && w.anchor_action == action
-                && !w.retired
-                && !w.promoted
-                && w.predecessor_cells.contains(&previous)
-        }).collect::<Vec<_>>();
-
-        if matching.is_empty() {
-            return true;
-        }
-
-        matching.into_iter().any(|w| {
-            let Some(side) = w.predecessor_cells.iter()
-                .position(|&p| p == previous) else { return false; };
-            let counts = self.context_counts(native, w);
-            let current = counts[side][0] + counts[side][1];
-            let opposite = counts[1 - side][0] + counts[1 - side][1];
-            current <= opposite
-        })
     }
 
     /// Actual POST only. Existing G20 behavior is unchanged unless explicitly
