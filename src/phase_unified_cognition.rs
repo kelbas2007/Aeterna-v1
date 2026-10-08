@@ -115,6 +115,80 @@ impl EvoPhase {
     // unreachable using the physical learned recurrence and all ordinary
     // cognition abstains, revisit the weakest *factual* local model edge.
     // This is a carrier-based pressure, not a world label or answer lookup.
+    // When multiple genuinely goal-progressing physical successor paths are
+    // known, keep their evidential coverage under observation. An established
+    // route with heavy support must not permanently exclude a weaker but
+    // physically supported competing route from factual verification.
+    // All values come from the same phase-native circuits and goal relevance.
+    fn unified_competing_goal_path_coverage(
+        &self,
+        sensory: &[f32],
+        goal_sensory: &[f32],
+    ) -> Option<(usize, f32, f32)> {
+        let base = self.phase_native_abstract_state(sensory)?;
+        let goal = self.phase_native_abstract_state(goal_sensory)?;
+        if base.level != goal.level || base.cell == goal.cell {
+            return None;
+        }
+        let native = self.phase_native.as_ref()?;
+        if !native.config.learning_enabled { return None; }
+        let entry = self.unified_operational_entry(sensory, base.cell)?;
+        let mut state_cells = self.phase_native_abstract_cells_at_level(base.level);
+        if !state_cells.contains(&entry) { state_cells.push(entry); }
+        let relevance = self.phase_goal_relevance_for_cells(
+            native,goal.cell,&state_cells
+        );
+        if relevance[entry] <= 1.0e-8 { return None; }
+
+        let floor = native.config.coherence_floor;
+        let min_support = u64::from(self.config.min_recruit_support);
+        let mut pathways: Vec<(usize, u64, f32)> = Vec::new();
+        for action in 0..self.config.motor_cells {
+            let motor = self.config.sensory_cells + action;
+            let mut total_support = 0u64;
+            let mut best_progress = 0.0f32;
+            for circuit in &native.circuits {
+                if circuit.support < min_support { continue; }
+                let aff = &self.synapses[circuit.afferent_synapse];
+                let succ = &self.synapses[circuit.successor_synapse];
+                let output = &self.synapses[circuit.motor_synapse];
+                if aff.from != entry || output.to != motor
+                    || succ.to == entry || !state_cells.contains(&succ.to)
+                {
+                    continue;
+                }
+                let conducting = conductance(&self.cells,aff,floor)
+                    .min(conductance(&self.cells,succ,floor));
+                if conducting <= 1.0e-8 { continue; }
+                let progress = relevance[succ.to]-relevance[entry];
+                if progress <= 1.0e-7 { continue; }
+                total_support = total_support.saturating_add(circuit.support);
+                best_progress = best_progress.max(
+                    conducting * relevance[succ.to]
+                );
+            }
+            if total_support > 0 && best_progress > 1.0e-8 {
+                pathways.push((action,total_support,best_progress));
+            }
+        }
+        if pathways.len() < 2 { return None; }
+        let max_support=pathways.iter().map(|(_,n,_)|*n).max()?;
+        let mut under=pathways.into_iter().filter(|(_,n,_)|*n<max_support)
+            .collect::<Vec<_>>();
+        if under.is_empty() { return None; }
+        // Least-verified physical model first. The code receives no
+        // task/action labels; ties use factual progress then opaque motor id.
+        under.sort_by(|a,b|{
+            a.1.cmp(&b.1)
+                .then_with(||b.2.total_cmp(&a.2))
+                .then_with(||a.0.cmp(&b.0))
+        });
+        let (action,support,progress)=under[0];
+        let evidence_debt = ((max_support-support) as f32
+            /(max_support as f32 + 1.0)).clamp(0.0,1.0);
+        Some((action,progress.clamp(0.0,1.0),evidence_debt))
+    }
+
     fn unified_exhausted_model_revalidation(
         &self,
         sensory: &[f32],
@@ -409,6 +483,31 @@ impl EvoPhase {
             self.push_unified_proposal(
                 &mut out,&sensory,goal_sensory,action,None,0xE915,
             );
+        }
+
+        // A distinct supported goal-reaching route can also be a valuable
+        // scientific experiment. Preserve its goal value and relative
+        // evidential deficit as a native proposal; common learned U1 weights
+        // decide whether it wins against current exploitation.
+        if let Some((action,progress,debt)) =
+            self.unified_competing_goal_path_coverage(&sensory,goal_sensory)
+        {
+            if let Some(mut fields) =
+                self.unified_action_fields(&sensory,goal_sensory,action)
+            {
+                fields[0] = fields[0].max(progress).clamp(0.0,1.0);
+                fields[1] = fields[1].max(debt).clamp(0.0,1.0);
+                out.push(PhaseUnifiedCognitiveProposal {
+                    persistent_candidate_id: None,
+                    applicability: 1.0,
+                    proposal: PhaseCognitiveProposal {
+                        proposal_id: unified_hash(&[
+                            0xE71Du64, action as u64
+                        ]),
+                        action, fields,
+                    },
+                });
+            }
         }
 
         // Only when no qualified cognitive proposal survives: the physical
