@@ -45,12 +45,29 @@ pub struct PhaseTemporalSensingDecision {
     pub missing_evidence: f32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PhaseTemporalOutcomeLink {
+    source_cell: usize,
+    motor_action: usize,
+    value_synapse: usize,
+    observations: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseTemporalOutcomeDecision {
+    pub action: usize,
+    pub synapse: usize,
+    pub learned_value: f32,
+    pub source_cell: usize,
+}
+
 #[derive(Debug, Clone)]
 pub(super) struct PhaseTemporalEvidenceState {
     config: PhaseTemporalEvidenceConfig,
     hub_cell: usize,
     cues: Vec<PhaseTemporalCue>,
     samplers: Vec<PhaseTemporalSampler>,
+    outcomes: Vec<PhaseTemporalOutcomeLink>,
     observations: u32,
     episodes: u64,
 }
@@ -102,6 +119,7 @@ impl EvoPhase {
             hub_cell,
             cues: Vec::new(),
             samplers: Vec::new(),
+            outcomes: Vec::new(),
             observations: 0,
             episodes: 0,
         });
@@ -116,7 +134,8 @@ impl EvoPhase {
         self.phase_native.as_ref()
             .and_then(|state| state.temporal_evidence.as_ref())
             .map(|p|p.cues.iter().any(|c|c.evidence_synapse==synapse_index)
-                || p.samplers.iter().any(|m|m.sensory_synapse==synapse_index))
+                || p.samplers.iter().any(|m|m.sensory_synapse==synapse_index)
+                || p.outcomes.iter().any(|m|m.value_synapse==synapse_index))
             .unwrap_or(false)
     }
 
@@ -320,6 +339,141 @@ impl EvoPhase {
             &self.cells,&self.synapses[motor.sensory_synapse],
             n.config.coherence_floor
         ))
+    }
+
+    /// TE5: learn the factual value of an actually executed opaque motor
+    /// given the *pre-action* physical distribution over acquired raw cues.
+    /// No hidden side, goal-correct motor or symbolic class is accepted.
+    /// This method is for true observed POST and bounded task consequence;
+    /// integration under Human Protection must enforce that boundary.
+    pub fn observe_phase_native_temporal_outcome(
+        &mut self,
+        action:usize,
+        post_sensory:&[f32],
+        task_outcome:f32,
+    )->bool{
+        if action>=self.config.motor_cells || !task_outcome.is_finite()
+            || !(0.0..=1.0).contains(&task_outcome)
+        {
+            return false;
+        }
+        let Some(post)=self.phase_native_abstract_state(post_sensory) else {
+            return false;
+        };
+        let Some(mut native)=self.phase_native.take() else {
+            return false;
+        };
+        let Some(mut evidence)=native.temporal_evidence.take() else {
+            self.phase_native=Some(native);
+            return false;
+        };
+        let ready=native.config.learning_enabled
+            && evidence.cues.len()==2
+            && evidence.observations>=1
+            // A cue-to-cue observation is a sample, not a terminal result.
+            && !evidence.cues.iter().any(|cue|cue.source_cell==post.cell);
+        if !ready {
+            native.temporal_evidence=Some(evidence);
+            self.phase_native=Some(native);
+            return false;
+        }
+        let floor=native.config.coherence_floor;
+        let observations=evidence.cues.iter().map(|cue|
+            conductance(&self.cells,
+                &self.synapses[cue.evidence_synapse],floor)
+        ).collect::<Vec<_>>();
+        let mass=observations.iter().sum::<f32>();
+        if mass<=1.0e-8 {
+            native.temporal_evidence=Some(evidence);
+            self.phase_native=Some(native);
+            return false;
+        }
+        let source_cells=evidence.cues.iter().map(|c|c.source_cell)
+            .collect::<Vec<_>>();
+        let mut updated=0usize;
+        for (cue_index,source_cell) in source_cells.into_iter().enumerate(){
+            let credit=(observations[cue_index]/mass).clamp(0.0,1.0);
+            if credit<=1.0e-8 {continue;}
+            let policy_index=match evidence.outcomes.iter()
+                .position(|w|w.source_cell==source_cell
+                    && w.motor_action==action)
+            {
+                Some(i)=>i,
+                None=>{
+                    let motor=self.motor_cell(action);
+                    let link=self.native_synapse(source_cell,motor);
+                    let syn=&mut self.synapses[link];
+                    syn.phase_offset=wrap_phase(
+                        self.cells[syn.to].phase-self.cells[syn.from].phase
+                    );
+                    syn.confidence=1.0;
+                    evidence.outcomes.push(PhaseTemporalOutcomeLink {
+                        source_cell,motor_action:action,
+                        value_synapse:link,observations:0,
+                    });
+                    evidence.outcomes.len()-1
+                }
+            };
+            let value=&mut evidence.outcomes[policy_index];
+            value.observations=value.observations.saturating_add(1);
+            let syn=&mut self.synapses[value.value_synapse];
+            let learning_rate=(0.35*credit).clamp(0.0,0.35);
+            syn.weight += learning_rate*(task_outcome-syn.weight);
+            syn.weight=syn.weight.clamp(0.0,1.0);
+            syn.eligibility=credit;
+            updated+=1;
+        }
+        native.temporal_evidence=Some(evidence);
+        self.phase_native=Some(native);
+        updated>0
+    }
+
+    /// TE5: physically acquired belief->motor consequence readout. An
+    /// undecided/tied native physical belief cannot silently become a label.
+    /// The unique winner must have phase-conducting useful reward evidence.
+    pub fn choose_phase_native_temporal_outcome_action(
+        &self
+    )->Option<PhaseTemporalOutcomeDecision>{
+        let belief=self.phase_native_temporal_evidence()?;
+        let source_cell=belief.winner_cell?;
+        let native=self.phase_native.as_ref()?;
+        let evidence=native.temporal_evidence.as_ref()?;
+        let floor=native.config.coherence_floor;
+        let mut best:Option<PhaseTemporalOutcomeDecision>=None;
+        let mut tied=false;
+        for candidate in evidence.outcomes.iter()
+            .filter(|w|w.source_cell==source_cell
+                && w.observations>0)
+        {
+            let credit=conductance(&self.cells,
+                &self.synapses[candidate.value_synapse],floor);
+            if credit<=0.05 {continue;}
+            match best {
+                None=>{
+                    best=Some(PhaseTemporalOutcomeDecision{
+                        action:candidate.motor_action,
+                        synapse:candidate.value_synapse,
+                        learned_value:credit,
+                        source_cell,
+                    });
+                    tied=false;
+                }
+                Some(prior) if credit>prior.learned_value+1.0e-6=>{
+                    best=Some(PhaseTemporalOutcomeDecision{
+                        action:candidate.motor_action,
+                        synapse:candidate.value_synapse,
+                        learned_value:credit,
+                        source_cell,
+                    });
+                    tied=false;
+                }
+                Some(prior) if (credit-prior.learned_value).abs()<=1.0e-6=>{
+                    tied=true;
+                }
+                _=>{}
+            }
+        }
+        if tied {None}else{best}
     }
 
     /// Explicit generic NEW EPISODE boundary resets the transient physical
