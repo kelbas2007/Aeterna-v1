@@ -1,0 +1,41 @@
+name: Qualified INTEL-4 main integration audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [integration/intel4-main]
+    paths:
+      - '.github/workflows/integration-intel4-main.yml'
+jobs:
+  verify-main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify identical frozen EvoPhase cognitive sources
+        run: |
+          git fetch origin c7b5455ba006b297288fa8d16ef6300c8a19ceca --depth=1 || true
+          git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
+      - name: Verify archival guidance and authority evidence exist
+        run: |
+          test -s PROJECT_MAP.md
+          test -s docs/INTEL4_RESULT_PASS.md
+          grep -Fq '37821849040' docs/INTEL4_RESULT_PASS.md
+      - name: Physical model validity and competing goal paths
+        run: |
+          cargo test --release --test e_model_revalidation e_model_revalidation_depends_on_factual_local_support
+          cargo test --release --test e_model_revalidation e_goal_route_coverage_comes_from_acquired_physical_successors
+      - name: Concept succession and G20–G23
+        run: |
+          cargo test --release --test composition_succession composition_replaces_rejected
+          cargo test --release --test g20_continual_reasoning
+          cargo test --release --test g21_contextual_state_refinement
+          cargo test --release --test g22_perceptual_variable_invention
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+      - name: U1–U3 and Human Protection
+        run: |
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+          cargo test --release --test human_protection
+      - name: Optimized release build
+        run: cargo build --release
