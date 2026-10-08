@@ -2,6 +2,13 @@
 
 **Primary development source: `main`**, promoted from the original successful INTEL-4 branch by a non-squashed two-parent history-preserving integration. Evidence remains pinned to its exact frozen cognitive source; later documentation/branch changes do not create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) for branch purposes and archival records.
 
+## Current scientific boundary — after qualified INTEL-4
+
+- **INTEL-4 remains PASS** on the preregistered bounded deterministic synthetic A–E family (one frozen EvoPhase organism).
+- **FRONTIER-1 independently FAIL** in a structurally different stochastic latent-cause task: **40/80** held-out correct, **0/80** episodes with repeated active sensing, best last-noisy-cue oracle **56/80**, eight-cue majority oracle **69/80**. [Result in active research branch](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/FRONTIER1_RESULT_FAIL1.md), Actions `37831945655`. This exposes a missing demonstrated active evidence-accumulation behavior; it does not invalidate the narrower INTEL-4 result.
+- **GitHub branch cleanup finished:** exactly four branches — `main`, `intel4-frozen-unified`, `research/beyond-intel4`, `archive/evidence-20261008`; twelve obsolete refs deleted with archived history preserved. [Project map](PROJECT_MAP.md) and [cleanup result](docs/BRANCH_CLEANUP_RESULT.md).
+- The primary research objective is now active inference from multiple noisy observations, with a new generic architecture witness independent of the burned FRONTIER-1 world. No open-world AGI claim.
+
 ## Latest frozen independent system verdict — 2026-10-08
 
 **INTEL-4 PASS (bounded unified autonomous developing intelligence in the tested deterministic world family).**
