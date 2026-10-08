@@ -1,0 +1,38 @@
+name: intel2-postmortem-w3
+# Diagnostic only. Replays the burned INTEL-2 seed; never counts as a verdict.
+on:
+  workflow_dispatch:
+  push:
+    branches: [unified-cognition]
+    paths: ['.github/workflows/intel2-postmortem-w3.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    if: >-
+      github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'intel2: run frozen W3 postmortem'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify cognitive source still equals frozen INTEL-2 core
+        run: git diff --exit-code 07b44fb8e00837568bc9655e760eb031d1944dff -- src Cargo.toml Cargo.lock
+      - name: Replay burned pack for diagnosis only
+        env:
+          AETERNA_INTEL2_SEED: "37687243350"
+          AETERNA_SOURCE_SHA: "POSTMORTEM_ONLY"
+          AETERNA_SPEC_SHA: "POSTMORTEM_ONLY"
+        run: |
+          set -o pipefail
+          cargo test --release --test intel2_unified_worlds intel2_frozen_unified_unknown_world_lifetime -- --nocapture | tee intel2-postmortem.log
+      - name: Preserve diagnostic log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intel2-postmortem-w3
+          path: intel2-postmortem.log
+          if-no-files-found: ignore
+          retention-days: 30
