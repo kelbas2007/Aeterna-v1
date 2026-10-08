@@ -42,8 +42,8 @@ jobs:
       - name: Execute one-use INTEL-3 verdict
         shell: bash
         env:
-          AETERNA_INTEL3_SEED: \${{ github.run_id }}
-          AETERNA_SOURCE_SHA: \${{ github.sha }}
+          AETERNA_INTEL3_SEED: ${{ github.run_id }}
+          AETERNA_SOURCE_SHA: ${{ github.sha }}
         run: |
           export AETERNA_SPEC_SHA="$(git rev-parse HEAD:docs/INTEL3_PROTOCOL.md)"
           set -o pipefail
