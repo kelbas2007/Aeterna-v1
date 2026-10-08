@@ -1,0 +1,24 @@
+name: INTEL-4 outcome-free frozen preflight
+on:
+  workflow_dispatch:
+  push:
+    branches: [intel4-frozen-unified]
+    paths:
+      - 'tests/intel4_unified_worlds.rs'
+      - '.github/workflows/intel4-preflight.yml'
+jobs:
+  preseal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify frozen production cognition
+        run: |
+          git fetch origin c7b5455ba006b297288fa8d16ef6300c8a19ceca --depth=1 || true
+          git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
+      - name: Compile evaluator without consuming a target pack
+        run: cargo test --release --test intel4_unified_worlds --no-run
+      - name: Evaluator source guard, NO TARGET WORLD EXECUTION
+        run: cargo test --release --test intel4_unified_worlds intel4_evaluator_uses_only_unified_external_runtime -- --nocapture
+      - name: Release build
+        run: cargo build --release
