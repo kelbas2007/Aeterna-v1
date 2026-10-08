@@ -82,7 +82,10 @@ fn te3_physical_sensing_project_competes_in_unified_without_host_priority(){
                  *native.learned_affordance-1.0e-6
         ).collect::<Vec<_>>();
         assert!(!sensor_project.is_empty(),"physical evidence debt must enter U1 competition");
-        assert!(rt.organism().choose_phase_native_unified_proposal(&proposals).is_some());
+        let winner=rt.organism().choose_phase_native_unified_proposal(&proposals);
+        println!("TE3_ARBITRATION sensor={sensor} native={native:?} u1={:?} candidate={proposals:?} winner={winner:?}",
+            rt.organism().phase_native_meta_weights());
+        assert!(winner.is_some(),"generic U1 must avoid tied active-sensing deadlock");
         let before=rt.organism().phase_native_learned_fingerprint();
         assert_eq!(proposals,rt.organism().collect_phase_native_unified_proposals(&goal));
         assert_eq!(before,rt.organism().phase_native_learned_fingerprint());
