@@ -656,6 +656,9 @@ impl EvoPhase {
     }
     fn observe_phase_induction_result(&mut self, action: usize, pre: &[Option<f32>], outcome: f32) {
         self.observe_phase_induction_result_inner(action, pre, outcome);
+        // One factual action updates all materialized candidate synapses.
+        // Only the legacy mode scans bounded factual buffers retrospectively.
+        let _ = self.observe_phase_primitive_synaptic_argument_credit(action);
         // Acquisition is driven by actual executed PRE/action/POST feedback,
         // never by the later read-only prediction or an external binder call.
         let _ = self.consolidate_phase_native_argument_bindings();
@@ -854,6 +857,25 @@ impl PhaseInductionState {
                 {
                     return false;
                 }
+            }
+            // Causal ownership for online synaptic competition. Candidate
+            // endpoints are the two proposed sensory argument channels.
+            if s.native_argument_competition && !s.argument_transfer_enabled {
+                return false;
+            }
+            for candidate in &s.argument_candidates {
+                if candidate.action>=cfg.motor_cells
+                    ||candidate.operation_index>=s.operations.len()
+                    ||!s.operations[candidate.operation_index].admitted
+                    ||candidate.source_inputs[0]==candidate.source_inputs[1]
+                    ||candidate.source_inputs.iter().any(|&x|x>=cfg.sensory_cells)
+                    ||candidate.candidate_synapse>=links.len()
+                    ||!used.insert(candidate.candidate_synapse)
+                    ||candidate.observations as u64>sequence
+                {return false;}
+                let link=&links[candidate.candidate_synapse];
+                if link.from>=cfg.sensory_cells ||link.to>=cfg.sensory_cells
+                    ||link.from==link.to {return false;}
             }
             // Physical acquired argument connections are first-class
             // checkpoint-owned synapses. No hidden metadata-only fallback
