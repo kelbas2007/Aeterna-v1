@@ -144,6 +144,9 @@ fn u1_new_cold_no_curriculum_continual_lifetime_development() {
             max_observations:8,minimum_observations:3,decisive_margin:0.125
         }));
         assert!(rt.set_unified_online_learning(true));
+        // Intervention is only the U1 score equation. The generator, opaque
+        // role assignments, A/B/A schedule and evaluation seed are unchanged.
+        assert!(rt.set_unified_monotone_evidence_scoring(true));
         let mut train=Measures::default();
         let mut diagnostic=false;
         for (i,episode) in train_data.iter().enumerate() {
@@ -157,6 +160,8 @@ fn u1_new_cold_no_curriculum_continual_lifetime_development() {
         ).unwrap_or(0.0);
         let meta_updates=rt.organism().phase_native_meta_observations();
         assert!(rt.restart_cognition().is_ok());
+        assert!(rt.organism().phase_native_meta_monotone_evidence(),
+            "the scoring contract must persist in the cognitive checkpoint");
         rt.set_model_learning_enabled(false);
         let frozen_meta=rt.organism().phase_native_meta_weights();
         let mut evaluated=Measures::default();
