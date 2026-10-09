@@ -33,6 +33,7 @@ jobs:
       - name: Verify physical sensor acquisition and U1 causality
         run: |
           cargo test --locked --release --test te6_cold_probe_control te6_autonomous_motor_coverage_discovers_sensing_affordance_physically -- --exact --nocapture
+          cargo test --locked --release --test te6_cold_probe_control te6_terminal_experiment_moves_away_from_factually_checked_motor -- --exact --nocapture
           cargo test --locked --release --test u1_meta_control u1_positive_evidence_does_not_dilute_factual_utility_in_online_mode -- --exact --nocapture
       - name: Measure unchanged A-B-A cold organism
         run: cargo test --locked --release --test u1_cold_lifetime u1_new_cold_no_curriculum_continual_lifetime_development -- --exact --nocapture
