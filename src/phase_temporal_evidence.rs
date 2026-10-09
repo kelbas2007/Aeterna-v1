@@ -56,6 +56,24 @@ struct PhaseTemporalChain {
     support: u32,
 }
 
+/// A factual state-conditioned motor transition in the EXISTING carrier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PhaseTemporalTransition {
+    from_cell:usize,
+    motor_action:usize,
+    to_cell:usize,
+    entry_synapse:usize,
+    exit_synapse:usize,
+    observations:u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PhaseTemporalActionTrial {
+    from_cell:usize,
+    motor_action:usize,
+    observations:u32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PhaseTemporalSensingDecision {
     pub action: usize,
@@ -94,6 +112,10 @@ pub(super) struct PhaseTemporalEvidenceState {
     chain_learning_enabled: bool,
     pending_chain: Option<PhaseTemporalPendingChain>,
     chains: Vec<PhaseTemporalChain>,
+    /// Open development: the same evidence carrier handles variable depth.
+    multistep_enabled:bool,
+    transitions:Vec<PhaseTemporalTransition>,
+    action_trials:Vec<PhaseTemporalActionTrial>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -150,6 +172,9 @@ impl EvoPhase {
             chain_learning_enabled: false,
             pending_chain: None,
             chains: Vec::new(),
+            multistep_enabled:false,
+            transitions:Vec::new(),
+            action_trials:Vec::new(),
         });
         self.phase_native = Some(state);
         true
@@ -165,7 +190,9 @@ impl EvoPhase {
                 || p.samplers.iter().any(|m|m.sensory_synapse==synapse_index)
                 || p.outcomes.iter().any(|m|m.value_synapse==synapse_index)
                 || p.chains.iter().any(|m|m.entry_synapse==synapse_index
-                    || m.read_synapse==synapse_index))
+                    || m.read_synapse==synapse_index)
+                || p.transitions.iter().any(|e|e.entry_synapse==synapse_index
+                    || e.exit_synapse==synapse_index))
             .unwrap_or(false)
     }
 
@@ -258,6 +285,61 @@ impl EvoPhase {
             self.phase_native=Some(native);
             return false;
         };
+        // Multistep extension: acquire a general factual state/motor/state
+        // relation. No source, goal, correct motor, future trace or evaluator
+        // phase is imported. All learned value resides in conducting physical
+        // source->motor->destination synapses, not in the address record.
+        if evidence.multistep_enabled {
+            let trial=if let Some(t)=evidence.action_trials.iter_mut()
+                .find(|t|t.from_cell==pre.cell&&t.motor_action==action)
+            {t}else{
+                evidence.action_trials.push(PhaseTemporalActionTrial{
+                    from_cell:pre.cell,motor_action:action,observations:0
+                });
+                evidence.action_trials.last_mut().expect("factual trial")
+            };
+            trial.observations=trial.observations.saturating_add(1);
+            if native.config.learning_enabled && pre.cell!=post.cell {
+                let index=if let Some(i)=evidence.transitions.iter().position(
+                    |e|e.from_cell==pre.cell&&e.to_cell==post.cell
+                        &&e.motor_action==action
+                ){i}else{
+                    let entry=self.native_synapse(
+                        pre.cell,self.motor_cell(action)
+                    );
+                    let exit=self.native_synapse(
+                        self.motor_cell(action),post.cell
+                    );
+                    if evidence.transitions.len()>=self.config.motor_cells*32 {
+                        native.temporal_evidence=Some(evidence);
+                        self.phase_native=Some(native);
+                        return false;
+                    }
+                    evidence.transitions.push(PhaseTemporalTransition{
+                        from_cell:pre.cell,motor_action:action,
+                        to_cell:post.cell,entry_synapse:entry,
+                        exit_synapse:exit,observations:0
+                    });
+                    evidence.transitions.len()-1
+                };
+                let edge=&mut evidence.transitions[index];
+                edge.observations=edge.observations.saturating_add(1);
+                for &syn_index in &[edge.entry_synapse,edge.exit_synapse] {
+                    let syn=&mut self.synapses[syn_index];
+                    syn.phase_offset=wrap_phase(
+                        self.cells[syn.to].phase-self.cells[syn.from].phase
+                    );
+                    syn.confidence=1.0;
+                    syn.weight=(syn.weight
+                        +1.0/evidence.config.max_observations as f32)
+                        .min(1.0);
+                    syn.eligibility=1.0;
+                }
+            }
+            native.temporal_evidence=Some(evidence);
+            self.phase_native=Some(native);
+            return true;
+        }
         // Generic two-step causal affordance, opt-in. An opaque motor
         // producing a distinct factual non-cue state becomes a pending
         // hypothesis. A *different* motor that physically returns that state
@@ -500,6 +582,27 @@ impl EvoPhase {
         state.chain_learning_enabled=enabled;
         if !enabled {state.pending_chain=None;}
         true
+    }
+
+    /// Generalized, bounded multistep transitions: never a motor-role table.
+    /// Requires the existing temporal evidence state and acquired raw cues.
+    pub fn set_phase_native_temporal_multistep(&mut self,enabled:bool)->bool{
+        let Some(state)=self.phase_native.as_mut()
+            .and_then(|n|n.temporal_evidence.as_mut()) else{return false;};
+        state.multistep_enabled=enabled;
+        true
+    }
+
+    pub fn phase_native_temporal_multistep_enabled(&self)->bool{
+        self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref())
+            .map(|t|t.multistep_enabled).unwrap_or(false)
+    }
+
+    pub fn phase_native_temporal_transition_count(&self)->usize{
+        self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref())
+            .map(|t|t.transitions.len()).unwrap_or(0)
     }
 
     pub fn phase_native_temporal_chain_learning(&self)->bool{
