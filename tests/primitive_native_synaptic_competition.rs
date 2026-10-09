@@ -51,6 +51,13 @@ fn physical_synaptic_competition_learns_argument_calls_from_factual_outcomes(){
         winner.2,"lesioned candidate cannot win via saved metadata");
     e.restore_phase_native_synapse_for_control(winner.2,save_link);
     assert_eq!(e.phase_primitive_synaptic_argument_winner(action),Some(winner));
+    let phase_link=e.perturb_phase_native_synapse_for_control(
+        winner.2,1.0,std::f32::consts::PI
+    ).expect("phase-sensitive candidate");
+    assert_ne!(e.phase_primitive_synaptic_argument_winner(action).unwrap().2,
+        winner.2,"phase lesion must change synaptically selected hypothesis");
+    e.restore_phase_native_synapse_for_control(winner.2,phase_link);
+    assert_eq!(e.phase_primitive_synaptic_argument_winner(action),Some(winner));
     let frozen=ScientificRuntime::new(e).unwrap();
     let mut correct=0usize;
     for variant in 0..3{
@@ -64,5 +71,5 @@ fn physical_synaptic_competition_learns_argument_calls_from_factual_outcomes(){
         }
     }
     assert_eq!(correct,24);
-    println!("PRIMITIVE_SYNAPTIC_COMPETITION correct=24/24 candidates={} checkpoint=true lesion=true no_retrospective_search=true original_definitions_unchanged=true",hypotheses);
+    println!("PRIMITIVE_SYNAPTIC_COMPETITION correct=24/24 candidates={} checkpoint=true lesion=true phase_lesion=true no_retrospective_search=true original_definitions_unchanged=true",hypotheses);
 }
