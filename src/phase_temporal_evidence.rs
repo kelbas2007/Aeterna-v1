@@ -70,6 +70,8 @@ pub(super) struct PhaseTemporalEvidenceState {
     outcomes: Vec<PhaseTemporalOutcomeLink>,
     observations: u32,
     episodes: u64,
+    /// Opt-in carrier-owned exploration from factual motor coverage.
+    autonomous_probe_enabled: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -122,6 +124,7 @@ impl EvoPhase {
             outcomes: Vec::new(),
             observations: 0,
             episodes: 0,
+            autonomous_probe_enabled: false,
         });
         self.phase_native = Some(state);
         true
@@ -312,6 +315,70 @@ impl EvoPhase {
             action,synapse,learned_affordance,
             missing_evidence:(1.0-belief.evidence_margin).clamp(0.0,1.0),
         })
+    }
+
+    /// Opt in to evidence-driven unknown-motor coverage, not a prescribed
+    /// action schedule. The physical sampling affordance still must be learned
+    /// from a real permitted PRE/action/POST difference.
+    pub fn set_phase_native_temporal_autonomous_probe(&mut self, enabled: bool)->bool{
+        let Some(temporal)=self.phase_native.as_mut()
+            .and_then(|n|n.temporal_evidence.as_mut()) else {return false;};
+        temporal.autonomous_probe_enabled=enabled;
+        true
+    }
+
+    pub fn phase_native_temporal_autonomous_probe(&self)->bool{
+        self.phase_native.as_ref().and_then(|n|n.temporal_evidence.as_ref())
+            .map(|t|t.autonomous_probe_enabled).unwrap_or(false)
+    }
+
+    /// An intrinsically uncertain organism can investigate an as-yet
+    /// unverified opaque actuator. Pick the motor with least factual local
+    /// coverage; never use latent classes, correct motor labels or reward maps.
+    /// A conducting acquired sensor makes this cold probe unnecessary.
+    /// Candidate is NOT a permit and must still compete in U1.
+    pub fn choose_phase_native_temporal_unknown_probe(&self)
+        ->Option<(usize,f32)>{
+        let belief=self.phase_native_temporal_evidence()?;
+        let native=self.phase_native.as_ref()?;
+        let temporal=native.temporal_evidence.as_ref()?;
+        if !temporal.autonomous_probe_enabled
+            || temporal.cues.len()!=2 || !belief.needs_more
+            || !native.config.learning_enabled {
+            return None;
+        }
+        // Already-acquired physically conducting information paths use TE3.
+        if temporal.samplers.iter().any(|model|
+            model.distinctions>0
+                && conductance(&self.cells,
+                    &self.synapses[model.sensory_synapse],
+                    native.config.coherence_floor)>1.0e-8
+        ){return None;}
+        let (motor,trials)=(0..self.config.motor_cells).map(|action|{
+            let n=temporal.samplers.iter()
+                .find(|m|m.motor_action==action)
+                .map(|m|m.trials).unwrap_or(0);
+            (action,n)
+        }).min_by_key(|(action,trials)|(*trials,*action))?;
+        Some((motor,(1.0/(1.0+trials as f32)).clamp(0.0,1.0)))
+    }
+
+    /// Acquired physical cue evidence limits certainty of an otherwise
+    /// optimistic goal route. A conclusive belief (or exhausted evidence)
+    /// restores normal goal value. Only used in explicit autonomous mode.
+    pub fn phase_native_temporal_goal_evidence_coverage(&self)->Option<f32>{
+        let native=self.phase_native.as_ref()?;
+        let temporal=native.temporal_evidence.as_ref()?;
+        if !temporal.autonomous_probe_enabled || temporal.cues.len()!=2 {
+            return None;
+        }
+        let belief=self.phase_native_temporal_evidence()?;
+        if !belief.needs_more {return Some(1.0);}
+        let observed=(belief.observations as f32
+            /temporal.config.minimum_observations as f32).clamp(0.0,1.0);
+        let margin=(belief.evidence_margin
+            /temporal.config.decisive_margin).clamp(0.0,1.0);
+        Some((observed*margin).clamp(0.0,1.0))
     }
 
     pub fn phase_native_temporal_evidence_enabled(&self)->bool{
