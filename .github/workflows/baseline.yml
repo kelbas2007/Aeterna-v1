@@ -1,4 +1,4 @@
-name: Qualified baseline regressions
+name: Archived INTEL-4 baseline regressions
 
 on:
   pull_request:
@@ -22,16 +22,21 @@ jobs:
       CARGO_BUILD_JOBS: 2
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Test the archived baseline independently of the current main source.
+          # This is an ordinary regression, never a rerun of its authority pack.
+          ref: c7b5455ba006b297288fa8d16ef6300c8a19ceca
+          persist-credentials: false
       - name: Verify qualified cognitive source
         run: |
-          git fetch --no-tags origin c7b5455ba006b297288fa8d16ef6300c8a19ceca --depth=1
+          test "$(git rev-parse HEAD)" = c7b5455ba006b297288fa8d16ef6300c8a19ceca
           git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.99.0'
       - uses: Swatinem/rust-cache@v2
       - name: Check compilation targets
-        run: cargo check --all-targets
+        run: cargo check --locked --all-targets
       - name: Run ordinary physical and unified regressions
         shell: bash
         run: |

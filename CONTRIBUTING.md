@@ -5,13 +5,15 @@ Use [the project map](PROJECT_MAP.md) to choose the branch and
 
 ## Branches and scope
 
-- `main` publishes the qualified INTEL-4 baseline and current project navigation.
+- `main` publishes the integrated current development source, examples and guides.
 - `research/beyond-intel4` receives active development, opt-in modes and ordinary regressions.
 - `intel4-frozen-unified` preserves the independent INTEL-4 snapshot.
 - `archive/evidence-20261008` preserves earlier branch histories.
 
-Prepare development against the latest research branch. Submit documentation and
-navigation changes to `main` without changing its frozen cognitive source. Avoid
+Prepare development against the latest main or research branch. Integrate tested
+research into `main` by fast-forward when possible, otherwise preserve both
+histories with a normal merge. After integration, bring the research branch
+forward to that same integration commit before starting new work. Avoid
 automatic merges of historical experiments. Keep PASS, FAIL and INVALID records
 pinned to their original sources and runs.
 
@@ -30,14 +32,16 @@ git diff --check
 
 `scripts/check.sh` selects ordinary and causal regression tests, including TE5.
 It excludes one-use authority packs and explicitly negative development scorers.
-`scripts/demo.sh` exercises eight examples and the perception utility through separate learning/restoration
+`scripts/demo.sh` exercises nine examples and the perception utility through separate learning/restoration
 processes and writes checkpoints to a new temporary directory.
 
-Active CI has three purposes: development regressions on the research branch,
-ordinary baseline regressions plus exact frozen-source verification on `main`,
-and local documentation-link checks on both. The baseline workflow is pinned to
-INTEL-4's cognitive source; manually invoking it on modified research code is
-expected to reject that source. It does not execute an authority qualification.
+Active CI checks the current source on both main and research, including the
+two-action and variable-depth physical sensing controls, and checks local
+documentation links. The separate archived-baseline workflow explicitly checks
+out INTEL-4's exact cognitive commit and runs its ordinary regressions. A green
+archived-baseline job says nothing about qualification of the current source.
+Neither runner executes consumed authority packs. See the
+[integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
 Change only the relevant modules and format touched Rust files. Existing files
 have differing historical formatting; a whole-repository reformat would obscure

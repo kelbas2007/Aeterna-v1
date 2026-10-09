@@ -1,6 +1,6 @@
 # Aeterna-v1 status
 
-**Qualified baseline: `main`; active development: `research/beyond-intel4`.** Main was promoted from the original successful INTEL-4 branch by a non-squashed two-parent history-preserving integration. Evidence remains pinned to its exact frozen cognitive source; later documentation/branch changes do not create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) for branch purposes and archival records.
+**Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
 ## Latest bounded autonomous-cycle evidence — 2026-10-09
 
@@ -87,8 +87,14 @@ sensing-to-commit decisions. Its cold post-TE5 diagnostic remains **FAIL**:
 40/80, 55/80, 40/80, 40/80. [Project map](PROJECT_MAP.md) retains the preceding
 TE4 and TE1 failures and references the exact results.
 
+Physical two-action and variable-depth 2–5-action sensing mechanisms now have
+causal lesion and checkpoint controls in the ordinary regression runner. Open
+two-stage and variable-depth cold-transfer diagnostics keep their metric
+verdicts separate from CI exit status; see their
+[protocol](docs/MULTISTEP_CAUSAL_SENSING_PROTOCOL.md).
+
 Ordinary regressions, causal controls and separate-process demonstrations are
-available on the research branch. The [validation record](docs/DEVELOPMENT_VALIDATION.md)
+available on main and the research branch. The [validation record](docs/DEVELOPMENT_VALIDATION.md)
 distinguishes the earlier 127/137/147-test integrations from the program-induction checks. These checks do not rerun
 consumed authority packs or qualify a new scientific gate.
 
@@ -116,7 +122,7 @@ One uninterrupted EvoPhase lifetime:
 
 Authority documentation: `docs/INTEL4_PROTOCOL.md`, `docs/INTEL4_CORE_FREEZE.md`, `docs/INTEL4_RESULT_PASS.md`.
 
-**Scope:** confirmed only for the predefined bounded synthetic deterministic world families. This is NOT human/open-world AGI, stochastic generality, natural language, or real-world safety. Rejected/burned INTEL-1/2/2R1/3 verdicts remain historical truth. The successful frozen source is qualified and its tree has been integrated for the new `main` baseline; the **separate mature Codex-AETERNA** remains untouched.
+**Scope:** confirmed only for the predefined bounded synthetic deterministic world families. This is NOT human/open-world AGI, stochastic generality, natural language, or real-world safety. Rejected/burned INTEL-1/2/2R1/3 verdicts remain historical truth. The successful frozen source remains qualified in `intel4-frozen-unified`; current `main` contains later development and carries no automatic extension of that verdict; the **separate mature Codex-AETERNA** remains untouched.
 
 ## Historical status retained below
 

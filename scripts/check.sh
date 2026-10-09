@@ -38,6 +38,8 @@ cargo test --locked --release --test te6_cold_probe_control te6_terminal_experim
 cargo test --locked --release --test te6_cold_probe_control te6_rival_physical_outcomes_make_organism_seek_more_evidence -- --exact
 cargo test --locked --release --test te6_cold_probe_control te6_decisive_reward_does_not_create_unsupported_rival_policy -- --exact
 cargo test --locked --release --test u1_cold_lifetime u1_new_cold_no_curriculum_continual_lifetime_development -- --exact --nocapture
+cargo test --locked --release --test structure1_chain_mechanism
+cargo test --locked --release --test multistep_physical_path
 python3 scripts/g21_statistical_crosscheck.py
 python3 scripts/check_docs.py
 cargo build --locked --release --bins --examples

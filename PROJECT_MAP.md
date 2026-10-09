@@ -16,9 +16,9 @@ Updated 2026-10-09. Four maintained GitHub branches have distinct roles. This is
 
 | Branch | Meaning |
 |---|---|
-| `main` | **Main project** — source-preserved qualified INTEL-4 baseline, README, current status and guides |
+| `main` | **Main project** — integrated current source, all development modes, examples, status and guides |
 | `intel4-frozen-unified` | **Immutable scientific snapshot** — original sealed independent INTEL-4 evidence |
-| `research/beyond-intel4` | **Only active research branch** — structurally new stochastic/partial-observation tasks and future architectural prototypes |
+| `research/beyond-intel4` | **Research integration branch** — ongoing prototypes, synchronized with main after each tested integration |
 | `archive/evidence-20261008` | **Complete history** — single 13-parent commit anchoring every pre-cleanup experimental branch head |
 
 ## Current development — 2026-10-09
@@ -40,20 +40,21 @@ decision stump's 111/120; all 120 phase tasks began with acquired sensing.
 3-NN 335/364 and centroid 328/364. The perception utility trains and reads actual
 PNG/JPEG files, freezes recognition, and accepts external factual correction.
 
-On `research/beyond-intel4`, run `bash scripts/check.sh` for ordinary regressions
-and `bash scripts/demo.sh` for eight learn/restore examples and the perception utility. Development
-CI runs on research pushes and pull requests; documentation links are checked on
-both maintained working branches. Main CI verifies its exact frozen cognitive
-source and runs ordinary baseline regressions. Historical authority workflows
-remain separate.
+On `main` or `research/beyond-intel4`, run `bash scripts/check.sh` for ordinary
+regressions, including physical two-action and 2–5-action sensing paths, and
+`bash scripts/demo.sh` for nine learn/restore examples and the perception utility.
+Current-source development CI and documentation links run on both branches.
+The separate archived-baseline job checks out exact INTEL-4 source and runs its
+ordinary regressions. Historical authority workflows remain separate and are
+not rerun during integration.
 
 The numeric rule modes combine acquired physical phase parameters with software
 hypothesis fitting and bounded search. The combined mode uses circular intervals
 and bounded joint inverse equations; factual full-tuple numeric tuition remains
 required. Checkpoint v9 reads v1–v8. These development results do
-not promote a new scientific gate or change the frozen INTEL-4 evidence. The main
-cognitive source remains the qualified baseline; its guides link to current
-research code.
+not promote a new scientific gate or change the frozen INTEL-4 evidence. Current
+main is development source; only the pinned historical source carries the
+original INTEL-4 qualification. [Integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
 ## Housekeeping complete
 
@@ -80,7 +81,7 @@ INTEL-4 established bounded adaptive behavior across deterministic A–E familie
 - **[TE4 cold autonomous evaluation](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE4_RESULT_FAIL.md):** **DEVELOPMENT_FAIL** on 4 new worlds with no matched motor tuition. Frozen holdouts: 40/80, 55/80, 40/80, 38/80; despite some discovered sensors, evidence did not reliably control final action.
 - **[TE5 physical belief-conditioned action](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE5_RESULT.md):** prepared facts learned 12/12 cue-conditional action associations and revised 12/12; **6/6 protected U1 sensing→commit mechanism runs passed**, [Actions 37842428971](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37842428971). However post-TE5 replay of the unchanged burned TE4 generator **still failed**: 40/80, 55/80, 40/80, 40/80. Its CI completed, but its actual diagnostic scorer returned FAIL.
 
-**Historical TE4/TE5 failure boundary (before later Fresh-2 development):** untrained cold sensor discovery, delayed information credit, and stochastic terminal response were not then solved. The new Fresh-2 development evidence above supports all three **within the same bounded task family**, but no independently qualified structurally new-world stochastic generality has been established. Do not convert the burned FRONTIER-1 FAIL or the TE1 strict noisy FAIL into PASS. TE1–TE3 remain opted-in experimental research, not merged into qualified `main`.
+**Historical TE4/TE5 failure boundary (before later Fresh-2 development):** untrained cold sensor discovery, delayed information credit, and stochastic terminal response were not then solved. The new Fresh-2 development evidence above supports all three **within the same bounded task family**, but no independently qualified structurally new-world stochastic generality has been established. Do not convert the burned FRONTIER-1 FAIL or the TE1 strict noisy FAIL into PASS. TE1–TE3 are integrated into current main as opt-in experimental research; their inclusion does not extend historical qualification.
 
 The next architecture question is carrier-owned **uncertainty reduction and self-initiated active sensing from cold experience**, not another permutation of A–E.
 
