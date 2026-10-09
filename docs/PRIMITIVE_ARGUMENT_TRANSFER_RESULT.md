@@ -1,20 +1,36 @@
-# Existing operation definitions with acquired argument bindings
+# Приобретённая операция: перенос на новые аргументы
 
-Status: OPEN DEVELOPMENT MECHANISM AND RUNTIME TEST PASS.
-Evidence run: https://github.com/kelbas2007/Aeterna-v1/actions/runs/37967510317
-Starting source commit: `12bd5a0cfd195eef34e945bc1c5f52208624e61c` (guarded integration applied in this run, then tested).
+Дата: 2026-10-09. Статус: **OPEN DEVELOPMENT PASS — перенос вызова и защищённое исполнение**.
 
-## What was measured
+Однажды приобретённые определения операций теперь можно применять к другим входам, не переобучая и не копируя их физическое определение. В обычном предикторе привязка аргументов выводится из фактических исходов действий, а не передаётся как правильная пара каналов.
 
-The existing acquired-operation learner first acquired a two-input relation from factual environment outcomes. No target function is added to the new engine code. Its original definition and physical synapses then remain unchanged while argument calls are transferred to different sensor channels.
+Проверенный и опубликованный код: `53824c60969fde59105bac18e8c1b5a7651fcbd3`.
+[Успешный прогон 37967510317](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37967510317) применил интеграцию к исходному коммиту `12bd5a0cfd195eef34e945bc1c5f52208624e61c`, скомпилировал все цели, выполнил тесты и только после этого опубликовал проверенные исходники обычным fast-forward push. Последующий workflow оставлен только для чтения и проверок: автоматического изменения исходников в нём больше нет.
 
-Explicit argument-call mechanism control: 96/96 correct across four new ordered argument pairs, eight Boolean cases and three new numeric magnitudes. The original unbound call scores 48/96 on those same target cases. This is a control of argument mapping, NOT a superiority claim over another fully retrained learner.
+## Полученный результат
 
-Runtime control: one continuing training organism encounters two externally scheduled new input-pair tasks. It receives only the ordinary selected action and factual outcome, never the correct pair or a binding. The binding selector uses the existing bounded per-action factual buffers. It selects on an earlier prefix and requires at least eight subsequent validating facts; a failing suffix does not select an alternative binding. On 48 heldout numeric cases, the existing protected runtime performs correct goal actions using original source-operation roots. Checkpoint/restart preserves the operation and factual evidence used to reconstruct the bindings. Direct prediction and binding inspection do not update any retained state.
+| Проверка | Результат |
+|---|---|
+| Вызов того же определения с четырьмя новыми упорядоченными парами аргументов | **96/96**; прежний вызов без перепривязки — **48/96** на тех же примерах |
+| Первая новая задача: привязка каналов `[1,2]` выбрана по фактическим исходам | **24/24** новых числовых примера; 159 обучающих действий |
+| Вторая задача в том же продолжающемся обучающемся организме: `[0,2]` | **24/24** новых числовых примера; 149 обучающих действий |
+| Реальные контрольные действия через защищённый runtime | **48/48** успешных, всего 48 действий |
+| Исходные определения операций | Те же корневые ячейки **70 и 55**, физические связи не изменились |
+| Checkpoint и запросы | Привязки восстанавливаются из сохранённого опыта; прогнозы и просмотр привязок не изменяют сохранённое состояние |
 
-The feature is opt-in (`set_phase_primitive_argument_transfer`). The normal induction prediction path uses validated calls before ordinary program prediction. Factual observation checks reuse before rebuilding a definition. Existing acquired-operation and real-program pipeline regressions ran in the same job. Their previously published real-dataset performance FAIL verdicts are not altered by this test.
+Номера каналов в таблице начинаются с нуля. Проверки используют три новых числовых масштаба для восьми комбинаций входов. Контроль 48/96 — это именно исходный вызов без смены аргументов, **не** сравнение с другим полностью переобученным решателем и **не** доказательство ускорения.
 
-## Exact emitted measurements
+## Что именно делает организм и что делает среда
+
+Существующий конструктор сначала приобретает двухвходовую зависимость из фактических исходов. В новый вычислительный код не добавлена именованная XOR/AND-функция. На следующих задачах среда задаёт данные и возвращает результат реально выбранного действия; правильные индексы аргументов остаются только у проверяющего стенда.
+
+Селектор привязки проверяет возможные вызовы прежних определений по ограниченным буферам фактов каждого действия. Противоречие отзывает поддержку устаревшей привязки, но не переписывает само определение. Привязка выбирается по более ранней части опыта; восемь последующих фактов проверяют выбранный вариант. Провал этих восьми не используется для выбора другого кандидата. Для каждого аргумента требуется подтверждённое варьирование входных значений; повторение одного успешного примера недостаточно.
+
+Нормальный `phase_induction_predict` сначала использует подтверждённый вызов, затем обычный путь индукции. После фактического обновления подтверждённый вызов позволяет не пересобирать определение заново. Это встроено в существующие `phase_primitives` и `phase_induction`, а не отдельный исполнитель задач.
+
+Тест проверки носителя обнуляет необходимую связь исходного определения: параметризованный вызов становится недоступен. Точное восстановление связи возвращает вычисление. Полный снимок исходных связей проверяется до и после обеих новых задач.
+
+## Точные строки результата
 
 ```text
 PRIMITIVE_ARGUMENT_MECHANISM correct=96/96 old_unbound=48/96 same_definition=true no_query_learning=true lesion=true restore=true
@@ -25,10 +41,26 @@ PRIMITIVE_ARGUMENT_TASK task=1 correct=24/24 factual_training_actions=149 origin
 PRIMITIVE_ARGUMENT_RUNTIME correct=48/48 protected_actions=48 one_training_lifetime=true arguments_not_supplied=true original_definitions_unchanged=true checkpoint=true
 ```
 
-## Boundaries — essential to interpreting this result
+## Сохранённые неудачные попытки
 
-This does NOT establish spontaneous invention of a new phase-native constructor or general intelligence. The source relation and the two later tasks are externally scheduled synthetic curricula. Generic perception, branch interpreter, and bounded argument-search algorithm remain inherited software. Binding views are reconstructed from factual buffers; they are not independently learned physical argument-binding synapses. The original computation is read through its physical definition, whose lesion makes the parameterized call unavailable.
+Первый открытый прогон [37966660011](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37966660011) прошёл проверку вызовов 96/96, но не допустил ни одной автоматической привязки. Условие требовало положительных и отрицательных исходов в последних восьми примерах, хотя успешная выбираемая политика перестаёт совершать ошибки.
 
-Current limit: at most eight channels and three structurally used raw arguments, with injective binding candidates. Explicit calls retain original support guards and require a fully observed frame of the existing width. Search is capped at 32768 definition evaluations per action. This does not yet establish transfer to arbitrary input width, unrestricted objects, new computational node types, speed advantage or cold open-ended primitive invention.
+Во втором прогоне [37967069025](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37967069025) появилась одна из двух требуемых привязок. Дополнительное ограничение создавали устаревшие факты прежней задачи. После добавления общего отзыва поддержки по противоречию обе задачи прошли. Тестовые функции, пары аргументов, бюджет обучения и ожидаемые 96/96 и 48/48 не менялись; алгоритм дорабатывался по этим открытым результатам. Поэтому это **не** независимое замороженное научное испытание.
 
-The concrete new capability is reuse of an unchanged, acquired computational definition on new evidence-derived argument mappings inside the existing predictor. No MAIN or frozen INTEL-4 source is modified by this workflow.
+## Границы результата
+
+**Это перенос приобретённой составной операции, а не доказательство самостоятельного изобретения нового фазового конструктора.** Исходная зависимость и последовательность новых задач заданы внешним синтетическим стендом. Один обучающийся организм последовательно проходит обе задачи; для контрольных проверок используются его замороженные восстановленные снимки.
+
+Исполнитель ветвлений, конструктор определений и ограниченный поиск привязок остаются унаследованным Rust-кодом. Привязки реконструируются из фактических буферов; они пока не приобретаются в виде самостоятельных физических синапсов привязки аргументов. Причинные вмешательства подтверждают роль исходного вычислительного определения, а не физическое владение алгоритмом поиска привязок.
+
+Лимиты: до восьми сенсорных каналов, до трёх структурно используемых аргументов, инъективные варианты при автоматическом поиске, не более 32768 проверок определения на один селектор действия. Требуется полностью наблюдаемый кадр прежней ширины; сохраняются исходные ограничения поддержки определения. Не доказаны произвольная ширина входа, новые типы вычислительных узлов, понимание объектов, ускорение, открытый самостоятельный выбор учебных задач или AGI.
+
+В том же успешном прогоне прошли существующие тесты приобретённых операций и целостности конвейера реальных данных. Их прежние отрицательные оценки полезности на цифрах и сигналах не переименовываются в PASS. `main` и `intel4-frozen-unified` в этой работе не изменялись.
+
+## Использование
+
+После включения существующего режима приобретённых операций вызовите `set_phase_primitive_argument_transfer(true)`. Фактическое обучение остаётся в обычном runtime. `phase_primitive_argument_bindings()` показывает выбранные определения, аргументы и поддержку; `phase_primitive_argument_prediction()` — предсказание через эти вызовы. `phase_primitive_bound_value()` нужен для явного диагностического вызова; автоматическая политика не получает от него правильную привязку.
+
+```bash
+cargo test --locked --release --test primitive_argument_transfer --test acquired_primitives --test real_programs -- --nocapture
+```
