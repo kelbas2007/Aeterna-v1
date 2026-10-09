@@ -542,6 +542,9 @@ impl EvoPhase {
         &self,
         frame: &[Option<f32>],
     ) -> Option<PhaseInductionPrediction> {
+        if let Some(call) = self.phase_primitive_argument_prediction(frame) {
+            return Some(call);
+        }
         if !vector_valid(frame, self.config.sensory_cells) {
             return None;
         }
@@ -730,6 +733,19 @@ impl EvoPhase {
             success,
             sequence,
         });
+        // Reuse a factually validated call before rebuilding its definition.
+        if state.primitives.as_ref().is_some_and(|library| {
+            primitive_argument_match(
+                &p.facts,
+                library,
+                &state.config,
+                &self.cells,
+                &self.synapses,
+            )
+            .is_some()
+        }) {
+            return;
+        }
         if rebuild && p.facts.len() >= state.config.min_child_support {
             let (fit_facts, sources, priorities) = primitive_fit_inputs(
                 &p.facts,

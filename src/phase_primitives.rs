@@ -31,6 +31,8 @@ struct PhasePrimitiveState {
     operations: Vec<PhasePrimitive>,
     priorities: Vec<usize>,
     policy_updates: u64,
+    #[serde(default)]
+    argument_transfer_enabled: bool,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct PhasePrimitiveInfo {
@@ -120,6 +122,9 @@ impl PhasePrimitiveState {
         feed(self.config.capacity as u64);
         feed(u64::from(self.config.policy_learning_rate.to_bits()));
         feed(self.policy_updates);
+        if self.argument_transfer_enabled {
+            feed(0x4152475452414E53);
+        }
         for &i in &self.priorities {
             feed(i as u64);
         }
@@ -411,6 +416,7 @@ impl EvoPhase {
             operations,
             priorities,
             policy_updates: 0,
+            argument_transfer_enabled: false,
         });
         true
     }
@@ -492,3 +498,6 @@ impl EvoPhase {
         })
     }
 }
+
+// Parameterized views of the same acquired physical definitions.
+include!("phase_primitive_arguments.rs");
