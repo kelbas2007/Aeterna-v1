@@ -42,7 +42,7 @@ cargo run --locked --release --example learned_rules -- run /tmp/aeterna-rules.j
 4. Использовать обычные `ScientificRuntime::observe_external`, `set_goal`
    и `step`/`step_unified` с внешними наблюдениями и результатами действия.
 
-Готовый пример: [examples/learned_rules.rs](../examples/learned_rules.rs).
+Готовый пример: [examples/learned_rules.rs](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/examples/learned_rules.rs).
 Правила мира находятся только во внешнем примере и не передаются организму.
 
 ## Реальный механизм
@@ -106,7 +106,7 @@ Checkpoint v1–v4 остаются читаемыми. Проверка стр�
 
 ## Проверки
 
-[tests/online_rules.rs](../tests/online_rules.rs) проверяет:
+[tests/online_rules.rs](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/tests/online_rules.rs) проверяет:
 
 | Сценарий | Полученный результат |
 | --- | --- |

@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: development-regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -32,28 +36,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          checkpoint_path="$RUNNER_TEMP/aeterna-online.json"
-          target/release/examples/online_learning learn "$checkpoint_path"
-          target/release/examples/online_learning run "$checkpoint_path"
-          rule_checkpoint_path="$RUNNER_TEMP/aeterna-rules.json"
-          target/release/examples/learned_rules learn "$rule_checkpoint_path"
-          target/release/examples/learned_rules run "$rule_checkpoint_path"
-          partial_checkpoint_path="$RUNNER_TEMP/aeterna-partial.json"
-          target/release/examples/partial_observation learn "$partial_checkpoint_path"
-          target/release/examples/partial_observation run "$partial_checkpoint_path"
-          expanded_checkpoint_path="$RUNNER_TEMP/aeterna-expanded.json"
-          target/release/examples/expanded_rules learn "$expanded_checkpoint_path"
-          target/release/examples/expanded_rules run "$expanded_checkpoint_path"
-          inverse_checkpoint_path="$RUNNER_TEMP/aeterna-inverse.json"
-          target/release/examples/inverse_inference learn "$inverse_checkpoint_path"
-          target/release/examples/inverse_inference run "$inverse_checkpoint_path"
-          adaptive_checkpoint_path="$RUNNER_TEMP/aeterna-adaptive.json"
-          target/release/examples/adaptive_learning learn "$adaptive_checkpoint_path"
-          target/release/examples/adaptive_learning run "$adaptive_checkpoint_path"
+          bash scripts/demo.sh 2>&1 | tee demos.log
       - name: Preserve regression output
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: development-regression-log
-          path: regression.log
+          path: |
+            regression.log
+            demos.log
           if-no-files-found: ignore

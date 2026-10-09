@@ -24,5 +24,8 @@ cargo test --locked --release --test intel2_refined_state_controls refined_state
 cargo test --locked --release --test te1_temporal_evidence te1_physically_accumulates_contradictory_raw_cues_and_restores -- --exact
 cargo test --locked --release --test te2_sensing_affordance te2_opaque_sensing_action_is_acquired_physically_in_six_permutations -- --exact
 cargo test --locked --release --test te3_unified_sensing te3_
+cargo test --locked --release --test te5_belief_action te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary -- --exact
+cargo test --locked --release --test te5_unified_decisions te5_unified_selects_acquired_sensing_then_belief_grounded_goal_motor -- --exact
 python3 scripts/g21_statistical_crosscheck.py
+python3 scripts/check_docs.py
 cargo build --locked --release --bins --examples

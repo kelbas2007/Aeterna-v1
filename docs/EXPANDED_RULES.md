@@ -65,7 +65,7 @@ cargo run --locked --release --example expanded_rules -- run /tmp/aeterna-expand
 
 В облачной среде при необходимости сначала выполните
 `source /workspace/.aeterna-env/activate.sh`. `learn` требует нового имени файла.
-В [примере](../examples/expanded_rules.rs) все четыре моторных правила
+В [примере](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/examples/expanded_rules.rs) все четыре моторных правила
 приобретаются в одном непрерывном эпизоде; наблюдения получаются только
 от внешнего мира. `run` начинает другой процесс, загружает модель,
 отключает обучение, получает свежий кадр и решает новую задачу.
@@ -133,7 +133,7 @@ v1–v4 с прежней семантикой; широкий язык нель
 
 ## Проверки
 
-[tests/expanded_rules.rs](../tests/expanded_rules.rs) содержит 10 новых
+[tests/expanded_rules.rs](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/tests/expanded_rules.rs) содержит 10 новых
 development-тестов:
 
 | Проверка | Полученный результат |

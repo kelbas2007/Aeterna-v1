@@ -1,6 +1,33 @@
 # Aeterna-v1 status
 
-**Primary development source: `main`**, promoted from the original successful INTEL-4 branch by a non-squashed two-parent history-preserving integration. Evidence remains pinned to its exact frozen cognitive source; later documentation/branch changes do not create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) for branch purposes and archival records.
+**Qualified baseline: `main`; active development: `research/beyond-intel4`.** Main was promoted from the original successful INTEL-4 branch by a non-squashed two-parent history-preserving integration. Evidence remains pinned to its exact frozen cognitive source; later documentation/branch changes do not create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) for branch purposes and archival records.
+
+## Current development — 2026-10-09
+
+Six opt-in modes are documented in [the guide index](docs/README.md): cold online
+acquisition, acquired rules, expanded formulas, partial observations, inverse
+inference and full-observed conditional/noisy continual learning. Checkpoint v5
+retains compatibility with v1–v4. Rule parameters reside in shared phase synapses;
+hypothesis fitting, context metadata and bounded planning are software.
+
+Open development comparisons: inverse inference reached 256/256 new goals versus
+128/256 for cyclic actions with the same action budget; conditional rules reached
+256/256 versus 0/256 for the same language without conditions. An uninterrupted
+A → B → A lifetime demonstrated revision/recall, and a 2048-action memory check
+kept fixed topology and a bounded checkpoint. These are bounded synthetic
+development results; they do not qualify a new independent intelligence gate.
+
+The development source is integrated with TE5 through upstream `3e6fe616`.
+TE5 supports prepared physical belief-to-action learning and protected U1
+sensing-to-commit decisions. Its cold post-TE5 diagnostic remains **FAIL**:
+40/80, 55/80, 40/80, 40/80. [Project map](PROJECT_MAP.md) retains the preceding
+TE4 and TE1 failures and references the exact results.
+
+Ordinary regressions, causal controls and separate-process demonstrations are
+available on the research branch. Integration validation completed with 127
+successful test invocations, zero failures and all six separate-process examples.
+[Validation record](docs/DEVELOPMENT_VALIDATION.md). These checks do not rerun
+consumed authority packs or qualify a new scientific gate.
 
 ## Current scientific boundary — after qualified INTEL-4
 

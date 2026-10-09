@@ -1,244 +1,87 @@
 # AETERNA v1 — EvoPhase Cognitive Runtime
 
-**Development extension:** [online acquisition and disk checkpoints](docs/ONLINE_LEARNING.md) add an opt-in cold sensor mode using the existing P1/P3 substrate. It learns from protected factual actions without the INTEL-4 representation curriculum. Run ordinary regressions with `bash scripts/check.sh`. This extension is covered by development tests, not a new sealed intelligence qualification.
-
-**Acquired-rule extension:** [learned transformations and hypothesis testing](docs/LEARNED_RULES.md) add an opt-in hybrid mode that transfers circular sensor rules to unseen states, tests ambiguous alternatives, revises contradicted actions and resumes from disk. Its parameters reside in shared phase synapses; its bounded plan search is software. Try `cargo run --locked --release --example learned_rules -- learn /tmp/aeterna-rules.json`, then replace `learn` with `run`.
-
-**Partial-observation extension:** [hidden channels and informative actions](docs/PARTIAL_OBSERVATION.md) add explicit missing values, conservative alternatives over acquired rules, learned output visibility and frozen state inference. Success requires a factual measurement of every constrained goal channel. Try `cargo run --locked --release --example partial_observation -- learn /tmp/aeterna-partial.json`, then replace `learn` with `run`.
-
-**Expanded rule families:** [circular affine rules](docs/EXPANDED_RULES.md) add constants, integer gains of ±2/±3, and signed sums/differences of two channels. An existing rule model can expand its vocabulary using retained factual evidence; new ambiguity requires another experiment. Try `cargo run --locked --release --example expanded_rules -- learn /tmp/aeterna-expanded.json`, then replace `learn` with `run`.
-
-**Inverse inference:** [recover hidden operands](docs/INVERSE_INFERENCE.md) from acquired exact rules and factual partial POST, retain every modular root and select a separating measurement. Inferred values remain imagined and never teach the numeric model. Try `cargo run --locked --release --example inverse_inference -- learn /tmp/aeterna-inverse.json`, then replace `learn` with `run`.
-
-**Conditional and continual learning:** [bounded noisy models](docs/ADAPTIVE_RULES.md) learn a threshold condition on an observed channel, accumulate support despite bounded sensor error, retain previous physical models and recall them after a law returns. This separate full-observation mode uses fixed model slots and explicit fitting/search budgets. Try `cargo run --locked --release --example adaptive_learning -- learn /tmp/aeterna-adaptive.json`, then replace `learn` with `run`.
-
-**Current qualified baseline:** **INTEL-4 PASS** on one independently seeded five-world deterministic synthetic family, **not** open-world AGI. Same frozen no-LLM EvoPhase organism acquired, revised and reused physical knowledge across A/B/C/D/E and retained it after restart. See [verified INTEL-4 report](docs/INTEL4_RESULT_PASS.md) and [protocol](docs/INTEL4_PROTOCOL.md).
-
-**Where everything is:** [PROJECT_MAP.md](PROJECT_MAP.md). Default `main` is the working qualified baseline after source-preserving integration; frozen experiment origin remains `intel4-frozen-unified`. `archive/evidence-20261008` anchors every previous branch head. New research goes to `research/beyond-intel4`. **Separate mature Codex-AETERNA is unaffected.**
-
-**Precise distinction:** Early G8/G10 audits below identified host-execution gaps that led to the phase-native ownership program. Those dated negative findings are preserved as historical records; they do **not** supersede the later qualified P1–P5/G20–G23/U1–U3 and INTEL-4 results. Nor does INTEL-4 prove all cognition is free of inherited generic algorithms.
-
----
-
-## Historical development documentation
-
-# AETERNA v1
-
-A clean no-LLM intelligence research line targeting **full EvoPhase cognitive ownership**.
-
-## Current architectural qualification
-
-**Full physical phase-native execution is NOT yet established.** The recorded task results in `STATUS.md` remain evidence, but they must not be confused with proof that the phase-cell/synapse network itself executes every cognitive operation.
-
-The 2026-10-06 [phase-execution audit](docs/PHASE_EXECUTION_AUDIT_RESULT.md) reproduced a specific gap: the legacy G8 planning path gave identical decisions in 18/18 deterministic matched cases with phase plasticity and structural recruitment disabled and no dormant cells. Its learned transition table remained present; removing that table removed the plan. A standalone version of the same production planner also worked without constructing an EvoPhase instance.
-
-This is a negative architectural witness, not an all-learning ablation and not an invalidation of every earlier result. The original audit and its tests are preserved. The strong ownership requirement below remains unchanged. G10 is preregistered; neither the audit, P1 nor P2 implements or qualifies it.
-
-### P1: acquired shared-synapse execution now tested
-
-A new explicit native mode routes ordinary planning APIs through learned connections in the **same EvoPhase cell and synapse arrays**, with no legacy graph fallback. Tested source: `f33028a5d2809fd7500d46a2021b35f230b1e704`; workflow `37522194429`.
-
-The preregistered P1 run passed 24 deterministic intervention cases and 80/80 freshly sampled bounded task instances. Cutting a necessary internal successor connection gave 0/80; shifting its learned phase offset by pi also gave 0/80; exact restoration recovered 80/80 without relearning. Same-relay/same-synapse factual outcome devaluation changed the decision in 80/80 cases. Separate zero-phase-learning, zero-weight-learning, no-capacity and no-growth acquisition controls each completed 0/80 tasks. The independent graph reference also completed 80/80.
-
-This is **phase-dependent local value propagation**, not forward generated sensory imagination or a complete neural migration of all cognition. The recurrence and winner-take-all competition are inherited; P1 inference uses learned phase calibration rather than evolving oscillator trajectories. Primary tuition averaged 854 factual transition presentations per arm and instance. No data-efficiency, competitive-performance or general-intelligence claim follows.
-
-See the [P1 protocol](docs/PHASE_NATIVE_P1_PROTOCOL.md) and [verified P1 result, costs, evidence and limits](docs/PHASE_NATIVE_P1_RESULT.md). The tested pack is burned. Old G8/G9 results are not relabeled as phase-native results.
-
-### P2: acquired forward sensory model and ordinary action/fact loop
-
-P2 adds shared-synapse forward continuation and learned sensory decoding in `src/phase_forward.rs`. Tested source: `f6503b234f51a11d1a8d930e61a665bae557b7fd`; workflow `37524647331`. The full regression suite and Release build passed; an initial workflow YAML failure is preserved separately in the result record.
-
-All 24 deterministic causal cases and 80/80 one-use generated instances passed the implemented bounded contract. The carrier forecasts 2–5-step sequences by continuing internal membrane activity, without being given intermediate future observations. In the ordinary interaction test, native P1 chooses an action, P2 predicts BEFORE the external world executes it, and factual POST is compared with the prior forecast. All 80 instances reached delayed factual Need with correct relational forecasts.
-
-Necessary internal connection lesions, pi phase shifts and decoder-only phase perturbations each removed the full forecast in 80/80 cases. Exact restoration recovered it, and unrelated lesions preserved it. Separate zero-phase-learning, zero-weight-learning and no-capacity controls each produced 0/80 full forecasts. Factual changed-successor learning corrected the new transition forecast in 80/80 while frozen copies retained obsolete forecasts and unchanged alternative transitions stayed correct.
-
-The result is **a learned associative forward model with physical causal dependence**, not full intelligence. P1 still chooses actions; P2 has not independently demonstrated better decision selection. The decoder reconstructs learned sensory patterns in their tuition coordinate frame, evaluated through relational HDC comparison, not observer-aligned novel image generation. The synchronous phasor update and recognition machinery are inherited. All small transition sets are taught: mean 904 tuple presentations per arm and instance, with 128 additional factual presentations for the revision test. There is no autonomous exploration or data-efficiency claim. The fresh instances share one narrow generator, not 80 independent domains.
-
-See the [P2 protocol](docs/PHASE_NATIVE_P2_PROTOCOL.md), [executed P2 result and limitations](docs/PHASE_NATIVE_P2_RESULT.md), and [ordinary API usage and coordinate-frame limits](docs/PHASE_NATIVE_P2_USAGE.md). P2's observed pack is burned for subsequent design revisions.
-
-### P3: autonomous acquisition without a supplied transition curriculum
-
-P3 adds a phase-native acquisition selector that gives intrinsic value to unmodelled actions and propagates deeper frontier novelty backward through **the same acquired successor synapses**. In the reset-chain test family, wrong actions reset the environment to the start, so the organism must reuse already learned transitions to deliberately return to deeper unknown states.
-
-The first one-use FRESH-P3 authority run `37528857872` at source `52bbbc2654894bbaf8501e6834757dff25f1e242` passed its frozen contract:
-
-- cold FULL acquisition **80/80**, Wilson95 [0.954182,1.000000];
-- held-out frozen exploitation **80/80**;
-- restore into a newly constructed EvoPhase and solve again **80/80**;
-- DIRECT_ONLY **9/80**, seeded random **35/80**;
-- no-learning / no-growth / zero-phase / zero-weight controls **[0,0,9,2]/80**;
-- changed-law detour repair **78/80**, while frozen stale copies scored **0/80**;
-- revised solve + checkpoint restore **78/78**;
-- mean initial acquisition cost **20.075** physical interactions;
-- mean changed-law repair cost **16.462**;
-- legacy graph transition table remained absent.
-
-This is the first bounded result in this line where the tested transition experience is **not handed in as a prepared curriculum**. The organism chooses the physical acquisition actions itself and learns only from their factual consequences.
-
-It is still not general intelligence: the intrinsic frontier-novelty rule is hand-specified, worlds are deterministic and fully observed, and the tested family is narrow. See [P3 protocol](docs/PHASE_NATIVE_P3_PROTOCOL.md), [fresh protocol](docs/PHASE_NATIVE_P3_FRESH_PROTOCOL.md), and [P3 result](docs/PHASE_NATIVE_P3_RESULT.md). The authority pack `c9a3d25d6f64c483` is permanently burned.
-
-
-### P4: learned exploration drive instead of fixed target curiosity
-
-P4 learns the behavioral value of two generic epistemic substrate features — DIRECT_UNMODELLED and REACHABLE_FRONTIER — from factual changes in AETERNA's own phase-native model. Only the learned drive checkpoint transfers between cold organisms; source-world receptors, circuits and sensory patterns do not.
-
-The deterministic mechanism preflight (`37530869041`) produced LEARNED_DRIVE 12/12 versus ZERO_DRIVE 0/12, frontier-lesion 0/12, zero-phase-drive 0/12 and seeded random 6/12.
-
-The first valid one-use FRESH-P4 run `37531676452` at source `3795f3865f90dbff1942ffbc7d450aba24b2b66d` passed the frozen contract:
-
-- FULL_LEARNED_DRIVE **80/80**, Wilson95 [0.954182,1.000000];
-- every sub-seed **8/8**;
-- ZERO_DRIVE **0/80**;
-- FRONTIER_LESION **7/80**;
-- ZERO_PHASE_DRIVE **0/80**;
-- RANDOM_ACTION **18/80**;
-- P3 teacher ceiling **80/80**;
-- FULL mean acquisition cost **24.087** vs lesion **55.700**, zero-phase **60.000**, random **52.062**;
-- pack digest `47b2a86ebe50dc8f`;
-- target drive weights were frozen;
-- every target began with zero world receptors/circuits and zero legacy graph transitions.
-
-The drive therefore transfers as a learned way of valuing experience rather than a memorized route. The epistemic feature vocabulary itself is still inherited. This is not general curiosity or general intelligence.
-
-See [P4 protocol](docs/PHASE_NATIVE_P4_PROTOCOL.md), [fresh P4 protocol](docs/PHASE_NATIVE_P4_FRESH_PROTOCOL.md), and [P4 result](docs/PHASE_NATIVE_P4_RESULT.md).
-
-
-### P5: one persistent organism across several changing worlds
-
-P5 keeps a single target EvoPhase alive while it acquires four distinct reset-chain worlds in sequence. No evaluator world/task ID enters cognition and no per-world checkpoint is swapped in during acquisition or retention.
-
-The first preflight exposed a genuine lifetime bug rather than a test-tuning issue. Old A synapses remained unchanged after B learning, but shared raw sensory-cell phases drifted by +0.01 on every observation, invalidating the phase coherence of long-lived P2 decoder offsets. In phase-native mode, REAL input now changes sensory charge without permanently moving the intrinsic sensory phase reference; adaptation remains in synaptic parameters.
-
-Workflow `37534699260` passed the fixed preregistered mechanism:
-
-- persistent A/B/C/D acquisition costs **[9,24,12,20]**;
-- retention revisit cost **34** actions;
-- changed-B repair **9** actions;
-- receptors grow **[4,9,13,18]**, circuits **[7,19,27,38]**;
-- ZERO_DRIVE_PERSISTENT **0/4**;
-- NO_GROWTH_PERSISTENT **0/4**;
-- a full post-lifetime checkpoint restored A/revised-B/C/D in a newly constructed EvoPhase;
-- full optimized regressions and Release build PASS.
-
-The subsequent one-use FRESH-P5 run `37569003124` statistically qualified this bounded continual-learning result: primary **80/80**, acquisition **40/40**, intermediate revisits **100/100**, changed-world repair **10/10**, post-change retention **40/40**, checkpoint restore **40/40**; FROZEN_CHANGED **0/10**, RESET_BETWEEN earlier retention **0/30**, ZERO_DRIVE **1/40**, NO_GROWTH **0/40**. See [P5 protocol](docs/PHASE_NATIVE_P5_PROTOCOL.md), [fresh protocol](docs/PHASE_NATIVE_P5_FRESH_PROTOCOL.md), [mechanism result](docs/PHASE_NATIVE_P5_RESULT.md) and [fresh result](docs/PHASE_NATIVE_P5_FRESH_RESULT.md).
-
-### G10: autonomous composite concept construction
-
-G10 now has a deterministic mechanism PASS. From raw scenes containing two local motifs, AETERNA acquires reusable lower-level relation atoms and promotes new composite concepts only when joint factual evidence is strong while each child remains individually non-predictive.
-
-Workflow `37569651485`: FULL **8/8**, matched NO_CONSTRUCTION **4/8**, NO_READOUT **4/8**, with both opaque motor permutations. The composites store acquired child atom IDs rather than evaluator labels, and transfer to unseen absolute motif bindings. Full regressions and Release build passed.
-
-The subsequent one-use FRESH-G10 run `37570124870` qualified the bounded claim: FULL **80/80**, NO_CONSTRUCTION **40/80**, NO_READOUT **40/80**, zero atom-inventory mismatches, child evidence 0.0 and winning composite evidence 1.0 across 10 authority-sampled atom/pair packs. This is still bounded concept construction, not unrestricted concept invention. See [G10 protocol](docs/G10_COMPOSITE_CONCEPT_PROTOCOL.md), [numeric freeze](docs/G10_COMPOSITE_CONCEPT_IMPLEMENTATION_SPEC.md), [fresh protocol](docs/G10_COMPOSITE_CONCEPT_FRESH_PROTOCOL.md), [mechanism result](docs/G10_COMPOSITE_CONCEPT_RESULT.md), and [fresh result](docs/G10_COMPOSITE_CONCEPT_FRESH_RESULT.md).
-
-### G10-PHYS: physical composite execution
-
-The post-G10 ownership audit correctly found a gap: standalone concept memory and a zero-physical carrier still solved 8/8, so the original G10 readout was not physically phase-dependent. That negative witness is preserved.
-
-The strengthened G10-PHYS path moves pair evidence, promotion and action influence into actual EvoPhase cells/synapses. Workflow `37571372722` passed: intact **8/8**, necessary synapse lesion **6/8**, pi phase shift **6/8**, exact restoration **8/8**, unrelated target **2/2**, while ZERO_PHASE, ZERO_WEIGHT, NO_CAPACITY and NO_GROWTH were all **0/8**. The dedicated table composite inventory/readout is unused in this physical path.
-
-FRESH-G10-PHYS is the active evidence gate.
-
-### G11: recursive physical abstraction
-
-G11 now has a mechanism PASS: a physical concept acquired at level 1 can itself become a physical child of a newly acquired level-2 concept. Workflow `37577562551` produced FULL **8/8**, NO_RECURSION **0/8**, LEVEL1_ONLY **4/8**, with causal loss under both L1->L2 and lower atom->L1 lesions. ZERO_PHASE, ZERO_WEIGHT and NO_GROWTH were **0/8**.
-
-The first G11 preflight also exposed and preserved a useful architectural defect: concept promotion was dependent on curriculum order. The substrate now re-evaluates supported candidates after every new fact, so late evidence can trigger abstraction without replaying the candidate itself.
-
-FRESH-G11 has now passed on 80/80 fresh recursive decisions: NO_RECURSION 0/80, LEVEL1_ONLY 40/80, ZERO_PHASE/ZERO_WEIGHT/NO_GROWTH 0/80, necessary lesions 0/20 and exact restores 20/20. The next architectural gap is no longer whether recursion works, but whether AETERNA can autonomously decide **when a new abstraction level is worth creating**.
-
-### G12: self-triggered abstraction
-
-G12 has a mechanism PASS: the ordinary factual concept-learning path can keep using a sufficient L1 explanation, allocate zero L2 structures while it remains adequate, then detect later supported residual failure and autonomously recruit/promote L2 physical concepts without an evaluator task-phase signal or explicit recursive-tuition call.
-
-Workflow `37590743597`: FULL_AUTO **8/8**, NO_ESCALATION **0/8**, FROZEN_SIMPLE **0/8**, ZERO_PHASE/ZERO_WEIGHT **0/8**, necessary lesion **6/8**, pi phase shift **6/8**, exact restore **8/8**. FULL used **0** pre-residual L2 candidates versus **4** for ALWAYS_ESCALATE.
-
-FRESH-G12 has now passed: FULL_AUTO **80/80**, all four matched failure controls **0/80**, zero premature FULL L2 allocation across all 10 seeds, first L2 candidate exactly at the first supported-weak observation in every seed, necessary lesion/phase **0/20**, exact restore **20/20**. This statistically qualifies bounded evidence-driven self-triggered L1→L2 escalation.
-
-### G13: depth-generic physical abstraction
-
-G13 now has a qualifying mechanism PASS on the preregistered 20x20 substrate. One generic physical higher-abstraction engine is reused to build **16 raw relation atoms → 8 L1 concepts → 4 L2 nodes → 2 L3 nodes**.
-
-Workflow `37603203990`: FULL **8/8**, MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH **0/8**, necessary L2→L3 lesion **4/8**, pi phase shift **4/8**, exact restore **8/8**, lower L1→L2 lesion dependent success **0/2**. Full regressions and Release passed.
-
-The earlier 40x40 green run is retained as non-qualifying protocol drift. FRESH-G13 has passed: FULL **80/80**, MAX_LEVEL2 / NO_HIGHER_ENGINE / ZERO_PHASE / ZERO_WEIGHT / NO_GROWTH **0/80**, necessary lesion and pi phase shift **0/20**, exact restore **20/20**, with zero hierarchy-reference violations across 10 fresh authority-selected hierarchies. The next gate is self-selected abstraction depth rather than externally supplied task depth.
-
-### G14: self-selected abstraction depth
-
-G14 removes task-supplied abstraction depth from ordinary cognition. The same no-argument open-depth physical engine has safety ceiling 16 but stops at L2 when L2 is sufficient and grows to L3 only when evidence makes L2 insufficient.
-
-Fresh run `37605704724`: SIMPLE **40/40** with every seed stopping at L2 and zero L3 candidates; DEEP **80/80** with every seed growing to L3 and zero L4 candidates; CAP_LEVEL2 / NO_HIGHER_ENGINE **0/80**; necessary lesion and pi phase shift **0/20**; exact restore **20/20**.
-
-The next gate is G15 abstract model-based planning: learned abstractions must become reusable states of the physical future model.
-
-### G15: abstract model-based planning
-
-G15 has a mechanism PASS connecting acquired physical abstractions to multi-step future-directed choice. Acquired L2 cells are direct endpoints of the same phase-native P1 transition/value circuits; no host graph planner is introduced.
-
-Workflow `37608846717`: FULL **8/8** with depth >=3 on every success, DEPTH1 **0/8**, NO_ABSTRACT_MODEL **0/8**, broken abstract-state/transition/pi-phase **0/8**, exact restore **8/8**, irrelevant lesion **2/2**. Full regressions and Release passed.
-
-The active evidence gate is FRESH-G15 across new hierarchies, raw bindings and delayed route lengths.
-
-### G16: autonomous abstract model acquisition
-
-G16 has a mechanism PASS. A target starts with acquired abstract states and a transferred learned exploration drive but zero target transition circuits. It autonomously interacts, grows the physical abstract model, discovers delayed reward, freezes learning, plans correctly on held-out raw bindings, and retains the model across restart.
-
-Workflow `37614779191`: reward **12/12**, held-out plan **12/12**, restart plan **12/12**; ZERO_DRIVE/FRONTIER_LESION/DIRECT_ONLY **0/12**; mean first-delayed-reward cost **32.000** against frozen <=45. FRESH-G16 has now passed: delayed reward discovery **40/40**, held-out planning **80/80**, restart planning **40/40**, mean acquisition cost **31.575** vs frozen <=45; ZERO_DRIVE **0/40**, FRONTIER_LESION **1/40**, DIRECT_ONLY **1/40**, RANDOM **2/40**, with zero ownership/persistence violations. The next intelligence gate is goal-conditioned active reasoning.
-
-### Human Protection v1
-
-A non-learned final physical-action authorization boundary is now integrated. Human-affecting actions with predicted harm >1%, hazard confidence <90%, invalid evidence, or an emergency-stop condition are blocked. Emergency stop latches across cognitive checkpoint restore and can be cleared only through an explicit external human-reset API.
-
-The protection layer produces a sealed permit only for allowed proposals. Human Protection v1.1 additionally makes that permit a **single-use actuator permit**: it is non-Clone/non-Copy, bound to the current screening sequence, invalidated by later screening or emergency stop, and consumed through the protection gate. It is independent of planner reward, exploration drive, concepts and learned transitions. The repository does not yet contain person-detection/collision sensors or an authenticated hardware actuator adapter; those remain deployment requirements.
-
-### G17: explicit goal-conditioned planning
-
-G17 has a mechanism PASS. A raw goal observation resolves to an acquired physical abstract goal cell; that cell is seeded only in imagined state and value propagates backward through the already learned zero-reward abstract transition model.
-
-Workflow `37617083481`: FULL **8/8**, DEPTH1 **0/8**, NO_GOAL **0/8**, opposite-goal cue follows the other goal **8/8**, broken goal/route/pi **0/4**, exact restore **8/8**. The same world-model therefore changes action when only the goal changes.
-
-FRESH-G17 is the active evidence gate.
-
-## Non-negotiable rule
-
-EvoPhase is the cognitive substrate, not a planner plugin.
-
-Rust may implement substrate physics and the trusted shell (I/O, persistence, serialization, provenance, safety and exact verification), but Rust must not contain hidden task answers or perform task-level cognition on behalf of the organism.
-
-The following adaptive state must be EvoPhase-owned:
-
-- learned sensory distinctions and representations;
-- concepts and relations;
-- predictive hypotheses and rival models;
-- reusable skills / programs and their composition;
-- experiment selection;
-- imagined rollouts and planning state;
-- action policy;
-- revision after factual counterexamples;
-- structural growth, retirement and reuse.
-
-No LLM is used by the runtime.
-
-## Acceptance chain
-
-A capability is accepted only when the same ordinary organism demonstrates:
-
-```text
-raw experience
-  -> EvoPhase-owned state change
-  -> new prediction / program / experiment / plan
-  -> changed physical action
-  -> factual external result
-  -> revision of the same EvoPhase-owned structure
+Исследовательский runtime на Rust без LLM. EvoPhase приобретает модели из
+фактических действий, использует их для прогноза и выбора действия, пересматривает
+противоречивые знания и сохраняет состояние на диск.
+
+`main` содержит квалифицированную базовую версию INTEL-4 и навигацию проекта.
+Новые режимы находятся в **`research/beyond-intel4`**. INTEL-4 подтвердил работу
+в ограниченном семействе пяти детерминированных синтетических миров. Общий
+интеллект и автономная работа в шумном открытом мире пока не подтверждены.
+
+## Что можно запустить
+
+| Режим | Возможности | Пример |
+|---|---|---|
+| [Online](docs/ONLINE_LEARNING.md) | Обучение с нуля на сырых числовых сенсорах, переходы и checkpoint | `online_learning` |
+| [Приобретённые правила](docs/LEARNED_RULES.md) | Перенос круговых преобразований на новые значения, выбор эксперимента | `learned_rules` |
+| [Расширенные формулы](docs/EXPANDED_RULES.md) | Константы, коэффициенты ±2/±3, суммы и разности каналов | `expanded_rules` |
+| [Частичные наблюдения](docs/PARTIAL_OBSERVATION.md) | Отсутствующие каналы, несколько объяснений, дополнительное измерение | `partial_observation` |
+| [Обратный вывод](docs/INVERSE_INFERENCE.md) | Восстановление скрытых операндов и сохранение всех модульных решений | `inverse_inference` |
+| [Условное обучение](docs/ADAPTIVE_RULES.md) | Пороговые условия, ограниченный шум, смена и возврат законов | `adaptive_learning` |
+
+Параметры правил хранятся в общих фазовых связях. Подбор гипотез и ограниченный
+поиск плана выполняются программно. Обратный вывод расширяет режим частичных
+наблюдений; условное обучение использует полные наблюдения. Проверки этих
+режимов описаны в соответствующих руководствах.
+
+## Быстрый старт
+
+Нужны Git, Rust 1.99.0, Bash и Python 3. В исследовательской ветке Rust закреплён
+в `rust-toolchain.toml`, зависимости — в `Cargo.lock`.
+
+```bash
+git clone https://github.com/kelbas2007/Aeterna-v1.git
+cd Aeterna-v1
+git switch research/beyond-intel4
+cargo fetch --locked
+cargo check --locked --all-targets
+bash scripts/check.sh
+bash scripts/demo.sh
 ```
 
-Matched controls must preserve raw observations, primitive substrate, factual outcomes and resource limits while disabling only the mechanism under test.
+`check.sh` запускает обычные регрессии и причинные проверки. `demo.sh` запускает
+все шесть примеров: каждый обучается и восстанавливается в отдельных процессах.
+Файлы знаний сохраняются в новой временной папке; её путь печатается в конце.
+[Проверка объединённой разработки](docs/DEVELOPMENT_VALIDATION.md): 127 успешных
+тестовых запусков и все шесть примеров; компиляция всех целей прошла.
 
-## Current branch
+Для одного примера используйте новый путь к checkpoint:
 
-Development is on **`main`**, following the owner's merge of `genesis/full-evophase`.
+```bash
+cargo run --locked --release --example inverse_inference -- learn /tmp/aeterna-inverse.json
+cargo run --locked --release --example inverse_inference -- run /tmp/aeterna-inverse.json
+```
 
-Historical capability measurements and failed packs are retained in [STATUS.md](STATUS.md) and [EXPERIMENT_LEDGER.md](EXPERIMENT_LEDGER.md). The [phase-execution audit result](docs/PHASE_EXECUTION_AUDIT_RESULT.md) qualifies their architectural interpretation; it does not erase them. The separate P1–P5 result records document bounded phase-native checkpoints without rewriting that history.
+`learn` отказывается перезаписывать существующий файл. `run` восстанавливает
+знания, замораживает обучение и получает свежее фактическое наблюдение.
+Checkpoint v5 читает также сохранённые модели v1–v4.
 
-P3 closes the prepared-transition-curriculum gap for one deterministic family. P4 closes the fixed target frontier-valuation gap. P5 now has a fresh statistical qualification for bounded continual retention/revision in one persistent organism. G10 now has a fresh statistical PASS for bounded autonomous composite-concept construction. The next ownership gate is to make composite activation/readout causally depend on acquired physical phase cells/synapses rather than only a dedicated EvoPhase-owned concept structure.
+## Результаты и границы
 
-Status: **research implementation; no AGI claim or production promotion**. CI is manual-only. Any future fresh qualification requires a newly frozen source/spec and a new first-attempt authority run.
+- [INTEL-4](docs/INTEL4_RESULT_PASS.md): независимый PASS в замороженном ограниченном детерминированном семействе.
+- [FRONTIER-1](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/FRONTIER1_RESULT_FAIL1.md): независимый FAIL, 40/80 шумных латентных решений.
+- [TE4 и TE5](PROJECT_MAP.md): отдельные физические механизмы работают после подготовленного опыта; холодный стохастический тест остаётся FAIL.
+- [Обратный вывод](docs/INVERSE_INFERENCE.md): открытая development-проверка — 256/256 целей против 128/256 у циклического алгоритма при одинаковом бюджете действий.
+- [Условные правила](docs/ADAPTIVE_RULES.md): 256/256 новых целей против 0/256 у модели без условий; непрерывное обучение A → B → A и проверка ограниченной памяти.
+
+Последние два результата относятся к открытым синтетическим тестам разработки.
+Они не меняют прежние научные вердикты. Выведенные значения остаются воображаемыми;
+достижение цели требует фактического измерения. Память ограничена числом моделей,
+примеров и физических связей; это ещё не универсальная база текстовых знаний.
+
+## Где что находится
+
+| Ветка | Назначение |
+|---|---|
+| `main` | Квалифицированная база INTEL-4, актуальное описание и документация |
+| `research/beyond-intel4` | Активная разработка, новые режимы и автоматические обычные регрессии |
+| `intel4-frozen-unified` | Замороженный независимый научный снимок INTEL-4 |
+| `archive/evidence-20261008` | Сохранённая история прежних экспериментальных веток |
+
+[Карта проекта](PROJECT_MAP.md) · [Каталог документации](docs/README.md) ·
+[Текущий статус](STATUS.md) · [Правила внесения изменений](CONTRIBUTING.md) ·
+[Журнал экспериментов](EXPERIMENT_LEDGER.md)
+
+Прежний подробный README сохранён в [исторической документации](docs/HISTORICAL_README.md).
+Отдельный проект Codex-AETERNA не изменялся.

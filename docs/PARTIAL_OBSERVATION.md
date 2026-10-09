@@ -30,7 +30,7 @@ cargo run --locked --release --example partial_observation -- run /tmp/aeterna-p
 видимый канал; после настоящего измерения модель перепланирует и достигает
 цели ещё за два действия. `run` загружает тот же файл в отдельном процессе,
 отключает обучение и повторяет задачу. Код внешнего мира находится только
-в [примере](../examples/partial_observation.rs); планировщик его не вызывает.
+в [примере](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/examples/partial_observation.rs); планировщик его не вызывает.
 
 Локальный запуск действительно выполнен в двух отдельных процессах:
 
@@ -133,7 +133,7 @@ Checkpoint v5 сохраняет правила, фазовые параметр
 
 ## Проверки и границы результата
 
-[tests/partial_observation.rs](../tests/partial_observation.rs) содержит
+[tests/partial_observation.rs](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/tests/partial_observation.rs) содержит
 11 development-тестов:
 
 | Проверка | Результат |

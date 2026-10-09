@@ -1,16 +1,18 @@
 # AETERNA-v1 — project map
 
-Updated 2026-10-08. **Exactly four GitHub branches remain.** This is the separate EvoPhase/no-LLM research repository, **not** the mature Codex-AETERNA project.
+Updated 2026-10-09. Four maintained GitHub branches have distinct roles. This is the separate EvoPhase/no-LLM research repository. The mature Codex-AETERNA project is separate.
 
 ## Start here
 
 - **[Verified INTEL-4 evidence](docs/INTEL4_RESULT_PASS.md)** — first complete independently seeded frozen five-world deterministic system PASS, [Actions 37821849040](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37821849040). Does **not** establish general AGI.
 - **[Current status](STATUS.md)** — qualifications and unresolved capabilities.
+- **[Documentation index](docs/README.md)** — current modes, library guides, scientific evidence and historical records.
+- **[Development workflow](CONTRIBUTING.md)** — branch roles and ordinary checks.
 - **[INTEL-4 preregistration](docs/INTEL4_PROTOCOL.md)** and [frozen cognitive source](docs/INTEL4_CORE_FREEZE.md).
 - **[Research ledger](EXPERIMENT_LEDGER.md)** — historical PASS/FAIL/INVALID events retained.
 - **[FRONTIER-1 new-world protocol](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/FRONTIER1_PROTOCOL.md)** and [first sealed FAIL](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/FRONTIER1_RESULT_FAIL1.md).
 
-## Git branches — now only four
+## Maintained branches
 
 | Branch | Meaning |
 |---|---|
@@ -18,6 +20,30 @@ Updated 2026-10-08. **Exactly four GitHub branches remain.** This is the separat
 | `intel4-frozen-unified` | **Immutable scientific snapshot** — original sealed independent INTEL-4 evidence |
 | `research/beyond-intel4` | **Only active research branch** — structurally new stochastic/partial-observation tasks and future architectural prototypes |
 | `archive/evidence-20261008` | **Complete history** — single 13-parent commit anchoring every pre-cleanup experimental branch head |
+
+## Current development — 2026-10-09
+
+The research branch now combines the latest TE5 source with six opt-in learning
+modes: [raw online acquisition](docs/ONLINE_LEARNING.md),
+[acquired rules](docs/LEARNED_RULES.md),
+[expanded formulas](docs/EXPANDED_RULES.md),
+[partial observations](docs/PARTIAL_OBSERVATION.md),
+[inverse inference](docs/INVERSE_INFERENCE.md) and
+[conditional/noisy continual learning](docs/ADAPTIVE_RULES.md).
+
+On `research/beyond-intel4`, run `bash scripts/check.sh` for ordinary regressions
+and `bash scripts/demo.sh` for all six learn/restore demonstrations. Development
+CI runs on research pushes and pull requests; documentation links are checked on
+both maintained working branches. Main CI verifies its exact frozen cognitive
+source and runs ordinary baseline regressions. Historical authority workflows
+remain separate.
+
+The numeric rule modes combine acquired physical phase parameters with software
+hypothesis fitting and bounded search. Partial inverse inference and full-observed
+noisy conditional learning remain separate modes. Their development results do
+not promote a new scientific gate or change the frozen INTEL-4 evidence. The main
+cognitive source remains the qualified baseline; its guides link to current
+research code.
 
 ## Housekeeping complete
 
@@ -29,7 +55,7 @@ Exact old branch SHAs and their recovery procedure: [ARCHIVE_MANIFEST.md](https:
 
 ## Next scientific boundary
 
-INTEL-4 established bounded adaptive behavior across deterministic A–E families. It did **not** qualify long noisy inference. The first different-family test **FRONTIER-1** independently failed: 40/80 correct latent decisions, zero repeated sensing, last noisy-cue oracle 56/80 and 8-cue majority oracle 69/80. Do not relabel or patch its consumed authority seed. The research branch now has three physically tested components:
+INTEL-4 established bounded adaptive behavior across deterministic A–E families. It did **not** qualify long noisy inference. The first different-family test **FRONTIER-1** independently failed: 40/80 correct latent decisions, zero repeated sensing, last noisy-cue oracle 56/80 and 8-cue majority oracle 69/80. Do not relabel or patch its consumed authority seed. The research branch contains these physically tested components and cold diagnostics:
 
 - **[TE1 physical temporal evidence](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE1_RESULT.md):** causal phase-synapse memory, but strict noisy holdout **FAIL 63/80** versus a predeclared 70/80 threshold; 11 tied-evidence abstentions.
 - **[TE2 sensory affordance](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE2_RESULT.md):** learned the observation-producing opaque motor from balanced factual experience in 6/6 assignments; physical lesion/π/checkpoint controls.
