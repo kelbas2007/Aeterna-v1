@@ -538,3 +538,18 @@ Follow-up design **must not modify the consumed FRONTIER-1 scoring pack or relab
 | TE3 opt-in unified protected sensory choice | `37837182177` | **MECHANISM PASS**, U1 chose a previously acquired sensor motor in all 6/6 verified protected action/fact cases; C/G20–G23/U1–U3/Human Protection/Release PASS | No independently qualified cold discovery/hidden-mode commitment or full stochastic generalization |
 
 The original FRONTIER-1 sealed FAIL (40/80; zero sensing) remains unchanged. TE1–TE3 live only on `research/beyond-intel4`; qualified `main` still uses the frozen INTEL-4 cognitive source. Full TE3 report: https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE3_RESULT.md.
+
+## Later temporal diagnostics and bounded rule development — 2026-10-09
+
+| Line | Recorded result | Scope |
+|---|---|---|
+| TE4 cold autonomous discovery | **DEVELOPMENT_FAIL**, holdouts 40/80, 55/80, 40/80, 38/80 | No matched motor tuition; cold noisy decisions did not meet the contract. [Original result](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE4_RESULT_FAIL.md) |
+| TE5 belief-conditioned action | Prepared associations 12/12 and revisions 12/12; protected U1 sensing→commit 6/6, workflow `37842428971` | Physical mechanism with prepared experience. Unchanged burned TE4 replay remains **FAIL**, 40/80, 55/80, 40/80, 40/80. [Original result](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE5_RESULT.md) |
+| Inverse circular inference | Open development comparison 256/256 versus forward-only 127/256 and cyclic 128/256 | 32 worlds, 256 goals, same two-action budget; confirmed rules plus factual partial POST; multiple roots retained. [Guide](docs/INVERSE_INFERENCE.md) |
+| Conditional/noisy rules | Open development comparison 256/256 versus global model 0/256 | 16 worlds; same rule language, 256 factual acquisition actions per arm and one action per goal. [Guide](docs/ADAPTIVE_RULES.md) |
+| Continual bounded models | A → B → A in one uninterrupted 768-action lifetime; 32/32 changed and 32/32 recalled goals; fixed topology after 2048 actions | Bounded examples and model slots; checkpoint 81,881 bytes in the tested memory fixture. Software fitting/search with physical parameter readout; no general text knowledge claim. [Guide](docs/ADAPTIVE_RULES.md) |
+
+The six opt-in modes are implemented in development commit `1c89e96` and
+integrated with TE5 upstream `3e6fe616`. These open synthetic development tests
+are separate from independent authority qualification. The main cognitive tree
+and every prior scientific PASS/FAIL/INVALID record retain their original scope.

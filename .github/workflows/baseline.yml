@@ -1,0 +1,52 @@
+name: Qualified baseline regressions
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qualified-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify qualified cognitive source
+        run: |
+          git fetch --no-tags origin c7b5455ba006b297288fa8d16ef6300c8a19ceca --depth=1
+          git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Check compilation targets
+        run: cargo check --all-targets
+      - name: Run ordinary physical and unified regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            cargo test --release --test g20_continual_reasoning --test g21_contextual_state_refinement --test g22_perceptual_variable_invention --test u1_meta_control --test u2_hypothesis_ecology --test u3_cross_mechanism_allocation --test human_protection
+            cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+            cargo test --release --test e_model_revalidation e_model_revalidation_depends_on_factual_local_support -- --exact
+            cargo test --release --test e_model_revalidation e_goal_route_coverage_comes_from_acquired_physical_successors -- --exact
+            cargo build --release
+          } 2>&1 | tee baseline.log
+      - name: Preserve baseline regression output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qualified-baseline-log
+          path: baseline.log
+          if-no-files-found: ignore

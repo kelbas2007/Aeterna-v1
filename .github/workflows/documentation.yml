@@ -1,0 +1,20 @@
+name: Documentation links
+
+on:
+  pull_request:
+    paths: ['**/*.md', 'scripts/check_docs.py', '.github/workflows/documentation.yml']
+  push:
+    branches: [main, research/beyond-intel4]
+    paths: ['**/*.md', 'scripts/check_docs.py', '.github/workflows/documentation.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check local Markdown targets
+        run: python3 scripts/check_docs.py
