@@ -4,8 +4,7 @@
 // no matched sensory/terminal tuition. Reports failures without relabeling them
 // as passing cognition. Target thresholds are fixed below before the run.
 include!("intel2_unified_worlds.rs");
-use aeterna_v1::carrier::{PhaseTemporalEvidenceConfig,PhaseHypothesisEcologyConfig};
-use aeterna_v1::scientific_runtime::{ScientificRuntime,StepOutcome};
+use aeterna_v1::carrier::PhaseTemporalEvidenceConfig;
 
 #[derive(Clone,Copy)]
 struct ColdRoles {
