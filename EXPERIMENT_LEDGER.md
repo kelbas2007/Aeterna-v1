@@ -553,3 +553,24 @@ The six opt-in modes are implemented in development commit `1c89e96` and
 integrated with TE5 upstream `3e6fe616`. These open synthetic development tests
 are separate from independent authority qualification. The main cognitive tree
 and every prior scientific PASS/FAIL/INVALID record retain their original scope.
+
+## Combined uncertainty and external measurements — 2026-10-09
+
+These are open development experiments. The code and corpus were available
+during development; no sealed authority qualification or repaired historical
+verdict is claimed.
+
+| Experiment | Observed result | Budget and scope |
+|---|---|---|
+| Circular interval inverse | All ±2/±3 roots retained; joint sum/difference recovered both modular alternatives; dependent equations remained continuous | Learned noisy physical parameters; independent dense 257²-state evaluator; cap and operation exhaustion widen instead of dropping alternatives. [Guide](docs/UNCERTAIN_LEARNING.md) |
+| Mixed noisy partial continual learning | One A → B → A lifetime, model archive and recall; 768 actual actions with a hidden channel every 17th POST | Numeric tuition only from actual full PRE/POST. An additional 2048 actual actions kept 29 cells / 420 synapses, bounded evidence and hypotheses. No general text memory claim. |
+| Recorded Iris binary tasks | **108/120 phase vs 111/120 matched stump**; phase sensing first 120/120, one incorrect commitment, eleven abstentions | 707 actual acquired tuition actions across three cold organisms; 120 binary tasks reuse 60 distinct held-out plants; at most two actions and one terminal choice per task. Frozen fingerprint unchanged. [Full comparison](docs/IRIS_BENCHMARK.md) |
+
+The initial prototype exploited a premature constant model and scored 20/40
+on the first Iris pair. Development added a bounded generic per-motor exposure
+quota and reproducible tie mixing to prevent synchronization of motor order
+with the example stream. A fixed neutral input also produced unidentifiable
+constant/copy models, so the benchmark varies it independently. These exposed
+development outcomes are not independent preregistered trials. The final
+comparison retains the simple comparator's higher total, rather than claiming
+general superiority or promoting an intelligence gate.

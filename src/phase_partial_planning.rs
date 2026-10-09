@@ -136,6 +136,9 @@ impl EvoPhase {
     /// Frozen model may gather factual state information using supported
     /// actions. It cannot learn a new motor law or output mask in that mode.
     pub fn phase_partial_decision(&self, goal: &[Option<f32>]) -> Option<PhasePartialDecision> {
+        if self.phase_uncertain_observation_enabled() {
+            return self.phase_uncertain_decision(goal);
+        }
         let native = self.phase_native.as_ref()?;
         let partial = native.partial.as_ref()?;
         partial.episode.as_ref()?;

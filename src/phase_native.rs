@@ -239,6 +239,9 @@ impl EvoPhase {
         if let Some(partial) = state.partial.as_ref() {
             // Beliefs and visible frames are transient inference, not learned parameters.
             text.push_str(&format!("|{:?}|{:?}|{}|{}", partial.config, partial.masks, partial.factual_sequence, partial.inverse_enabled));
+            if let Some(config) = partial.uncertainty.as_ref() {
+                text.push_str(&format!("|{:?}", config));
+            }
         }
         for byte in text.bytes() {
             h ^= u64::from(byte);
@@ -725,6 +728,8 @@ include!("phase_online_rule_planning.rs");
 include!("phase_partial_observation.rs");
 include!("phase_inverse_inference.rs");
 include!("phase_partial_planning.rs");
+include!("phase_uncertain_observation.rs");
+include!("phase_uncertain_planning.rs");
 include!("phase_online_checkpoint.rs");
 include!("phase_forward.rs");
 include!("phase_concept.rs");

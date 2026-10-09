@@ -1,7 +1,7 @@
 // Versioned, data-only persistence for the online mode. Neither REAL input nor
 // actuator authority is serialized. No code or external paths are evaluated.
 
-const ONLINE_CHECKPOINT_VERSION: u32 = 5;
+const ONLINE_CHECKPOINT_VERSION: u32 = 6;
 const ONLINE_CHECKPOINT_MAX_BYTES: usize = 16 * 1024 * 1024;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -239,7 +239,7 @@ impl OnlineSnapshot {
             }
             if let Some(adaptive) = &rules.adaptive {
                 if rules.factual_sequence != 0
-                    || self.partial.is_some()
+                    || self.partial.as_ref().is_some_and(|p| p.uncertainty.is_none())
                     || !adaptive.config.valid()
                     || adaptive.actions.len() != cfg.motor_cells
                     || adaptive.factual_sequence == u64::MAX
@@ -393,6 +393,11 @@ impl OnlineSnapshot {
         if let Some(partial) = &self.partial {
             if self.rules.is_none()
                 || (self.version < 5 && partial.inverse_enabled)
+                || (self.version < 6 && partial.uncertainty.is_some())
+                || partial.uncertainty.as_ref().is_some_and(|c| {
+                    !c.valid()
+                        || !self.rules.as_ref().is_some_and(|r| r.adaptive.is_some())
+                })
                 || !partial.config.valid()
                 || partial.masks.len() != cfg.motor_cells
                 || partial.factual_sequence == u64::MAX

@@ -41,6 +41,7 @@ struct PhasePartialEpisode {
     invalid_rules: Vec<bool>,
     invalid_masks: Vec<bool>,
     inverse: Option<PhaseInverseReport>,
+    uncertain: Option<PhaseUncertainEpisode>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -51,6 +52,8 @@ struct PhasePartialState {
     factual_sequence: u64,
     #[serde(default)]
     inverse_enabled: bool,
+    #[serde(default)]
+    uncertainty: Option<PhaseUncertainConfig>,
     #[serde(skip)]
     episode: Option<PhasePartialEpisode>,
 }
@@ -132,6 +135,7 @@ impl EvoPhase {
                 .collect(),
             factual_sequence: 0,
             inverse_enabled: false,
+            uncertainty: None,
             episode: None,
         });
         self.current_real = None;
@@ -190,6 +194,9 @@ impl EvoPhase {
         if !partial_vector_valid(observation, self.config.sensory_cells) {
             return false;
         }
+        if self.phase_uncertain_observation_enabled() {
+            return self.observe_phase_uncertain_initial(observation);
+        }
         let Some(partial) = self.phase_native.as_mut().and_then(|s| s.partial.as_mut()) else {
             return false;
         };
@@ -200,12 +207,16 @@ impl EvoPhase {
             invalid_rules: vec![false; self.config.motor_cells],
             invalid_masks: vec![false; self.config.motor_cells],
             inverse: None,
+            uncertain: None,
         });
         self.current_real = None;
         true
     }
 
     pub fn phase_partial_goal_reached(&self, goal: &[Option<f32>]) -> bool {
+        if self.phase_uncertain_observation_enabled() {
+            return self.phase_uncertain_goal_reached(goal);
+        }
         let Some(native) = self.phase_native.as_ref() else {
             return false;
         };
@@ -330,6 +341,9 @@ impl EvoPhase {
         action: usize,
         post: &[Option<f32>],
     ) -> Option<PhasePartialUpdate> {
+        if self.phase_uncertain_observation_enabled() {
+            return self.observe_phase_uncertain_result(action, post);
+        }
         if !partial_vector_valid(post, self.config.sensory_cells) {
             return None;
         }
@@ -422,6 +436,7 @@ impl EvoPhase {
             invalid_rules,
             invalid_masks,
             inverse,
+            uncertain: None,
         });
         self.current_real = None;
         Some(PhasePartialUpdate {

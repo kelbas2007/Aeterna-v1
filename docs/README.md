@@ -14,10 +14,14 @@ Start with [the README](../README.md), [project map](../PROJECT_MAP.md) and
 | [Partial observation](PARTIAL_OBSERVATION.md) | Explicit missing channels, conservative alternatives and factual goals | `partial_observation` |
 | [Inverse inference](INVERSE_INFERENCE.md) | Hidden operands, modular roots and separating measurements | `inverse_inference` |
 | [Adaptive rules](ADAPTIVE_RULES.md) | Observed threshold conditions, bounded noise and retained old models | `adaptive_learning` |
+| [Uncertain learning](UNCERTAIN_LEARNING.md) | Combined noisy partial inference, joint equations and acquired sensing | `uncertain_learning` |
+| [Recorded Iris benchmark](IRIS_BENCHMARK.md) | External measurements, hidden features and matched decision stump | `iris_grounded` |
 
-These are separate opt-in development modes. Inverse inference extends partial
-observation; adaptive rules use full observations. They are not one combined
-noise/hidden-context system. The checkpoint writer is v5 and accepts v1–v4.
+The seventh opt-in mode combines partial inverse inference with adaptive noisy
+models. Numeric tuition still requires actual full PRE/POST; inferred centers
+cannot teach. The checkpoint writer is v6 and accepts v1–v5. The Iris benchmark
+extends open development validation beyond synthetic generators and preserves
+the simple comparator's higher aggregate score.
 
 ## Scientific evidence
 
