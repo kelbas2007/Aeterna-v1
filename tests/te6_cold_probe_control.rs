@@ -61,6 +61,29 @@ fn te6_autonomous_motor_coverage_discovers_sensing_affordance_physically() {
         assert!(restored.phase_native_temporal_action_evidence_admissible(
             (sensor+1)%6
         ),"decisive factual belief releases ordinary goal actions");
+        // The newly acquired physical goal outcome, not a label or fixed
+        // motor, must now determine which terminal choice is admissible.
+        let terminal=(sensor+2)%6;
+        let post=foundation::scene(&l1,
+            if cue0==10 || cue1==10 {11} else {10},1);
+        assert!(restored.observe_phase_native_temporal_outcome(
+            terminal,&post,1.0
+        ));
+        let policy=restored.choose_phase_native_temporal_outcome_action()
+            .expect("positive physically conducting reward synapse");
+        assert_eq!(policy.action,terminal);
+        assert!(restored.phase_native_temporal_action_evidence_admissible(terminal));
+        assert!(!restored.phase_native_temporal_action_evidence_admissible(
+            (terminal+1)%6
+        ));
+        let old=restored.perturb_phase_native_synapse_for_control(
+            policy.synapse,0.0,0.0).unwrap();
+        assert!(restored.choose_phase_native_temporal_outcome_action().is_none());
+        assert!(restored.phase_native_temporal_action_evidence_admissible(
+            (terminal+1)%6
+        ),"lesion removes physically unsupported terminal policy");
+        restored.restore_phase_native_synapse_for_control(policy.synapse,old);
+        assert_eq!(restored.choose_phase_native_temporal_outcome_action(),Some(policy));
     }
     println!("TE6_COVERAGE unknown_probe=true physical_sensor=true lesion=true restart=true");
 }
