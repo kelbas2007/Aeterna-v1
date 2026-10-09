@@ -231,26 +231,38 @@ fn primitive_argument_match(
 /// buffer scan or permutation search occurs in this readout; a lesion of even
 /// one necessary input synapse invalidates the entire call.
 fn primitive_argument_physical_call(
-    action:usize,state:&PhasePrimitiveState,links:&[PhaseSynapse],
-    width:usize,
-)->Option<PrimitiveArgumentMatch>{
-    let bound=state.bound_calls.iter().find(|b|b.action==action)?;
-    let op=state.operations.get(bound.operation_index)?;
-    if !op.admitted || bound.source_inputs.len()!=bound.binding_synapses.len()
-        || bound.source_inputs.is_empty(){return None;}
-    let mut arguments=Vec::with_capacity(bound.binding_synapses.len());
-    for (&source,&index) in bound.source_inputs.iter().zip(&bound.binding_synapses){
-        let link=links.get(index)?;
-        if link.from!=source || link.to>=width || link.weight<=0.5
-            || link.confidence<0.5 || arguments.contains(&link.to){
+    action: usize,
+    state: &PhasePrimitiveState,
+    links: &[PhaseSynapse],
+    width: usize,
+) -> Option<PrimitiveArgumentMatch> {
+    let bound = state.bound_calls.iter().find(|b| b.action == action)?;
+    let op = state.operations.get(bound.operation_index)?;
+    if !op.admitted
+        || bound.source_inputs.len() != bound.binding_synapses.len()
+        || bound.source_inputs.is_empty()
+    {
+        return None;
+    }
+    let mut arguments = Vec::with_capacity(bound.binding_synapses.len());
+    for (&source, &index) in bound.source_inputs.iter().zip(&bound.binding_synapses) {
+        let link = links.get(index)?;
+        if link.from != source
+            || link.to >= width
+            || link.weight <= 0.5
+            || link.confidence < 0.5
+            || arguments.contains(&link.to)
+        {
             return None;
         }
         arguments.push(link.to);
     }
-    Some(PrimitiveArgumentMatch{
-        operation_index:bound.operation_index,
-        source_inputs:bound.source_inputs.clone(),
-        arguments,fit_facts:bound.fit_facts,future_checks:bound.future_checks,
+    Some(PrimitiveArgumentMatch {
+        operation_index: bound.operation_index,
+        source_inputs: bound.source_inputs.clone(),
+        arguments,
+        fit_facts: bound.fit_facts,
+        future_checks: bound.future_checks,
     })
 }
 
@@ -259,118 +271,192 @@ impl EvoPhase {
     /// sensory-to-sensory synapses; their targets, not a saved argument table,
     /// encode the binding. The bounded candidate fitting still runs in Rust
     /// during acquisition and is NOT represented as neural invention.
-    pub fn consolidate_phase_native_argument_bindings(&mut self)->usize{
-        let Some(native)=self.phase_native.as_ref() else{return 0;};
-        if !native.config.learning_enabled {return 0;}
-        let Some(state)=native.vector.as_ref().and_then(|v|v.induction.as_ref())
-            else{return 0;};
-        let Some(primitives)=state.primitives.as_ref() else{return 0;};
-        if !primitives.argument_transfer_enabled{return 0;}
-        let width=self.config.sensory_cells;
+    pub fn consolidate_phase_native_argument_bindings(&mut self) -> usize {
+        let Some(native) = self.phase_native.as_ref() else {
+            return 0;
+        };
+        if !native.config.learning_enabled {
+            return 0;
+        }
+        let Some(state) = native.vector.as_ref().and_then(|v| v.induction.as_ref()) else {
+            return 0;
+        };
+        let Some(primitives) = state.primitives.as_ref() else {
+            return 0;
+        };
+        if !primitives.argument_transfer_enabled {
+            return 0;
+        }
+        let width = self.config.sensory_cells;
         // Factual contradictions can invalidate a previously acquired
         // connection even when no replacement has earned enough support.
         // This is evidence withdrawal, never binding revision on a query.
-        let mut revoked=Vec::new();
+        let mut revoked = Vec::new();
         for bound in &primitives.bound_calls {
-            let Some(last)=state.programs.get(bound.action)
-                .and_then(|p|p.facts.back()) else {continue;};
-            let Some(call)=primitive_argument_physical_call(
-                bound.action,primitives,&self.synapses,width
-            ) else {continue;};
-            let agrees=primitive_argument_read(&call,primitives,&state.config,
-                &last.input,&self.cells,&self.synapses)
-                .is_some_and(|(v,_)|(v-f32::from(last.success)).abs()
-                    <=1.0-state.config.minimum_outcome);
-            if !agrees {revoked.push(bound.action);}
-        }
-        let mut candidates=Vec::new();
-        for (action,p) in state.programs.iter().enumerate() {
-            if let Some(candidate)=primitive_argument_match(
-                &p.facts,primitives,&state.config,&self.cells,&self.synapses
-            ) {
-                let unchanged=primitive_argument_physical_call(
-                    action,primitives,&self.synapses,width
-                ).is_some_and(|old|
-                    old.operation_index==candidate.operation_index
-                    &&old.source_inputs==candidate.source_inputs
-                    &&old.arguments==candidate.arguments
-                );
-                if !unchanged {candidates.push((action,candidate));}
+            let Some(last) = state
+                .programs
+                .get(bound.action)
+                .and_then(|p| p.facts.back())
+            else {
+                continue;
+            };
+            let Some(call) =
+                primitive_argument_physical_call(bound.action, primitives, &self.synapses, width)
+            else {
+                continue;
+            };
+            let agrees = primitive_argument_read(
+                &call,
+                primitives,
+                &state.config,
+                &last.input,
+                &self.cells,
+                &self.synapses,
+            )
+            .is_some_and(|(v, _)| {
+                (v - f32::from(last.success)).abs() <= 1.0 - state.config.minimum_outcome
+            });
+            if !agrees {
+                revoked.push(bound.action);
             }
         }
-        if candidates.is_empty() && revoked.is_empty(){return 0;}
-        let Some(mut native)=self.phase_native.take() else{return 0;};
-        for action in revoked {
-            if let Some(bound)=native.vector.as_ref()
-                .and_then(|v|v.induction.as_ref())
-                .and_then(|i|i.primitives.as_ref())
-                .and_then(|p|p.bound_calls.iter().find(|b|b.action==action)) {
-                for &address in &bound.binding_synapses {
-                    let syn=&mut self.synapses[address];
-                    syn.weight=0.0;
-                    syn.confidence=0.0;
+        let mut candidates = Vec::new();
+        for (action, p) in state.programs.iter().enumerate() {
+            if let Some(candidate) = primitive_argument_match(
+                &p.facts,
+                primitives,
+                &state.config,
+                &self.cells,
+                &self.synapses,
+            ) {
+                let unchanged =
+                    primitive_argument_physical_call(action, primitives, &self.synapses, width)
+                        .is_some_and(|old| {
+                            old.operation_index == candidate.operation_index
+                                && old.source_inputs == candidate.source_inputs
+                                && old.arguments == candidate.arguments
+                        });
+                if !unchanged {
+                    candidates.push((action, candidate));
                 }
             }
         }
-        let mut installed=0usize;
-        for (action,call) in candidates {
+        if candidates.is_empty() && revoked.is_empty() {
+            return 0;
+        }
+        let Some(mut native) = self.phase_native.take() else {
+            return 0;
+        };
+        for action in revoked {
+            if let Some(bound) = native
+                .vector
+                .as_ref()
+                .and_then(|v| v.induction.as_ref())
+                .and_then(|i| i.primitives.as_ref())
+                .and_then(|p| p.bound_calls.iter().find(|b| b.action == action))
+            {
+                for &address in &bound.binding_synapses {
+                    let syn = &mut self.synapses[address];
+                    syn.weight = 0.0;
+                    syn.confidence = 0.0;
+                }
+            }
+        }
+        let mut installed = 0usize;
+        for (action, call) in candidates {
             // Each slot owns a real synapse. Rebinding changes where that
             // source slot connects rather than mutating the definition.
-            let old=native.vector.as_mut().and_then(|v|v.induction.as_mut())
-                .and_then(|i|i.primitives.as_mut())
-                .and_then(|p|p.bound_calls.iter().position(|b|b.action==action));
-            let mut addresses=Vec::with_capacity(call.arguments.len());
-            for (&source,&arg) in call.source_inputs.iter().zip(&call.arguments){
-                let existing=old.and_then(|i|
-                    native.vector.as_ref().and_then(|v|v.induction.as_ref())
-                        .and_then(|x|x.primitives.as_ref())
-                        .and_then(|p|p.bound_calls[i].binding_synapses
-                            .get(addresses.len()).copied())
-                );
-                let link=existing.unwrap_or_else(||self.native_synapse(source,arg));
-                let syn=&mut self.synapses[link];
-                syn.from=source;
-                syn.to=arg;
-                syn.weight=1.0;
-                syn.confidence=1.0;
-                syn.eligibility=1.0;
-                syn.phase_offset=wrap_phase(
-                    self.cells[arg].phase-self.cells[source].phase
-                );
+            let old = native
+                .vector
+                .as_mut()
+                .and_then(|v| v.induction.as_mut())
+                .and_then(|i| i.primitives.as_mut())
+                .and_then(|p| p.bound_calls.iter().position(|b| b.action == action));
+            let mut addresses = Vec::with_capacity(call.arguments.len());
+            for (&source, &arg) in call.source_inputs.iter().zip(&call.arguments) {
+                let existing = old.and_then(|i| {
+                    native
+                        .vector
+                        .as_ref()
+                        .and_then(|v| v.induction.as_ref())
+                        .and_then(|x| x.primitives.as_ref())
+                        .and_then(|p| {
+                            p.bound_calls[i]
+                                .binding_synapses
+                                .get(addresses.len())
+                                .copied()
+                        })
+                });
+                let link = existing.unwrap_or_else(|| self.native_synapse(source, arg));
+                let syn = &mut self.synapses[link];
+                syn.from = source;
+                syn.to = arg;
+                syn.weight = 1.0;
+                syn.confidence = 1.0;
+                syn.eligibility = 1.0;
+                syn.phase_offset = wrap_phase(self.cells[arg].phase - self.cells[source].phase);
                 addresses.push(link);
             }
-            let bindings=&mut native.vector.as_mut().unwrap()
-                .induction.as_mut().unwrap().primitives.as_mut().unwrap().bound_calls;
-            let admitted=PhaseNativeBoundCall{
-                action,operation_index:call.operation_index,
-                source_inputs:call.source_inputs,binding_synapses:addresses,
-                fit_facts:call.fit_facts,future_checks:call.future_checks,
+            let bindings = &mut native
+                .vector
+                .as_mut()
+                .unwrap()
+                .induction
+                .as_mut()
+                .unwrap()
+                .primitives
+                .as_mut()
+                .unwrap()
+                .bound_calls;
+            let admitted = PhaseNativeBoundCall {
+                action,
+                operation_index: call.operation_index,
+                source_inputs: call.source_inputs,
+                binding_synapses: addresses,
+                fit_facts: call.fit_facts,
+                future_checks: call.future_checks,
             };
-            if let Some(index)=old {bindings[index]=admitted}
-            else {bindings.push(admitted);}
-            installed+=1;
+            if let Some(index) = old {
+                bindings[index] = admitted
+            } else {
+                bindings.push(admitted);
+            }
+            installed += 1;
         }
-        self.phase_native=Some(native);
+        self.phase_native = Some(native);
         installed
     }
 
     /// Expose addresses for physical lesion controls, never answers or
     /// privileged argument labels.
-    pub fn phase_native_argument_binding_synapses(
-        &self,action:usize
-    )->Option<Vec<usize>>{
-        let p=self.phase_native.as_ref()?.vector.as_ref()?.induction.as_ref()?
-            .primitives.as_ref()?;
-        Some(p.bound_calls.iter().find(|b|b.action==action)?
-            .binding_synapses.clone())
+    pub fn phase_native_argument_binding_synapses(&self, action: usize) -> Option<Vec<usize>> {
+        let p = self
+            .phase_native
+            .as_ref()?
+            .vector
+            .as_ref()?
+            .induction
+            .as_ref()?
+            .primitives
+            .as_ref()?;
+        Some(
+            p.bound_calls
+                .iter()
+                .find(|b| b.action == action)?
+                .binding_synapses
+                .clone(),
+        )
     }
 
     /// Number of independently acquired physically represented bindings.
-    pub fn phase_native_argument_binding_count(&self)->usize{
-        self.phase_native.as_ref().and_then(|n|n.vector.as_ref())
-            .and_then(|v|v.induction.as_ref())
-            .and_then(|x|x.primitives.as_ref())
-            .map(|p|p.bound_calls.len()).unwrap_or(0)
+    pub fn phase_native_argument_binding_count(&self) -> usize {
+        self.phase_native
+            .as_ref()
+            .and_then(|n| n.vector.as_ref())
+            .and_then(|v| v.induction.as_ref())
+            .and_then(|x| x.primitives.as_ref())
+            .map(|p| p.bound_calls.len())
+            .unwrap_or(0)
     }
 }
 
@@ -489,14 +575,21 @@ impl EvoPhase {
             .iter()
             .enumerate()
             .filter_map(|(action, p)| {
-                let call=if primitives.bound_calls.iter()
-                    .any(|b|b.action==action){
+                let call = if primitives.bound_calls.iter().any(|b| b.action == action) {
                     primitive_argument_physical_call(
-                        action,primitives,&self.synapses,self.config.sensory_cells
+                        action,
+                        primitives,
+                        &self.synapses,
+                        self.config.sensory_cells,
                     )?
-                }else{
-                    primitive_argument_match(&p.facts,primitives,&state.config,
-                        &self.cells,&self.synapses)?
+                } else {
+                    primitive_argument_match(
+                        &p.facts,
+                        primitives,
+                        &state.config,
+                        &self.cells,
+                        &self.synapses,
+                    )?
                 };
                 Some((
                     action,
@@ -530,15 +623,25 @@ impl EvoPhase {
         }
         let mut candidates = Vec::new();
         for (action, p) in state.programs.iter().enumerate() {
-            let call=if primitives.bound_calls.iter().any(|b|b.action==action){
+            let call = if primitives.bound_calls.iter().any(|b| b.action == action) {
                 primitive_argument_physical_call(
-                    action,primitives,&self.synapses,self.config.sensory_cells
+                    action,
+                    primitives,
+                    &self.synapses,
+                    self.config.sensory_cells,
                 )
-            }else{
-                primitive_argument_match(&p.facts,primitives,&state.config,
-                    &self.cells,&self.synapses)
+            } else {
+                primitive_argument_match(
+                    &p.facts,
+                    primitives,
+                    &state.config,
+                    &self.cells,
+                    &self.synapses,
+                )
             };
-            let Some(call)=call else {continue;};
+            let Some(call) = call else {
+                continue;
+            };
             let Some((value, leaf)) = primitive_argument_read(
                 &call,
                 primitives,

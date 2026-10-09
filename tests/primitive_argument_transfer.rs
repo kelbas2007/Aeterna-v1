@@ -219,51 +219,68 @@ fn factual_experience_selects_rebinding_and_runtime_reuses_original_operations()
 
 #[test]
 fn factual_argument_calls_have_synapse_addresses_and_lesion_controls() {
-    let mut e=acquired();
-    let roots=e.phase_primitives().iter().map(|p|p.output_cell).collect::<Vec<_>>();
-    let definitions_before=definitions(&e,&roots);
+    let mut e = acquired();
+    let roots = e
+        .phase_primitives()
+        .iter()
+        .map(|p| p.output_cell)
+        .collect::<Vec<_>>();
+    let definitions_before = definitions(&e, &roots);
     assert!(e.set_phase_primitive_argument_transfer(true));
-    let mut rt=ScientificRuntime::new(e).unwrap();
+    let mut rt = ScientificRuntime::new(e).unwrap();
     rt.set_outcome_goal(1.0).unwrap();
     // The binder sees only ordinary executed action/outcome. The target is
     // held solely by the external task simulator, not passed to the model.
     for _ in 0..16 {
         for bits in 0..8 {
-            world::teach(&mut rt,&input(bits,false),xor_of(bits,[1,2]),
-                &world::roles(0),None);
+            world::teach(
+                &mut rt,
+                &input(bits, false),
+                xor_of(bits, [1, 2]),
+                &world::roles(0),
+                None,
+            );
         }
     }
-    let e=rt.organism();
-    let bindings=e.phase_primitive_argument_bindings();
-    assert_eq!(bindings.len(),2,"two factual outcomes must have physical calls");
-    assert_eq!(e.phase_native_argument_binding_count(),2);
-    assert_eq!(definitions(e,&roots),definitions_before);
-    let (action,root,args,_,_)=bindings[0].clone();
-    assert_eq!(args,vec![1,2]);
+    let e = rt.organism();
+    let bindings = e.phase_primitive_argument_bindings();
+    assert_eq!(
+        bindings.len(),
+        2,
+        "two factual outcomes must have physical calls"
+    );
+    assert_eq!(e.phase_native_argument_binding_count(), 2);
+    assert_eq!(definitions(e, &roots), definitions_before);
+    let (action, root, args, _, _) = bindings[0].clone();
+    assert_eq!(args, vec![1, 2]);
     assert!(roots.contains(&root));
-    let addresses=e.phase_native_argument_binding_synapses(action).unwrap();
-    assert_eq!(addresses.len(),2);
-    for (i,&link) in addresses.iter().enumerate() {
-        let syn=e.phase_native_synapse(link).unwrap();
-        assert_eq!(syn.to,args[i]);
-        assert!(syn.weight>0.5 && syn.confidence>=0.5);
+    let addresses = e.phase_native_argument_binding_synapses(action).unwrap();
+    assert_eq!(addresses.len(), 2);
+    for (i, &link) in addresses.iter().enumerate() {
+        let syn = e.phase_native_synapse(link).unwrap();
+        assert_eq!(syn.to, args[i]);
+        assert!(syn.weight > 0.5 && syn.confidence >= 0.5);
     }
-    let bytes=e.online_checkpoint_bytes().unwrap();
-    let mut resumed=EvoPhase::from_online_checkpoint(&bytes).unwrap();
-    assert_eq!(resumed.phase_primitive_argument_bindings(),bindings);
-    let before_query=resumed.online_checkpoint_bytes().unwrap();
-    let query=changed_values(0b110,1).into_iter().map(Some).collect::<Vec<_>>();
-    let normal=resumed.phase_primitive_argument_prediction(&query);
+    let bytes = e.online_checkpoint_bytes().unwrap();
+    let mut resumed = EvoPhase::from_online_checkpoint(&bytes).unwrap();
+    assert_eq!(resumed.phase_primitive_argument_bindings(), bindings);
+    let before_query = resumed.online_checkpoint_bytes().unwrap();
+    let query = changed_values(0b110, 1)
+        .into_iter()
+        .map(Some)
+        .collect::<Vec<_>>();
+    let normal = resumed.phase_primitive_argument_prediction(&query);
     assert!(normal.is_some());
-    assert_eq!(resumed.online_checkpoint_bytes().unwrap(),before_query);
-    let link=addresses[0];
-    let saved=resumed.perturb_phase_native_synapse_for_control(link,0.0,0.0)
+    assert_eq!(resumed.online_checkpoint_bytes().unwrap(), before_query);
+    let link = addresses[0];
+    let saved = resumed
+        .perturb_phase_native_synapse_for_control(link, 0.0, 0.0)
         .expect("physical argument synapse must be addressed");
-    let remaining=resumed.phase_primitive_argument_bindings();
-    assert_eq!(remaining.len(),1,"lesion must disable THIS physical call");
-    assert!(remaining.iter().all(|b|b.0!=action));
-    resumed.restore_phase_native_synapse_for_control(link,saved);
-    assert_eq!(resumed.phase_primitive_argument_bindings(),bindings);
-    assert_eq!(resumed.phase_primitive_argument_prediction(&query),normal);
+    let remaining = resumed.phase_primitive_argument_bindings();
+    assert_eq!(remaining.len(), 1, "lesion must disable THIS physical call");
+    assert!(remaining.iter().all(|b| b.0 != action));
+    resumed.restore_phase_native_synapse_for_control(link, saved);
+    assert_eq!(resumed.phase_primitive_argument_bindings(), bindings);
+    assert_eq!(resumed.phase_primitive_argument_prediction(&query), normal);
     println!("PRIMITIVE_PHYSICAL_BINDINGS calls=2 source_definitions_unchanged=true query_no_fit=true checkpoint=true lesion=true restore=true");
 }

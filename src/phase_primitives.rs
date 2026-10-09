@@ -142,10 +142,19 @@ impl PhasePrimitiveState {
             feed(0x4152475452414E53);
         }
         for call in &self.bound_calls {
-            for n in [call.action,call.operation_index,call.fit_facts,call.future_checks] {
+            for n in [
+                call.action,
+                call.operation_index,
+                call.fit_facts,
+                call.future_checks,
+            ] {
                 feed(n as u64);
             }
-            for &i in call.source_inputs.iter().chain(call.binding_synapses.iter()) {
+            for &i in call
+                .source_inputs
+                .iter()
+                .chain(call.binding_synapses.iter())
+            {
                 feed(i as u64);
             }
         }
@@ -178,8 +187,10 @@ impl PhasePrimitiveState {
         }
     }
     fn contains_synapse(&self, index: usize) -> bool {
-        self.bound_calls.iter().any(|b|b.binding_synapses.contains(&index))
-            ||self.priorities.contains(&index)
+        self.bound_calls
+            .iter()
+            .any(|b| b.binding_synapses.contains(&index))
+            || self.priorities.contains(&index)
             || self
                 .operations
                 .iter()
@@ -442,7 +453,7 @@ impl EvoPhase {
             priorities,
             policy_updates: 0,
             argument_transfer_enabled: false,
-            bound_calls:Vec::new(),
+            bound_calls: Vec::new(),
         });
         true
     }
