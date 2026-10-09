@@ -655,6 +655,12 @@ impl EvoPhase {
             })
     }
     fn observe_phase_induction_result(&mut self, action: usize, pre: &[Option<f32>], outcome: f32) {
+        self.observe_phase_induction_result_inner(action,pre,outcome);
+        // Acquisition is driven by actual executed PRE/action/POST feedback,
+        // never by the later read-only prediction or an external binder call.
+        let _=self.consolidate_phase_native_argument_bindings();
+    }
+    fn observe_phase_induction_result_inner(&mut self, action: usize, pre: &[Option<f32>], outcome: f32) {
         let Some(input) = pre.iter().copied().collect::<Option<Vec<_>>>() else {
             return;
         };
@@ -842,6 +848,33 @@ impl PhaseInductionState {
                     || links[index].to != cfg.sensory_cells + cfg.motor_cells
                 {
                     return false;
+                }
+            }
+            // Physical acquired argument connections are first-class
+            // checkpoint-owned synapses. No hidden metadata-only fallback
+            // may rescue a lost link after a causal lesion.
+            let mut seen_actions=std::collections::BTreeSet::new();
+            for bound in &s.bound_calls {
+                if bound.action>=cfg.motor_cells
+                    ||!seen_actions.insert(bound.action)
+                    ||bound.operation_index>=s.operations.len()
+                    ||!s.operations[bound.operation_index].admitted
+                    ||bound.source_inputs.is_empty()
+                    ||bound.source_inputs.len()>3
+                    ||bound.source_inputs.len()!=bound.binding_synapses.len()
+                    ||bound.fit_facts>sequence as usize
+                    ||bound.future_checks>self.config.facts_per_motor
+                {return false;}
+                let mut seen_args=std::collections::BTreeSet::new();
+                for (&source,&link_index) in bound.source_inputs.iter()
+                    .zip(&bound.binding_synapses) {
+                    if source>=cfg.sensory_cells || link_index>=links.len()
+                        ||!used.insert(link_index) 
+                        ||links[link_index].from!=source
+                        ||links[link_index].to>=cfg.sensory_cells
+                        ||!seen_args.insert(links[link_index].to){
+                        return false;
+                    }
                 }
             }
             for op in &s.operations {
