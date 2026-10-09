@@ -141,6 +141,76 @@ impl EvoPhase {
         reinforcement.len()
     }
 
+    /// Enable a self-selected experiment from physical hypothesis
+    /// disagreement. The world still supplies facts and consequences,
+    /// never a motor curriculum or the correct binding.
+    pub fn set_phase_native_intrinsic_argument_experiments(
+        &mut self,enabled:bool
+    )->bool{
+        let Some(p)=self.phase_native.as_mut()
+            .and_then(|n|n.vector.as_mut())
+            .and_then(|v|v.induction.as_mut())
+            .and_then(|i|i.primitives.as_mut()) else{return false;};
+        if enabled && !p.native_argument_competition{return false;}
+        p.intrinsic_argument_experiments=enabled;
+        true
+    }
+
+    /// Pick the motor whose physically acquired candidate population has
+    /// the greatest disagreement on the PRESENT actual sensory frame.
+    /// This is an epistemic experiment, not a fabricated goal/teacher label,
+    /// and is always subject to the ordinary execution protection gate.
+    pub fn phase_native_intrinsic_argument_probe(
+        &self,frame:&[Option<f32>],rejected:&[bool]
+    )->Option<(usize,f32)>{
+        let native=self.phase_native.as_ref()?;
+        if !native.config.learning_enabled{return None;}
+        let state=native.vector.as_ref()?.induction.as_ref()?;
+        let p=state.primitives.as_ref()?;
+        if !p.native_argument_competition || !p.intrinsic_argument_experiments {
+            return None;
+        }
+        let input=frame.iter().copied().collect::<Option<Vec<_>>>()?;
+        let mut selected=None;
+        let mut most_uncertain=0.05f32;
+        for action in 0..self.config.motor_cells {
+            if rejected.get(action).copied().unwrap_or(true)
+                ||synaptic_argument_winner(action,p,&self.synapses).is_some(){
+                continue;
+            }
+            let mut yes=0.0f32;
+            let mut total=0.0f32;
+            let mut experience=0u32;
+            for c in p.argument_candidates.iter().filter(|c|c.action==action){
+                let syn=&self.synapses[c.candidate_synapse];
+                if syn.confidence<0.5 || syn.weight<=0.1 {continue;}
+                let call=PrimitiveArgumentMatch{
+                    operation_index:c.operation_index,
+                    source_inputs:c.source_inputs.to_vec(),
+                    arguments:vec![syn.from,syn.to],
+                    fit_facts:0,future_checks:0,
+                };
+                if let Some((value,_))=primitive_argument_read(
+                    &call,p,&state.config,&input,&self.cells,&self.synapses
+                ){
+                    total+=syn.weight;
+                    yes+=syn.weight*f32::from(value>=0.5);
+                    experience=experience.max(c.observations);
+                }
+            }
+            if total<=1.0e-8 {continue;}
+            let probability=yes/total;
+            let disagreement=(4.0*probability*(1.0-probability)).clamp(0.0,1.0);
+            let novelty=1.0/(1.0+experience as f32/24.0);
+            let score=disagreement*novelty;
+            if score>most_uncertain+1.0e-6 {
+                most_uncertain=score;
+                selected=Some((action,score));
+            }
+        }
+        selected
+    }
+
     /// Physical winner readout. Report candidate addresses and weights for
     /// falsifiable synapse-lesion controls.
     pub fn phase_primitive_synaptic_argument_winner(
