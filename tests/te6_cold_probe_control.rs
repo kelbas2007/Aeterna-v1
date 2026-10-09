@@ -58,9 +58,11 @@ fn te6_autonomous_motor_coverage_discovers_sensing_affordance_physically() {
                 &foundation::scene(&l1,cue0,0)));
         }
         assert!(!restored.phase_native_temporal_evidence().unwrap().needs_more);
+        let (trial_motor,_,_)=restored.choose_phase_native_temporal_outcome_probe()
+            .expect("decisive but untested reward still needs experiments");
         assert!(restored.phase_native_temporal_action_evidence_admissible(
-            (sensor+1)%6
-        ),"decisive factual belief releases ordinary goal actions");
+            trial_motor
+        ),"candidate must be grounded in current reward-coverage deficit");
         // The newly acquired physical goal outcome, not a label or fixed
         // motor, must now determine which terminal choice is admissible.
         let terminal=(sensor+2)%6;
@@ -72,6 +74,10 @@ fn te6_autonomous_motor_coverage_discovers_sensing_affordance_physically() {
         let policy=restored.choose_phase_native_temporal_outcome_action()
             .expect("positive physically conducting reward synapse");
         assert_eq!(policy.action,terminal);
+        // Frozen evaluation exploits only the physically learnt terminal
+        // outcome; plastic acquisition continues comparing alternatives.
+        restored.set_planning_learning_enabled(false);
+        assert!(restored.choose_phase_native_temporal_outcome_probe().is_none());
         assert!(restored.phase_native_temporal_action_evidence_admissible(terminal));
         assert!(!restored.phase_native_temporal_action_evidence_admissible(
             (terminal+1)%6
