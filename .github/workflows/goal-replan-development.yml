@@ -1,0 +1,42 @@
+name: Goal-conditioned physical replanning development
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/scientific_runtime.rs'
+      - 'tests/goal_replan_physical.rs'
+      - '.github/workflows/goal-replan-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: goal-replan-development-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cognitive-replan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile whole goal-path integration target
+        run: cargo check --locked --test goal_replan_physical
+      - name: Protected physical goal plan and factual drift repair
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test goal_replan_physical goal_replan_composes_physical_routes_after_unannounced_causal_drift -- --exact --nocapture 2>&1 | tee goal-replan.log
+      - name: Preserve scientific negative and positive outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: goal-replan-development-evidence
+          path: goal-replan.log
+          if-no-files-found: ignore
