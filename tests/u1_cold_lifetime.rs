@@ -36,6 +36,10 @@ struct Measures {
     right:usize,commits:usize, samples:usize, multiple:usize,
     no_action:usize,blocked:usize, oracle_one:usize,oracle_three:usize,
     actions:usize,
+    decisive_commits:usize,
+    learned_policy_at_commit:usize,
+    learned_policy_matched:usize,
+    terminal_motor_counts:[usize;6],
 }
 fn run_episode(
     rt:&mut ScientificRuntime, l1:&[[usize;2];8], roles:ColdRoles,
@@ -71,6 +75,8 @@ fn run_episode(
                 }
             }
         }
+        let prior_belief=rt.organism().phase_native_temporal_evidence();
+        let prior_policy=rt.organism().choose_phase_native_temporal_outcome_action();
         let result=rt.step_unified(
             |_|Some(safe()),
             |motor|{
@@ -96,7 +102,25 @@ fn run_episode(
             }
         );
         match result {
-            Ok(StepOutcome::Executed{..})=>{totals.actions+=1;},
+            Ok(StepOutcome::Executed{proposal,..})=>{
+                totals.actions+=1;
+                if did_commit {
+                    totals.terminal_motor_counts[proposal.action]+=1;
+                    totals.decisive_commits+=usize::from(
+                        prior_belief.as_ref().and_then(|b|b.winner_cell).is_some()
+                    );
+                    if let Some(policy)=prior_policy {
+                        totals.learned_policy_at_commit+=1;
+                        totals.learned_policy_matched+=usize::from(
+                            policy.action==proposal.action
+                        );
+                    }
+                    if ordinal>=1000 && ordinal%100<2 {
+                        println!("U1_TERMINAL_AUDIT ep={} action={} expected_reward={} native_policy={:?} belief={:?}",
+                            ordinal,proposal.action,success,prior_policy,prior_belief);
+                    }
+                }
+            },
             Ok(StepOutcome::GoalReached)=>break,
             Ok(StepOutcome::Blocked(_))=>{totals.blocked+=1;break;},
             _=>{totals.no_action+=1;break;},
@@ -184,6 +208,10 @@ fn u1_new_cold_no_curriculum_continual_lifetime_development() {
             evaluated.right,evaluated.commits,evaluated.samples,evaluated.multiple,
             evaluated.oracle_one,evaluated.oracle_three,evaluated.no_action,
             evaluated.blocked==0,pass);
+        println!("U1_TERMINAL_SUMMARY arm={} decisive_commits={} physical_outcome_candidates={} matched_physical_policy={} motor_counts={:?}",
+            arm,evaluated.decisive_commits,
+            evaluated.learned_policy_at_commit,evaluated.learned_policy_matched,
+            evaluated.terminal_motor_counts);
     }
     println!("U1_COLD_SUMMARY all_arms_pass={} verdict={}",
         all_pass,if all_pass{"DEVELOPMENT_PASS"}else{"DEVELOPMENT_FAIL"});
