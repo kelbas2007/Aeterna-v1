@@ -695,6 +695,13 @@ impl ScientificRuntime {
                 let _=self.organism.observe_phase_native_temporal_outcome(
                     action,&post,task_outcome
                 );
+                // The same trusted factual outcome distinguishes a
+                // demonstrably completed goal from a possible sensory
+                // prerequisite. The cognitive carrier, not the evaluator,
+                // stores its phase-conducting motor->POST evidence.
+                let _=self.organism.observe_phase_native_temporal_full_goal_outcome(
+                    action,&post,task_outcome
+                );
                 let _=self.organism.observe_phase_native_sensing_affordance(
                     action,&factual_pre,&post
                 );
