@@ -169,3 +169,51 @@ fn te6_rival_physical_outcomes_make_organism_seek_more_evidence() {
     assert!(strong.winner_cell.is_some());
     println!("TE6_GOAL_INFO rival_action=true more_info=true physical_goal=true");
 }
+
+
+#[test]
+fn te6_decisive_reward_does_not_create_unsupported_rival_policy() {
+    let (mut evo,l1)=foundation::build24();
+    assert!(evo.enable_phase_native_temporal_evidence(
+        PhaseTemporalEvidenceConfig{max_observations:8,
+            minimum_observations:3,decisive_margin:0.125}
+    ));
+    let cues=[6usize,15usize];
+    for cue in cues {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cue,0)));
+    }
+    assert!(evo.set_phase_native_temporal_autonomous_probe(true));
+    assert!(evo.begin_phase_native_temporal_episode());
+    for cue in [cues[0],cues[1],cues[0]] {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cue,0)));
+    }
+    assert!(evo.phase_native_temporal_evidence().unwrap().winner_cell.is_some());
+    assert!(evo.observe_phase_native_temporal_outcome(
+        2,&foundation::scene(&l1,10,2),1.0));
+    let a=evo.choose_phase_native_temporal_outcome_action()
+        .expect("winner has real positive physical reward");
+    assert_eq!(a.action,2);
+
+    assert!(evo.begin_phase_native_temporal_episode());
+    for _ in 0..3 {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cues[1],1)));
+    }
+    assert!(evo.choose_phase_native_temporal_outcome_action().is_none(),
+        "rejected rival cannot inherit a reward it never earned");
+
+    assert!(evo.observe_phase_native_temporal_outcome(
+        4,&foundation::scene(&l1,11,2),1.0));
+    let b=evo.choose_phase_native_temporal_outcome_action()
+        .expect("other cue acquired its own reward");
+    assert_eq!(b.action,4);
+    assert_ne!(a.synapse,b.synapse);
+    let original=evo.perturb_phase_native_synapse_for_control(
+        b.synapse,0.0,0.0).unwrap();
+    assert!(evo.choose_phase_native_temporal_outcome_action().is_none());
+    evo.restore_phase_native_synapse_for_control(b.synapse,original);
+    assert_eq!(evo.choose_phase_native_temporal_outcome_action(),Some(b));
+    println!("TE6_CAUSAL_REWARD decisive_only=true rival_leak=false physical=true");
+}
