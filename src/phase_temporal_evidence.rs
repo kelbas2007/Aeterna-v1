@@ -522,6 +522,10 @@ impl EvoPhase {
         let Some(post)=self.phase_native_abstract_state(post_sensory) else {
             return false;
         };
+        // Capture the *pre-action* physical belief before mutating native
+        // state; never infer the latent cause from POST/reward.
+        let factual_winner=self.phase_native_temporal_evidence()
+            .and_then(|readout|readout.winner_cell);
         let Some(mut native)=self.phase_native.take() else {
             return false;
         };
@@ -532,6 +536,7 @@ impl EvoPhase {
         let ready=native.config.learning_enabled
             && evidence.cues.len()==2
             && evidence.observations>=1
+            && (!evidence.autonomous_probe_enabled || factual_winner.is_some())
             // A cue-to-cue observation is a sample, not a terminal result.
             && !evidence.cues.iter().any(|cue|cue.source_cell==post.cell);
         if !ready {
@@ -554,7 +559,16 @@ impl EvoPhase {
             .collect::<Vec<_>>();
         let mut updated=0usize;
         for (cue_index,source_cell) in source_cells.into_iter().enumerate(){
-            let credit=(observations[cue_index]/mass).clamp(0.0,1.0);
+            // In explicit autonomous inference, an already decisive physical
+            // hypothesis owns the observed consequence. Crediting its rejected
+            // rival would invent an unsupported cue->motor value and mix the
+            // two alternative policies. Legacy prepared TE5 soft-credit mode
+            // remains unchanged when this integration is not enabled.
+            let credit=if evidence.autonomous_probe_enabled {
+                if Some(source_cell)==factual_winner {1.0} else {0.0}
+            } else {
+                (observations[cue_index]/mass).clamp(0.0,1.0)
+            };
             if credit<=1.0e-8 {continue;}
             let policy_index=match evidence.outcomes.iter()
                 .position(|w|w.source_cell==source_cell
