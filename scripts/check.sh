@@ -33,6 +33,7 @@ cargo test --locked --release --test te5_unified_decisions te5_unified_selects_a
 cargo test --locked --release --test u1_live_credit u1_online_credit_depends_on_protected_factual_sensing_and_freezes -- --exact
 cargo test --locked --release --test te6_cold_probe_control te6_autonomous_motor_coverage_discovers_sensing_affordance_physically -- --exact
 cargo test --locked --release --test te6_cold_probe_control te6_terminal_experiment_moves_away_from_factually_checked_motor -- --exact
+cargo test --locked --release --test te6_cold_probe_control te6_rival_physical_outcomes_make_organism_seek_more_evidence -- --exact
 cargo test --locked --release --test u1_cold_lifetime u1_new_cold_no_curriculum_continual_lifetime_development -- --exact --nocapture
 python3 scripts/g21_statistical_crosscheck.py
 python3 scripts/check_docs.py
