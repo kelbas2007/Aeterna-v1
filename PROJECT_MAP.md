@@ -85,6 +85,27 @@ FAIL 0/4. Further cost-sensitive evidence/goal arbitration required.
 
 First separate frozen fresh attempt [37932975901](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37932975901) **FAILED 1/4**; a generic physical terminal credit defect was repaired before preregistering fresh2. These are fixed, distinct experiments; neither has been erased or re-scored. **No structurally different stochastic family or open-world AGI qualification has passed.** The four arms are four separate organisms, each one continuous lifetime, with pretrained generic perception/U1 foundation.
 
+## Goal-conditioned physical replanning (new development result)
+
+The active research branch now supports an opt-in, goal-conditioned bounded
+physical causal path readout using the existing phase-native multistep
+PRE/action/POST connections. U1 and Human Protection still own motor selection
+and execution. Actual contradiction to a supported deterministic transition
+physically invalidates the link and forces planning again from the factual
+current state.
+
+The development mechanism [4/4 intact and changed-law world runs](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37973110682)
+and [first-attempt source-frozen 12/12 fresh motor permutations](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37973556878)
+are **DEVELOPMENT PASS**. Full [results](docs/GOAL_REPLAN1_RESULT.md);
+[preregistered fresh protocol](docs/GOAL_REPLAN_FRESH1_PROTOCOL.md).
+
+This is not a cold discovery of the six constituent facts: each motor/state
+transition was previously observed individually. Whole learned paths and
+detours were not supplied. Independent structural generalization, long-horizon
+planning with uncertainty and fully unguided causal model acquisition remain
+open scientific requirements. The separate noisy multistep 2/4 FAIL and
+historical STRUCTURE-1 first-attempt FAIL are retained.
+
 ## Next scientific boundary
 
 INTEL-4 established bounded adaptive behavior across deterministic A–E families. It did **not** qualify long noisy inference. The first different-family test **FRONTIER-1** independently failed: 40/80 correct latent decisions, zero repeated sensing, last noisy-cue oracle 56/80 and 8-cue majority oracle 69/80. Do not relabel or patch its consumed authority seed. The research branch contains these physically tested components and cold diagnostics:
