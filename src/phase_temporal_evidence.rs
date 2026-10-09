@@ -599,12 +599,23 @@ impl EvoPhase {
         let mut best:Option<(usize,f32,f32)>=None;
         let mut best_score=f32::NEG_INFINITY;
         for action in 0..self.config.motor_cells {
-            let known_sensor=temporal.samplers.iter().any(|m|
+            let single_step_sensor=temporal.samplers.iter().any(|m|
                 m.motor_action==action && m.distinctions>0
                 && conductance(&self.cells,
                     &self.synapses[m.sensory_synapse],floor)>1.0e-8
             );
-            if known_sensor {continue;}
+            let chain_sensor=temporal.chain_learning_enabled
+                && temporal.chains.iter().any(|chain|
+                    (chain.first_action==action || chain.second_action==action)
+                        && conductance(&self.cells,
+                            &self.synapses[chain.entry_synapse],floor)>1.0e-8
+                        && conductance(&self.cells,
+                            &self.synapses[chain.read_synapse],floor)>1.0e-8
+                );
+            // Both causally acquired INFORMATION actions are not candidate
+            // terminal responses while their two-link physical path conducts.
+            // No motor role or action ID is supplied by the evaluator.
+            if single_step_sensor || chain_sensor {continue;}
             let trials=temporal.samplers.iter()
                 .find(|m|m.motor_action==action)
                 .map(|m|m.belief_trials[cue_index]).unwrap_or(0);
