@@ -212,6 +212,13 @@ impl ScientificRuntime {
         true
     }
 
+    /// Opt-in generic investigation of under-tested opaque motors when
+    /// physical belief remains insufficient. EvoPhase supplies the candidate;
+    /// the unchanged U1 and Human Protection still choose and permit actions.
+    pub fn set_temporal_autonomous_probe(&mut self, enabled: bool) -> bool {
+        self.organism.set_phase_native_temporal_autonomous_probe(enabled)
+    }
+
     /// Change only the U1 scoring equation, not candidate classes or safety.
     /// Default remains the historical INTEL-4 compatible normalized policy.
     /// Once enabled, the policy is stored in the physical meta checkpoint.
