@@ -511,6 +511,30 @@ impl EvoPhase {
             }
         }
 
+        // Goal-conditioned physical causal path. The route is inferred fresh
+        // from the CURRENT observed state and the raw caller goal on every
+        // step, including after factual drift. No evaluator-specified plan.
+        // U1 still arbitrates and Human Protection still guards execution.
+        if let Some(plan)=self.choose_phase_native_temporal_goal_plan(goal_sensory){
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,plan.action
+            ){
+                fields[0]=fields[0].max((0.95*plan.strength).clamp(0.0,1.0));
+                fields[3]=fields[3].max(plan.strength);
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[
+                            0x60A7_u64,plan.action as u64
+                        ]),
+                        action:plan.action,
+                        fields,
+                    },
+                });
+            }
+        }
+
         // TE3: a genuinely acquired sensory motor can compete for authority
         // while two temporally integrated raw hypotheses remain unresolved.
         // Physical uncertainty and phase-conducting affordance determine the
