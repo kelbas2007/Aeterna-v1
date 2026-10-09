@@ -87,3 +87,38 @@ fn te6_autonomous_motor_coverage_discovers_sensing_affordance_physically() {
     }
     println!("TE6_COVERAGE unknown_probe=true physical_sensor=true lesion=true restart=true");
 }
+
+
+#[test]
+fn te6_terminal_experiment_moves_away_from_factually_checked_motor() {
+    let (mut evo,l1)=foundation::build24();
+    assert!(evo.enable_phase_native_temporal_evidence(
+        PhaseTemporalEvidenceConfig{max_observations:8,minimum_observations:3,
+            decisive_margin:0.125}
+    ));
+    let cues=[3usize,19usize];
+    for cue in cues {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cue,0)));
+    }
+    assert!(evo.begin_phase_native_temporal_episode());
+    assert!(evo.set_phase_native_temporal_autonomous_probe(true));
+    for _ in 0..3 {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cues[0],0)));
+    }
+    let (first,_,_)=evo.choose_phase_native_temporal_outcome_probe()
+        .expect("cold terminal trial");
+    let post=foundation::scene(&l1,10,1);
+    assert!(evo.observe_phase_native_temporal_outcome(first,&post,0.0));
+    assert!(evo.observe_phase_native_sensing_affordance(
+        first,&foundation::scene(&l1,cues[0],0),&post));
+    let (second,_,_)=evo.choose_phase_native_temporal_outcome_probe()
+        .expect("next factual reward experiment");
+    assert_ne!(first,second,
+        "a self-evaluated unhelpful motor must not become a permanent policy");
+    assert!(evo.phase_native_temporal_action_evidence_admissible(second));
+    assert!(!evo.phase_native_temporal_action_evidence_admissible(first));
+    println!("TE6_TERMINAL_SEARCH first={} second={} physical_factual=true",
+        first,second);
+}
