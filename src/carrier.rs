@@ -24,7 +24,7 @@ pub use phase_native::{
     PhaseHypothesisEcologyConfig, PhaseHypothesisProposal, PhaseHypothesisDecision,
     PhaseEcologicalCognitiveProposal,
     PhaseHypothesisRecordInfo, HYPOTHESIS_CAPACITY,
-    PhaseUnifiedCognitiveProposal, PhaseUnifiedDecision, PhaseUnifiedKnowledgeSnapshot,
+    PhaseUnifiedCognitiveProposal, PhaseUnifiedDecision, PhaseUnifiedActionTrace, PhaseUnifiedKnowledgeSnapshot,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
     PhaseTemporalEvidenceConfig, PhaseTemporalEvidenceReadout, PhaseTemporalSensingDecision,
     PhaseTemporalOutcomeDecision,
