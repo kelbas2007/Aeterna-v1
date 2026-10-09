@@ -93,6 +93,12 @@ impl EvoPhase {
             }
         };
 
+        // A native physical belief can lower the certainty of an optimistic
+        // goal path. Once evidence becomes decisive the full learned goal
+        // value is restored. No motor/task identity is inspected here.
+        let goal_value=goal_value
+            *self.phase_native_temporal_goal_evidence_coverage().unwrap_or(1.0);
+
         let frontier = self.phase_drive_frontier_activity_for_cells(state, &state_cells);
         let drive_features = self.phase_drive_features(state, operational, action, &frontier);
         let epistemic_value = drive_features[0].max(drive_features[1]).clamp(0.0,1.0);
@@ -473,6 +479,36 @@ impl EvoPhase {
                 &mut out,&sensory,goal_sensory,action,
                 self.unified_composition_candidate(action),0xC023,
             );
+        }
+
+        // Before a useful sampling affordance has been discovered, give one
+        // least-verified opaque motor a GENERAL epistemic proposal backed by
+        // actual transition-coverage deficit. This is a carrier hypothesis
+        // about information, not a sensor label, permission, or host schedule.
+        if let Some((action,novelty))=
+            self.choose_phase_native_temporal_unknown_probe()
+        {
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,action
+            ){
+                fields[1]=fields[1].max(novelty).clamp(0.0,1.0);
+                // The two acquired rival cue identities are not yet
+                // discriminable in this episode. This pressure decays with
+                // factual trials and does not invent a positive sensor link.
+                let unresolved=1.0
+                    -self.phase_native_temporal_goal_evidence_coverage()
+                        .unwrap_or(1.0);
+                fields[2]=fields[2].max(novelty*unresolved)
+                    .clamp(0.0,1.0);
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[0x7E32u64,action as u64]),
+                        action,fields
+                    },
+                });
+            }
         }
 
         // TE3: a genuinely acquired sensory motor can compete for authority
