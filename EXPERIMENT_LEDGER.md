@@ -627,3 +627,30 @@ memory, malformed graphs/atomic restart and resource admission. Writer v8 reads
 v1–v7. The historical G23 qualification and independent PASS/FAIL records are
 unchanged; real digits retain 343/364 in the previous prototype mode.
 New-program image/signal quality remains unmeasured.
+
+## 2026-10-09 — acquired composite operations and first recorded-data scores
+
+Development from research `b4d3c4b874de241bfa604bad71e9400eeff00483`.
+Prospectively confirmed nonconstant programs become callable physical definitions
+in a fixed library. Later programs can read their output cells. Factual local
+credit learns equal-loss constructor preferences; the generic interpreter,
+midpoint search and plasticity rule remain inherited Rust. No arbitrary primitive
+invention, complete learned-constructor ownership or AGI qualification.
+
+First mechanism score: three tests PASS, including acquired interaction reuse,
+library cut/restore, causal learned preference, persistence and self-call rejection.
+Additional allocation/memory/atomic controls extend the integration without
+changing recorded-data settings. Writer v9 reads v1–v8.
+
+[First recorded-data contract](docs/PRIMITIVE_PROTOCOL.md) fixed settings and
+usefulness gates before scoring. [Raw results](docs/REAL_PROGRAM_RESULTS.txt):
+images **143/364**, nearest-example 344/364, centroid 328/364; 141 abstentions,
+80 wrong, 6503 tuition/587 test actions. Signals **104/150**, nearest-example
+137/150, centroid 113/150; 12 abstentions, 34 wrong, 329 tuition/288 test actions.
+Measurement first for every task. Four/two learned operations; four/five uses
+in construction. Both declared gates (60%/70%) **FAIL**. No held-out-driven tuning.
+GunPoint contains actual recorded motion traces, original 50/150 split;
+training-only normalization and fixed 150-to-50 averaging. No live-stream or
+actor-independent claim. The prototype digit path remains separate at 343/364;
+it never supplies a fallback in the new engine. Ordinary pipeline CI tests
+check integrity and frozen factual execution, not metric qualification.

@@ -1,8 +1,29 @@
 # Development integration validation — 2026-10-09
 
-The latest section covers the ninth mode: experience-built conditional
-programs. Earlier perception and combined-uncertainty records remain below.
+The latest section covers acquired operations and actual recorded images/signals. Earlier induction, perception and combined-uncertainty records remain below.
 These are open development checks, not sealed intelligence qualifications.
+
+## Acquired-operation and recorded-data validation
+
+| Check | Outcome |
+|---|---|
+| Ordinary full integration | **163 passed, 0 failed**, 8 ignored, 93 filtered across 40 test-binary runs; dataset/statistical/link checks and release build PASS |
+| Final targeted integration after provenance/control-adapter refinement | **16 passed, 0 failed**: acquired operations, program mechanism, both recorded corpora and both real-file CLI modes |
+| Recorded-data usefulness gates | **FAIL images 143/364**, target >=60%; **FAIL signals 104/150**, target >=70%; [unchanged first and corrected-adapter reports](REAL_PROGRAM_RESULTS.txt) |
+| Same-facts controls | Nearest-example 344/364 images and 137/150 signals; centroid 328/364 and 113/150; 728/300 actual control actions |
+| `cargo check --locked --all-targets`, correctness Clippy | PASS; nonfatal inherited/style/shared-helper warnings remain |
+| `bash scripts/demo.sh` | Nine examples plus perception learned/resumed in separate processes; recorded signal model resumed 104/150, 12 abstentions |
+| Actual original v8 checkpoints | Eight earlier examples resumed, original perception checkpoint recognized its held-out PGM with the v9 reader |
+| Frozen recorded-data execution | Restored before scoring; acquisition of measurement first in every task, at most two actions; learned fingerprint unchanged |
+| Physical mechanism | Empty cold library, reusable acquired definition, later program dependency, physical library cut/exact restore, learned preference tie intervention, no imagined updates, fixed allocation and atomic invalid/cyclic checkpoint rejection |
+
+The full local suite ran before the final stricter publication-provenance checks
+and control-cost adapter clarification; the final 16 tests reran their affected
+paths. No engine defaults or metric gates were tuned after real-data scoring.
+Ordinary pipeline PASS is not usefulness or intelligence qualification. The
+[guide](ACQUIRED_OPERATIONS.md) describes inherited executor/search/plasticity,
+limited learned construction, stronger separate prototype mode and scope limits.
+Writer v9 accepts v1–v8. Historical independent verdicts remain unchanged.
 
 ## Experience-built program validation — completed locally
 
