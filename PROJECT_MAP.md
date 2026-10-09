@@ -63,6 +63,21 @@ The historical `main` and the successful INTEL-4 line had diverged. The integrat
 
 Exact old branch SHAs and their recovery procedure: [ARCHIVE_MANIFEST.md](https://github.com/kelbas2007/Aeterna-v1/blob/archive/evidence-20261008/ARCHIVE_MANIFEST.md).
 
+## Generalized multistep prerequisites (open development) — 2026-10-09
+
+[Variable-depth phase-native causal sensing](docs/MULTISTEP_CAUSAL_SENSING_RESULT.md):
+2-, 3-, 4-, and 5-action observation chains are acquired through actual
+factual PRE/action/POST and represented by conducting physical state/motor
+synapses. 12/12 controlled acquisition/checkpoint/lesion cases passed
+([Actions 37954728543](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37954728543)).
+The latest feedback-driven cold training did self-discover all four path
+lengths, and heldout cognition self-selected 2+ extra samples in every
+episode. Final goal scores: **59/80, 67/80, 65/80, 59/80** — **2/4
+DEVELOPMENT FAIL**, not a broad scientific gate ([Actions
+37958136237](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37958136237)).
+The separately consumed first STRUCTURE-1 2-action diagnostic remains
+FAIL 0/4. Further cost-sensitive evidence/goal arbitration required.
+
 ## Autonomous cognitive-cycle development result — 2026-10-09
 
 **First-attempt Fresh-2 DEVELOPMENT PASS (4/4):** [run 37934001957](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37934001957), heldout 69/80, 64/80, 72/80, 68/80 (total 273/320) versus one-cue oracle 228/320 and fixed three-cue oracle 251/320. Each independently started target lifetime learned the unknown physical sampling motor, repeatedly sampled without an evaluator motor schedule, revised its phase-native belief-to-outcome associations during A→B→A, then executed goal actions with a frozen cognitive model after checkpoint. [Full documented evidence](docs/AUTONOMOUS_CYCLE_FRESH2_RESULT.md) · [preregistration](docs/AUTONOMOUS_CYCLE_FRESH2_PROTOCOL.md).
