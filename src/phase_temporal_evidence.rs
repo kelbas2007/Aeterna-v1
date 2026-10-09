@@ -725,6 +725,14 @@ impl EvoPhase {
         )
     }
 
+    /// Causal lesion address for factual full-goal reward evidence only.
+    pub fn phase_native_temporal_reward_synapse(&self,action:usize)
+        ->Option<usize>{
+        let t=self.phase_native.as_ref()?.temporal_evidence.as_ref()?;
+        t.goal_witnesses.iter().find(|w|w.motor_action==action)
+            .map(|w|w.outcome_synapse)
+    }
+
     pub fn phase_native_temporal_rewarded_action_count(&self)->usize{
         let Some(t)=self.phase_native.as_ref()
             .and_then(|n|n.temporal_evidence.as_ref()) else{return 0;};
