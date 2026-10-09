@@ -30,6 +30,8 @@ struct Metrics {
     blocked:usize, arm_actions:usize, read_actions:usize,
     successful_reads:usize, two_extra:usize,
     firstcue_oracle:usize, threecue_oracle:usize,
+    decisive_commit:usize, policy_available:usize, policy_match:usize,
+    belief_correct:usize, actions_by_motor:[usize;6],
 }
 fn one_episode(
     rt:&mut ScientificRuntime,l1:&[[usize;2];8],roles:Roles,ep:&Episode,
@@ -50,6 +52,8 @@ fn one_episode(
     let mut current=ep.noisy[0];
     for step in 0..12usize {
         if commit {break;}
+        let before_belief=rt.organism().phase_native_temporal_evidence();
+        let before_policy=rt.organism().choose_phase_native_temporal_outcome_action();
         let result=rt.step_unified(
             |_|Some(safe()),
             |motor|{
@@ -92,7 +96,31 @@ fn one_episode(
             }
         );
         match result {
-            Ok(StepOutcome::Executed{..})=>m.actions+=1,
+            Ok(StepOutcome::Executed{proposal,..})=>{
+                m.actions+=1;
+                if commit {
+                    m.actions_by_motor[proposal.action]+=1;
+                    m.decisive_commit+=usize::from(before_belief.as_ref()
+                        .and_then(|belief|belief.winner_cell).is_some());
+                    if let Some(policy)=before_policy {
+                        m.policy_available+=1;
+                        m.policy_match+=usize::from(policy.action==proposal.action);
+                    }
+                    let actual=rt.organism().phase_native_abstract_state(
+                        &foundation::scene(l1,roles.cue[ep.hidden],0)
+                    );
+                    m.belief_correct+=usize::from(
+                        actual.as_ref().and_then(|c|Some(c.cell))
+                            ==before_belief.as_ref()
+                                .and_then(|b|b.winner_cell)
+                    );
+                    if ordinal>=1000 && ordinal%100==0 {
+                        println!("CHAIN_COMMIT_DETAIL ordinal={} motor={} goal_reward={} physical_belief={:?} physically_learned={:?}",
+                            ordinal,proposal.action,success,before_belief,
+                            before_policy);
+                    }
+                }
+            },
             Ok(StepOutcome::GoalReached)=>break,
             Ok(StepOutcome::Blocked(_))=>{m.blocked+=1;break;},
             _=>{m.unavailable+=1;break;},
@@ -167,6 +195,9 @@ fn structure1_acquired_chained_sensing_open_development(){
             && frozen.unavailable==0 && frozen.blocked==0
             && acquired_cue_count==2 && acquired_read>1.0e-8;
         passed+=usize::from(pass);
+        println!("CHAIN_BELIEF_ACTION arm={} decisive={} belief_correct={} policy_available={} policy_matched={} terminal_motor_counts={:?}",
+            arm_i,frozen.decisive_commit,frozen.belief_correct,
+            frozen.policy_available,frozen.policy_match,frozen.actions_by_motor);
         println!("STRUCTURE1_CHAIN_DEV_ARM arm={} motor_arm={} motor_read={} terminal={:?} cue={:?} ready={} train_right={}/192 train_arm={} train_read={} train_new_cues={} learnt_read={:.6} frozen_right={}/80 frozen_commits={} frozen_arm={} frozen_read={} frozen_actual_new_cues={} episodes_2plus={} firstcue_oracle={}/80 threecue_oracle={}/80 unavailable={} blocked={} unchanged_u1={} pass={}",
             arm_i,roles.arm,roles.read,roles.terminal,roles.cue,roles.ready,
             learning.right,learning.arm_actions,learning.read_actions,
