@@ -128,3 +128,44 @@ fn te6_terminal_experiment_moves_away_from_factually_checked_motor() {
     println!("TE6_TERMINAL_SEARCH first={} second={} physical_factual=true",
         first,second);
 }
+
+
+#[test]
+fn te6_rival_physical_outcomes_make_organism_seek_more_evidence() {
+    let (mut evo,l1)=foundation::build24();
+    assert!(evo.enable_phase_native_temporal_evidence(
+        PhaseTemporalEvidenceConfig{max_observations:8,minimum_observations:3,
+            decisive_margin:0.125}
+    ));
+    let cues=[4usize,21usize];
+    for cue in cues {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cue,0)));
+    }
+    assert!(evo.set_phase_native_temporal_autonomous_probe(true));
+    for (cue,motor) in [(cues[0],0usize),(cues[1],2usize)] {
+        assert!(evo.begin_phase_native_temporal_episode());
+        for _ in 0..3 {
+            assert!(evo.observe_phase_native_temporal_signal(
+                &foundation::scene(&l1,cue,0)));
+        }
+        assert!(evo.observe_phase_native_temporal_outcome(
+            motor,&foundation::scene(&l1,10,2),1.0));
+    }
+    assert!(evo.begin_phase_native_temporal_episode());
+    for cue in [cues[0],cues[1],cues[0]] {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cue,0)));
+    }
+    let weak=evo.phase_native_temporal_evidence().unwrap();
+    assert_eq!(weak.observations,3);
+    assert!(weak.needs_more,"opposite goal actions justify further facts");
+    assert_eq!(weak.winner_cell,None);
+    assert!(evo.observe_phase_native_temporal_signal(
+        &foundation::scene(&l1,cues[0],0)));
+    let strong=evo.phase_native_temporal_evidence().unwrap();
+    assert_eq!(strong.observations,4);
+    assert!(!strong.needs_more);
+    assert!(strong.winner_cell.is_some());
+    println!("TE6_GOAL_INFO rival_action=true more_info=true physical_goal=true");
+}
