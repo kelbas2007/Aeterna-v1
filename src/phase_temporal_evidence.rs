@@ -390,8 +390,16 @@ impl EvoPhase {
         &self,action:usize
     )->bool{
         if !self.phase_native_temporal_autonomous_probe(){return true;}
-        if !self.phase_native_temporal_evidence()
-            .map(|b|b.needs_more).unwrap_or(false){return true;}
+        let Some(belief)=self.phase_native_temporal_evidence()
+            else{return true;};
+        if !belief.needs_more {
+            // Once a physically decisive belief exists, execute its learned
+            // factual outcome association rather than an unrelated inherited
+            // optimistic route. If the necessary phase link disappears, this
+            // constraint disappears too: metadata never stores a motor label.
+            return self.choose_phase_native_temporal_outcome_action()
+                .map(|policy|policy.action==action).unwrap_or(true);
+        }
         let Some(sensor)=self.choose_phase_native_temporal_sensing_action()
             else{return true;};
         // If the physical sensor loses its conducting path, no metadata
