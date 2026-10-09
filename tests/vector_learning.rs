@@ -226,7 +226,7 @@ fn restore_is_atomic_preserves_freeze_goal_stop_and_requires_fresh_frame() {
     let e = acquired();
     let bytes = e.online_checkpoint_bytes().unwrap();
     let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-    assert_eq!(value["version"], 7);
+    assert_eq!(value["version"], 8);
     let mut rt = ScientificRuntime::new(e).unwrap();
     rt.set_outcome_goal(1.0).unwrap();
     rt.set_model_learning_enabled(false);

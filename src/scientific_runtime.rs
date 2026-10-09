@@ -39,6 +39,7 @@ pub enum ReasoningMode {
     PartialInformationGathering,
     PartialMaskExploration,
     VectorPrediction,
+    InducedProgramPrediction,
     VectorMeasurement,
     VectorExperiment,
 }
@@ -348,6 +349,7 @@ impl ScientificRuntime {
         let decision=self.organism.phase_vector_decision().ok_or(RuntimeError::NoSupportedAction)?;
         let mode=match decision.kind {
             crate::carrier::PhaseVectorDecisionKind::Prediction=>ReasoningMode::VectorPrediction,
+            crate::carrier::PhaseVectorDecisionKind::InducedProgram=>ReasoningMode::InducedProgramPrediction,
             crate::carrier::PhaseVectorDecisionKind::Measurement=>ReasoningMode::VectorMeasurement,
             crate::carrier::PhaseVectorDecisionKind::Experiment=>ReasoningMode::VectorExperiment,
         };

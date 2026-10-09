@@ -90,6 +90,8 @@ struct PhaseVectorState {
     config: PhaseVectorConfig,
     motors: Vec<PhaseVectorMotor>,
     factual_sequence: u64,
+    #[serde(default)]
+    induction: Option<PhaseInductionState>,
     #[serde(skip)]
     episode: Option<PhaseVectorEpisode>,
 }
@@ -113,6 +115,7 @@ pub struct PhaseVectorPrediction {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PhaseVectorDecisionKind {
     Prediction,
+    InducedProgram,
     Measurement,
     Experiment,
 }
@@ -231,6 +234,7 @@ impl EvoPhase {
             config,
             motors: actions,
             factual_sequence: 0,
+            induction: None,
             episode: None,
         });
         self.current_real = None;
@@ -412,12 +416,16 @@ impl EvoPhase {
                 });
             }
         }
-        if let Some(p) = self.phase_vector_predict(&e.factual) {
-            if !e.rejected[p.action] {
-                return Some(PhaseVectorDecision {
-                    action: p.action,
-                    kind: PhaseVectorDecisionKind::Prediction,
-                });
+        let prediction = if s.induction.is_some() {
+            self.phase_induction_predict(&e.factual)
+                .map(|p| (p.action, PhaseVectorDecisionKind::InducedProgram))
+        } else {
+            self.phase_vector_predict(&e.factual)
+                .map(|p| (p.action, PhaseVectorDecisionKind::Prediction))
+        };
+        if let Some((action, kind)) = prediction {
+            if !e.rejected[action] {
+                return Some(PhaseVectorDecision { action, kind });
             }
         }
         native
@@ -457,12 +465,15 @@ impl EvoPhase {
         let old = s.episode.as_ref()?.clone();
         let learning = native.config.learning_enabled;
         let sequence = s.factual_sequence.checked_add(u64::from(learning))?;
-        let predicted = self.phase_vector_predict(&old.factual);
+        let induction_enabled = s.induction.is_some();
+        let predicted = (!induction_enabled)
+            .then(|| self.phase_vector_predict(&old.factual))
+            .flatten();
         let mut state = self.phase_native.as_mut()?.vector.take()?;
         if learning {
             let m = &mut state.motors[action];
             m.observations += 1;
-            let preserved = old.factual.iter().any(Option::is_some)
+            let preserved = post.iter().any(Option::is_some)
                 && old.factual.iter().zip(post).all(|(a, b)| {
                     a.is_none() || a.zip(*b).is_some_and(|(a, b)| (a - b).abs() <= 0.001)
                 });
@@ -475,7 +486,10 @@ impl EvoPhase {
             m.mask_support = (m.mask_support + 1).min(state.config.sensing_support);
             if outcome >= state.config.success_threshold {
                 m.positives += 1;
-                if let Some(input) = old.factual.iter().copied().collect::<Option<Vec<_>>>() {
+                if let Some(input) = (!induction_enabled)
+                    .then(|| old.factual.iter().copied().collect::<Option<Vec<_>>>())
+                    .flatten()
+                {
                     let nearest = m
                         .prototypes
                         .iter()
@@ -549,6 +563,9 @@ impl EvoPhase {
             rejected,
         });
         self.phase_native.as_mut()?.vector = Some(state);
+        if learning && induction_enabled {
+            self.observe_phase_induction_result(action, &old.factual, outcome);
+        }
         self.current_real = None;
         Some(PhasePartialUpdate {
             suppressed: 0,
@@ -600,6 +617,9 @@ impl PhaseVectorState {
             feed(u64::from(n.to_bits()));
         }
         feed(self.factual_sequence);
+        if let Some(induction) = &self.induction {
+            induction.fingerprint_feed(&mut feed);
+        }
         for m in &self.motors {
             feed(m.observations);
             feed(m.positives);
@@ -695,5 +715,8 @@ impl PhaseVectorState {
             }
         }
         observations == self.factual_sequence
+            && self.induction.as_ref().is_none_or(|i| {
+                i.validate_snapshot(cfg, self.factual_sequence, cells, synapses, allocated, used)
+            })
     }
 }

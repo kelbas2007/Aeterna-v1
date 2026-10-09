@@ -1,7 +1,7 @@
 // Versioned, data-only persistence for the online mode. Neither REAL input nor
 // actuator authority is serialized. No code or external paths are evaluated.
 
-const ONLINE_CHECKPOINT_VERSION: u32 = 7;
+const ONLINE_CHECKPOINT_VERSION: u32 = 8;
 const ONLINE_CHECKPOINT_MAX_BYTES: usize = 16 * 1024 * 1024;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -432,7 +432,7 @@ impl OnlineSnapshot {
             }
         }
         if let Some(vector) = &self.vector {
-            if self.version<7 || self.rules.is_some() || self.partial.is_some() || !self.observations.is_empty() || !self.circuits.is_empty()
+            if self.version<7 || (self.version<8 && vector.induction.is_some()) || self.rules.is_some() || self.partial.is_some() || !self.observations.is_empty() || !self.circuits.is_empty()
                 || !vector.validate_snapshot(cfg,&self.cells,&self.synapses,&mut allocated,&mut used_synapses) { return Err(fail()); }
         }
         if used_synapses.len() != self.synapses.len()

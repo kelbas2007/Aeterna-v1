@@ -79,3 +79,8 @@ cargo run --locked --release --example real_digits
 The example also prints the complete 10×11 confusion matrix for each variant;
 column ten represents abstention. Existing FRONTIER-1, TE1 and TE4 scientific
 FAIL records remain unchanged.
+
+The table above records the original v7 checkpoints. Rechecking after optional
+program induction and writer v8 retained all accuracy, tuition and action counts.
+The extra null induction field adds 17 bytes to canonical v8 image snapshots;
+program induction was not enabled for this image regression.

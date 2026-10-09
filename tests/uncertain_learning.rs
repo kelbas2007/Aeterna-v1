@@ -549,7 +549,7 @@ fn version_six_restore_is_atomic_bounded_and_requires_new_observation() {
     let e = acquired(2, 1, 32, 8192, joint);
     let bytes = e.online_checkpoint_bytes().unwrap();
     let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-    assert_eq!(value["version"], 7);
+    assert_eq!(value["version"], 8);
     let mut rt = ScientificRuntime::new(e).unwrap();
     rt.set_model_learning_enabled(false);
     rt.observe_external_partial(&[Some(0.1), Some(0.2)])

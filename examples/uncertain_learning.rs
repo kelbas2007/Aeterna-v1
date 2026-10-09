@@ -135,6 +135,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     {
         return Err("acquired sensing/conditional goal or freeze failed".into());
     }
-    println!("mode={} checkpoint_v=7 hidden_context=true actions={actions:?} factual_goal=true frozen_knowledge=true",args[1]);
+    println!("mode={} checkpoint_v=8 hidden_context=true actions={actions:?} factual_goal=true frozen_knowledge=true",args[1]);
     Ok(())
 }

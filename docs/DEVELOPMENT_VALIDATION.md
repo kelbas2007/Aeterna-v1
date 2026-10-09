@@ -1,8 +1,42 @@
 # Development integration validation — 2026-10-09
 
-The latest section covers the eighth multivariate perception mode and recorded
-handwritten images. Earlier combined-uncertainty and integration records remain
-below. These are open development checks, not sealed intelligence qualifications.
+The latest section covers the ninth mode: experience-built conditional
+programs. Earlier perception and combined-uncertainty records remain below.
+These are open development checks, not sealed intelligence qualifications.
+
+## Experience-built program validation — completed locally
+
+| Check | Outcome |
+|---|---|
+| `cargo check --locked --all-targets` | PASS |
+| `bash scripts/check.sh` | **157 passed, 0 failed**, 8 ignored, 93 filtered in 38 test-binary runs; dataset/statistical checks and release bins/examples PASS |
+| Program benchmark | 704/704, matched 32-example prototype 704/704, linear centroid 641/704; each 1408 test actions, measurement first 704/704; 15988 actual tuition actions across 38 lives |
+| New mechanism checks | 9 passed: prospective-only admission, acquired threshold 0.25, physical cut/threshold/restore, protected execution, unsupported combination, changed-law revision, immediate first-counterexample withdrawal, atomic graph/restart checks and resource admission |
+| First greedy result | 512/512 two-input tasks, then first three-input parity **FAIL 16/32**; later three-input variants unscored at that point. [Raw reports](INDUCTION_RESULTS.txt), [explicit subsequent revisions](INDUCTION_PROTOCOL.md) |
+| Earlier real digits | 343/364 per permutation, centroid 328/364, bounded 3-NN 335/364; accuracy/tuition/actions unchanged with induction disabled |
+| `bash scripts/demo.sh` | Eight examples plus the perception utility learned and resumed in separate processes; acquired parity program resumed 32/32 new numeric observations in 64 actions |
+| Actual original v7 files | All seven prior example files resumed; original perception model recognized its held-out PGM using the new v8 reader |
+| Bounded program memory | 45 allocated nodes for three motors, 3–31 active; 82672–98965-byte checkpoints; 768 changed-law episodes kept the same cells/links and capped buffers |
+| `cargo clippy --locked --lib -- -D clippy::correctness` | PASS; nonfatal legacy/style and shared-example unused-code warnings remain |
+| Documentation, shell and diff checks | No missing local Markdown targets, shell syntax and whitespace checks PASS |
+
+The new path learns particular input tests, phase thresholds and physical branch
+addresses without the G23 Atom/AND/XOR operator menu. Generic branch/leaf
+primitives and bounded partition search remain inherited Rust code. No invented
+universal computational primitive or fully physical learning-algorithm
+qualification is claimed. The [guide](INDUCED_PROGRAMS.md) distinguishes these
+boundaries and preserves the initial greedy failure. All logical truth-table
+rows were trained; the held-out observations vary numeric values and distractors.
+The revised result is post-failure open development, not an independent seal.
+
+Subsequent-only checks are reset immediately after the first actual
+counterexample, even when too little evidence remains to replace the old
+candidate. Prediction never trains itself. Latest factual feedback for an
+identical input replaces older conflicts while preserving aggregate counts;
+this deterministic policy does not solve random noise or universal retention.
+Writer v8 accepts v1–v7. It never restores an observation, goal or actuator
+permit as fresh authority. Historical G23 and independent scientific verdicts
+remain unchanged; main's cognitive tree stays frozen.
 
 ## Multivariate perception validation — completed locally
 

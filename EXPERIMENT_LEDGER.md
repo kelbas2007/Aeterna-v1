@@ -594,3 +594,36 @@ CLI test trains and restores across processes, reads PNG/JPEG, accepts external
 correction into a new file and rejects overwrites/malformed images. Writer v7
 reads v1–v6; prior mode semantics and historical scientific FAIL/PASS records
 are unchanged. This does not establish general vision, language or AGI.
+
+
+## 2026-10-09 — programs induced from factual differences
+
+The [new path](docs/INDUCED_PROGRAMS.md) does not call the inherited G23
+Atom/AND/XOR menu or circular formula templates. It learns threshold inputs and
+physical conditional topology from actual chosen-action feedback; generic
+partition search and branch/leaf primitives remain inherited Rust algorithms.
+[Protocol](docs/INDUCTION_PROTOCOL.md) fixed before first scoring.
+
+**Initial open result:** all 512 two-input tasks passed, but first three-input
+parity variant scored **16/32**, sixteen abstentions; evaluation stopped before
+the other three-input variants. This is a retained DEVELOPMENT_FAIL. Greedy
+split choice selected a distractor; ambiguous numerical predictions also earned
+confirmation for a correct sign. The threshold-lesion engineering test initially
+queried a branch that did not cross the perturbed threshold and was corrected.
+
+**Revised open result:** bounded 2048-expansion recursive candidate scoring,
+stricter subsequent numerical confirmation and bounded retention of both outcome
+types yielded **704/704**, prototype 704/704, linear centroid 641/704. Every
+method used 1408 test actions; 15988 actual tuition actions across 38 cold lives.
+The primary 95% criterion, data and physical/evaluation budgets were unchanged.
+All logical rows were trained; only numeric values/distractor layouts are held
+out. This post-failure development result is not fresh scientific qualification
+or a superiority claim over exemplar methods.
+
+Nine mechanism checks include acquired non-default thresholds and prospective-only promotion, immediate withdrawal
+after even one actual counterexample, physical cut/threshold/restore, protected
+execution, unsupported-combination abstention, changed-law revision with fixed
+memory, malformed graphs/atomic restart and resource admission. Writer v8 reads
+v1–v7. The historical G23 qualification and independent PASS/FAIL records are
+unchanged; real digits retain 343/364 in the previous prototype mode.
+New-program image/signal quality remains unmeasured.

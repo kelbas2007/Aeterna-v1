@@ -11,6 +11,7 @@ cargo test --locked --release --lib \
     --test online_learning --test online_rules --test expanded_rules --test partial_observation \
     --test inverse_inference --test adaptive_rules --test uncertain_learning --test iris_grounded \
     --test vector_learning --test real_digits --test perception_cli \
+    --test induced_programs --test induction_mechanism \
     --test phase_native_execution --test phase_forward_execution \
     --test phase_native_autonomy --test phase_native_continual \
     --test g20_continual_reasoning --test g21_contextual_state_refinement \
