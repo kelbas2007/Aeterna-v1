@@ -212,6 +212,12 @@ impl ScientificRuntime {
         true
     }
 
+    /// Open research: general multi-step physical state-action-state
+    /// evidence learning. No desired action length or motor roles are passed.
+    pub fn set_temporal_multistep(&mut self,enabled:bool)->bool{
+        self.organism.set_phase_native_temporal_multistep(enabled)
+    }
+
     /// Extend the existing phase-native temporal affordance to physically
     /// acquired two-action sequences with a factual intermediate state.
     pub fn set_temporal_chain_learning(&mut self, enabled: bool) -> bool {
