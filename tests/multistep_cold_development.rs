@@ -59,6 +59,19 @@ fn perform(rt:&mut ScientificRuntime,l1:&[[usize;2];8],w:&World,
     for step in 0..16usize {
         if commit {break;}
         let stage_before=state;
+        if w.depth==3 && step==0 && ordinal<192
+            && ordinal%32==0
+        {
+            println!("MULTISTEP_GATE_DBG episode={} sources={} prior={:?} probe={:?} sensor={:?} coalesced={:?}",
+                ordinal,rt.organism().phase_native_temporal_source_count(),
+                rt.organism().phase_native_temporal_evidence(),
+                rt.organism().choose_phase_native_temporal_unknown_probe(),
+                rt.organism().choose_phase_native_temporal_sensing_action(),
+                rt.inspect_unified_competition().map(|v|
+                    v.into_iter().map(|p|(p.action,p.score)).collect::<Vec<_>>()
+                )
+            );
+        }
         let result=rt.step_unified(
             |_|Some(safe()),
             |motor|{
