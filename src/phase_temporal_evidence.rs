@@ -677,9 +677,39 @@ impl EvoPhase {
             ).clamp(0.0,1.0);
         }
         let margin=(signal[0]-signal[1]).abs();
+        // A belief should carry greater factual support before selecting
+        // between *different* physically learned goal actions. When both
+        // hypotheses recommend the same motor, extra observations cannot
+        // change the choice and the old minimum margin remains sufficient.
+        // This is a generic, action-consequence-dependent information demand,
+        // not a fixed number of observations or a world/role lookup.
+        let mut required_margin=state.config.decisive_margin;
+        if state.autonomous_probe_enabled && state.cues.len()==2 {
+            let best_for=|source:usize| {
+                state.outcomes.iter()
+                    .filter(|o|o.source_cell==source && o.observations>0)
+                    .map(|o|(o.motor_action,conductance(
+                        &self.cells,&self.synapses[o.value_synapse],floor
+                    )))
+                    .filter(|(_,value)|*value>0.05)
+                    .max_by(|a,b|a.1.total_cmp(&b.1))
+            };
+            if let (Some(a),Some(b))=(
+                best_for(state.cues[0].source_cell),
+                best_for(state.cues[1].source_cell)
+            ){
+                if a.0!=b.0 {
+                    // Require two net physical observations of support
+                    // (rather than one) when a mistaken belief would change
+                    // the chosen real-world action.
+                    let extra=2.0/state.config.max_observations as f32;
+                    required_margin=required_margin.max(extra);
+                }
+            }
+        }
         let decisive = state.cues.len()==2
             && state.observations>=state.config.minimum_observations
-            && margin+1.0e-7>=state.config.decisive_margin;
+            && margin+1.0e-7>=required_margin;
         let winner_cell = if decisive {
             if signal[0]>signal[1] {sources[0]} else {sources[1]}
         }else{
