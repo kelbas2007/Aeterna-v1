@@ -67,6 +67,8 @@ struct PhasePrimitiveState {
     #[serde(default)]
     native_argument_competition: bool,
     #[serde(default)]
+    intrinsic_argument_experiments: bool,
+    #[serde(default)]
     argument_candidates: Vec<PhaseSynapticArgumentCandidate>,
 }
 #[derive(Debug, Clone, PartialEq)]
@@ -161,6 +163,7 @@ impl PhasePrimitiveState {
             feed(0x4152475452414E53);
         }
         feed(u64::from(self.native_argument_competition));
+        feed(u64::from(self.intrinsic_argument_experiments));
         for c in &self.argument_candidates {
             for v in [c.action,c.operation_index,c.source_inputs[0],
                       c.source_inputs[1],c.candidate_synapse,c.observations as usize] {
@@ -482,6 +485,7 @@ impl EvoPhase {
             argument_transfer_enabled: false,
             bound_calls: Vec::new(),
             native_argument_competition:false,
+            intrinsic_argument_experiments:false,
             argument_candidates:Vec::new(),
         });
         true
