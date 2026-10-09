@@ -416,6 +416,7 @@ impl EvoPhase {
         };
         if state.online.is_none()
             || state.rules.is_some()
+            || state.vector.is_some()
             || !state.receptors.is_empty()
             || !state.circuits.is_empty()
             || state.drive.is_some()

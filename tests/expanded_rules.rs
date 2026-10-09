@@ -534,7 +534,7 @@ fn v5_validates_formula_topology_and_legacy_v3_remains_readable() {
     learn_episodes(&mut rt, &mut world, 0xABCD);
     let bytes = rt.organism().online_checkpoint_bytes().unwrap();
     let valid: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-    assert_eq!(valid["version"], 6);
+    assert_eq!(valid["version"], 7);
     let pair = valid["rules"]["actions"][0]["outputs"][0]["candidates"]
         .as_array()
         .unwrap()

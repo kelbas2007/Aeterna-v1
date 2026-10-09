@@ -1,7 +1,7 @@
 // Versioned, data-only persistence for the online mode. Neither REAL input nor
 // actuator authority is serialized. No code or external paths are evaluated.
 
-const ONLINE_CHECKPOINT_VERSION: u32 = 6;
+const ONLINE_CHECKPOINT_VERSION: u32 = 7;
 const ONLINE_CHECKPOINT_MAX_BYTES: usize = 16 * 1024 * 1024;
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -26,6 +26,8 @@ struct OnlineSnapshot {
     rules: Option<PhaseRuleState>,
     #[serde(default)]
     partial: Option<PhasePartialState>,
+    #[serde(default)]
+    vector: Option<PhaseVectorState>,
 }
 
 fn invalid_online_checkpoint(message: &str) -> std::io::Error {
@@ -429,6 +431,10 @@ impl OnlineSnapshot {
                 return Err(fail());
             }
         }
+        if let Some(vector) = &self.vector {
+            if self.version<7 || self.rules.is_some() || self.partial.is_some() || !self.observations.is_empty() || !self.circuits.is_empty()
+                || !vector.validate_snapshot(cfg,&self.cells,&self.synapses,&mut allocated,&mut used_synapses) { return Err(fail()); }
+        }
         if used_synapses.len() != self.synapses.len()
             || (dormant_start..total).any(|i| self.cells[i].recruited != allocated.contains(&i))
         {
@@ -485,6 +491,8 @@ impl EvoPhase {
         if let Some(partial) = partial.as_mut() {
             partial.episode = None;
         }
+        let mut vector=state.vector.clone();
+        if let Some(vector)=vector.as_mut() { vector.episode=None; }
         let snapshot = OnlineSnapshot {
             version: ONLINE_CHECKPOINT_VERSION,
             config: self.config.clone(),
@@ -496,6 +504,7 @@ impl EvoPhase {
             circuits: state.circuits.clone(),
             rules: state.rules.clone(),
             partial,
+            vector,
         };
         snapshot.validate()?;
         let bytes = serde_json::to_vec(&snapshot).map_err(std::io::Error::other)?;
@@ -539,6 +548,7 @@ impl EvoPhase {
         state.circuits = snapshot.circuits;
         state.rules = snapshot.rules;
         state.partial = snapshot.partial;
+        state.vector = snapshot.vector;
         Ok(evo)
     }
 }

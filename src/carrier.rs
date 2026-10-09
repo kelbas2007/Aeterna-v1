@@ -38,6 +38,8 @@ pub use phase_native::{
     PhaseAdaptiveActionInfo, PhaseAdaptiveForecast,
     PhaseUncertainConfig, PhaseInterval, PhaseUncertainVector,
     PhaseUncertainBeliefInfo, PhaseUncertainInverseReport, PhaseUncertainForecast,
+    PhaseVectorConfig, PhaseVectorPrediction, PhaseVectorNeighbor,
+    PhaseVectorDecision, PhaseVectorDecisionKind, PhaseVectorInfo,
     PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
 };
 use phase_native::PhaseNativeState;

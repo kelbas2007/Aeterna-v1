@@ -574,3 +574,23 @@ constant/copy models, so the benchmark varies it independently. These exposed
 development outcomes are not independent preregistered trials. The final
 comparison retains the simple comparator's higher total, rather than claiming
 general superiority or promoting an intelligence gate.
+
+
+## 2026-10-09 — multivariate perception and recorded handwritten images
+
+Open development only; [protocol fixed before scoring](docs/VECTOR_PROTOCOL.md).
+Generic bounded phase prototypes use real numerical frames and actual outcome
+feedback for self-selected opaque actions. The 1797-image public fixture splits
+into 1433 training and 364 held-out images. Frozen EvoPhase scored 343/364 (94.23%),
+same-facts bounded 3-NN 335/364, centroid 328/364, with two actions per task.
+Three motor/pixel permutations reuse the same 364 held-out images. Phase acquired
+measurement first in every task; fourteen wrong responses and seven abstentions
+per variant remain in the score. The [full result](docs/DIGITS_BENCHMARK.md)
+documents tuition, memory and limitations.
+
+Eight engineering tests cover physical cut/π/restore, correction, factual-only
+learning, bounded memory and protected runtime/checkpoint behavior. A separate
+CLI test trains and restores across processes, reads PNG/JPEG, accepts external
+correction into a new file and rejects overwrites/malformed images. Writer v7
+reads v1–v6; prior mode semantics and historical scientific FAIL/PASS records
+are unchanged. This does not establish general vision, language or AGI.

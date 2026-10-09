@@ -75,6 +75,7 @@ pub(super) struct PhaseNativeState {
     online: Option<PhaseOnlineConfig>,
     rules: Option<PhaseRuleState>,
     partial: Option<PhasePartialState>,
+    vector: Option<PhaseVectorState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -129,6 +130,7 @@ impl EvoPhase {
             online: None,
             rules: None,
             partial: None,
+            vector: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -171,7 +173,8 @@ impl EvoPhase {
             && !hypothesis_synapse
             && !temporal_synapse
             && !self.is_phase_rule_synapse(index)
-            && !self.is_native_decoder_synapse(index) {
+            && !self.is_native_decoder_synapse(index)
+            && !self.is_phase_vector_synapse(index) {
             return None;
         }
         self.synapses.get(index).cloned()
@@ -203,6 +206,7 @@ impl EvoPhase {
     /// Readout diagnostics and IMAGINED scratch membranes are deliberately absent.
     pub fn phase_native_learned_fingerprint(&self) -> u64 {
         let Some(state) = self.phase_native.as_ref() else { return 0; };
+        if let Some(vector)=state.vector.as_ref() { return vector.fingerprint(&self.cells,&self.synapses); }
         let mut h = 14_695_981_039_346_656_037_u64;
         let mut learned_cells = self.cells.clone();
         for cell in &mut learned_cells {
@@ -243,6 +247,9 @@ impl EvoPhase {
                 text.push_str(&format!("|{:?}", config));
             }
         }
+        if let Some(vector) = state.vector.as_ref() {
+            text.push_str(&format!("|{:?}|{:?}|{}",vector.config,vector.motors,vector.factual_sequence));
+        }
         for byte in text.bytes() {
             h ^= u64::from(byte);
             h = h.wrapping_mul(1_099_511_628_211);
@@ -263,6 +270,7 @@ impl EvoPhase {
         state.last_motor_potentials.fill(0.0);
         state.last_local_updates = 0;
         if let Some(partial) = state.partial.as_mut() { partial.episode = None; }
+        if let Some(vector) = state.vector.as_mut() { vector.episode = None; }
         if let Some(context) = state.contextual.as_mut() {
             context.previous_base = None;
         }
@@ -730,6 +738,7 @@ include!("phase_inverse_inference.rs");
 include!("phase_partial_planning.rs");
 include!("phase_uncertain_observation.rs");
 include!("phase_uncertain_planning.rs");
+include!("phase_vector_learning.rs");
 include!("phase_online_checkpoint.rs");
 include!("phase_forward.rs");
 include!("phase_concept.rs");

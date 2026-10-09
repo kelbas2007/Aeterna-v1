@@ -77,6 +77,7 @@ impl EvoPhase {
     /// May only be called at a validated external observation boundary. Goals
     /// and imagined predictions never allocate receptors or teach transitions.
     pub fn acquire_phase_native_online_observation(&mut self, sensory: &[f32]) -> bool {
+        if self.phase_vector_enabled() { return false; }
         if !self.phase_native_online_enabled() {
             return false;
         }

@@ -17,3 +17,26 @@ This fixture is a small recorded measurement task. Species labels remain in
 the external evaluator; the runtime sees numeric measurements, goals and the
 actual outcome of opaque actions. See the Iris example for the fixed split,
 action budget and matched decision-stump control.
+
+# Handwritten digit image fixture
+
+`digits.csv` is the decompressed, unmodified 1797-record image dataset distributed
+with scikit-learn 1.5.2. Each row contains 64 intensities in 0..16 for an 8×8
+handwritten image, followed by a digit annotation 0..9; there is no header.
+
+Source: <https://raw.githubusercontent.com/scikit-learn/scikit-learn/1.5.2/sklearn/datasets/data/digits.csv.gz>
+
+Compressed SHA-256: `09f66e6debdee2cd2b5ae59e0d6abbb73fc2b0e0185d2e1957e9ebb51e23aa22`.
+Decompressed SHA-256: `6ebb3d2fee246a4e99363262ddf8a00a3c41bee6014c373ed9d9216ba7f651b8`.
+`scripts/check.sh` verifies the decompressed fixture against `digits.sha256`.
+
+Original data: [UCI Optical Recognition of Handwritten Digits](https://archive.ics.uci.edu/dataset/80/optical+recognition+of+handwritten+digits),
+E. Alpaydin and C. Kaynak (1998), DOI 10.24432/C50P49.
+The scikit-learn distribution is covered by the included
+[BSD 3-Clause license](SCIKIT_LEARN_LICENSE).
+
+The fixed within-class split has 1433 training records and 364 held-out records.
+This fixture does not expose writer identities; the evaluation does not claim
+a writer-independent split. Annotations stay with the external evaluator.
+See the [task protocol](../../docs/VECTOR_PROTOCOL.md) and
+[measured result](../../docs/DIGITS_BENCHMARK.md).

@@ -38,6 +38,9 @@ pub enum ReasoningMode {
     PartialGoalPlanning,
     PartialInformationGathering,
     PartialMaskExploration,
+    VectorPrediction,
+    VectorMeasurement,
+    VectorExperiment,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,6 +62,7 @@ pub enum RuntimeError {
     NoSupportedAction,
     InvalidCheckpoint,
     PartialModeRequired,
+    VectorModeRequired,
 }
 
 impl fmt::Display for RuntimeError {
@@ -103,6 +107,7 @@ pub struct ScientificRuntime {
     protection: HumanProtection,
     goal: Option<Vec<f32>>,
     partial_goal: Option<Vec<Option<f32>>>,
+    outcome_goal: Option<f32>,
     goal_epoch: u64,
     sequence: u64,
     audit: VecDeque<LifetimeEvent>,
@@ -121,6 +126,7 @@ impl ScientificRuntime {
             protection: HumanProtection::new(),
             goal: None,
             partial_goal: None,
+            outcome_goal: None,
             goal_epoch: 0,
             sequence: 0,
             audit: VecDeque::new(),
@@ -207,6 +213,7 @@ impl ScientificRuntime {
     }
 
     pub fn propose_unified(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.organism.phase_vector_enabled() { return self.propose_vector(); }
         if self.organism.phase_partial_enabled() { return self.propose_partial(); }
         Ok(self.select_unified_internal()?.map(|(proposal,_,_)|proposal))
     }
@@ -280,7 +287,7 @@ impl ScientificRuntime {
     /// must come from outside cognition. Online mode may acquire a sensory
     /// receptor, but no action consequence is invented at this boundary.
     pub fn observe_external(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
-        if self.organism.phase_partial_enabled() {
+        if self.organism.phase_partial_enabled() || self.organism.phase_vector_enabled() {
             let observation = raster.iter().copied().map(Some).collect::<Vec<_>>();
             return self.observe_external_partial(&observation);
         }
@@ -299,6 +306,7 @@ impl ScientificRuntime {
     }
 
     pub fn set_goal(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
+        if self.organism.phase_vector_enabled() { return Err(RuntimeError::VectorModeRequired); }
         if self.organism.phase_partial_enabled() {
             let goal = raster.iter().copied().map(Some).collect::<Vec<_>>();
             return self.set_partial_goal(&goal);
@@ -324,9 +332,36 @@ impl ScientificRuntime {
         self.organism.set_planning_learning_enabled(enabled);
     }
 
+    /// Multivariate responses require actual bounded external outcomes. A
+    /// desired image or an externally supplied response label is not a goal.
+    pub fn set_outcome_goal(&mut self, target: f32) -> Result<(),RuntimeError> {
+        if !self.organism.phase_vector_enabled() { return Err(RuntimeError::VectorModeRequired); }
+        if !target.is_finite() || !(0.5..=1.0).contains(&target) { return Err(RuntimeError::InvalidRaster); }
+        self.goal_epoch=self.goal_epoch.checked_add(1).expect("goal epoch exhausted");
+        self.outcome_goal=Some(target); self.goal=None; self.partial_goal=None;
+        self.record(LifetimeEventKind::GoalChanged); Ok(())
+    }
+
+    pub fn propose_vector(&mut self) -> Result<Option<ActionProposal>,RuntimeError> {
+        if !self.organism.phase_vector_enabled() { return Err(RuntimeError::VectorModeRequired); }
+        if self.goal_reached()? { return Ok(None); }
+        let decision=self.organism.phase_vector_decision().ok_or(RuntimeError::NoSupportedAction)?;
+        let mode=match decision.kind {
+            crate::carrier::PhaseVectorDecisionKind::Prediction=>ReasoningMode::VectorPrediction,
+            crate::carrier::PhaseVectorDecisionKind::Measurement=>ReasoningMode::VectorMeasurement,
+            crate::carrier::PhaseVectorDecisionKind::Experiment=>ReasoningMode::VectorExperiment,
+        };
+        let proposal=ActionProposal { action:decision.action,mode,goal_epoch:self.goal_epoch,learned_fingerprint:self.organism.phase_native_learned_fingerprint() };
+        self.record(LifetimeEventKind::Proposal(proposal.clone())); Ok(Some(proposal))
+    }
+
     pub fn goal_reached(&self) -> Result<bool, RuntimeError> {
         if self.fresh_observation_required {
             return Err(RuntimeError::FreshObservationRequired);
+        }
+        if self.organism.phase_vector_enabled() {
+            let target=self.outcome_goal.ok_or(RuntimeError::GoalRequired)?;
+            return Ok(self.organism.phase_vector_last_outcome().is_some_and(|value| value>=target));
         }
         if self.organism.phase_partial_enabled() {
             let goal = self.partial_goal.as_ref().ok_or(RuntimeError::GoalRequired)?;
@@ -354,6 +389,7 @@ impl ScientificRuntime {
     /// Fixed orchestration of existing native mechanisms. Task-level scoring
     /// remains in EvoPhase; this function does not construct or search a model.
     pub fn propose(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.organism.phase_vector_enabled() { return self.propose_vector(); }
         if self.organism.phase_native_online_enabled() {
             return self.propose_unified();
         }
@@ -430,6 +466,7 @@ impl ScientificRuntime {
         Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
         Execute: FnOnce(usize) -> Result<Vec<f32>, String>,
     {
+        if self.organism.phase_vector_enabled() { return Err(RuntimeError::VectorModeRequired); }
         if self.organism.phase_native_online_enabled() {
             return self.step_unified(assess, |action| execute(action).map(|post| (post, 0.0)));
         }
@@ -508,7 +545,7 @@ impl ScientificRuntime {
         Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
         Execute: FnOnce(usize) -> Result<(Vec<f32>, f32), String>,
     {
-        if self.organism.phase_partial_enabled() {
+        if self.organism.phase_partial_enabled() || self.organism.phase_vector_enabled() {
             return self.step_dense_partial(assess, execute);
         }
         if self.protection.emergency_stop_latched() {
@@ -666,14 +703,14 @@ impl ScientificRuntime {
     }
 
     fn validate_partial_values(&self, values: &[Option<f32>]) -> Result<(), RuntimeError> {
-        if !self.organism.phase_partial_enabled() {
+        if !self.organism.phase_partial_enabled() && !self.organism.phase_vector_enabled() {
             return Err(RuntimeError::PartialModeRequired);
         }
         if values.len() != self.organism.config().sensory_cells
             || values
                 .iter()
                 .flatten()
-                .any(|x| !x.is_finite() || !(0.0..1.0).contains(x))
+                .any(|x| !x.is_finite() || if self.organism.phase_vector_enabled() { !(0.0..=1.0).contains(x) } else { !(0.0..1.0).contains(x) })
         {
             return Err(RuntimeError::InvalidRaster);
         }
@@ -684,7 +721,8 @@ impl ScientificRuntime {
     /// factual value and is never materialized as a synthetic zero channel.
     pub fn observe_external_partial(&mut self, values: &[Option<f32>]) -> Result<(), RuntimeError> {
         self.validate_partial_values(values)?;
-        if !self.organism.observe_phase_partial_initial(values) {
+        let accepted=if self.organism.phase_vector_enabled() { self.organism.observe_phase_vector_initial(values) } else { self.organism.observe_phase_partial_initial(values) };
+        if !accepted {
             return Err(RuntimeError::InvalidRaster);
         }
         self.fresh_observation_required = false;
@@ -695,6 +733,7 @@ impl ScientificRuntime {
     /// None in a goal is an unconstrained field. At least one constraint is
     /// required. Setting it does not supply hidden observations or any tuition.
     pub fn set_partial_goal(&mut self, values: &[Option<f32>]) -> Result<(), RuntimeError> {
+        if self.organism.phase_vector_enabled() { return Err(RuntimeError::VectorModeRequired); }
         self.validate_partial_values(values)?;
         if !values.iter().any(Option::is_some) {
             return Err(RuntimeError::InvalidRaster);
@@ -707,6 +746,7 @@ impl ScientificRuntime {
     }
 
     pub fn propose_partial(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.organism.phase_vector_enabled() { return self.propose_vector(); }
         if !self.organism.phase_partial_enabled() {
             return Err(RuntimeError::PartialModeRequired);
         }
@@ -744,7 +784,7 @@ impl ScientificRuntime {
         Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
         Execute: FnOnce(usize) -> Result<(Vec<Option<f32>>, f32), String>,
     {
-        if !self.organism.phase_partial_enabled() {
+        if !self.organism.phase_partial_enabled() && !self.organism.phase_vector_enabled() {
             return Err(RuntimeError::PartialModeRequired);
         }
         if self.protection.emergency_stop_latched() {
@@ -776,7 +816,8 @@ impl ScientificRuntime {
         if let Err(error) = self.validate_partial_values(&post) {
             return Ok(self.latch_fault(format!("unusable factual partial POST: {error}")));
         }
-        let report = match self.organism.observe_phase_partial_result(action, &post) {
+        let update=if self.organism.phase_vector_enabled() { self.organism.observe_phase_vector_result(action,&post,outcome) } else { self.organism.observe_phase_partial_result(action,&post) };
+        let report = match update {
             Some(report) => report,
             None => return Ok(self.latch_fault("factual partial update rejected".into())),
         };
@@ -830,6 +871,7 @@ impl ScientificRuntime {
             .map_err(|_| RuntimeError::InvalidCheckpoint)?;
         if replacement.config().sensory_cells != self.organism.config().sensory_cells
             || replacement.config().motor_cells != self.organism.config().motor_cells
+            || replacement.phase_vector_enabled()!=self.organism.phase_vector_enabled()
         {
             return Err(RuntimeError::InvalidCheckpoint);
         }
