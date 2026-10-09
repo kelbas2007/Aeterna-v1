@@ -576,7 +576,8 @@ impl EvoPhase {
             .enumerate()
             .filter_map(|(action, p)| {
                 let call = if primitives.native_argument_competition {
-                    synaptic_argument_winner(action,primitives,&self.synapses)?
+                    synaptic_argument_winner(action,primitives,&self.cells,
+                    &self.synapses,self.phase_native.as_ref()?.config.coherence_floor)?
                 } else if primitives.bound_calls.iter().any(|b| b.action == action) {
                     primitive_argument_physical_call(
                         action,
@@ -626,7 +627,8 @@ impl EvoPhase {
         let mut candidates = Vec::new();
         for (action, p) in state.programs.iter().enumerate() {
             let call = if primitives.native_argument_competition {
-                synaptic_argument_winner(action,primitives,&self.synapses)
+                synaptic_argument_winner(action,primitives,&self.cells,
+                    &self.synapses,self.phase_native.as_ref()?.config.coherence_floor)
             } else if primitives.bound_calls.iter().any(|b| b.action == action) {
                 primitive_argument_physical_call(
                     action,
