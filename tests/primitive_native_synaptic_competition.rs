@@ -36,7 +36,7 @@ fn physical_synaptic_competition_learns_argument_calls_from_factual_outcomes(){
         sorted.sort_unstable();
         assert_eq!(sorted,vec![1,2]);
         let physical=rt.organism().phase_native_synapse(winner.2).unwrap();
-        assert_eq!([physical.from,physical.to],args.as_slice());
+        assert_eq!(vec![physical.from,physical.to],*args);
         assert!(physical.weight>=0.83);
     }
     assert_eq!(definitions(rt.organism(),&original_roots),definition_before);
