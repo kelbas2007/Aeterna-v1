@@ -32,6 +32,8 @@ jobs:
         run: cargo check --locked --all-targets
       - name: Causal 2-to-5-action physical path mechanism controls
         run: cargo test --locked --release --test multistep_physical_path physical_sensing_paths_of_variable_depth_are_reused_and_lesionable -- --exact --nocapture
+      - name: Factual completed goal cannot masquerade as information frontier
+        run: cargo test --locked --release --test multistep_physical_path completed_goal_is_not_an_unexplored_multistep_information_frontier -- --exact --nocapture
       - name: Untrained two-to-five-action cold variable-depth development
         shell: bash
         run: |
