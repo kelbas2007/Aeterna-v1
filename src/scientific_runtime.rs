@@ -218,6 +218,12 @@ impl ScientificRuntime {
         self.organism.set_phase_native_temporal_multistep(enabled)
     }
 
+    /// Enable carrier-owned multistep planning to the factual sensory goal.
+    /// This never bypasses the ordinary U1 selector or Human Protection.
+    pub fn set_temporal_goal_replanning(&mut self,enabled:bool)->bool{
+        self.organism.set_phase_native_temporal_goal_replanning(enabled)
+    }
+
     /// Extend the existing phase-native temporal affordance to physically
     /// acquired two-action sequences with a factual intermediate state.
     pub fn set_temporal_chain_learning(&mut self, enabled: bool) -> bool {
