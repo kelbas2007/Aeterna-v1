@@ -1,0 +1,33 @@
+name: EvoPhase fresh2 causal reward witness
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'tests/u1_cold_fresh2.rs'
+      - '.github/workflows/autonomous-cycle-fresh2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  new-seed-first-attempt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Enforce physical cognitive source and new-seed preregistration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:src)" = "$(git rev-parse f8a4047ea22e0d96fd0b8dba0c218e6259324774:src)"
+          grep -Fq '0xDA7E_2026_CE42_9801' docs/AUTONOMOUS_CYCLE_FRESH2_PROTOCOL.md
+          grep -Fq 'const SEED:u64=0xDA7E_2026_CE42_9801' tests/u1_cold_fresh2.rs
+      - name: Single fresh2 frozen-source end-to-end witness
+        run: cargo test --locked --release --test u1_cold_fresh2 u1_fresh2_autonomous_reward_causal_transfer -- --exact --nocapture
