@@ -21,6 +21,15 @@ pub struct PhaseUnifiedDecision {
     pub score: f32,
 }
 
+/// Read-only evidence of the *actual* coalesced U1 action competition.
+/// Action IDs are opaque; fields and scores come from physical readout.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseUnifiedActionTrace {
+    pub action: usize,
+    pub fields: [f32; META_FIELD_COUNT],
+    pub score: f32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhaseUnifiedKnowledgeSnapshot {
     pub circuits: u64,
@@ -606,25 +615,12 @@ impl EvoPhase {
         out
     }
 
-    pub fn choose_phase_native_unified_proposal(
+    /// Coalesce proposals by physical motor. This is shared by authority and
+    /// read-only diagnostics so traces cannot silently score another policy.
+    fn coalesced_phase_native_unified_actions(
         &self,
         proposals:&[PhaseUnifiedCognitiveProposal],
-    )->Option<PhaseUnifiedDecision>{
-        if proposals.is_empty(){return None;}
-        if self.phase_native_online_enabled() {
-            let [item] = proposals else { return None; };
-            if item.proposal.action >= self.config.motor_cells
-                || !Self::valid_meta_fields(item.proposal.fields)
-            {
-                return None;
-            }
-            return Some(PhaseUnifiedDecision {
-                supporting_candidate_ids: Vec::new(),
-                proposal_id: item.proposal.proposal_id,
-                action: item.proposal.action,
-                score: item.proposal.fields[0].max(item.proposal.fields[1]),
-            });
-        }
+    )->Option<Vec<(usize,[f32;META_FIELD_COUNT],Vec<u64>)>>{
         let native=self.phase_native.as_ref()?;
         let ecology=native.meta_control.as_ref()?.ecology.as_ref()?;
 
@@ -675,6 +671,47 @@ impl EvoPhase {
 
         if groups.is_empty(){return None;}
         for (_,_,supporters) in &mut groups {supporters.sort_unstable();}
+
+        Some(groups)
+    }
+
+    /// The audit is read-only; it never reveals evaluator labels or selects an
+    /// action, and uses exactly the same U1/U2 filtering as the actuator.
+    pub fn trace_phase_native_unified_competition(
+        &self,
+        proposals:&[PhaseUnifiedCognitiveProposal],
+    )->Option<Vec<PhaseUnifiedActionTrace>>{
+        if self.phase_native_online_enabled(){return None;}
+        let groups=self.coalesced_phase_native_unified_actions(proposals)?;
+        let mut trace=Vec::with_capacity(groups.len());
+        for (action,fields,_) in groups {
+            trace.push(PhaseUnifiedActionTrace{
+                action,fields,score:self.phase_native_meta_score(fields)?,
+            });
+        }
+        Some(trace)
+    }
+
+    pub fn choose_phase_native_unified_proposal(
+        &self,
+        proposals:&[PhaseUnifiedCognitiveProposal],
+    )->Option<PhaseUnifiedDecision>{
+        if proposals.is_empty(){return None;}
+        if self.phase_native_online_enabled() {
+            let [item] = proposals else { return None; };
+            if item.proposal.action >= self.config.motor_cells
+                || !Self::valid_meta_fields(item.proposal.fields)
+            {
+                return None;
+            }
+            return Some(PhaseUnifiedDecision {
+                supporting_candidate_ids: Vec::new(),
+                proposal_id: item.proposal.proposal_id,
+                action: item.proposal.action,
+                score: item.proposal.fields[0].max(item.proposal.fields[1]),
+            });
+        }
+        let groups=self.coalesced_phase_native_unified_actions(proposals)?;
 
         let adjusted=groups.iter().map(|(action,fields,_)|
             PhaseCognitiveProposal{
