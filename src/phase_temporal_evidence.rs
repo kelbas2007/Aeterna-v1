@@ -489,6 +489,58 @@ impl EvoPhase {
         true
     }
 
+    /// Bounded graph traversal through physical, state-conditioned factual
+    /// synapses. Any change to an essential source->motor or motor->state
+    /// synapse invalidates the route. Each node is an actually acquired
+    /// abstract sensory state; the graph carries no evaluator action labels.
+    fn phase_native_temporal_multistep_route(
+        &self, origin:usize, targets:&[usize], min_steps:usize
+    )->Option<(usize,usize,f32,usize)>{
+        let native=self.phase_native.as_ref()?;
+        let evidence=native.temporal_evidence.as_ref()?;
+        if !evidence.multistep_enabled{return None;}
+        let floor=native.config.coherence_floor;
+        let mut frontier=std::collections::VecDeque::new();
+        frontier.push_back((origin,None,1.0f32,0usize,vec![origin]));
+        let mut considered=0usize;
+        let mut best:Option<(usize,usize,f32,usize)>=None;
+        while let Some((cell,first,strength,depth,visited))=frontier.pop_front(){
+            if considered>=1024 {break;}
+            considered+=1;
+            if depth>=8 {continue;}
+            if best.is_some_and(|b|depth>=b.3){continue;}
+            for edge in evidence.transitions.iter().filter(|e|
+                e.from_cell==cell && e.observations>0
+            ){
+                let c0=conductance(
+                    &self.cells,&self.synapses[edge.entry_synapse],floor
+                );
+                let c1=conductance(
+                    &self.cells,&self.synapses[edge.exit_synapse],floor
+                );
+                let physical=strength.min(c0).min(c1);
+                if physical<=1.0e-8 {continue;}
+                let nextdepth=depth+1;
+                let initial=first.unwrap_or((edge.motor_action,edge.entry_synapse));
+                if nextdepth>=min_steps &&targets.contains(&edge.to_cell){
+                    if best.is_none_or(|b|nextdepth<b.3
+                        ||(nextdepth==b.3&&physical>b.2+1.0e-6)){
+                        best=Some((initial.0,initial.1,physical,nextdepth));
+                    }
+                }else if !visited.contains(&edge.to_cell)
+                    && nextdepth<8
+                {
+                    let mut seen=visited.clone();
+                    seen.push(edge.to_cell);
+                    frontier.push_back((
+                        edge.to_cell,Some(initial),physical,nextdepth,seen
+                    ));
+                }
+            }
+        }
+        best
+    }
+
     /// When the physical cue evidence is ambiguous, propose ONLY a sensor
     /// action whose own positive sensory affordance was acquired from real
     /// transitions. An action with no factual distinctions cannot win.
@@ -501,6 +553,25 @@ impl EvoPhase {
         let native=self.phase_native.as_ref()?;
         let state=native.temporal_evidence.as_ref()?;
         let floor=native.config.coherence_floor;
+        if state.multistep_enabled {
+            if let Some(real)=self.current_real.as_ref() {
+                if let Some(current)=self.phase_native_abstract_state(&real.sensory) {
+                    let sources=state.cues.iter()
+                        .map(|cue|cue.source_cell).collect::<Vec<_>>();
+                    if let Some((action,synapse,strength,_steps))=
+                        self.phase_native_temporal_multistep_route(
+                            current.cell,&sources,1
+                        )
+                    {
+                        return Some(PhaseTemporalSensingDecision{
+                            action,synapse,learned_affordance:strength,
+                            missing_evidence:(1.0-belief.evidence_margin)
+                                .clamp(0.0,1.0),
+                        });
+                    }
+                }
+            }
+        }
         if state.chain_learning_enabled {
             if let Some(real)=self.current_real.as_ref() {
                 if let Some(entry)=self.phase_native_abstract_state(&real.sensory) {
