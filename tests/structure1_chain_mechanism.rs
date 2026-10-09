@@ -76,5 +76,13 @@ fn chain_motor_affordance_is_physical_contextual_and_checkpointed(){
     ));
     restored.restore_phase_native_synapse_for_control(read.synapse,link);
     assert_eq!(restored.choose_phase_native_temporal_sensing_action(),Some(read));
+    for _ in 0..2 {
+        assert!(restored.observe_phase_native_temporal_signal(&cue0));
+    }
+    let terminal=restored.choose_phase_native_temporal_outcome_probe()
+        .expect("unknown terminal action");
+    assert_ne!(terminal.0,first);
+    assert_ne!(terminal.0,probe,
+        "an information-carrying motor is not an untried terminal candidate");
     println!("STRUCTURE1_CHAIN_MECHANISM physical_two_step=true prepost_context=true lesion_both=true checkpoint=true");
 }
