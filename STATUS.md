@@ -2,6 +2,26 @@
 
 **Qualified baseline: `main`; active development: `research/beyond-intel4`.** Main was promoted from the original successful INTEL-4 branch by a non-squashed two-parent history-preserving integration. Evidence remains pinned to its exact frozen cognitive source; later documentation/branch changes do not create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) for branch purposes and archival records.
 
+## Latest multistep research — 2026-10-09
+
+**Variable-depth 2–5-step causal sensing has a physically verified mechanism PASS:** 12/12 shuffled
+motor/marker controls, every necessary source→motor and motor→state synapse
+lesion, checkpoint and restoration. [Actions 37954728543](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37954728543).
+The first cold autonomous attempt **FAILED 0/4**. After generic goal-vs-information
+and terminal-credit corrections, [open development 37958136237](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37958136237)
+**independently discovered all four 2–5-step sensor chains**, collected at
+least two extra observations in 80/80 heldout episodes **per depth**, and
+made terminal choices after checkpoint on all 320 episodes. Frozen correct
+outcomes were **59/80, 67/80, 65/80, 59/80**, a **2/4 end-to-end DEVELOPMENT
+FAIL** under the individually ≥64/80 criterion. Full [report](docs/MULTISTEP_CAUSAL_SENSING_RESULT.md)
+and [pre-implementation specification](docs/MULTISTEP_CAUSAL_SENSING_PROTOCOL.md).
+
+The earlier independently consumed STRUCTURE-1 first attempt remains FAIL
+0/4, and these open, feedback-driven diagnostics are *not* sealed new-world
+generality. They establish bounded self-discovery of prerequisites with
+variable length; cost-sensitive terminal correctness at all depths is
+still unqualified. `main` and frozen INTEL-4 remain untouched.
+
 ## Latest bounded autonomous-cycle evidence — 2026-10-09
 
 **Fresh-2 DEVELOPMENT PASS: 4/4 new seeded stochastic worlds.** First-attempt
