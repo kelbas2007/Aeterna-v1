@@ -1,0 +1,103 @@
+name: One-use verified cleanup of archived research branches
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.branch_cleanup_authority_trigger'
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: aeterna-branch-cleanup-20261008
+  cancel-in-progress: false
+
+jobs:
+  safely-delete-archived-refs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify qualified main, archive, all old heads, and closed G1 PR
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          test "$(git rev-parse refs/remotes/origin/archive/evidence-20261008)" = "46c8e64562de7b9e300cb65ddcacc89b4e652d1f"
+          git merge-base --is-ancestor 59c0e299f8927cd9c03c148db07d60ed04ab0e8b refs/remotes/origin/main
+          git fetch origin c7b5455ba006b297288fa8d16ef6300c8a19ceca --depth=1 || true
+          git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
+          test "$(gh pr view 3 --repo "$GITHUB_REPOSITORY" --json state --jq .state)" = "CLOSED"
+
+          cat > /tmp/stale-heads <<'EOF'
+          developmental-agenda 1f71b7285e084316a503c8d70c50390576959043 archive
+          developmental-candidate-succession 16dd12c99d892fd7d5a6be4d1badad446d72b720 archive
+          developmental-law-revision ed9f69d39beef8aaffc53ff11c7523c1a22dca32 archive
+          g1/raw-raster-distinction e5b8608005f0f14e3f32a183206f58221ba1402c archive
+          genesis/full-evophase f50c97d97fcea8b65f1727edb70f33a0b307a250 archive
+          intel2-r1-frozen 94347b62e1074d25aac056cb12452a7162a41f03 archive
+          intel2-r1-postmortem 1429ce98ddf0a7851a074eedef984071497635b2 archive
+          post-intel2-action-ecology 4d132e9164b2e673a8ea70e8b4f2b56fef3252d4 archive
+          post-intel2-c-diagnosis f50bbc161c29833549e07de1a1db3551fa5d18dd archive
+          unified-cognition 903500f2f384e3a3c10329e44d27f620137b3d1c archive
+          unified-operation-competition 6abc7dbb70bfdb2917a033628b70df4027d45259 archive
+          integration/intel4-main 59c0e299f8927cd9c03c148db07d60ed04ab0e8b main
+          EOF
+
+          open_heads="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json headRefName --jq '.[].headRefName')"
+          while read -r name sha retention; do
+            case "$name" in
+              main|intel4-frozen-unified|archive/evidence-20261008|research/beyond-intel4)
+                echo "ERROR: protected branch nominated: $name"; exit 1;;
+            esac
+            if [[ "$retention" == archive ]]; then
+              git merge-base --is-ancestor "$sha" refs/remotes/origin/archive/evidence-20261008 || {
+                echo "ERROR: $name not retained by archive"; exit 1;
+              }
+            else
+              git merge-base --is-ancestor "$sha" refs/remotes/origin/main || {
+                echo "ERROR: $name not retained by main"; exit 1;
+              }
+            fi
+            if grep -Fxq "$name" <<<"$open_heads"; then
+              echo "ERROR: active PR head $name"; exit 1
+            fi
+            echo "ARCHIVE_VERIFIED $name $sha $retention"
+          done < /tmp/stale-heads
+
+      - name: Delete only unchanged archived refs with force-with-lease
+        shell: bash
+        run: |
+          set -euo pipefail
+          deleted=0
+          skipped=0
+          while read -r name sha retention; do
+            actual="$(git ls-remote --heads origin "refs/heads/$name" | awk '{print $1}')"
+            if [[ -z "$actual" ]]; then
+              echo "ALREADY_ABSENT $name"
+              skipped=$((skipped+1))
+              continue
+            fi
+            if [[ "$actual" != "$sha" ]]; then
+              echo "SKIP_CHANGED_HEAD $name expected=$sha actual=$actual"
+              skipped=$((skipped+1))
+              continue
+            fi
+            git push --force-with-lease="refs/heads/$name:$sha" origin ":refs/heads/$name"
+            echo "DELETED_ARCHIVED_BRANCH $name $sha"
+            deleted=$((deleted+1))
+          done < /tmp/stale-heads
+          echo "BRANCH_CLEANUP_RESULT deleted=$deleted skipped=$skipped"
+      - name: Verify four protected refs survive
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in main intel4-frozen-unified archive/evidence-20261008 research/beyond-intel4; do
+            test -n "$(git ls-remote --heads origin "refs/heads/$name")"
+            echo "KEPT_PROTECTED_BRANCH $name"
+          done

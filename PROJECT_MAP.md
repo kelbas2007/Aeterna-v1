@@ -1,46 +1,45 @@
-# AETERNA-v1 — WHERE EVERYTHING IS (2026-10-08)
+# AETERNA-v1 — project map
 
-## Single source of truth
+Updated 2026-10-08. **Exactly four GitHub branches remain.** This is the separate EvoPhase/no-LLM research repository, **not** the mature Codex-AETERNA project.
 
-**Main:** `main` — promoted qualified EvoPhase v1 research runtime, based on frozen successful INTEL-4. Never confuse with the separate mature Codex AETERNA repository.
+## Start here
 
-**Last independently sealed system verdict:** **INTEL-4 PASS**, bounded five-world deterministic synthetic family only. Actions: https://github.com/kelbas2007/Aeterna-v1/actions/runs/37821849040. Frozen production cognition: `c7b5455ba006b297288fa8d16ef6300c8a19ceca`. Source and evaluator unchanged through seal.
+- **[Verified INTEL-4 evidence](docs/INTEL4_RESULT_PASS.md)** — first complete independently seeded frozen five-world deterministic system PASS, [Actions 37821849040](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37821849040). Does **not** establish general AGI.
+- **[Current status](STATUS.md)** — qualifications and unresolved capabilities.
+- **[INTEL-4 preregistration](docs/INTEL4_PROTOCOL.md)** and [frozen cognitive source](docs/INTEL4_CORE_FREEZE.md).
+- **[Research ledger](EXPERIMENT_LEDGER.md)** — historical PASS/FAIL/INVALID events retained.
+- **[FRONTIER-1 new-world protocol](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/FRONTIER1_PROTOCOL.md)** and [first sealed FAIL](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/FRONTIER1_RESULT_FAIL1.md).
 
-**Read these first:**
-- [INTEL-4 verified result](docs/INTEL4_RESULT_PASS.md)
-- [INTEL-4 preregistered contract](docs/INTEL4_PROTOCOL.md)
-- [Current research status](STATUS.md)
-- [Historical experimental ledger](EXPERIMENT_LEDGER.md)
-- [Frozen source guarantee](docs/INTEL4_CORE_FREEZE.md)
+## Git branches — now only four
 
-## Git branches
+| Branch | Meaning |
+|---|---|
+| `main` | **Main project** — source-preserved qualified INTEL-4 baseline, README, current status and guides |
+| `intel4-frozen-unified` | **Immutable scientific snapshot** — original sealed independent INTEL-4 evidence |
+| `research/beyond-intel4` | **Only active research branch** — structurally new stochastic/partial-observation tasks and future architectural prototypes |
+| `archive/evidence-20261008` | **Complete history** — single 13-parent commit anchoring every pre-cleanup experimental branch head |
 
-| Category | Branch | Purpose |
-|---|---|---|
-| Default | `main` | Current qualified INTEL-4 baseline; prefer this for ordinary reading |
-| New work | `research/beyond-intel4` | Tests of structurally novel environments, without changing the frozen INTEL-4 verdict |
-| Historical anchor | `archive/evidence-20261008` | Git octopus anchor holding **all 13 pre-cleanup branch heads**, including negative/burned experiments and former main |
-| Qualified immutable snapshot | `intel4-frozen-unified` | Original INTEL-4 frozen authority run and its result |
-| Temporary integration | `integration/intel4-main` | Source-compatible merge of former main ancestry with qualified INTEL-4; may be deleted after promotion |
-| Existing PR head | `g1/raw-raster-distinction` | Open PR #3: keep until reviewed |
-| Superseded experimental heads | remaining `post-intel2-*`, `intel2-r1-*`, `unified-*`, `developmental-*`, `genesis/*` | Archive anchored; not current production and should not be used as starting points |
+## Housekeeping complete
 
-All legacy heads are recorded with their exact SHA and preserved as reachable Git commit ancestors in [the archival manifest](https://github.com/kelbas2007/Aeterna-v1/blob/archive/evidence-20261008/ARCHIVE_MANIFEST.md). Do not delete negative reports or reclassify burned seeds as success. Previous main at `d13585da3af57ca71a4d863636e0b14cb7d83471` remains reachable in qualified integration history and the archive.
+**[Branch cleanup proof](docs/BRANCH_CLEANUP_RESULT.md)**: [workflow 37832467225](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37832467225), `deleted=12 skipped=0`. The obsolete draft G1 PR [#3](https://github.com/kelbas2007/Aeterna-v1/pull/3) was closed **without merging**; its exact branch-tip commit survives under the archive. No unique results were silently discarded.
 
-## Reconciliation method
+The historical `main` and the successful INTEL-4 line had diverged. The integration commit `6a50e7ef288a86317eabba83fa890c54b351364f` used **both histories as parents** while deliberately selecting the **qualified INTEL-4 tree** for all current source files. This is not a blind merge of failed experimental Rust variants. [Integration CI 37831043806](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37831043806) was SUCCESS. Old main before consolidation: `d13585da3af57ca71a4d863636e0b14cb7d83471`.
 
-The previous `main` and `intel4-frozen-unified` had diverged. The integration merge uses **two parents**, one from each history, while explicitly choosing the complete **qualified INTEL-4 tree** as the working content. This is deliberate; blindly merging conflicting Rust logic from failed experiments would compromise the frozen qualification. Historical unique files from the former main can be reviewed on the archival branch at the pinned original main SHA.
+Exact old branch SHAs and their recovery procedure: [ARCHIVE_MANIFEST.md](https://github.com/kelbas2007/Aeterna-v1/blob/archive/evidence-20261008/ARCHIVE_MANIFEST.md).
 
-No genetic/source changes were made during consolidation. Documentation changes after qualification are not new scientific evidence.
+## Next scientific boundary
 
-## Workflow safety
+INTEL-4 established bounded adaptive behavior across deterministic A–E families. It did **not** qualify long noisy inference. The first different-family test **FRONTIER-1** independently failed: 40/80 correct latent decisions, zero repeated sensing, last noisy-cue oracle 56/80 and 8-cue majority oracle 69/80. Do not relabel or patch its consumed authority seed. The research branch now has three physically tested components:
 
-- Never edit the historical frozen `INTEL4_RESULT_PASS.md` as if rerunning a result.
-- New tests must have a preregistered contract, genuinely different laws, fresh seed, and original outcomes.
-- A test on the old A–E generators is **diagnostic**, not proof of structural transfer.
-- No automatic PR merges from archival experiments.
-- Human Protection software gate is not equivalent to real-world physical safety engineering.
+- **[TE1 physical temporal evidence](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE1_RESULT.md):** causal phase-synapse memory, but strict noisy holdout **FAIL 63/80** versus a predeclared 70/80 threshold; 11 tied-evidence abstentions.
+- **[TE2 sensory affordance](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE2_RESULT.md):** learned the observation-producing opaque motor from balanced factual experience in 6/6 assignments; physical lesion/π/checkpoint controls.
+- **[TE3 unified sensing](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE3_RESULT.md):** learned U1 selected that physically grounded sensing motor in an actual protected step in 6/6 assignments. Final workflow [37837182177](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37837182177) **SUCCESS** with C/G20–G23/U1–U3/Human Protection/Release regressions.
 
-## GitHub GUI cleanup when branch deletion is authorized
+- **[TE4 cold autonomous evaluation](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE4_RESULT_FAIL.md):** **DEVELOPMENT_FAIL** on 4 new worlds with no matched motor tuition. Frozen holdouts: 40/80, 55/80, 40/80, 38/80; despite some discovered sensors, evidence did not reliably control final action.
+- **[TE5 physical belief-conditioned action](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE5_RESULT.md):** prepared facts learned 12/12 cue-conditional action associations and revised 12/12; **6/6 protected U1 sensing→commit mechanism runs passed**, [Actions 37842428971](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37842428971). However post-TE5 replay of the unchanged burned TE4 generator **still failed**: 40/80, 55/80, 40/80, 40/80. Its CI completed, but its actual diagnostic scorer returned FAIL.
 
-The connected GitHub API currently permits creating/updating refs, but not deleting them. Once `main` is confirmed and archive branch reviewed, go to repository → **Branches**, and delete only the branches marked superseded above. Do not delete `main`, `archive/evidence-20261008`, `research/beyond-intel4`, or PR #3 head before review. The branch list may remain long until that last GUI-only step.
+**Not yet solved:** untrained cold discovery of the sensor action, physical delayed credit for seeking information, and learning the final response from stochastic observations. No end-to-end new-world stochastic qualification has passed. Do not convert the burned FRONTIER-1 FAIL or the TE1 strict noisy FAIL into PASS. TE1–TE3 remain opted-in experimental research, not merged into qualified `main`.
+
+The next architecture question is carrier-owned **uncertainty reduction and self-initiated active sensing from cold experience**, not another permutation of A–E.
+
+The scientific runtime still uses a trusted physical-action protection callback, not qualified real-world human-safety hardware. No changes to the separate mature Codex-AETERNA have been made.
