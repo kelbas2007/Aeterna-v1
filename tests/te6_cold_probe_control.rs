@@ -35,6 +35,11 @@ fn te6_autonomous_motor_coverage_discovers_sensing_affordance_physically() {
         let sensory=evo.choose_phase_native_temporal_sensing_action().unwrap();
         assert_eq!(sensory.action,sensor);
         assert!(sensory.learned_affordance>0.0);
+        assert!(evo.phase_native_temporal_action_evidence_admissible(sensor));
+        assert!(!evo.phase_native_temporal_action_evidence_admissible(
+            (sensor+1)%6
+        ),"unknown alternatives cannot masquerade as sufficiently informed");
+
         assert!(evo.choose_phase_native_temporal_unknown_probe().is_none());
         let checkpoint=evo.phase_native_checkpoint().unwrap();
         let mut restored=EvoPhase::new(evo.config().clone());
@@ -48,6 +53,14 @@ fn te6_autonomous_motor_coverage_discovers_sensing_affordance_physically() {
             "missing conducting affordance must reopen investigation");
         restored.restore_phase_native_synapse_for_control(sensory.synapse,saved);
         assert_eq!(restored.choose_phase_native_temporal_sensing_action(),Some(sensory));
+        for _ in 0..3 {
+            assert!(restored.observe_phase_native_temporal_signal(
+                &foundation::scene(&l1,cue0,0)));
+        }
+        assert!(!restored.phase_native_temporal_evidence().unwrap().needs_more);
+        assert!(restored.phase_native_temporal_action_evidence_admissible(
+            (sensor+1)%6
+        ),"decisive factual belief releases ordinary goal actions");
     }
     println!("TE6_COVERAGE unknown_probe=true physical_sensor=true lesion=true restart=true");
 }
