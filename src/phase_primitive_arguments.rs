@@ -284,7 +284,7 @@ impl EvoPhase {
         let Some(primitives) = state.primitives.as_ref() else {
             return 0;
         };
-        if !primitives.argument_transfer_enabled {
+        if !primitives.argument_transfer_enabled || primitives.native_argument_competition {
             return 0;
         }
         let width = self.config.sensory_cells;
@@ -575,7 +575,9 @@ impl EvoPhase {
             .iter()
             .enumerate()
             .filter_map(|(action, p)| {
-                let call = if primitives.bound_calls.iter().any(|b| b.action == action) {
+                let call = if primitives.native_argument_competition {
+                    synaptic_argument_winner(action,primitives,&self.synapses)?
+                } else if primitives.bound_calls.iter().any(|b| b.action == action) {
                     primitive_argument_physical_call(
                         action,
                         primitives,
@@ -623,7 +625,9 @@ impl EvoPhase {
         }
         let mut candidates = Vec::new();
         for (action, p) in state.programs.iter().enumerate() {
-            let call = if primitives.bound_calls.iter().any(|b| b.action == action) {
+            let call = if primitives.native_argument_competition {
+                synaptic_argument_winner(action,primitives,&self.synapses)
+            } else if primitives.bound_calls.iter().any(|b| b.action == action) {
                 primitive_argument_physical_call(
                     action,
                     primitives,
