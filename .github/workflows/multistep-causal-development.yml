@@ -1,0 +1,33 @@
+name: EvoPhase variable-depth causal sensing development
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/scientific_runtime.rs'
+      - 'tests/multistep_physical_path.rs'
+      - '.github/workflows/multistep-causal-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: multi-depth-causal-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  physical-multistep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile all targets
+        run: cargo check --locked --all-targets
+      - name: Causal 2-to-5-action physical path mechanism controls
+        run: cargo test --locked --release --test multistep_physical_path physical_sensing_paths_of_variable_depth_are_reused_and_lesionable -- --exact --nocapture
