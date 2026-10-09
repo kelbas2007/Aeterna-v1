@@ -970,10 +970,26 @@ impl EvoPhase {
                 best_for(state.cues[1].source_cell)
             ){
                 if a.0!=b.0 {
-                    // Require two net physical observations of support
-                    // (rather than one) when a mistaken belief would change
-                    // the chosen real-world action.
-                    let extra=2.0/state.config.max_observations as f32;
+                    // A consequential disagreement normally needs two
+                    // net physical observations. But another observation
+                    // may require a *learned multi-action causal path*.
+                    // Discount the marginal confidence demand by its
+                    // physically conducting action cost; otherwise the
+                    // organism can exhaust its external budget investigating
+                    // rather than acting. This uses acquired phase links,
+                    // not an external time or motor-role schedule.
+                    let floor=native.config.coherence_floor;
+                    let extra_costly_chain=state.chain_learning_enabled
+                        &&state.chains.iter().any(|c|
+                            conductance(&self.cells,
+                                &self.synapses[c.entry_synapse],floor)>1.0e-8
+                            &&conductance(&self.cells,
+                                &self.synapses[c.read_synapse],floor)>1.0e-8
+                        );
+                    let predicted_information_cost=
+                        if extra_costly_chain {2.0}else{1.0};
+                    let extra=2.0/(state.config.max_observations as f32
+                        *predicted_information_cost);
                     required_margin=required_margin.max(extra);
                 }
             }
