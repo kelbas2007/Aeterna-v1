@@ -34,6 +34,8 @@ jobs:
         run: cargo test --locked --release --test multistep_physical_path physical_sensing_paths_of_variable_depth_are_reused_and_lesionable -- --exact --nocapture
       - name: Factual completed goal cannot masquerade as information frontier
         run: cargo test --locked --release --test multistep_physical_path completed_goal_is_not_an_unexplored_multistep_information_frontier -- --exact --nocapture
+      - name: Belief-conditioned terminal reward trial causal regression
+        run: cargo test --locked --release --test multistep_physical_path factual_terminal_trials_preserve_belief_conditioned_ucb_in_multistep_carrier -- --exact --nocapture
       - name: Untrained two-to-five-action cold variable-depth development
         shell: bash
         run: |
