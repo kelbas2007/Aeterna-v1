@@ -4,11 +4,12 @@
 
 ## Current development — 2026-10-09
 
-Seven opt-in modes are documented in [the guide index](docs/README.md): cold online
+Eight opt-in modes are documented in [the guide index](docs/README.md): cold online
 acquisition, acquired rules, expanded formulas, partial observations, inverse
 inference, full-observed conditional/noisy continual learning, and combined
-[noisy partial inference](docs/UNCERTAIN_LEARNING.md). Checkpoint v6
-retains compatibility with v1–v5. Rule parameters reside in shared phase synapses;
+[noisy partial inference](docs/UNCERTAIN_LEARNING.md), plus
+[multivariate perception](docs/VECTOR_PERCEPTION.md). Checkpoint v7
+retains compatibility with v1–v6. Rule parameters reside in shared phase synapses;
 hypothesis fitting, context metadata and bounded planning are software.
 
 Open development comparisons: inverse inference reached 256/256 new goals versus
@@ -27,6 +28,16 @@ decision stump's 111/120, with a two-action budget. The phase agent measured
 first in all 120 tasks, made one wrong commitment and abstained eleven times.
 The corpus is small and familiar; the result is open development evidence.
 
+[Recorded handwritten digits](docs/DIGITS_BENCHMARK.md) now exercise 64-pixel
+perception: 343/364 (94.23%) frozen responses, versus same-facts bounded 3-NN
+335/364 and centroid 328/364. Acquired measurement is first in all 364 tasks,
+with seven abstentions and fourteen wrong responses. Three motor/pixel
+permutations reuse the same held-out images. Actual PNG/JPEG recognition and
+external correction run in separate processes; bounded pattern parameters live
+in physical phase links, while quantization and voting are inherited software.
+Recorded time-series signals and integration with symbolic planning remain
+unvalidated.
+
 The development source is integrated with TE5 through upstream `3e6fe616`.
 TE5 supports prepared physical belief-to-action learning and protected U1
 sensing-to-commit decisions. Its cold post-TE5 diagnostic remains **FAIL**:
@@ -35,8 +46,7 @@ TE4 and TE1 failures and references the exact results.
 
 Ordinary regressions, causal controls and separate-process demonstrations are
 available on the research branch. The [validation record](docs/DEVELOPMENT_VALIDATION.md)
-distinguishes the earlier 127-test integration from the new combined-mode checks.
-[Validation record](docs/DEVELOPMENT_VALIDATION.md). These checks do not rerun
+distinguishes the earlier 127/137-test integrations from the perception checks. These checks do not rerun
 consumed authority packs or qualify a new scientific gate.
 
 ## Current scientific boundary — after qualified INTEL-4

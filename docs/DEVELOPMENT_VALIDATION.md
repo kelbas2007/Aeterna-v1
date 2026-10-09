@@ -1,8 +1,37 @@
 # Development integration validation — 2026-10-09
 
-The latest section covers the seventh combined uncertainty mode and recorded
-Iris measurements. The earlier integration record is retained below. Both are
-open development validation, not new sealed intelligence qualifications.
+The latest section covers the eighth multivariate perception mode and recorded
+handwritten images. Earlier combined-uncertainty and integration records remain
+below. These are open development checks, not sealed intelligence qualifications.
+
+## Multivariate perception validation — completed locally
+
+| Check | Outcome |
+|---|---|
+| `cargo check --locked --all-targets` | PASS |
+| `bash scripts/check.sh` | **147 passed, 0 failed**, 8 ignored, 93 filtered in 36 test-binary runs; both dataset checksums, statistical crosscheck and release bins/examples PASS |
+| New vector mechanism checks | 8 passed: actual feature/motor cut, π shift and exact restore, factual correction, REAL/IMAGINED boundary, acquired sensing, bounded memory, invalid input/POST and atomic restart |
+| Recorded digit images | 343/364 (94.23%) phase; same-facts centroid 328/364 and bounded 3-NN 335/364; seven abstentions, fourteen wrong responses, measurement first 364/364, 721 actual test actions; [full contract and limits](DIGITS_BENCHMARK.md) |
+| Real-file CLI integration | PASS: separate training/load processes, PNG/JPEG, background inversion, external correction into a new checkpoint, malformed-input and overwrite rejection |
+| `bash scripts/demo.sh` | All seven previous examples plus the perception utility trained and resumed in separate processes; perception exported a held-out PGM and recognized digit 0 |
+| Actual previously saved v6 files | All seven original v6 demonstration checkpoints resumed with the new v7 reader |
+| Perception memory | 432 physical cells, 22880 links, 320/352 occupied prototypes, 2623049-byte canonical checkpoint; fixed topology after tuition; separate 512-record feedback check retains bounded provenance |
+| `cargo clippy --locked --lib -- -D clippy::correctness` | PASS; nonfatal style/legacy warnings remain |
+| Documentation, shell and diff checks | No missing Markdown targets; `bash -n` and `git diff --check` PASS |
+
+The generic vector mode uses actual PRE and bounded external outcome feedback.
+Image annotations stay with the evaluator/application. Acquired numerical centers
+and response strengths are stored in shared phase links; quantization, distance
+and voting are inherited software. Writer v7 reads v1–v6. The same 364 held-out
+images are reused in three pixel/motor permutations, not 1092 independent images.
+The engineering tie-strength correction after first scoring did not change any
+reported corpus result. Familiar public data, fixed image preprocessing and
+supervised corrective feedback limit the claim; recorded time-series signals,
+new-writer robustness and integration with symbolic planning remain unvalidated.
+
+The 147 invocations include shared fixtures and are not independent scientific
+trials. Consumed authority packs and negative cold scorers were not rerun.
+Historical independent PASS/FAIL evidence is unchanged.
 
 ## Combined uncertainty validation — completed locally
 
