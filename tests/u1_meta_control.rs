@@ -219,3 +219,47 @@ fn u1_meta_competition_source_has_no_module_priority(){
         assert!(source.contains(required),"missing U1 physical dependency {required}");
     }
 }
+
+
+#[test]
+fn u1_positive_evidence_does_not_dilute_factual_utility_in_online_mode() {
+    let mut evo=train_meta();
+    let base=[1.0,0.0,0.0,0.0,0.0];
+    let supported=[1.0,0.5,0.0,0.0,0.0];
+    let legacy_base=evo.phase_native_meta_score(base).unwrap();
+    let legacy_supported=evo.phase_native_meta_score(supported).unwrap();
+    assert!(legacy_supported<legacy_base,
+        "reproduce the established positive-evidence dilution");
+    assert!(evo.set_phase_native_meta_monotone_evidence(true));
+    let first=evo.phase_native_meta_score(base).unwrap();
+    let second=evo.phase_native_meta_score(supported).unwrap();
+    assert!(second>first+1.0e-4,
+        "extra physically supported epistemic evidence must not lower value");
+    let candidates=[
+        PhaseCognitiveProposal{proposal_id:14,action:0,fields:base},
+        PhaseCognitiveProposal{proposal_id:39,action:1,fields:supported},
+    ];
+    assert_eq!(evo.choose_phase_native_meta_proposal(&candidates).unwrap().action,1);
+    let mut reversed=candidates;
+    reversed.reverse();
+    assert_eq!(evo.choose_phase_native_meta_proposal(&reversed).unwrap().action,1);
+    let syn=evo.phase_native_meta_synapses().unwrap()[1];
+    let original=evo.perturb_phase_native_synapse_for_control(syn,0.0,0.0).unwrap();
+    assert_eq!(evo.phase_native_meta_score(base).unwrap(),
+        evo.phase_native_meta_score(supported).unwrap(),
+        "the added evidence is useless when its physical synapse is lesioned");
+    assert!(evo.choose_phase_native_meta_proposal(&candidates).is_none(),
+        "ties must fail closed, not invent a motor priority");
+    evo.restore_phase_native_synapse_for_control(syn,original);
+    assert_eq!(evo.choose_phase_native_meta_proposal(&candidates).unwrap().action,1);
+
+    let checkpoint=evo.phase_native_meta_checkpoint().unwrap();
+    let mut resumed=carrier();
+    assert!(resumed.restore_phase_native_meta_checkpoint(checkpoint));
+    assert!(resumed.phase_native_meta_monotone_evidence());
+    assert_eq!(resumed.phase_native_meta_score(supported),
+        evo.phase_native_meta_score(supported));
+    assert!(resumed.set_phase_native_meta_monotone_evidence(false));
+    assert_eq!(resumed.phase_native_meta_score(supported),Some(legacy_supported));
+    println!("U1_MONOTONE positive_evidence=true physical_lesion=true restore=true legacy_unchanged=true");
+}
