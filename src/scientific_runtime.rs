@@ -212,6 +212,13 @@ impl ScientificRuntime {
         true
     }
 
+    /// Change only the U1 scoring equation, not candidate classes or safety.
+    /// Default remains the historical INTEL-4 compatible normalized policy.
+    /// Once enabled, the policy is stored in the physical meta checkpoint.
+    pub fn set_unified_monotone_evidence_scoring(&mut self, enabled: bool) -> bool {
+        self.organism.set_phase_native_meta_monotone_evidence(enabled)
+    }
+
     /// Opt-in bounded evidence trace. Turning on diagnostics cannot change U1.
     pub fn set_unified_decision_tracing(&mut self, enabled: bool) {
         self.unified_trace_enabled = enabled;
