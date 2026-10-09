@@ -258,6 +258,88 @@ impl EvoPhase {
             self.phase_native=Some(native);
             return false;
         };
+        // Generic two-step causal affordance, opt-in. An opaque motor
+        // producing a distinct factual non-cue state becomes a pending
+        // hypothesis. A *different* motor that physically returns that state
+        // to an acquired raw cue proves the full chain. Neither action is
+        // named, taught or selected by the external environment.
+        if evidence.chain_learning_enabled && native.config.learning_enabled
+            && evidence.cues.len()==2
+        {
+            let pre_cue=evidence.cues.iter().any(|c|c.source_cell==pre.cell);
+            let post_cue=evidence.cues.iter().any(|c|c.source_cell==post.cell);
+            if let Some(pending)=evidence.pending_chain.clone() {
+                if pre.cell==pending.marker_cell {
+                    if let Some(ref mut active)=evidence.pending_chain {
+                        active.trials[action]=active.trials[action].saturating_add(1);
+                    }
+                    if post_cue && pending.first_action!=action {
+                        let index=if let Some(i)=evidence.chains.iter().position(|c|
+                            c.first_action==pending.first_action
+                                && c.second_action==action
+                                && c.marker_cell==pending.marker_cell
+                        ){ i } else {
+                            let entry=self.native_synapse(
+                                self.motor_cell(pending.first_action),
+                                pending.marker_cell
+                            );
+                            let read=self.native_synapse(
+                                self.motor_cell(action),evidence.hub_cell
+                            );
+                            evidence.chains.push(PhaseTemporalChain{
+                                first_action:pending.first_action,
+                                second_action:action,
+                                marker_cell:pending.marker_cell,
+                                entry_synapse:entry,
+                                read_synapse:read,
+                                support:0,
+                            });
+                            evidence.chains.len()-1
+                        };
+                        let chain=&mut evidence.chains[index];
+                        chain.support=chain.support.saturating_add(1);
+                        for syn_index in [chain.entry_synapse,chain.read_synapse] {
+                            let syn=&mut self.synapses[syn_index];
+                            syn.phase_offset=wrap_phase(
+                                self.cells[syn.to].phase-self.cells[syn.from].phase
+                            );
+                            syn.confidence=1.0;
+                            syn.weight=(syn.weight
+                                +1.0/evidence.config.max_observations as f32)
+                                .min(1.0);
+                            syn.eligibility=1.0;
+                        }
+                        evidence.pending_chain=None;
+                    }
+                    native.temporal_evidence=Some(evidence);
+                    self.phase_native=Some(native);
+                    return true;
+                }
+            }
+            if pre_cue && !post_cue && pre.cell!=post.cell {
+                let index=if let Some(i)=evidence.samplers.iter()
+                    .position(|m|m.motor_action==action){i}else{
+                    let link=self.native_synapse(
+                        self.motor_cell(action),evidence.hub_cell
+                    );
+                    evidence.samplers.push(PhaseTemporalSampler{
+                        motor_action:action,sensory_synapse:link,
+                        trials:0,distinctions:0,belief_trials:[0;2]
+                    });
+                    evidence.samplers.len()-1
+                };
+                evidence.samplers[index].trials=
+                    evidence.samplers[index].trials.saturating_add(1);
+                evidence.pending_chain=Some(PhaseTemporalPendingChain{
+                    first_action:action,
+                    marker_cell:post.cell,
+                    trials:vec![0;self.config.motor_cells],
+                });
+                native.temporal_evidence=Some(evidence);
+                self.phase_native=Some(native);
+                return true;
+            }
+        }
         if !native.config.learning_enabled
             || evidence.cues.len()!=2
             || !evidence.cues.iter().any(|c|c.source_cell==pre.cell)
