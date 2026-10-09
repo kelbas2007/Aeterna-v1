@@ -1,0 +1,47 @@
+name: Fresh1 twelve unseen causal replanning worlds
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'tests/goal_replan_fresh1.rs'
+      - '.github/workflows/goal-replan-fresh1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  first-attempt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify frozen cognitive source and preregistered challenge
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD:src)" = "$(git rev-parse ec3bf3827e449ad37569e90e4f59842544b927e3:src)"
+          test "$(git rev-parse HEAD:tests/goal_replan_fresh1.rs)" = "c01f37beaa5f32df0f25f4fc13f2b212004403d6"
+          grep -Fq '0x6A17_2026_11FA_9001' docs/GOAL_REPLAN_FRESH1_PROTOCOL.md
+          grep -Fq 'Rng::new(0x6A17_2026_11FA_9001)' tests/goal_replan_fresh1.rs
+      - name: Exactly one complete fresh twelve-world transfer check
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test goal_replan_fresh1 goal_replan_fresh_twelve_opaque_worlds_first_attempt -- --exact --nocapture 2>&1 | tee goal-replan-fresh1.log
+      - name: Demand complete predeclared causal result
+        run: grep -F 'GOAL_REPLAN_FRESH_SUMMARY intact=12/12 drift_recovered=12/12 verdict=DEVELOPMENT_PASS' goal-replan-fresh1.log
+      - name: Retain first-attempt evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: goal-replan-fresh1-first-attempt
+          path: goal-replan-fresh1.log
+          if-no-files-found: ignore
