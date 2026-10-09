@@ -31,9 +31,13 @@ regressions, dataset checksums, documentation links and nine learn/restore
 examples plus the perception utility. It now includes both
 `structure1_chain_mechanism` and `multistep_physical_path` mechanism suites.
 
-The archived-baseline workflow explicitly checks out the exact INTEL-4 cognitive
-commit before its ordinary regression run. Its success concerns that historical
-source, not qualification of current main. Consumed authority tests, fresh seed
+The archived-baseline workflow checks out previous main `6c6bb4d` with its
+ordinary test harness, then verifies the cognitive tree against exact INTEL-4
+commit `c7b5455b` before ordinary regression tests. Its success concerns that historical
+source, not qualification of current main. The historical library had no
+external dependencies and no tracked Cargo.lock. The job creates its
+dependency-free lockfile offline in the detached CI workspace before all locked
+compilation/test commands; the frozen Git tree remains unchanged. Consumed authority tests, fresh seed
 packs, protocols and trigger files are unchanged and are not rerun.
 
 Local results and the final publication are recorded in

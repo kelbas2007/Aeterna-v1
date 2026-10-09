@@ -25,16 +25,22 @@ jobs:
         with:
           # Test the archived baseline independently of the current main source.
           # This is an ordinary regression, never a rerun of its authority pack.
-          ref: c7b5455ba006b297288fa8d16ef6300c8a19ceca
+          # Previous main includes the later ordinary regression harness.
+          ref: 6c6bb4d597619060449cb0f63d4266b3b283271d
+          fetch-depth: 0
           persist-credentials: false
       - name: Verify qualified cognitive source
         run: |
-          test "$(git rev-parse HEAD)" = c7b5455ba006b297288fa8d16ef6300c8a19ceca
+          test "$(git rev-parse HEAD)" = 6c6bb4d597619060449cb0f63d4266b3b283271d
           git diff --exit-code c7b5455ba006b297288fa8d16ef6300c8a19ceca -- src Cargo.toml Cargo.lock
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.99.0'
       - uses: Swatinem/rust-cache@v2
+      - name: Resolve dependencies for the historical library snapshot
+        # Cargo.lock was not tracked in the original INTEL-4 commit.
+        # Generate it only in this detached CI checkout, then lock every check.
+        run: cargo generate-lockfile --offline
       - name: Check compilation targets
         run: cargo check --locked --all-targets
       - name: Run ordinary physical and unified regressions

@@ -19,9 +19,15 @@ test and stopped because `AETERNA_INTEL2_SEED` was absent. No authority seed or
 new qualification was supplied; the initial failure log is retained locally.
 The corrected runner selects only the intended ordinary tests with `--exact`.
 
-The baseline workflow now checks out original qualified cognitive source
+The baseline workflow checks out previous main
+`6c6bb4d597619060449cb0f63d4266b3b283271d` with its later ordinary test harness,
+then verifies its cognitive tree against original qualified source
 `c7b5455ba006b297288fa8d16ef6300c8a19ceca` before ordinary tests; it cannot be
-interpreted as qualifying later main code. Historical qualification files and
+interpreted as qualifying later main code. The original library had no
+external dependencies or tracked Cargo.lock; the first archived job rejected
+`--locked` with no lockfile. The runner now generates its dependency-free
+lockfile offline in the detached CI checkout before locked checks. This changes
+no archived source, protocol, evidence or authority seed. Historical qualification files and
 used protocols are unchanged by this integration. Planned push-trigger review
 selects only development regressions, documentation and archived-baseline
 checks. No consumed authority workflow is selected.
@@ -33,6 +39,7 @@ Verified local checks on the reviewed cognitive source:
 | `cargo check --locked --all-targets` | PASS |
 | Ordinary and causal test selections in `scripts/check.sh` | **174 passed, 0 failed**, 8 ignored, 181 filtered across 50 test-binary runs |
 | Release binaries/examples, statistical crosscheck | PASS |
+| Archived baseline with previous-main test harness | Compilation, selected physical/unified tests and release build PASS |
 | `bash scripts/demo.sh` | Nine examples plus perception trained and resumed in separate processes; PASS |
 | Recorded dataset checksums | Iris, digits and GunPoint PASS |
 | Markdown links | 211 documents, no missing local targets |

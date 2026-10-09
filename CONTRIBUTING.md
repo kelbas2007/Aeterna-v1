@@ -38,7 +38,8 @@ processes and writes checkpoints to a new temporary directory.
 Active CI checks the current source on both main and research, including the
 two-action and variable-depth physical sensing controls, and checks local
 documentation links. The separate archived-baseline workflow explicitly checks
-out INTEL-4's exact cognitive commit and runs its ordinary regressions. A green
+out previous main `6c6bb4d`, verifies its source against INTEL-4's exact cognitive
+commit, and runs its ordinary regressions. A green
 archived-baseline job says nothing about qualification of the current source.
 Neither runner executes consumed authority packs. See the
 [integration record](docs/BRANCH_INTEGRATION_20261009.md).

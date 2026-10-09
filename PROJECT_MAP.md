@@ -44,8 +44,8 @@ On `main` or `research/beyond-intel4`, run `bash scripts/check.sh` for ordinary
 regressions, including physical two-action and 2–5-action sensing paths, and
 `bash scripts/demo.sh` for nine learn/restore examples and the perception utility.
 Current-source development CI and documentation links run on both branches.
-The separate archived-baseline job checks out exact INTEL-4 source and runs its
-ordinary regressions. Historical authority workflows remain separate and are
+The separate archived-baseline job checks out previous main, verifies its exact
+INTEL-4 source and runs its ordinary regressions. Historical authority workflows remain separate and are
 not rerun during integration.
 
 The numeric rule modes combine acquired physical phase parameters with software
