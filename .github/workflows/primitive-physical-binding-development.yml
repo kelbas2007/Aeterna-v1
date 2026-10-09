@@ -1,0 +1,48 @@
+name: Physical primitive argument binding development
+
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_primitives.rs'
+      - 'src/phase_primitive_arguments.rs'
+      - 'src/phase_induction.rs'
+      - 'tests/primitive_argument_transfer.rs'
+      - '.github/workflows/primitive-physical-binding-development.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: primitive-native-binding-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mechanism-and-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Validate physical primitive binding source and all targets
+        run: |
+          cargo check --locked --all-targets
+          git diff --check
+      - name: Test physical acquisition, protected runtime, checkpoint and lesions
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test primitive_argument_transfer -- --nocapture 2>&1 | tee primitive-physical.log
+      - name: Verify separately reported physical source ownership
+        run: grep -F 'PRIMITIVE_PHYSICAL_BINDINGS calls=2 source_definitions_unchanged=true query_no_fit=true checkpoint=true lesion=true restore=true' primitive-physical.log
+      - name: Preserve log even on scientific failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: primitive-physical-binding-evidence
+          path: primitive-physical.log
+          if-no-files-found: ignore
