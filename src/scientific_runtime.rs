@@ -10,7 +10,8 @@ use crate::carrier::{
     EvoPhase, PhaseNativeCheckpoint, PhaseCognitiveProposal,
     PhaseMetaControlCheckpoint, PhaseMetaDecision,
     PhaseHypothesisEcologyConfig, PhaseUnifiedDecision, PhaseUnifiedCognitiveProposal,
-    PhaseTemporalEvidenceConfig,
+    PhaseUnifiedActionTrace, PhaseTemporalEvidenceReadout,
+    PhaseTemporalSensingDecision, PhaseTemporalOutcomeDecision, PhaseTemporalEvidenceConfig,
     PhasePartialDecisionKind,
 };
 use crate::human_protection::{
@@ -81,6 +82,8 @@ pub enum LifetimeEventKind {
     Blocked(HumanProtectionRecord),
     Executed { action: usize, suppressed: usize, learned: bool },
     ExecutionFault(String),
+    /// Bounded, opt-in factual evidence of U1 competition and its consequence.
+    UnifiedDecisionTrace(UnifiedDecisionTrace),
     CognitiveRestart,
     OperatorReset,
 }
@@ -90,6 +93,20 @@ pub struct LifetimeEvent {
     pub sequence: u64,
     pub goal_epoch: u64,
     pub kind: LifetimeEventKind,
+}
+
+/// Physical U1 arbitration before action and an optional factual consequence.
+/// No evaluator labels or privileged actor categories enter this audit.
+#[derive(Debug, Clone)]
+pub struct UnifiedDecisionTrace {
+    pub selected_action: usize,
+    pub actions: Vec<PhaseUnifiedActionTrace>,
+    pub belief_before: Option<PhaseTemporalEvidenceReadout>,
+    pub sensing_before: Option<PhaseTemporalSensingDecision>,
+    pub outcome_before: Option<PhaseTemporalOutcomeDecision>,
+    pub factual_outcome: Option<f32>,
+    pub acquired_sample: bool,
+    pub online_utility: Option<f32>,
 }
 
 #[derive(Debug, Clone)]
@@ -114,6 +131,8 @@ pub struct ScientificRuntime {
     audit: VecDeque<LifetimeEvent>,
     fresh_observation_required: bool,
     model_learning_enabled: bool,
+    online_unified_learning_enabled: bool,
+    unified_trace_enabled: bool,
 }
 
 impl ScientificRuntime {
@@ -133,6 +152,8 @@ impl ScientificRuntime {
             audit: VecDeque::new(),
             fresh_observation_required: true,
             model_learning_enabled,
+            online_unified_learning_enabled: false,
+            unified_trace_enabled: false,
         })
     }
 
@@ -177,6 +198,30 @@ impl ScientificRuntime {
         }
         self.organism.set_phase_native_meta_learning_enabled(false);
         true
+    }
+
+    /// Opt-in, factual U1 plasticity. Unlike the historical frozen checkpoint,
+    /// this trains the EXISTING physical meta-synapses from executed POSTs.
+    /// It never selects or permits an action and is disabled during holdout.
+    pub fn set_unified_online_learning(&mut self, enabled: bool) -> bool {
+        if !self.organism.phase_native_meta_control_enabled() { return false; }
+        self.online_unified_learning_enabled = enabled;
+        self.organism.set_phase_native_meta_learning_enabled(
+            enabled && self.model_learning_enabled
+        );
+        true
+    }
+
+    /// Opt-in bounded evidence trace. Turning on diagnostics cannot change U1.
+    pub fn set_unified_decision_tracing(&mut self, enabled: bool) {
+        self.unified_trace_enabled = enabled;
+    }
+
+    /// Read-only view of the precise coalesced fields which U1 will score.
+    pub fn inspect_unified_competition(&self) -> Option<Vec<PhaseUnifiedActionTrace>> {
+        let goal = self.goal.as_ref()?;
+        let proposals = self.organism.collect_phase_native_unified_proposals(goal);
+        self.organism.trace_phase_native_unified_competition(&proposals)
     }
 
     /// TE3 optional native temporal-evidence project. Source/goal/answer
@@ -331,6 +376,9 @@ impl ScientificRuntime {
     pub fn set_model_learning_enabled(&mut self, enabled: bool) {
         self.model_learning_enabled = enabled;
         self.organism.set_planning_learning_enabled(enabled);
+        if self.online_unified_learning_enabled {
+            self.organism.set_phase_native_meta_learning_enabled(enabled);
+        }
     }
 
     /// Multivariate responses require actual bounded external outcomes. A
@@ -575,6 +623,26 @@ impl ScientificRuntime {
             }
         };
 
+        // Capture physical competition BEFORE the permitted external action;
+        // this is the only feature vector eligible for subsequent U1 credit.
+        let competition = if self.online_unified_learning_enabled
+            || self.unified_trace_enabled
+        {
+            self.organism.trace_phase_native_unified_competition(&pre_proposals)
+                .unwrap_or_default()
+        } else { Vec::new() };
+        let selected_fields = competition.iter()
+            .find(|item| item.action == action).map(|item| item.fields);
+        let belief_before = if self.online_unified_learning_enabled
+            || self.unified_trace_enabled
+        { self.organism.phase_native_temporal_evidence() } else { None };
+        let sensing_before = if self.unified_trace_enabled {
+            self.organism.choose_phase_native_temporal_sensing_action()
+        } else { None };
+        let outcome_before = if self.unified_trace_enabled {
+            self.organism.choose_phase_native_temporal_outcome_action()
+        } else { None };
+
         let before_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
         let factual_pre = self.organism.current_real()
             .ok_or(RuntimeError::FreshObservationRequired)?
@@ -648,6 +716,32 @@ impl ScientificRuntime {
         let after_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
         let info_gain = after_knowledge.gained_since(before_knowledge);
 
+        // Credit only genuinely acquired evidence, never an unchanged no-op
+        // or predicted/imagined cue. An actual sensory sample is informative
+        // only if the *pre-action* physical belief still needed information.
+        let acquired_sample = belief_before.as_ref().map(|prior| {
+            self.organism.phase_native_temporal_evidence()
+                .map(|after| after.observations > prior.observations)
+                .unwrap_or(false)
+        }).unwrap_or(false);
+        let sensor_information = if acquired_sample
+            && belief_before.as_ref().is_some_and(|prior| prior.needs_more)
+        {
+            self.organism.phase_native_temporal_action_affordance(action)
+                .unwrap_or(0.0).clamp(0.0,1.0) * 0.5
+        } else { 0.0 };
+        let online_utility = if self.online_unified_learning_enabled
+            && self.model_learning_enabled
+        {
+            let value = task_outcome.max(sensor_information)
+                .max(if info_gain { 0.5 } else { 0.0 });
+            if let Some(fields) = selected_fields {
+                if self.organism.observe_phase_native_meta_utility(fields,value) {
+                    Some(value)
+                } else { None }
+            } else { None }
+        } else { None };
+
         // U2 ecology receives generic factual credit for every persistent
         // proposal that was applicable around this fact. No reasoning-class
         // label is present. Increased structure applicability is passive
@@ -692,6 +786,26 @@ impl ScientificRuntime {
             }
         }
 
+        if self.unified_trace_enabled {
+            let mut actions = competition;
+            // Bounded action diagnostics even if the external actuator has
+            // an unusually large action space. Keep high-score rivals first.
+            actions.sort_by(|a,b| b.score.total_cmp(&a.score)
+                .then_with(||a.action.cmp(&b.action)));
+            actions.truncate(16);
+            self.record(LifetimeEventKind::UnifiedDecisionTrace(
+                UnifiedDecisionTrace {
+                    selected_action: action,
+                    actions,
+                    belief_before,
+                    sensing_before,
+                    outcome_before,
+                    factual_outcome: Some(task_outcome),
+                    acquired_sample,
+                    online_utility,
+                }
+            ));
+        }
         self.record(LifetimeEventKind::Executed {
             action,
             suppressed,
