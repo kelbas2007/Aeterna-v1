@@ -573,6 +573,28 @@ impl EvoPhase {
             }
         }
 
+        // After a decisive physical belief, terminal alternatives must
+        // still be investigated when their observed reward coverage is weak.
+        // The motor and its value come from the SAME causal phase evidence,
+        // not from a host-provided correct-action or fixed motor schedule.
+        if let Some((action,value,uncertainty))=
+            self.choose_phase_native_temporal_outcome_probe()
+        {
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,action
+            ){
+                fields[0]=fields[0].max(value).clamp(0.0,1.0);
+                fields[1]=fields[1].max(uncertainty).clamp(0.0,1.0);
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[0x7E57u64,action as u64]),
+                        action,fields
+                    },
+                });
+            }
+        }
+
         let mut rival=self.clone();
         if let Some(action)=rival.choose_phase_native_goal_rival_probe(goal_sensory){
             self.push_unified_proposal(
