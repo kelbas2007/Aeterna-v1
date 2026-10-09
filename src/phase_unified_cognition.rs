@@ -705,6 +705,13 @@ impl EvoPhase {
             }
         }
 
+        // Evidence-ownership contract: do not let an optimistic goal route
+        // masquerade as informed while a physically acquired sensor can
+        // still resolve the current competing hypotheses. When sufficient
+        // raw facts make the belief decisive, ordinary U1 resumes unaltered.
+        groups.retain(|(action,_,_)|
+            self.phase_native_temporal_action_evidence_admissible(*action)
+        );
         if groups.is_empty(){return None;}
         for (_,_,supporters) in &mut groups {supporters.sort_unstable();}
 
