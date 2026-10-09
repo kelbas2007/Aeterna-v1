@@ -4,8 +4,8 @@
 // now updates the EXISTING physical meta controller when explicitly enabled.
 // This test is NOT a cold end-to-end intelligence qualification.
 include!("intel2_unified_worlds.rs");
-use aeterna_v1::carrier::{PhaseTemporalEvidenceConfig,PhaseHypothesisEcologyConfig};
-use aeterna_v1::scientific_runtime::{LifetimeEventKind,ScientificRuntime,StepOutcome};
+use aeterna_v1::carrier::PhaseTemporalEvidenceConfig;
+use aeterna_v1::scientific_runtime::LifetimeEventKind;
 
 #[test]
 fn u1_online_credit_depends_on_protected_factual_sensing_and_freezes() {
