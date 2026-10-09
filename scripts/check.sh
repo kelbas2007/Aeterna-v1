@@ -42,6 +42,10 @@ cargo test --locked --release --test structure1_chain_mechanism chain_motor_affo
 cargo test --locked --release --test multistep_physical_path physical_sensing_paths_of_variable_depth_are_reused_and_lesionable -- --exact
 cargo test --locked --release --test multistep_physical_path completed_goal_is_not_an_unexplored_multistep_information_frontier -- --exact
 cargo test --locked --release --test multistep_physical_path factual_terminal_trials_preserve_belief_conditioned_ucb_in_multistep_carrier -- --exact
+# New goal-replanning mechanism: learned factual transition graph, physical
+# synapse lesion, protected 4-action goal and changed-law 6-action recovery.
+# Frozen first-attempt fresh seed remains in its separate one-use workflow.
+cargo test --locked --release --test goal_replan_physical goal_replan_composes_physical_routes_after_unannounced_causal_drift -- --exact
 python3 scripts/g21_statistical_crosscheck.py
 python3 scripts/check_docs.py
 cargo build --locked --release --bins --examples
