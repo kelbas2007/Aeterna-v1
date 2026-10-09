@@ -416,6 +416,15 @@ impl EvoPhase {
                 });
             }
         }
+        // In an opt-in native argument-competition organism, an internal
+        // hypothesis conflict can initiate a protected factual experiment.
+        // No host lesson schedule supplies the motor or binding candidate.
+        if let Some((action,_uncertainty))=self
+            .phase_native_intrinsic_argument_probe(&e.factual,&e.rejected){
+            return Some(PhaseVectorDecision{
+                action,kind:PhaseVectorDecisionKind::Experiment,
+            });
+        }
         let prediction = if s.induction.is_some() {
             self.phase_induction_predict(&e.factual)
                 .map(|p| (p.action, PhaseVectorDecisionKind::InducedProgram))
