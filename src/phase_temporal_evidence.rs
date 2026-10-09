@@ -1418,8 +1418,21 @@ impl EvoPhase {
                             &&conductance(&self.cells,
                                 &self.synapses[c.read_synapse],floor)>1.0e-8
                         );
-                    let predicted_information_cost=
-                        if extra_costly_chain {2.0}else{1.0};
+                    let raw_cues=state.cues.iter()
+                        .map(|c|c.source_cell).collect::<Vec<_>>();
+                    let physical_depth=if state.multistep_enabled{
+                        raw_cues.iter().filter_map(|source|
+                            self.phase_native_temporal_multistep_route(
+                                *source,&raw_cues,1
+                            ).map(|(_,_,_,steps)|steps as f32)
+                        ).min_by(|a,b|a.total_cmp(b))
+                    }else{None};
+                    // This is NOT an evaluator-supplied sequence length:
+                    // the organism measures action cost from its own
+                    // conducting acquired source->motor->state graph.
+                    let predicted_information_cost=physical_depth.unwrap_or(
+                        if extra_costly_chain {2.0}else{1.0}
+                    );
                     let extra=2.0/(state.config.max_observations as f32
                         *predicted_information_cost);
                     required_margin=required_margin.max(extra);
