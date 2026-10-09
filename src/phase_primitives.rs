@@ -36,6 +36,19 @@ struct PhaseNativeBoundCall {
     future_checks: usize,
 }
 
+/// A competing physical candidate is a real input-to-input phase synapse.
+/// Its endpoints *are* the two proposed argument channels; its conductance
+/// is acquired from factual prediction/outcome agreement.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PhaseSynapticArgumentCandidate {
+    action: usize,
+    operation_index: usize,
+    source_inputs: [usize;2],
+    candidate_synapse: usize,
+    observations: u32,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PhasePrimitiveState {
@@ -49,6 +62,12 @@ struct PhasePrimitiveState {
     /// The original operation definitions are not mutated.
     #[serde(default)]
     bound_calls: Vec<PhaseNativeBoundCall>,
+    /// Alternative opt-in: candidate competition is acquired in physical
+    /// synapses instead of a bounded retrospective permutation scan.
+    #[serde(default)]
+    native_argument_competition: bool,
+    #[serde(default)]
+    argument_candidates: Vec<PhaseSynapticArgumentCandidate>,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct PhasePrimitiveInfo {
@@ -141,6 +160,13 @@ impl PhasePrimitiveState {
         if self.argument_transfer_enabled {
             feed(0x4152475452414E53);
         }
+        feed(u64::from(self.native_argument_competition));
+        for c in &self.argument_candidates {
+            for v in [c.action,c.operation_index,c.source_inputs[0],
+                      c.source_inputs[1],c.candidate_synapse,c.observations as usize] {
+                feed(v as u64);
+            }
+        }
         for call in &self.bound_calls {
             for n in [
                 call.action,
@@ -187,7 +213,8 @@ impl PhasePrimitiveState {
         }
     }
     fn contains_synapse(&self, index: usize) -> bool {
-        self.bound_calls
+        self.argument_candidates.iter().any(|c|c.candidate_synapse==index)
+            ||self.bound_calls
             .iter()
             .any(|b| b.binding_synapses.contains(&index))
             || self.priorities.contains(&index)
@@ -454,6 +481,8 @@ impl EvoPhase {
             policy_updates: 0,
             argument_transfer_enabled: false,
             bound_calls: Vec::new(),
+            native_argument_competition:false,
+            argument_candidates:Vec::new(),
         });
         true
     }
