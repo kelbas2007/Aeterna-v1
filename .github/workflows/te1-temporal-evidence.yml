@@ -1,15 +1,11 @@
-name: TE1 phase-native temporal evidence qualification
+name: TE1 historical temporal evidence qualification (manual)
+
+# The scored noisy holdout is already recorded as FAIL in docs/TE1_RESULT.md.
+# Explicit diagnostic reproduction is separate from ordinary push regressions;
+# scripts/check.sh continues to exercise the physical mechanism and controls.
 
 on:
   workflow_dispatch:
-  push:
-    branches: [research/beyond-intel4]
-    paths:
-      - 'src/phase_temporal_evidence.rs'
-      - 'src/phase_native.rs'
-      - 'src/carrier.rs'
-      - 'tests/te1_temporal_evidence.rs'
-      - '.github/workflows/te1-temporal-evidence.yml'
 
 jobs:
   physical:

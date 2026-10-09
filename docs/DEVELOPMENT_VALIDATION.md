@@ -38,13 +38,34 @@ Every resumed example reported unchanged frozen knowledge. New checkpoints were
 written to a fresh temporary directory; previously saved knowledge was preserved.
 The adaptive learning process also completed its uninterrupted 768-action life.
 
-## GitHub verification boundary
+## Verified on GitHub — 2026-10-09
 
-Git transport is available. The environment's GitHub API requests return 403,
-so this record cannot certify remote Actions results, current PR states or
-repository settings. Active workflows are configured for ordinary development
-regressions, exact-source baseline regressions and documentation links. Their
-remote results must be read through a working GitHub API or the GitHub UI.
+After adding `api.github.com` to the cloud network policy and applying the
+environment configuration, API access works. The published integration commits
+were verified against remote branch tips; four maintained branches remain and
+the frozen/archive refs retain their original SHAs. No pull requests were open
+at the time of the check.
+
+| Published source | GitHub check | Outcome |
+|---|---|---|
+| Research `3871613cce1bd393451c33dbf3c712ff680637aa` | [Development regressions 37898432849](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432849) | SUCCESS |
+| Main `6239918043157c06b8257601d43180d38c2cd221` | [Qualified baseline regressions 37898432679](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432679) | SUCCESS |
+| Main and research | [Main documentation 37898432728](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432728), [research documentation 37898432706](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432706) | SUCCESS |
+| Research `3871613` | [TE3 37898432741](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432741), [TE5 physical 37898432731](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432731), [TE5 unified 37898432723](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432723) | SUCCESS |
+| Research `3871613` | [Historical TE1 37898432696](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37898432696) | Physical job SUCCESS; noisy-evidence job FAILURE |
+
+The TE1 noisy test still enforces its original criterion of at least 70/80. Its
+original recorded score was 63/80 and remains a scientific FAIL. Historical TE1
+qualification is now a manual diagnostic workflow; ordinary regressions continue
+to exercise its physical causal mechanism. The tests and thresholds are unchanged.
+
+API run/job outcomes establish remote check completion. Downloading full Actions
+logs additionally requires access to `results-receiver.actions.githubusercontent.com`,
+which this environment's current network policy does not provide. The repository
+metadata-update and Actions-permissions endpoints return `Resource not accessible
+by integration` (HTTP 403): the integration lacks the administrative authorization
+needed to change those settings. These limits do not prevent reading the checks
+above or publishing source/documentation updates through Git.
 
 Historical FRONTIER-1, TE1 noisy and TE4 cold failures remain failures. These
 development checks do not establish open-world AGI or real-world safety.
