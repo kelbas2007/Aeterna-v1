@@ -212,6 +212,12 @@ impl ScientificRuntime {
         true
     }
 
+    /// Extend the existing phase-native temporal affordance to physically
+    /// acquired two-action sequences with a factual intermediate state.
+    pub fn set_temporal_chain_learning(&mut self, enabled: bool) -> bool {
+        self.organism.set_phase_native_temporal_chain_learning(enabled)
+    }
+
     /// Opt-in generic investigation of under-tested opaque motors when
     /// physical belief remains insufficient. EvoPhase supplies the candidate;
     /// the unchanged U1 and Human Protection still choose and permit actions.
@@ -688,8 +694,9 @@ impl ScientificRuntime {
                 );
             }
             if self.organism.phase_native_temporal_source_count()==2
-                && self.organism.phase_native_temporal_action_affordance(action)
-                    .unwrap_or(0.0)>1.0e-8
+                && self.organism.phase_native_temporal_factual_sample_from(
+                    action,&factual_pre,&post
+                )
             {
                 let _=self.organism.observe_phase_native_temporal_signal(&post);
             }
