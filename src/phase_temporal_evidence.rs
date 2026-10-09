@@ -406,6 +406,37 @@ impl EvoPhase {
         let native=self.phase_native.as_ref()?;
         let state=native.temporal_evidence.as_ref()?;
         let floor=native.config.coherence_floor;
+        if state.chain_learning_enabled {
+            if let Some(real)=self.current_real.as_ref() {
+                if let Some(entry)=self.phase_native_abstract_state(&real.sensory) {
+                    let mut acquired:Option<PhaseTemporalSensingDecision>=None;
+                    for chain in &state.chains {
+                        let first=conductance(&self.cells,
+                            &self.synapses[chain.entry_synapse],floor);
+                        let second=conductance(&self.cells,
+                            &self.synapses[chain.read_synapse],floor);
+                        let strength=first.min(second);
+                        if strength<=1.0e-8 {continue;}
+                        let (motor,syn)=if entry.cell==chain.marker_cell {
+                            (chain.second_action,chain.read_synapse)
+                        } else if state.cues.iter().any(|c|c.source_cell==entry.cell) {
+                            (chain.first_action,chain.entry_synapse)
+                        } else {continue;};
+                        if acquired.as_ref().map(|a|
+                            strength>a.learned_affordance+1.0e-6
+                        ).unwrap_or(true) {
+                            acquired=Some(PhaseTemporalSensingDecision{
+                                action:motor,synapse:syn,
+                                learned_affordance:strength,
+                                missing_evidence:(1.0-belief.evidence_margin)
+                                    .clamp(0.0,1.0),
+                            });
+                        }
+                    }
+                    if acquired.is_some(){return acquired;}
+                }
+            }
+        }
         let mut best:Option<(usize,usize,f32)>=None;
         let mut tied=false;
         for model in &state.samplers {
@@ -489,6 +520,22 @@ impl EvoPhase {
             || temporal.cues.len()!=2 || !belief.needs_more
             || !native.config.learning_enabled {
             return None;
+        }
+        if temporal.chain_learning_enabled {
+            if let (Some(pending),Some(real))=(
+                temporal.pending_chain.as_ref(),self.current_real.as_ref()
+            ) {
+                if self.phase_native_abstract_state(&real.sensory)
+                    .is_some_and(|state|state.cell==pending.marker_cell)
+                {
+                    let (motor,trials)=(0..self.config.motor_cells)
+                        .filter(|action|*action!=pending.first_action)
+                        .map(|action|(action,pending.trials[action]))
+                        .min_by_key(|(action,trials)|(*trials,*action))?;
+                    return Some((motor,
+                        (1.0/(1.0+trials as f32)).clamp(0.0,1.0)));
+                }
+            }
         }
         // Already-acquired physically conducting information paths use TE3.
         if temporal.samplers.iter().any(|model|
@@ -600,9 +647,23 @@ impl EvoPhase {
                 .map(|policy|policy.action==action).unwrap_or(true);
         }
         let Some(sensor)=self.choose_phase_native_temporal_sensing_action()
-            else{return true;};
-        // If the physical sensor loses its conducting path, no metadata
-        // whitelist may continue to force the same motor.
+            else{
+                if self.phase_native_temporal_chain_learning() {
+                    if let Some((probe,_))=
+                        self.choose_phase_native_temporal_unknown_probe()
+                    {
+                        if self.phase_native.as_ref()
+                            .and_then(|n|n.temporal_evidence.as_ref())
+                            .and_then(|t|t.pending_chain.as_ref()).is_some()
+                        {
+                            return probe==action;
+                        }
+                    }
+                }
+                return true;
+            };
+        // If the necessary physical chain is broken, do not use metadata
+        // alone to force an action that is no longer supported.
         sensor.action==action
     }
 
@@ -625,12 +686,53 @@ impl EvoPhase {
     )->Option<f32>{
         let n=self.phase_native.as_ref()?;
         let p=n.temporal_evidence.as_ref()?;
-        let motor=p.samplers.iter().find(|m|m.motor_action==action
-            && m.distinctions>0)?;
-        Some(conductance(
-            &self.cells,&self.synapses[motor.sensory_synapse],
-            n.config.coherence_floor
-        ))
+        let direct=p.samplers.iter()
+            .filter(|m|m.motor_action==action && m.distinctions>0)
+            .map(|m|conductance(
+                &self.cells,&self.synapses[m.sensory_synapse],
+                n.config.coherence_floor
+            )).fold(0.0_f32,f32::max);
+        let chain=if p.chain_learning_enabled {
+            p.chains.iter().filter(|c|c.second_action==action)
+                .map(|c|conductance(
+                    &self.cells,&self.synapses[c.entry_synapse],
+                    n.config.coherence_floor
+                ).min(conductance(
+                    &self.cells,&self.synapses[c.read_synapse],
+                    n.config.coherence_floor
+                ))).fold(0.0_f32,f32::max)
+        }else{0.0};
+        let value=direct.max(chain);
+        if value>1.0e-8 {Some(value)}else{None}
+    }
+
+    /// A learned physical path only counts an actual new sensory observation
+    /// at a supported causal PRE/action/POST context, never merely because a
+    /// motor was useful elsewhere. This prevents a read call from a non-ready
+    /// state being falsely credited as a fresh independent cue.
+    pub fn phase_native_temporal_factual_sample_from(
+        &self, action:usize, pre:&[f32],post:&[f32]
+    )->bool{
+        let Some(before)=self.phase_native_abstract_state(pre) else{return false;};
+        let Some(after)=self.phase_native_abstract_state(post) else{return false;};
+        let Some(native)=self.phase_native.as_ref() else{return false;};
+        let Some(t)=native.temporal_evidence.as_ref() else{return false;};
+        if !t.cues.iter().any(|c|c.source_cell==after.cell){return false;}
+        let floor=native.config.coherence_floor;
+        let immediate=t.cues.iter().any(|c|c.source_cell==before.cell)
+            &&t.samplers.iter().any(|m|
+                m.motor_action==action && m.distinctions>0
+                    && conductance(&self.cells,
+                        &self.synapses[m.sensory_synapse],floor)>1.0e-8
+            );
+        let two_step=t.chain_learning_enabled && t.chains.iter().any(|c|
+            c.second_action==action && c.marker_cell==before.cell
+                && conductance(&self.cells,
+                    &self.synapses[c.entry_synapse],floor)>1.0e-8
+                && conductance(&self.cells,
+                    &self.synapses[c.read_synapse],floor)>1.0e-8
+        );
+        immediate || two_step
     }
 
     /// TE5: learn the factual value of an actually executed opaque motor
