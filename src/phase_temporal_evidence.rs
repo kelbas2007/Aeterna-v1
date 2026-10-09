@@ -708,6 +708,60 @@ impl EvoPhase {
             || !native.config.learning_enabled {
             return None;
         }
+        if temporal.multistep_enabled {
+            let current=self.current_real.as_ref()
+                .and_then(|r|self.phase_native_abstract_state(&r.sensory))?
+                .cell;
+            // Once a complete physical path to a cue has been acquired, TE3
+            // supplies it, not open-ended novelty. When incomplete, follow
+            // the bounded factual graph to the nearest under-tested frontier.
+            let cues=temporal.cues.iter().map(|c|c.source_cell)
+                .collect::<Vec<_>>();
+            if self.phase_native_temporal_multistep_route(current,&cues,1)
+                .is_some(){return None;}
+            let floor=native.config.coherence_floor;
+            let mut queue=std::collections::VecDeque::new();
+            queue.push_back((current,None,1.0f32,0usize,vec![current]));
+            let mut best:Option<(usize,f32)>=None;
+            let mut expanded=0usize;
+            while let Some((cell,first,confidence,depth,visited))=
+                queue.pop_front()
+            {
+                if expanded>=512{break;}
+                expanded+=1;
+                let (trial_action,trials)=(0..self.config.motor_cells)
+                    .map(|action|{
+                        let seen=temporal.action_trials.iter().find(|t|
+                            t.from_cell==cell && t.motor_action==action
+                        ).map(|t|t.observations).unwrap_or(0);
+                        (action,seen)
+                    }).min_by_key(|(action,seen)|(*seen,*action))?;
+                let candidate=first.unwrap_or(trial_action);
+                let novelty=confidence/(1.0+trials as f32)
+                    /(1.0+depth as f32*0.12);
+                if best.is_none_or(|b|novelty>b.1+1.0e-6){
+                    best=Some((candidate,novelty));
+                }
+                if depth>=7{continue;}
+                for edge in temporal.transitions.iter().filter(|e|
+                    e.from_cell==cell && !visited.contains(&e.to_cell)
+                ){
+                    let physical=confidence.min(conductance(&self.cells,
+                        &self.synapses[edge.entry_synapse],floor
+                    )).min(conductance(&self.cells,
+                        &self.synapses[edge.exit_synapse],floor
+                    ));
+                    if physical<=1.0e-8{continue;}
+                    let mut seen=visited.clone();
+                    seen.push(edge.to_cell);
+                    queue.push_back((
+                        edge.to_cell,Some(first.unwrap_or(edge.motor_action)),
+                        physical,depth+1,seen
+                    ));
+                }
+            }
+            return best;
+        }
         if temporal.chain_learning_enabled {
             if let (Some(pending),Some(real))=(
                 temporal.pending_chain.as_ref(),self.current_real.as_ref()
@@ -758,6 +812,38 @@ impl EvoPhase {
         Some((observed*margin).clamp(0.0,1.0))
     }
 
+    /// Whether an action is physically part of a *complete* acquired
+    /// information path of arbitrary depth. Every necessary edge must
+    /// conduct; metadata cannot independently declare a sensory action.
+    fn phase_native_temporal_multistep_information_action(
+        &self,action:usize
+    )->bool{
+        let Some(native)=self.phase_native.as_ref() else{return false;};
+        let Some(t)=native.temporal_evidence.as_ref() else{return false;};
+        if !t.multistep_enabled{return false;}
+        let cues=t.cues.iter().map(|cue|cue.source_cell).collect::<Vec<_>>();
+        let floor=native.config.coherence_floor;
+        t.transitions.iter().any(|edge|{
+            if edge.motor_action!=action{return false;}
+            if conductance(&self.cells,
+                &self.synapses[edge.entry_synapse],floor)<=1.0e-8
+                ||conductance(&self.cells,
+                    &self.synapses[edge.exit_synapse],floor)<=1.0e-8
+            {return false;}
+            let prefix=cues.contains(&edge.from_cell)||
+                cues.iter().any(|source|
+                    self.phase_native_temporal_multistep_route(
+                        *source,&[edge.from_cell],1
+                    ).is_some()
+                );
+            let suffix=cues.contains(&edge.to_cell)||
+                self.phase_native_temporal_multistep_route(
+                    edge.to_cell,&cues,1
+                ).is_some();
+            prefix&&suffix
+        })
+    }
+
     /// Optimistic but evidence-based search of opaque outcome motors for a
     /// specific physically acquired belief. The reward estimate is read from
     /// the EXISTING phase-sensitive cue->motor synapse; the uncertainty bonus
@@ -802,7 +888,9 @@ impl EvoPhase {
             // Both causally acquired INFORMATION actions are not candidate
             // terminal responses while their two-link physical path conducts.
             // No motor role or action ID is supplied by the evaluator.
-            if single_step_sensor || chain_sensor {continue;}
+            if single_step_sensor || chain_sensor
+                ||self.phase_native_temporal_multistep_information_action(action)
+            {continue;}
             let trials=temporal.samplers.iter()
                 .find(|m|m.motor_action==action)
                 .map(|m|m.belief_trials[cue_index]).unwrap_or(0);
@@ -846,6 +934,12 @@ impl EvoPhase {
         }
         let Some(sensor)=self.choose_phase_native_temporal_sensing_action()
             else{
+                if self.phase_native_temporal_multistep_enabled(){
+                    if let Some((probe,_))=
+                        self.choose_phase_native_temporal_unknown_probe(){
+                        return probe==action;
+                    }
+                }
                 if self.phase_native_temporal_chain_learning() {
                     if let Some((probe,_))=
                         self.choose_phase_native_temporal_unknown_probe()
