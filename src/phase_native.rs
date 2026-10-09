@@ -2,6 +2,8 @@
 //! This child module has access to the carrier's private physical substrate.
 //! It does not use a transition table, frontier, route enumeration or planner.
 //! The recurrence and local winner-take-all rule are inherited, not learned.
+//! The separately enabled rule extension uses acquired shared-synapse phase
+//! parameters with explicit software hypothesis bookkeeping and beam search.
 
 use super::{EvoPhase, PhaseCell, PhaseSynapse};
 use crate::authority::Authority;
@@ -10,7 +12,7 @@ use crate::phase::{signed_phase_error, wrap_phase};
 use crate::planning::PlanDecision;
 use crate::trace::CarrierTrace;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PhaseNativeConfig {
     pub match_threshold: f32,
     pub coherence_floor: f32,
@@ -38,7 +40,7 @@ struct Receptor {
 }
 
 /// Structural addresses, not an executable copy of transition/reward content.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PhaseCircuitInfo {
     pub relay_cell: usize,
     pub afferent_synapse: usize,
@@ -70,6 +72,9 @@ pub(super) struct PhaseNativeState {
     compositional: Option<PhaseCompositionState>,
     meta_control: Option<PhaseMetaControlState>,
     temporal_evidence: Option<PhaseTemporalEvidenceState>,
+    online: Option<PhaseOnlineConfig>,
+    rules: Option<PhaseRuleState>,
+    partial: Option<PhasePartialState>,
     last_motor_potentials: Vec<f32>,
     last_local_updates: usize,
 }
@@ -121,6 +126,9 @@ impl EvoPhase {
             compositional: None,
             meta_control: None,
             temporal_evidence: None,
+            online: None,
+            rules: None,
+            partial: None,
             last_motor_potentials: vec![0.0; self.config.motor_cells],
             last_local_updates: 0,
         });
@@ -162,6 +170,7 @@ impl EvoPhase {
             && !meta_synapse
             && !hypothesis_synapse
             && !temporal_synapse
+            && !self.is_phase_rule_synapse(index)
             && !self.is_native_decoder_synapse(index) {
             return None;
         }
@@ -221,6 +230,16 @@ impl EvoPhase {
         if let Some(evidence) = state.temporal_evidence.as_ref() {
             text.push_str(&format!("|{:?}", evidence));
         }
+        if let Some(online) = state.online.as_ref() {
+            text.push_str(&format!("|{:?}", online));
+        }
+        if let Some(rules) = state.rules.as_ref() {
+            text.push_str(&format!("|{:?}", rules));
+        }
+        if let Some(partial) = state.partial.as_ref() {
+            // Beliefs and visible frames are transient inference, not learned parameters.
+            text.push_str(&format!("|{:?}|{:?}|{}|{}", partial.config, partial.masks, partial.factual_sequence, partial.inverse_enabled));
+        }
         for byte in text.bytes() {
             h ^= u64::from(byte);
             h = h.wrapping_mul(1_099_511_628_211);
@@ -240,6 +259,7 @@ impl EvoPhase {
         let mut state = self.phase_native.as_ref()?.clone();
         state.last_motor_potentials.fill(0.0);
         state.last_local_updates = 0;
+        if let Some(partial) = state.partial.as_mut() { partial.episode = None; }
         if let Some(context) = state.contextual.as_mut() {
             context.previous_base = None;
         }
@@ -432,6 +452,9 @@ impl EvoPhase {
             return Some(r.cell);
         }
         if !self.config.structural_growth_enabled { return None; }
+        if state.online.as_ref().is_some_and(|c| state.receptors.len() >= c.max_states) {
+            return None;
+        }
         let cell = self.dormant_range().find(|i| !self.cells[*i].recruited)?;
         self.cells[cell].recruited = true;
         state.receptors.push(Receptor { trace, cell });
@@ -695,6 +718,14 @@ impl EvoPhase {
 }
 
 include!("phase_drive.rs");
+include!("phase_online.rs");
+include!("phase_online_rules.rs");
+include!("phase_adaptive_rules.rs");
+include!("phase_online_rule_planning.rs");
+include!("phase_partial_observation.rs");
+include!("phase_inverse_inference.rs");
+include!("phase_partial_planning.rs");
+include!("phase_online_checkpoint.rs");
 include!("phase_forward.rs");
 include!("phase_concept.rs");
 include!("phase_recursive.rs");

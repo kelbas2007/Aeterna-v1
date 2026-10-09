@@ -1,5 +1,17 @@
 # AETERNA v1 — EvoPhase Cognitive Runtime
 
+**Development extension:** [online acquisition and disk checkpoints](docs/ONLINE_LEARNING.md) add an opt-in cold sensor mode using the existing P1/P3 substrate. It learns from protected factual actions without the INTEL-4 representation curriculum. Run ordinary regressions with `bash scripts/check.sh`. This extension is covered by development tests, not a new sealed intelligence qualification.
+
+**Acquired-rule extension:** [learned transformations and hypothesis testing](docs/LEARNED_RULES.md) add an opt-in hybrid mode that transfers circular sensor rules to unseen states, tests ambiguous alternatives, revises contradicted actions and resumes from disk. Its parameters reside in shared phase synapses; its bounded plan search is software. Try `cargo run --locked --release --example learned_rules -- learn /tmp/aeterna-rules.json`, then replace `learn` with `run`.
+
+**Partial-observation extension:** [hidden channels and informative actions](docs/PARTIAL_OBSERVATION.md) add explicit missing values, conservative alternatives over acquired rules, learned output visibility and frozen state inference. Success requires a factual measurement of every constrained goal channel. Try `cargo run --locked --release --example partial_observation -- learn /tmp/aeterna-partial.json`, then replace `learn` with `run`.
+
+**Expanded rule families:** [circular affine rules](docs/EXPANDED_RULES.md) add constants, integer gains of ±2/±3, and signed sums/differences of two channels. An existing rule model can expand its vocabulary using retained factual evidence; new ambiguity requires another experiment. Try `cargo run --locked --release --example expanded_rules -- learn /tmp/aeterna-expanded.json`, then replace `learn` with `run`.
+
+**Inverse inference:** [recover hidden operands](docs/INVERSE_INFERENCE.md) from acquired exact rules and factual partial POST, retain every modular root and select a separating measurement. Inferred values remain imagined and never teach the numeric model. Try `cargo run --locked --release --example inverse_inference -- learn /tmp/aeterna-inverse.json`, then replace `learn` with `run`.
+
+**Conditional and continual learning:** [bounded noisy models](docs/ADAPTIVE_RULES.md) learn a threshold condition on an observed channel, accumulate support despite bounded sensor error, retain previous physical models and recall them after a law returns. This separate full-observation mode uses fixed model slots and explicit fitting/search budgets. Try `cargo run --locked --release --example adaptive_learning -- learn /tmp/aeterna-adaptive.json`, then replace `learn` with `run`.
+
 **Current qualified baseline:** **INTEL-4 PASS** on one independently seeded five-world deterministic synthetic family, **not** open-world AGI. Same frozen no-LLM EvoPhase organism acquired, revised and reused physical knowledge across A/B/C/D/E and retained it after restart. See [verified INTEL-4 report](docs/INTEL4_RESULT_PASS.md) and [protocol](docs/INTEL4_PROTOCOL.md).
 
 **Where everything is:** [PROJECT_MAP.md](PROJECT_MAP.md). Default `main` is the working qualified baseline after source-preserving integration; frozen experiment origin remains `intel4-frozen-unified`. `archive/evidence-20261008` anchors every previous branch head. New research goes to `research/beyond-intel4`. **Separate mature Codex-AETERNA is unaffected.**

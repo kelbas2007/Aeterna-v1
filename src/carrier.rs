@@ -27,11 +27,19 @@ pub use phase_native::{
     PhaseUnifiedCognitiveProposal, PhaseUnifiedDecision, PhaseUnifiedKnowledgeSnapshot,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
     PhaseTemporalEvidenceConfig, PhaseTemporalEvidenceReadout, PhaseTemporalSensingDecision,
+    PhaseOnlineConfig,
+    PhaseRuleConfig, PhaseRuleActionInfo, PhaseRuleForecast, PhaseRuleDecision, PhaseRuleDecisionKind,
+    PhaseRuleLanguage, PhaseRuleFamily, PhaseRuleFormula, PhaseRuleTerm,
+    PhasePartialConfig, PhasePartialVector, PhasePartialBeliefInfo, PhasePartialMaskInfo,
+    PhasePartialDecision, PhasePartialDecisionKind,
+    PhaseInverseReport,
+    PhaseAdaptiveConfig, PhaseAdaptiveCondition, PhaseAdaptiveModelInfo,
+    PhaseAdaptiveActionInfo, PhaseAdaptiveForecast,
     PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
 };
 use phase_native::PhaseNativeState;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EvoConfig {
     pub sensory_cells: usize,
     pub motor_cells: usize,
@@ -62,7 +70,7 @@ impl Default for EvoConfig {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PhaseCell {
     pub phase: f32,
     pub charge: f32,
@@ -72,7 +80,7 @@ pub struct PhaseCell {
     pub recruited: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PhaseSynapse {
     pub from: usize,
     pub to: usize,
@@ -199,6 +207,10 @@ impl EvoPhase {
 
     pub fn config(&self) -> &EvoConfig {
         &self.config
+    }
+
+    pub(crate) fn native_model_learning_enabled(&self) -> bool {
+        self.phase_native.as_ref().is_some_and(|state| state.config.learning_enabled)
     }
 
     /// Diagnostic matched-control intervention. It changes only generic
@@ -1222,6 +1234,9 @@ impl EvoPhase {
     }
 
     fn encode_high_level_trace(&self, sensory: &[f32]) -> Option<CarrierTrace> {
+        if self.phase_native_online_enabled() {
+            return self.online_sensory_trace(sensory);
+        }
         let field = self.raster_field.as_ref()?;
         if self.robust_high_level_perception {
             field

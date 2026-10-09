@@ -747,11 +747,16 @@ fn intel2_frozen_unified_unknown_world_lifetime(){
 fn intel2_evaluator_uses_only_unified_external_runtime(){
     let source=include_str!("intel2_unified_worlds.rs");
     assert!(source.contains("step_unified"));
-    assert!(!source.contains(".step(|"));
-    assert!(!source.contains("ReasoningMode::"));
-    assert!(!source.contains("correct_explanation"));
-    assert!(!source.contains("world_id"));
-    assert!(!source.contains("task_id"));
+    // Construct tokens at runtime so this guard cannot match its own literals.
+    for forbidden in [
+        [".step", "(|"].concat(),
+        ["Reasoning", "Mode::"].concat(),
+        ["correct", "_explanation"].concat(),
+        ["world", "_id"].concat(),
+        ["task", "_id"].concat(),
+    ] {
+        assert!(!source.contains(&forbidden), "forbidden evaluator token: {forbidden}");
+    }
 }
 
 

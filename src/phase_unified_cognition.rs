@@ -401,6 +401,9 @@ impl EvoPhase {
         &self,
         goal_sensory:&[f32],
     )->Vec<PhaseUnifiedCognitiveProposal>{
+        if self.phase_native_online_enabled() {
+            return self.phase_native_online_proposal(goal_sensory).into_iter().collect();
+        }
         let Some(sensory)=self.current_real.as_ref().map(|r|r.sensory.clone())
             else{return Vec::new();};
         if self.phase_native_abstract_state(goal_sensory).is_none(){
@@ -581,6 +584,20 @@ impl EvoPhase {
         proposals:&[PhaseUnifiedCognitiveProposal],
     )->Option<PhaseUnifiedDecision>{
         if proposals.is_empty(){return None;}
+        if self.phase_native_online_enabled() {
+            let [item] = proposals else { return None; };
+            if item.proposal.action >= self.config.motor_cells
+                || !Self::valid_meta_fields(item.proposal.fields)
+            {
+                return None;
+            }
+            return Some(PhaseUnifiedDecision {
+                supporting_candidate_ids: Vec::new(),
+                proposal_id: item.proposal.proposal_id,
+                action: item.proposal.action,
+                score: item.proposal.fields[0].max(item.proposal.fields[1]),
+            });
+        }
         let native=self.phase_native.as_ref()?;
         let ecology=native.meta_control.as_ref()?.ecology.as_ref()?;
 

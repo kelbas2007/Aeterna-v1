@@ -15,6 +15,9 @@ impl EvoPhase {
         &self,
         sensory: &[f32],
     ) -> Option<PhaseAbstractStateRef> {
+        if self.phase_native_online_enabled() {
+            return self.phase_native_online_state(sensory);
+        }
         let memory = self.concept_memory.as_ref()?;
         let state = self.phase_native.as_ref()?;
         let concepts = state.concepts.as_ref()?;
@@ -114,6 +117,13 @@ impl EvoPhase {
         let Some(state) = self.phase_native.as_ref() else {
             return Vec::new();
         };
+        if state.online.is_some() {
+            return if level == 0 {
+                state.receptors.iter().map(|r| r.cell).collect()
+            } else {
+                Vec::new()
+            };
+        }
         let Some(concepts) = state.concepts.as_ref() else {
             return Vec::new();
         };

@@ -1,7 +1,8 @@
 //! Persistent orchestration of acquired native reasoning, not a second planner.
 //!
 //! The host supplies raw goals, hazard evidence and actual observations. Native
-//! EvoPhase selectors own action choice. The private protection gate owns the
+//! EvoPhase selectors own action choice; the opt-in learned-rule mode uses its
+//! explicitly documented bounded software search. The private protection gate owns the
 //! single-use permission to invoke the external action callback. This wrapper
 //! has no world labels, route table or task-conditioned learning rules.
 
@@ -10,6 +11,7 @@ use crate::carrier::{
     PhaseMetaControlCheckpoint, PhaseMetaDecision,
     PhaseHypothesisEcologyConfig, PhaseUnifiedDecision, PhaseUnifiedCognitiveProposal,
     PhaseTemporalEvidenceConfig,
+    PhasePartialDecisionKind,
 };
 use crate::human_protection::{
     HumanProtection, HumanProtectionEvidence, HumanProtectionReason,
@@ -29,6 +31,13 @@ pub enum ReasoningMode {
     CompositionalRefinement,
     GeneralEpistemic,
     UnifiedCompetition,
+    LearnedRulePlanning,
+    RuleExperiment,
+    AdaptiveRulePlanning,
+    AdaptiveRuleExperiment,
+    PartialGoalPlanning,
+    PartialInformationGathering,
+    PartialMaskExploration,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -44,10 +53,12 @@ pub enum RuntimeError {
     NativeModelRequired,
     InvalidRaster,
     UnknownRepresentation,
+    RepresentationCapacity,
     GoalRequired,
     FreshObservationRequired,
     NoSupportedAction,
     InvalidCheckpoint,
+    PartialModeRequired,
 }
 
 impl fmt::Display for RuntimeError {
@@ -91,6 +102,7 @@ pub struct ScientificRuntime {
     organism: EvoPhase,
     protection: HumanProtection,
     goal: Option<Vec<f32>>,
+    partial_goal: Option<Vec<Option<f32>>>,
     goal_epoch: u64,
     sequence: u64,
     audit: VecDeque<LifetimeEvent>,
@@ -103,15 +115,17 @@ impl ScientificRuntime {
         if organism.phase_native_checkpoint().is_none() {
             return Err(RuntimeError::NativeModelRequired);
         }
+        let model_learning_enabled = organism.native_model_learning_enabled();
         Ok(Self {
             organism,
             protection: HumanProtection::new(),
             goal: None,
+            partial_goal: None,
             goal_epoch: 0,
             sequence: 0,
             audit: VecDeque::new(),
             fresh_observation_required: true,
-            model_learning_enabled: true,
+            model_learning_enabled,
         })
     }
 
@@ -176,7 +190,15 @@ impl ScientificRuntime {
             .ok_or(RuntimeError::NoSupportedAction)?;
         let proposal = ActionProposal {
             action: decision.action,
-            mode: ReasoningMode::UnifiedCompetition,
+            mode: if self.organism.phase_adaptive_rules_enabled() {
+                if proposals.iter().any(|p|p.proposal.action == decision.action && p.proposal.fields[0] > 0.0) {
+                    ReasoningMode::AdaptiveRulePlanning
+                } else { ReasoningMode::AdaptiveRuleExperiment }
+            } else if self.organism.phase_rules_enabled() {
+                if proposals.iter().any(|p|p.proposal.action == decision.action && p.proposal.fields[0] > 0.0) {
+                    ReasoningMode::LearnedRulePlanning
+                } else { ReasoningMode::RuleExperiment }
+            } else { ReasoningMode::UnifiedCompetition },
             goal_epoch: self.goal_epoch,
             learned_fingerprint: self.organism.phase_native_learned_fingerprint(),
         };
@@ -185,6 +207,7 @@ impl ScientificRuntime {
     }
 
     pub fn propose_unified(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.organism.phase_partial_enabled() { return self.propose_partial(); }
         Ok(self.select_unified_internal()?.map(|(proposal,_,_)|proposal))
     }
 
@@ -215,11 +238,22 @@ impl ScientificRuntime {
         });
     }
 
-    fn validate_raster(&self, raster: &[f32]) -> Result<(), RuntimeError> {
+    fn validate_sensor_values(&self, raster: &[f32]) -> Result<(), RuntimeError> {
         if raster.len() != self.organism.config().sensory_cells
             || raster.iter().any(|x| !x.is_finite() || !(0.0..=1.0).contains(x))
+            || (self.organism.phase_rules_enabled() && raster.contains(&1.0))
         {
             return Err(RuntimeError::InvalidRaster);
+        }
+        Ok(())
+    }
+
+    fn validate_raster(&self, raster: &[f32]) -> Result<(), RuntimeError> {
+        self.validate_sensor_values(raster)?;
+        if self.organism.phase_rules_enabled() {
+            // A feature vector need not be a previously memorized state. Its
+            // transition remains unknown until factual support confirms a rule.
+            return Ok(());
         }
         if self.organism.phase_native_abstract_state(raster).is_none() {
             return Err(RuntimeError::UnknownRepresentation);
@@ -227,10 +261,30 @@ impl ScientificRuntime {
         Ok(())
     }
 
+    fn prepare_factual_observation(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
+        self.validate_sensor_values(raster)?;
+        if self.organism.phase_rules_enabled() { return Ok(()); }
+        if self.organism.phase_native_online_enabled()
+            && !self.organism.acquire_phase_native_online_observation(raster)
+        {
+            return Err(if self.model_learning_enabled {
+                RuntimeError::RepresentationCapacity
+            } else {
+                RuntimeError::UnknownRepresentation
+            });
+        }
+        self.validate_raster(raster)
+    }
+
     /// Initial sensing or fresh sensing after restart/fault. The observation
-    /// must come from outside cognition; this method performs no model tuition.
+    /// must come from outside cognition. Online mode may acquire a sensory
+    /// receptor, but no action consequence is invented at this boundary.
     pub fn observe_external(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
-        self.validate_raster(raster)?;
+        if self.organism.phase_partial_enabled() {
+            let observation = raster.iter().copied().map(Some).collect::<Vec<_>>();
+            return self.observe_external_partial(&observation);
+        }
+        self.prepare_factual_observation(raster)?;
         self.organism.clear_phase_native_context_history();
         // A new external real observation begins a fresh evidence episode,
         // while preserving acquired cue and motor synapses across the lifetime.
@@ -245,7 +299,17 @@ impl ScientificRuntime {
     }
 
     pub fn set_goal(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
-        self.validate_raster(raster)?;
+        if self.organism.phase_partial_enabled() {
+            let goal = raster.iter().copied().map(Some).collect::<Vec<_>>();
+            return self.set_partial_goal(&goal);
+        }
+        if self.organism.phase_native_online_enabled() {
+            // A desired observation is not factual experience. Recognition
+            // and a route may be acquired later from actual consequences.
+            self.validate_sensor_values(raster)?;
+        } else {
+            self.validate_raster(raster)?;
+        }
         self.goal_epoch = self.goal_epoch.checked_add(1)
             .expect("goal epoch exhausted");
         self.goal = Some(raster.to_vec());
@@ -264,19 +328,35 @@ impl ScientificRuntime {
         if self.fresh_observation_required {
             return Err(RuntimeError::FreshObservationRequired);
         }
+        if self.organism.phase_partial_enabled() {
+            let goal = self.partial_goal.as_ref().ok_or(RuntimeError::GoalRequired)?;
+            return Ok(self.organism.phase_partial_goal_reached(goal));
+        }
         let goal = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?;
         let real = self.organism.current_real()
             .ok_or(RuntimeError::FreshObservationRequired)?;
+        if self.organism.phase_rules_enabled() {
+            if self.organism.phase_adaptive_rules_enabled() {
+                return Ok(self.organism.phase_adaptive_goal_matches(&real.sensory, goal));
+            }
+            return Ok(self.organism.phase_rule_goal_matches(&real.sensory,goal));
+        }
         let current = self.organism.phase_native_abstract_state(&real.sensory)
             .ok_or(RuntimeError::UnknownRepresentation)?;
-        let target = self.organism.phase_native_abstract_state(goal)
-            .ok_or(RuntimeError::UnknownRepresentation)?;
+        let target = match self.organism.phase_native_abstract_state(goal) {
+            Some(target) => target,
+            None if self.organism.phase_native_online_enabled() => return Ok(false),
+            None => return Err(RuntimeError::UnknownRepresentation),
+        };
         Ok(current.level == target.level && current.cell == target.cell)
     }
 
     /// Fixed orchestration of existing native mechanisms. Task-level scoring
     /// remains in EvoPhase; this function does not construct or search a model.
     pub fn propose(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.organism.phase_native_online_enabled() {
+            return self.propose_unified();
+        }
         if self.goal_reached()? { return Ok(None); }
         let goal = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?.clone();
         let compositional = self.organism.phase_native_compositional_action(&goal);
@@ -337,7 +417,8 @@ impl ScientificRuntime {
         StepOutcome::ExecutionFault(message)
     }
 
-    /// Only this method invokes the action callback. Hazard assessment and the
+    /// The step methods invoke the action callback through the same mandatory
+    /// authorization boundary. Hazard assessment and the
     /// callback are supplied by the trusted execution adapter, not cognition.
     /// A missing assessment is fail-closed; the permit never leaves this gate.
     pub fn step<Assess, Execute>(
@@ -349,6 +430,9 @@ impl ScientificRuntime {
         Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
         Execute: FnOnce(usize) -> Result<Vec<f32>, String>,
     {
+        if self.organism.phase_native_online_enabled() {
+            return self.step_unified(assess, |action| execute(action).map(|post| (post, 0.0)));
+        }
         if self.protection.emergency_stop_latched() {
             let decision = self.protection.screen(0, Self::absent_evidence());
             let record = decision.record().clone();
@@ -376,7 +460,7 @@ impl ScientificRuntime {
             Ok(post) => post,
             Err(error) => return Ok(self.latch_fault(error)),
         };
-        if let Err(error) = self.validate_raster(&post) {
+        if let Err(error) = self.prepare_factual_observation(&post) {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
@@ -424,6 +508,9 @@ impl ScientificRuntime {
         Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
         Execute: FnOnce(usize) -> Result<(Vec<f32>, f32), String>,
     {
+        if self.organism.phase_partial_enabled() {
+            return self.step_dense_partial(assess, execute);
+        }
         if self.protection.emergency_stop_latched() {
             let decision = self.protection.screen(0, Self::absent_evidence());
             let record = decision.record().clone();
@@ -460,7 +547,7 @@ impl ScientificRuntime {
         if !task_outcome.is_finite() || !(0.0..=1.0).contains(&task_outcome) {
             return Ok(self.latch_fault("invalid bounded task outcome".into()));
         }
-        if let Err(error) = self.validate_raster(&post) {
+        if let Err(error) = self.prepare_factual_observation(&post) {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
@@ -485,7 +572,16 @@ impl ScientificRuntime {
             self.organism.phase_native_compositional_enabled()
                 || self.organism.phase_native_perceptual_enabled()
                 || self.organism.phase_native_context_enabled();
-        let suppressed = if any_refinement {
+        let suppressed = if self.organism.phase_rules_enabled() {
+            let count = if self.model_learning_enabled {
+                match self.organism.observe_phase_rule_result(action,&factual_pre,&post) {
+                    Some(count) => count,
+                    None => return Ok(self.latch_fault("factual rule update rejected".into())),
+                }
+            } else { 0 };
+            self.organism.observe_initial_real(&post,false);
+            count
+        } else if any_refinement {
             match self.organism.observe_phase_native_refinement_fanout_result(action, &post) {
                 Some(count) => count,
                 None => return Ok(self.latch_fault(
@@ -563,6 +659,149 @@ impl ScientificRuntime {
         })
     }
 
+    fn validate_partial_values(&self, values: &[Option<f32>]) -> Result<(), RuntimeError> {
+        if !self.organism.phase_partial_enabled() {
+            return Err(RuntimeError::PartialModeRequired);
+        }
+        if values.len() != self.organism.config().sensory_cells
+            || values
+                .iter()
+                .flatten()
+                .any(|x| !x.is_finite() || !(0.0..1.0).contains(x))
+        {
+            return Err(RuntimeError::InvalidRaster);
+        }
+        Ok(())
+    }
+
+    /// A fresh sparse observation resets episodic beliefs. None carries no
+    /// factual value and is never materialized as a synthetic zero channel.
+    pub fn observe_external_partial(&mut self, values: &[Option<f32>]) -> Result<(), RuntimeError> {
+        self.validate_partial_values(values)?;
+        if !self.organism.observe_phase_partial_initial(values) {
+            return Err(RuntimeError::InvalidRaster);
+        }
+        self.fresh_observation_required = false;
+        self.record(LifetimeEventKind::ExternalObservation);
+        Ok(())
+    }
+
+    /// None in a goal is an unconstrained field. At least one constraint is
+    /// required. Setting it does not supply hidden observations or any tuition.
+    pub fn set_partial_goal(&mut self, values: &[Option<f32>]) -> Result<(), RuntimeError> {
+        self.validate_partial_values(values)?;
+        if !values.iter().any(Option::is_some) {
+            return Err(RuntimeError::InvalidRaster);
+        }
+        self.goal_epoch = self.goal_epoch.checked_add(1).expect("goal epoch exhausted");
+        self.partial_goal = Some(values.to_vec());
+        self.goal = None;
+        self.record(LifetimeEventKind::GoalChanged);
+        Ok(())
+    }
+
+    pub fn propose_partial(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if !self.organism.phase_partial_enabled() {
+            return Err(RuntimeError::PartialModeRequired);
+        }
+        if self.goal_reached()? {
+            return Ok(None);
+        }
+        let goal = self.partial_goal.as_ref().ok_or(RuntimeError::GoalRequired)?;
+        let decision = self
+            .organism
+            .phase_partial_decision(goal)
+            .ok_or(RuntimeError::NoSupportedAction)?;
+        let mode = match decision.kind {
+            PhasePartialDecisionKind::GoalPlan => ReasoningMode::PartialGoalPlanning,
+            PhasePartialDecisionKind::InformationGathering => ReasoningMode::PartialInformationGathering,
+            PhasePartialDecisionKind::MaskExploration => ReasoningMode::PartialMaskExploration,
+        };
+        let proposal = ActionProposal {
+            action: decision.action,
+            mode,
+            goal_epoch: self.goal_epoch,
+            learned_fingerprint: self.organism.phase_native_learned_fingerprint(),
+        };
+        self.record(LifetimeEventKind::Proposal(proposal.clone()));
+        Ok(Some(proposal))
+    }
+
+    /// Partial POST is produced only by the external permitted actuator.
+    /// State inference remains available while learned parameters are frozen.
+    pub fn step_partial<Assess, Execute>(
+        &mut self,
+        assess: Assess,
+        execute: Execute,
+    ) -> Result<StepOutcome, RuntimeError>
+    where
+        Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
+        Execute: FnOnce(usize) -> Result<(Vec<Option<f32>>, f32), String>,
+    {
+        if !self.organism.phase_partial_enabled() {
+            return Err(RuntimeError::PartialModeRequired);
+        }
+        if self.protection.emergency_stop_latched() {
+            let record = self.protection.screen(0, Self::absent_evidence()).record().clone();
+            self.record(LifetimeEventKind::Blocked(record.clone()));
+            return Ok(StepOutcome::Blocked(record));
+        }
+        let Some(proposal) = self.propose_partial()? else {
+            return Ok(StepOutcome::GoalReached);
+        };
+        let evidence = assess(&proposal).unwrap_or_else(Self::absent_evidence);
+        let decision = self.protection.screen(proposal.action, evidence);
+        let screening = decision.record().clone();
+        let Some(permit) = decision.into_permit() else {
+            self.record(LifetimeEventKind::Blocked(screening.clone()));
+            return Ok(StepOutcome::Blocked(screening));
+        };
+        let action = match self.protection.consume_permit(permit) {
+            Ok(action) => action,
+            Err(error) => return Ok(self.latch_fault(format!("permit consumption: {error:?}"))),
+        };
+        let (post, outcome) = match execute(action) {
+            Ok(result) => result,
+            Err(error) => return Ok(self.latch_fault(error)),
+        };
+        if !outcome.is_finite() || !(0.0..=1.0).contains(&outcome) {
+            return Ok(self.latch_fault("invalid bounded task outcome".into()));
+        }
+        if let Err(error) = self.validate_partial_values(&post) {
+            return Ok(self.latch_fault(format!("unusable factual partial POST: {error}")));
+        }
+        let report = match self.organism.observe_phase_partial_result(action, &post) {
+            Some(report) => report,
+            None => return Ok(self.latch_fault("factual partial update rejected".into())),
+        };
+        self.record(LifetimeEventKind::Executed {
+            action,
+            suppressed: report.suppressed,
+            learned: report.learned,
+        });
+        Ok(StepOutcome::Executed {
+            proposal,
+            suppressed: report.suppressed,
+            learned: report.learned,
+        })
+    }
+
+    /// Adapt dense sensors to the partial execution seam. Conversion happens
+    /// inside the executor callback, after that seam consumes its permit.
+    fn step_dense_partial<Assess, Execute>(
+        &mut self,
+        assess: Assess,
+        execute: Execute,
+    ) -> Result<StepOutcome, RuntimeError>
+    where
+        Assess: FnOnce(&ActionProposal) -> Option<HumanProtectionEvidence>,
+        Execute: FnOnce(usize) -> Result<(Vec<f32>, f32), String>,
+    {
+        self.step_partial(assess, |action| {
+            execute(action).map(|(post, outcome)| (post.into_iter().map(Some).collect(), outcome))
+        })
+    }
+
     /// In-memory cognitive restart only. External safety authority, goal and
     /// lifetime audit survive. No saved observation is replayed as fresh fact.
     pub fn restart_cognition(&mut self) -> Result<(), RuntimeError> {
@@ -573,6 +812,39 @@ impl ScientificRuntime {
             return Err(RuntimeError::InvalidCheckpoint);
         }
         self.organism = replacement;
+        self.fresh_observation_required = true;
+        self.record(LifetimeEventKind::CognitiveRestart);
+        Ok(())
+    }
+
+    /// Restore persisted online cognition atomically while keeping the current
+    /// protection latch, goal and audit. Checkpoint data has no actuator authority.
+    pub fn restore_online_checkpoint(&mut self, bytes: &[u8]) -> Result<(), RuntimeError> {
+        let mut replacement = EvoPhase::from_online_checkpoint(bytes)
+            .map_err(|_| RuntimeError::InvalidCheckpoint)?;
+        if replacement.config().sensory_cells != self.organism.config().sensory_cells
+            || replacement.config().motor_cells != self.organism.config().motor_cells
+        {
+            return Err(RuntimeError::InvalidCheckpoint);
+        }
+        // Translate a full goal exactly when switching observation modes.
+        // A sparse goal has no exact full-vector equivalent, so reject that
+        // switch atomically rather than invent values for unconstrained fields.
+        let mut next_goal = self.goal.clone();
+        let mut next_partial_goal = self.partial_goal.clone();
+        if replacement.phase_partial_enabled() && !self.organism.phase_partial_enabled() {
+            next_partial_goal = next_goal.take().map(|goal| goal.into_iter().map(Some).collect());
+        } else if !replacement.phase_partial_enabled() && self.organism.phase_partial_enabled() {
+            if let Some(goal) = next_partial_goal.take() {
+                next_goal = Some(
+                    goal.into_iter().collect::<Option<Vec<_>>>().ok_or(RuntimeError::InvalidCheckpoint)?
+                );
+            }
+        }
+        replacement.set_planning_learning_enabled(self.model_learning_enabled);
+        self.organism = replacement;
+        self.goal = next_goal;
+        self.partial_goal = next_partial_goal;
         self.fresh_observation_required = true;
         self.record(LifetimeEventKind::CognitiveRestart);
         Ok(())

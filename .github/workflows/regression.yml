@@ -1,0 +1,59 @@
+name: Development regressions
+
+on:
+  pull_request:
+  push:
+    branches: [main, research/beyond-intel4, 'codex/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Check every compilation target
+        run: cargo check --locked --all-targets
+      - name: Run ordinary and causal regressions
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/check.sh 2>&1 | tee regression.log
+      - name: Persist and resume in separate processes
+        shell: bash
+        run: |
+          set -euo pipefail
+          checkpoint_path="$RUNNER_TEMP/aeterna-online.json"
+          target/release/examples/online_learning learn "$checkpoint_path"
+          target/release/examples/online_learning run "$checkpoint_path"
+          rule_checkpoint_path="$RUNNER_TEMP/aeterna-rules.json"
+          target/release/examples/learned_rules learn "$rule_checkpoint_path"
+          target/release/examples/learned_rules run "$rule_checkpoint_path"
+          partial_checkpoint_path="$RUNNER_TEMP/aeterna-partial.json"
+          target/release/examples/partial_observation learn "$partial_checkpoint_path"
+          target/release/examples/partial_observation run "$partial_checkpoint_path"
+          expanded_checkpoint_path="$RUNNER_TEMP/aeterna-expanded.json"
+          target/release/examples/expanded_rules learn "$expanded_checkpoint_path"
+          target/release/examples/expanded_rules run "$expanded_checkpoint_path"
+          inverse_checkpoint_path="$RUNNER_TEMP/aeterna-inverse.json"
+          target/release/examples/inverse_inference learn "$inverse_checkpoint_path"
+          target/release/examples/inverse_inference run "$inverse_checkpoint_path"
+          adaptive_checkpoint_path="$RUNNER_TEMP/aeterna-adaptive.json"
+          target/release/examples/adaptive_learning learn "$adaptive_checkpoint_path"
+          target/release/examples/adaptive_learning run "$adaptive_checkpoint_path"
+      - name: Preserve regression output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-regression-log
+          path: regression.log
+          if-no-files-found: ignore

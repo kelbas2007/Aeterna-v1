@@ -123,6 +123,8 @@ impl ShapeTrace {
 pub enum CarrierTrace {
     Exact(PhaseVector),
     RobustShape(ShapeTrace),
+    /// Factual bounded sensor channels, without a pretrained visual vocabulary.
+    Sensory(Vec<f32>),
 }
 
 impl CarrierTrace {
@@ -138,6 +140,9 @@ impl CarrierTrace {
         match (self, other) {
             (Self::Exact(a), Self::Exact(b)) => a.similarity(b),
             (Self::RobustShape(a), Self::RobustShape(b)) => a.similarity(b),
+            (Self::Sensory(a), Self::Sensory(b)) if a.len() == b.len() && !a.is_empty() => {
+                1.0 - a.iter().zip(b).map(|(x, y)| (x - y).abs()).fold(0.0, f32::max)
+            }
             _ => 0.0,
         }
     }
@@ -145,7 +150,7 @@ impl CarrierTrace {
     pub fn exact_vector(&self) -> Option<&PhaseVector> {
         match self {
             Self::Exact(vector) => Some(vector),
-            Self::RobustShape(_) => None,
+            Self::RobustShape(_) | Self::Sensory(_) => None,
         }
     }
 }
