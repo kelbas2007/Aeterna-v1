@@ -381,6 +381,24 @@ impl EvoPhase {
         Some((observed*margin).clamp(0.0,1.0))
     }
 
+    /// In an uncertain episode a physically verified information-producing
+    /// operation is the only currently supported way of changing the belief.
+    /// Do not treat an unsupported optimistic goal path as an informed action.
+    /// When belief becomes decisive, all normal motor proposals return.
+    /// No source class, hidden cause, reward motor or host phase is inspected.
+    pub fn phase_native_temporal_action_evidence_admissible(
+        &self,action:usize
+    )->bool{
+        if !self.phase_native_temporal_autonomous_probe(){return true;}
+        if !self.phase_native_temporal_evidence()
+            .map(|b|b.needs_more).unwrap_or(false){return true;}
+        let Some(sensor)=self.choose_phase_native_temporal_sensing_action()
+            else{return true;};
+        // If the physical sensor loses its conducting path, no metadata
+        // whitelist may continue to force the same motor.
+        sensor.action==action
+    }
+
     pub fn phase_native_temporal_evidence_enabled(&self)->bool{
         self.phase_native.as_ref()
             .and_then(|n|n.temporal_evidence.as_ref()).is_some()
