@@ -222,6 +222,10 @@ impl EvoPhase {
         let Some(post)=self.phase_native_abstract_state(post_sensory) else {
             return false;
         };
+        // Snapshot the factual pre-action belief BEFORE moving native state
+        // out for mutation; otherwise the readout would always be None.
+        let belief_source=self.phase_native_temporal_evidence()
+            .and_then(|readout|readout.winner_cell);
         let Some(mut native)=self.phase_native.take() else {
             return false;
         };
@@ -260,8 +264,6 @@ impl EvoPhase {
         };
         let changed=pre.cell!=post.cell
             && evidence.cues.iter().any(|c|c.source_cell==post.cell);
-        let belief_source = self.phase_native_temporal_evidence()
-            .and_then(|readout|readout.winner_cell);
         let belief_index=belief_source.and_then(|source|
             evidence.cues.iter().position(|cue|cue.source_cell==source)
         );
