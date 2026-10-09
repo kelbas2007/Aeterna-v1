@@ -737,7 +737,14 @@ impl EvoPhase {
                         (action,seen)
                     }).min_by_key(|(action,seen)|(*seen,*action))?;
                 let candidate=first.unwrap_or(trial_action);
-                let novelty=confidence/(1.0+trials as f32)
+                // A *conducting* route certifies reachability. Once it
+                // clears that causal gate, its partial synaptic maturation
+                // must not suppress all work at a deeper untried frontier:
+                // otherwise a one-trial link (weight ~0.125) can never
+                // compete with shallow no-op trials. The learning target is
+                // novelty conditional on physical reachability, discounted
+                // for action cost, not raw absolute synaptic confidence.
+                let novelty=1.0/(1.0+trials as f32)
                     /(1.0+depth as f32*0.12);
                 if best.is_none_or(|b|novelty>b.1+1.0e-6){
                     best=Some((candidate,novelty));
