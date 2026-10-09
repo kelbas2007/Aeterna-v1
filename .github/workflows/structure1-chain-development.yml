@@ -1,0 +1,44 @@
+name: Two-stage sensing chain open development
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/scientific_runtime.rs'
+      - 'tests/structure1_chain_mechanism.rs'
+      - 'tests/structure1_chain_development.rs'
+      - '.github/workflows/structure1-chain-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: structure1-chain-research-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  chain-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile shared cognitive and two-stage test targets
+        run: cargo check --locked --test structure1_chain_mechanism --test structure1_chain_development
+      - name: Physically causal two-action mechanism control
+        run: cargo test --locked --release --test structure1_chain_mechanism chain_motor_affordance_is_physical_contextual_and_checkpointed -- --exact --nocapture
+      - name: New-seed open two-stage transfer diagnostic
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test structure1_chain_development structure1_acquired_chained_sensing_open_development -- --exact --nocapture 2>&1 | tee chain-dev.log
+      - name: Preserve negative or positive open development evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: structure1-chain-open-evidence
+          path: chain-dev.log
+          if-no-files-found: ignore
