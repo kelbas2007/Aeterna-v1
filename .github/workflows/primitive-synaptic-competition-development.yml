@@ -9,6 +9,8 @@ on:
       - 'src/phase_primitive_arguments.rs'
       - 'src/phase_induction.rs'
       - 'tests/primitive_native_synaptic_competition.rs'
+      - 'tests/primitive_intrinsic_experiments.rs'
+      - 'src/phase_vector_learning.rs'
       - '.github/workflows/primitive-synaptic-competition-development.yml'
   workflow_dispatch:
 
@@ -36,10 +38,17 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked --release --test primitive_native_synaptic_competition physical_synaptic_competition_learns_argument_calls_from_factual_outcomes -- --exact --nocapture 2>&1 | tee neural-competition.log
+      - name: Open no-scheduled-lessons intrinsic experiment witness
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test primitive_intrinsic_experiments intrinsic_argument_disagreement_selects_its_own_protected_experiment -- --exact --nocapture 2>&1 | tee intrinsic-experiment.log
       - name: Preserve failures and winners
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: primitive-native-candidate-evidence
-          path: neural-competition.log
+          path: |
+            neural-competition.log
+            intrinsic-experiment.log
           if-no-files-found: ignore
