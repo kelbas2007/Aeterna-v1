@@ -121,7 +121,7 @@ fn completed_goal_is_not_an_unexplored_multistep_information_frontier(){
     assert!(!evo.observe_phase_native_temporal_full_goal_outcome(
         motor,&outcome,0.5
     ));
-    assert!(evo.observe_phase_native_temporal_sensing_affordance(
+    assert!(evo.observe_phase_native_sensing_affordance(
         motor,&first,&outcome
     ));
     assert_eq!(evo.phase_native_temporal_rewarded_action_count(),0);
