@@ -74,6 +74,16 @@ struct PhaseTemporalActionTrial {
     observations:u32,
 }
 
+/// Factual positive goal outcome. The physical motor->observed-goal
+/// synapse, not a fixed motor-role label, gates future frontier inference.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PhaseTemporalGoalWitness {
+    motor_action:usize,
+    post_cell:usize,
+    outcome_synapse:usize,
+    observations:u32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PhaseTemporalSensingDecision {
     pub action: usize,
@@ -116,6 +126,7 @@ pub(super) struct PhaseTemporalEvidenceState {
     multistep_enabled:bool,
     transitions:Vec<PhaseTemporalTransition>,
     action_trials:Vec<PhaseTemporalActionTrial>,
+    goal_witnesses:Vec<PhaseTemporalGoalWitness>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -175,6 +186,7 @@ impl EvoPhase {
             multistep_enabled:false,
             transitions:Vec::new(),
             action_trials:Vec::new(),
+            goal_witnesses:Vec::new(),
         });
         self.phase_native = Some(state);
         true
@@ -192,7 +204,8 @@ impl EvoPhase {
                 || p.chains.iter().any(|m|m.entry_synapse==synapse_index
                     || m.read_synapse==synapse_index)
                 || p.transitions.iter().any(|e|e.entry_synapse==synapse_index
-                    || e.exit_synapse==synapse_index))
+                    || e.exit_synapse==synapse_index)
+                || p.goal_witnesses.iter().any(|g|g.outcome_synapse==synapse_index))
             .unwrap_or(false)
     }
 
@@ -511,6 +524,7 @@ impl EvoPhase {
             if best.is_some_and(|b|depth>=b.3){continue;}
             for edge in evidence.transitions.iter().filter(|e|
                 e.from_cell==cell && e.observations>0
+                && !self.phase_native_temporal_rewarded_motor(e.motor_action)
             ){
                 let c0=conductance(
                     &self.cells,&self.synapses[edge.entry_synapse],floor
@@ -655,6 +669,70 @@ impl EvoPhase {
         true
     }
 
+    /// A permitted, actually achieved full task reward demonstrates that the
+    /// corresponding opaque motor can execute a GOAL, not gather more clues.
+    /// Only bounded factual outcome 1.0 is accepted; a zero-reward action is
+    /// not silently classified as a failure or terminal command.
+    pub fn observe_phase_native_temporal_full_goal_outcome(
+        &mut self, action:usize, post_sensory:&[f32], utility:f32
+    )->bool{
+        if !utility.is_finite()||utility<1.0-1.0e-6||utility>1.0
+            || action>=self.config.motor_cells {return false;}
+        let Some(post)=self.phase_native_abstract_state(post_sensory)
+            else{return false;};
+        let Some(mut native)=self.phase_native.take() else{return false;};
+        let Some(mut t)=native.temporal_evidence.take() else{
+            self.phase_native=Some(native);return false;
+        };
+        if !t.multistep_enabled||!native.config.learning_enabled {
+            native.temporal_evidence=Some(t);
+            self.phase_native=Some(native);return false;
+        }
+        let index=if let Some(i)=t.goal_witnesses.iter()
+            .position(|g|g.motor_action==action&&g.post_cell==post.cell)
+        {i}else{
+            let physical=self.native_synapse(
+                self.motor_cell(action),post.cell
+            );
+            t.goal_witnesses.push(PhaseTemporalGoalWitness{
+                motor_action:action,post_cell:post.cell,
+                outcome_synapse:physical,observations:0,
+            });
+            t.goal_witnesses.len()-1
+        };
+        let witness=&mut t.goal_witnesses[index];
+        witness.observations=witness.observations.saturating_add(1);
+        let syn=&mut self.synapses[witness.outcome_synapse];
+        syn.phase_offset=wrap_phase(
+            self.cells[syn.to].phase-self.cells[syn.from].phase
+        );
+        syn.confidence=1.0;
+        syn.weight=(syn.weight+0.25).clamp(0.0,1.0);
+        syn.eligibility=1.0;
+        native.temporal_evidence=Some(t);
+        self.phase_native=Some(native);
+        true
+    }
+
+    fn phase_native_temporal_rewarded_motor(&self,action:usize)->bool{
+        let Some(native)=self.phase_native.as_ref() else{return false;};
+        let Some(t)=native.temporal_evidence.as_ref() else{return false;};
+        t.multistep_enabled&&t.goal_witnesses.iter().any(|w|
+            w.motor_action==action && w.observations>0
+                && conductance(&self.cells,
+                    &self.synapses[w.outcome_synapse],
+                    native.config.coherence_floor)>1.0e-8
+        )
+    }
+
+    pub fn phase_native_temporal_rewarded_action_count(&self)->usize{
+        let Some(t)=self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref()) else{return 0;};
+        (0..self.config.motor_cells).filter(|a|
+            t.multistep_enabled&&self.phase_native_temporal_rewarded_motor(*a)
+        ).count()
+    }
+
     /// Generalized, bounded multistep transitions: never a motor-role table.
     /// Requires the existing temporal evidence state and acquired raw cues.
     pub fn set_phase_native_temporal_multistep(&mut self,enabled:bool)->bool{
@@ -730,6 +808,7 @@ impl EvoPhase {
                 if expanded>=512{break;}
                 expanded+=1;
                 let (trial_action,trials)=(0..self.config.motor_cells)
+                    .filter(|action|!self.phase_native_temporal_rewarded_motor(*action))
                     .map(|action|{
                         let seen=temporal.action_trials.iter().find(|t|
                             t.from_cell==cell && t.motor_action==action
@@ -752,6 +831,7 @@ impl EvoPhase {
                 if depth>=7{continue;}
                 for edge in temporal.transitions.iter().filter(|e|
                     e.from_cell==cell && !visited.contains(&e.to_cell)
+                    &&!self.phase_native_temporal_rewarded_motor(e.motor_action)
                 ){
                     let physical=confidence.min(conductance(&self.cells,
                         &self.synapses[edge.entry_synapse],floor
@@ -831,7 +911,9 @@ impl EvoPhase {
         let cues=t.cues.iter().map(|cue|cue.source_cell).collect::<Vec<_>>();
         let floor=native.config.coherence_floor;
         t.transitions.iter().any(|edge|{
-            if edge.motor_action!=action{return false;}
+            if edge.motor_action!=action
+                ||self.phase_native_temporal_rewarded_motor(action)
+            {return false;}
             if conductance(&self.cells,
                 &self.synapses[edge.entry_synapse],floor)<=1.0e-8
                 ||conductance(&self.cells,
