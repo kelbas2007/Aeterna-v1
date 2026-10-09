@@ -58,3 +58,5 @@ for provenance and are not an instruction to rerun their qualification packs.
 The new rule modes use physical phase parameters with software hypothesis fitting
 and bounded search. Describe both parts accurately. Human Protection and factual
 execution boundaries remain part of the runtime contract.
+
+Recorded-data pipeline integrity and metric qualification are separate: the acquired-operation engine currently misses both declared usefulness targets. Preserve these FAIL reports; do not infer scientific PASS from ordinary CI success. See [the protocol](docs/PRIMITIVE_PROTOCOL.md).

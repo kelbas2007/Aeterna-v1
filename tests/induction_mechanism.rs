@@ -197,7 +197,7 @@ fn malformed_graph_and_old_version_restore_atomically_without_actuator_authority
     let e = acquired();
     let bytes = e.online_checkpoint_bytes().unwrap();
     let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-    assert_eq!(value["version"], 8);
+    assert_eq!(value["version"], 9);
     let mut rt = ScientificRuntime::new(e).unwrap();
     rt.set_outcome_goal(1.0).unwrap();
     rt.set_model_learning_enabled(false);

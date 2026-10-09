@@ -741,6 +741,7 @@ include!("phase_uncertain_observation.rs");
 include!("phase_uncertain_planning.rs");
 include!("phase_vector_learning.rs");
 include!("phase_induction.rs");
+include!("phase_primitives.rs");
 include!("phase_online_checkpoint.rs");
 include!("phase_forward.rs");
 include!("phase_concept.rs");

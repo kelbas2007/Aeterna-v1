@@ -1,0 +1,15 @@
+Open recorded-data first score, 2026-10-09
+Development from research base b4d3c4b874de241bfa604bad71e9400eeff00483, not a sealed qualification.
+Settings and gates: PRIMITIVE_PROTOCOL.md. No held-out-driven tuning.
+
+Report { corpus: Images, tasks: 364, correct: 143, abstentions: 141, wrong: 80, nearest: 344, linear: 328, training_actions: 6503, test_actions: 587, sensing_first: 364, primitives: 4, primitive_uses: 4, constructor_updates: 4896, checkpoint_bytes: 3926691, useful: false }
+open_usefulness_target=FAIL
+Report { corpus: Signals, tasks: 150, correct: 104, abstentions: 12, wrong: 34, nearest: 137, linear: 113, training_actions: 329, test_actions: 288, sensing_first: 150, primitives: 2, primitive_uses: 5, constructor_updates: 234, checkpoint_bytes: 1450803, useful: false }
+open_usefulness_target=FAIL
+
+Adapter correction after first score: learn the measurement motor from the same actual tuples and count control actions explicitly. Engine settings and gates unchanged; all accuracy, abstention, tuition and model-size scores unchanged.
+
+Report { corpus: Images, tasks: 364, correct: 143, abstentions: 141, wrong: 80, nearest: 344, linear: 328, nearest_actions: 728, linear_actions: 728, training_actions: 6503, test_actions: 587, sensing_first: 364, primitives: 4, primitive_uses: 4, constructor_updates: 4896, checkpoint_bytes: 3926691, useful: false }
+open_usefulness_target=FAIL
+Report { corpus: Signals, tasks: 150, correct: 104, abstentions: 12, wrong: 34, nearest: 137, linear: 113, nearest_actions: 300, linear_actions: 300, training_actions: 329, test_actions: 288, sensing_first: 150, primitives: 2, primitive_uses: 5, constructor_updates: 234, checkpoint_bytes: 1450803, useful: false }
+open_usefulness_target=FAIL

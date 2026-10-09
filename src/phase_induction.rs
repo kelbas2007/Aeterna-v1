@@ -104,12 +104,16 @@ struct InductionProgram {
     revisions: u64,
     discarded_conflicts: u64,
     facts: std::collections::VecDeque<InductionFact>,
+    #[serde(default)]
+    last_search_expansions: usize,
 }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PhaseInductionState {
     config: PhaseInductionConfig,
     programs: Vec<InductionProgram>,
+    #[serde(default)]
+    primitives: Option<PhasePrimitiveState>,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct PhaseInductionPrediction {
@@ -139,6 +143,8 @@ pub struct PhaseInductionProgramInfo {
     pub future_checks: u64,
     pub retained_facts: usize,
     pub allocated_nodes: usize,
+    pub primitive_inputs: Vec<usize>,
+    pub last_search_expansions: usize,
     pub nodes: Vec<PhaseInductionNodeInfo>,
 }
 // Transient construction only; never serialized or consulted by prediction.
@@ -161,6 +167,7 @@ fn induction_fit(
     depth: usize,
     budget: usize,
     search_left: &mut usize,
+    priorities: &[f32],
 ) -> (InductionDraft, f64, usize) {
     let width = facts[0].input.len();
     let positives = facts.iter().filter(|f| f.success).count();
@@ -216,6 +223,7 @@ fn induction_fit(
     }
     options.sort_by(|a, b| {
         a.0.total_cmp(&b.0)
+            .then_with(|| priorities[b.1].total_cmp(&priorities[a.1]))
             .then_with(|| a.1.cmp(&b.1))
             .then_with(|| a.2.total_cmp(&b.2))
     });
@@ -229,14 +237,21 @@ fn induction_fit(
             .iter()
             .copied()
             .partition(|f| f.input[input] <= threshold);
-        let (lower, lower_loss, lower_nodes) =
-            induction_fit(&lower, cfg, depth + 1, (budget - 1) / 2, search_left);
+        let (lower, lower_loss, lower_nodes) = induction_fit(
+            &lower,
+            cfg,
+            depth + 1,
+            (budget - 1) / 2,
+            search_left,
+            priorities,
+        );
         let (upper, upper_loss, upper_nodes) = induction_fit(
             &upper,
             cfg,
             depth + 1,
             budget - 1 - lower_nodes,
             search_left,
+            priorities,
         );
         let candidate_loss = lower_loss + upper_loss;
         let nodes = 1 + lower_nodes + upper_nodes;
@@ -264,6 +279,50 @@ fn induction_read(
     input: &[f32],
     cells: &[PhaseCell],
     links: &[PhaseSynapse],
+    primitives: Option<&PhasePrimitiveState>,
+) -> Option<(f32, usize)> {
+    induction_read_inner(
+        program,
+        cfg,
+        input,
+        cells,
+        links,
+        primitives,
+        primitives.map_or(0, |s| s.operations.len()),
+    )
+}
+fn induction_read_inner(
+    program: &InductionProgram,
+    cfg: &PhaseInductionConfig,
+    input: &[f32],
+    cells: &[PhaseCell],
+    links: &[PhaseSynapse],
+    primitives: Option<&PhasePrimitiveState>,
+    primitive_limit: usize,
+) -> Option<(f32, usize)> {
+    // Ephemeral results of reading physical definitions in this one query.
+    // Each acquired operation is evaluated at most once, even in a deep DAG.
+    let mut cache = vec![None; primitives.map_or(0, |s| s.operations.len())];
+    induction_read_cached(
+        program,
+        cfg,
+        input,
+        cells,
+        links,
+        primitives,
+        primitive_limit,
+        &mut cache,
+    )
+}
+fn induction_read_cached(
+    program: &InductionProgram,
+    cfg: &PhaseInductionConfig,
+    input: &[f32],
+    cells: &[PhaseCell],
+    links: &[PhaseSynapse],
+    primitives: Option<&PhasePrimitiveState>,
+    primitive_limit: usize,
+    cache: &mut [Option<Option<f32>>],
 ) -> Option<(f32, usize)> {
     if program.active_nodes == 0 {
         return None;
@@ -301,8 +360,35 @@ fn induction_read(
                 if test.weight < 0.5 || test.confidence < 0.5 || !cells[test.from].recruited {
                     return None;
                 }
-                let side =
-                    usize::from(*input.get(test.from)? > test.phase_offset / std::f32::consts::PI);
+                let value = if let Some(&x) = input.get(test.from) {
+                    x
+                } else {
+                    let s = primitives?;
+                    let index = s
+                        .operations
+                        .iter()
+                        .take(primitive_limit)
+                        .position(|op| op.program.nodes[0].cell == test.from && op.admitted)?;
+                    let value = if let Some(value) = cache[index] {
+                        value
+                    } else {
+                        let value = induction_read_cached(
+                            &s.operations[index].program,
+                            cfg,
+                            input,
+                            cells,
+                            links,
+                            primitives,
+                            index,
+                            cache,
+                        )
+                        .map(|v| v.0);
+                        cache[index] = Some(value);
+                        value
+                    };
+                    value?
+                };
+                let side = usize::from(value > test.phase_offset / std::f32::consts::PI);
                 let edge = &links[node.edges[side]];
                 if edge.weight < 0.5 || edge.confidence < 0.5 {
                     return None;
@@ -317,6 +403,7 @@ fn induction_install(
     draft: InductionDraft,
     program: &mut InductionProgram,
     links: &mut [PhaseSynapse],
+    sources: &[usize],
 ) -> usize {
     let index = program.active_nodes;
     program.active_nodes += 1;
@@ -350,13 +437,13 @@ fn induction_install(
         } => {
             program.nodes[index].kind = InductionNodeKind::Branch;
             let test = &mut links[program.nodes[index].test];
-            test.from = input;
+            test.from = sources[input];
             test.phase_offset = threshold * std::f32::consts::PI;
             test.weight = 1.0;
             test.confidence = 1.0;
             let children = [
-                induction_install(*lower, program, links),
-                induction_install(*upper, program, links),
+                induction_install(*lower, program, links, sources),
+                induction_install(*upper, program, links, sources),
             ];
             for (side, child) in children.into_iter().enumerate() {
                 let edge = &mut links[program.nodes[index].edges[side]];
@@ -429,6 +516,7 @@ impl EvoPhase {
                 revisions: 0,
                 discarded_conflicts: 0,
                 facts: Default::default(),
+                last_search_expansions: 0,
             });
         }
         self.phase_native
@@ -437,7 +525,11 @@ impl EvoPhase {
             .vector
             .as_mut()
             .unwrap()
-            .induction = Some(PhaseInductionState { config, programs });
+            .induction = Some(PhaseInductionState {
+            config,
+            programs,
+            primitives: None,
+        });
         true
     }
     pub fn phase_induction_enabled(&self) -> bool {
@@ -466,9 +558,14 @@ impl EvoPhase {
             if p.future_checks < state.config.min_future_checks {
                 continue;
             }
-            let Some((score, index)) =
-                induction_read(p, &state.config, &input, &self.cells, &self.synapses)
-            else {
+            let Some((score, index)) = induction_read(
+                p,
+                &state.config,
+                &input,
+                &self.cells,
+                &self.synapses,
+                state.primitives.as_ref(),
+            ) else {
                 continue;
             };
             if p.nodes[index].future_checks < state.config.min_leaf_checks {
@@ -513,6 +610,13 @@ impl EvoPhase {
                 future_checks: p.future_checks,
                 retained_facts: p.facts.len(),
                 allocated_nodes: p.nodes.len(),
+                primitive_inputs: p.nodes[..p.active_nodes]
+                    .iter()
+                    .filter(|n| n.kind == InductionNodeKind::Branch)
+                    .map(|n| self.synapses[n.test].from)
+                    .filter(|&source| source >= self.config.sensory_cells)
+                    .collect(),
+                last_search_expansions: p.last_search_expansions,
                 nodes: p.nodes[..p.active_nodes]
                     .iter()
                     .map(|n| PhaseInductionNodeInfo {
@@ -542,6 +646,9 @@ impl EvoPhase {
                     .iter()
                     .flat_map(|p| &p.nodes)
                     .any(|n| n.links().any(|i| i == index))
+                    || s.primitives
+                        .as_ref()
+                        .is_some_and(|p| p.contains_synapse(index))
             })
     }
     fn observe_phase_induction_result(&mut self, action: usize, pre: &[Option<f32>], outcome: f32) {
@@ -556,8 +663,26 @@ impl EvoPhase {
         };
         let sequence = vector.factual_sequence;
         let success = outcome >= vector.config.success_threshold;
+        if let Some(primitives) = state.primitives.as_mut() {
+            primitives.observe(
+                action,
+                &input,
+                success,
+                &state.config,
+                &mut state.programs,
+                &self.cells,
+                &mut self.synapses,
+            );
+        }
         let p = &mut state.programs[action];
-        let prediction = induction_read(p, &state.config, &input, &self.cells, &self.synapses);
+        let prediction = induction_read(
+            p,
+            &state.config,
+            &input,
+            &self.cells,
+            &self.synapses,
+            state.primitives.as_ref(),
+        );
         let agrees =
             |score: f32| (score - f32::from(success)).abs() <= 1.0 - state.config.minimum_outcome;
         let rebuild = prediction.is_none_or(|(score, _)| !agrees(score));
@@ -606,10 +731,24 @@ impl EvoPhase {
             sequence,
         });
         if rebuild && p.facts.len() >= state.config.min_child_support {
-            let facts = p.facts.iter().collect::<Vec<_>>();
+            let (fit_facts, sources, priorities) = primitive_fit_inputs(
+                &p.facts,
+                state.primitives.as_ref(),
+                &state.config,
+                &self.cells,
+                &self.synapses,
+            );
+            let facts = fit_facts.iter().collect::<Vec<_>>();
             let mut search_left = state.config.search_expansions;
-            let (draft, _, _) =
-                induction_fit(&facts, &state.config, 0, p.nodes.len(), &mut search_left);
+            let (draft, _, _) = induction_fit(
+                &facts,
+                &state.config,
+                0,
+                p.nodes.len(),
+                &mut search_left,
+                &priorities,
+            );
+            p.last_search_expansions = state.config.search_expansions - search_left;
             p.active_nodes = 0;
             p.future_checks = 0;
             p.generation += 1;
@@ -626,7 +765,19 @@ impl EvoPhase {
                     l.phase_offset = 0.0;
                 }
             }
-            induction_install(draft, p, &mut self.synapses);
+            induction_install(draft, p, &mut self.synapses, &sources);
+            if let Some(primitives) = state.primitives.as_mut() {
+                primitives.record_construction(p, &self.synapses);
+            }
+        }
+        if let Some(primitives) = state.primitives.as_mut() {
+            primitives.acquire(
+                action,
+                sequence,
+                &state.config,
+                &state.programs[action],
+                &mut self.synapses,
+            );
         }
     }
 }
@@ -648,7 +799,78 @@ impl PhaseInductionState {
         }
         let start = cfg.sensory_cells + cfg.motor_cells + 1;
         let mut sources = std::collections::BTreeSet::new();
-        for (action, p) in self.programs.iter().enumerate() {
+        if let Some(s) = &self.primitives {
+            if !(1..=8).contains(&s.config.capacity)
+                || s.operations.len() != s.config.capacity
+                || !s.config.policy_learning_rate.is_finite()
+                || !(0.001..=0.25).contains(&s.config.policy_learning_rate)
+                || (cfg.motor_cells + s.config.capacity) * self.config.nodes_per_motor > 512
+                || s.policy_updates > sequence
+                || s.priorities.len() != cfg.sensory_cells + s.config.capacity
+            {
+                return false;
+            }
+            for (j, &index) in s.priorities.iter().enumerate() {
+                if index >= links.len() || !used.insert(index) {
+                    return false;
+                }
+                let source = if j < cfg.sensory_cells {
+                    j
+                } else {
+                    let Some(n) = s.operations[j - cfg.sensory_cells].program.nodes.first() else {
+                        return false;
+                    };
+                    n.cell
+                };
+                if links[index].from != source
+                    || links[index].to != cfg.sensory_cells + cfg.motor_cells
+                {
+                    return false;
+                }
+            }
+            for op in &s.operations {
+                if op.admitted != (op.program.active_nodes > 0)
+                    || op.program.generation != u64::from(op.admitted)
+                    || op.source_action >= cfg.motor_cells
+                    || op.published_sequence > sequence
+                    || op.program.born_sequence > op.published_sequence
+                    || op.source_generation > op.published_sequence
+                    || op.program.future_checks
+                        > op.published_sequence
+                            .saturating_sub(op.program.born_sequence)
+                    || op.source_generation > sequence
+                    || (op.admitted
+                        && (op.published_sequence == 0
+                            || op.source_generation == 0
+                            || op.program.future_checks < self.config.min_future_checks))
+                    || op.construction_uses > sequence
+                    || (!op.admitted
+                        && (op.source_generation != 0
+                            || op.published_sequence != 0
+                            || op.construction_uses != 0))
+                    || !op.program.facts.is_empty()
+                {
+                    return false;
+                }
+            }
+        }
+        let main_entries = self
+            .programs
+            .iter()
+            .enumerate()
+            .map(|(action, p)| (p, cfg.sensory_cells + action, None));
+        let primitive_entries = self
+            .primitives
+            .iter()
+            .flat_map(|s| s.operations.iter().enumerate())
+            .map(|(index, op)| {
+                (
+                    &op.program,
+                    op.program.nodes.first().map_or(usize::MAX, |n| n.cell),
+                    Some(index),
+                )
+            });
+        for (p, output_cell, primitive_index) in main_entries.chain(primitive_entries) {
             if p.nodes.len() != self.config.nodes_per_motor
                 || p.active_nodes > p.nodes.len()
                 || (p.active_nodes == 0) != (p.generation == 0)
@@ -659,6 +881,7 @@ impl PhaseInductionState {
                 || p.future_checks > sequence.saturating_sub(p.born_sequence)
                 || p.discarded_conflicts > sequence
                 || p.facts.len() > self.config.facts_per_motor
+                || p.last_search_expansions > self.config.search_expansions
             {
                 return false;
             }
@@ -703,13 +926,26 @@ impl PhaseInductionState {
                 let response = &links[n.response];
                 if test.to != n.cell
                     || response.from != n.cell
-                    || response.to != cfg.sensory_cells + action
+                    || response.to != output_cell
                     || !(0.0..=std::f32::consts::PI).contains(&test.phase_offset)
                 {
                     return false;
                 }
                 if n.kind == InductionNodeKind::Branch && test.from >= cfg.sensory_cells {
-                    return false;
+                    let Some(s) = &self.primitives else {
+                        return false;
+                    };
+                    let limit = primitive_index.unwrap_or(s.operations.len());
+                    if !s.operations[..limit].iter().any(|op| {
+                        op.admitted
+                            && op
+                                .program
+                                .nodes
+                                .first()
+                                .is_some_and(|n| n.cell == test.from)
+                    }) {
+                        return false;
+                    }
                 }
                 for &e in &n.edges {
                     if links[e].from != n.cell || !p.nodes.iter().any(|n| n.cell == links[e].to) {
@@ -792,6 +1028,7 @@ impl PhaseInductionState {
                 p.revisions,
                 p.discarded_conflicts,
                 p.facts.len() as u64,
+                p.last_search_expansions as u64,
             ] {
                 feed(n);
             }
@@ -811,6 +1048,9 @@ impl PhaseInductionState {
                     feed(u64::from(x.to_bits()));
                 }
             }
+        }
+        if let Some(s) = &self.primitives {
+            s.fingerprint_feed(feed);
         }
     }
 }

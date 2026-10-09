@@ -97,3 +97,49 @@ fn actual_file_training_png_jpeg_inversion_correction_and_restart() {
         .success());
     assert_eq!(std::fs::read(&model).unwrap(), original);
 }
+
+#[test]
+fn acquired_program_image_mode_has_no_prototype_fallback() {
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let scratch = Scratch(std::env::temp_dir().join(format!(
+        "aeterna-program-images-{}-{nonce}",
+        std::process::id()
+    )));
+    std::fs::create_dir(&scratch.0).unwrap();
+    let model = scratch.0.join("programs.json");
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/data/digits.csv");
+    let trained = ok(&["train", name(&fixture), name(&model), "--programs"]);
+    assert!(
+        trained.contains("engine=acquired_programs") && trained.contains("trained_records=1433")
+    );
+    let bytes = std::fs::read(&model).unwrap();
+    let e = EvoPhase::from_online_checkpoint(&bytes).unwrap();
+    assert!(e.phase_constructor_info().unwrap().factual_updates > 0);
+    assert!(!e.phase_primitives().is_empty());
+    assert_eq!(e.phase_vector_info().unwrap().active_prototypes, 0);
+    let png = scratch.0.join("actual-heldout.png");
+    let pixels = include_str!("data/digits.csv")
+        .lines()
+        .next()
+        .unwrap()
+        .split(',')
+        .take(64)
+        .map(|s| (s.parse::<f32>().unwrap() * 255.0 / 16.0).round() as u8)
+        .collect();
+    image::GrayImage::from_raw(8, 8, pixels)
+        .unwrap()
+        .save(&png)
+        .unwrap();
+    let output = ok(&["recognize", name(&model), name(&png)]);
+    assert!(output.contains("engine=acquired_programs"));
+    assert!(output.contains("abstained=true") || output.contains("authority=IMAGINED"));
+    assert_eq!(std::fs::read(&model).unwrap(), bytes);
+    assert!(
+        !invoke(&["train", name(&fixture), name(&model), "--programs"])
+            .status
+            .success()
+    );
+}

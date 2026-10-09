@@ -40,3 +40,19 @@ This fixture does not expose writer identities; the evaluation does not claim
 a writer-independent split. Annotations stay with the external evaluator.
 See the [task protocol](../../docs/VECTOR_PROTOCOL.md) and
 [measured result](../../docs/DIGITS_BENCHMARK.md).
+
+# Recorded GunPoint motion signals
+
+`GunPoint_TRAIN.ts` and `GunPoint_TEST.ts` are unmodified files mirrored by aeon:
+<https://raw.githubusercontent.com/aeon-toolkit/aeon/main/aeon/datasets/data/GunPoint/GunPoint_TRAIN.ts>
+and <https://raw.githubusercontent.com/aeon-toolkit/aeon/main/aeon/datasets/data/GunPoint/GunPoint_TEST.ts>.
+The downloaded snapshot is pinned by `gunpoint.sha256`, checked before tests.
+
+Original [UCR archive description](https://www.timeseriesclassification.com/description.php?Dataset=GunPoint):
+50 training and 150 test series, 150 samples each, two motion classes recorded
+from one female and one male actor. The archived signal tracks the X coordinate
+of the right-hand centroid during the two gestures. Files retain the original
+description and predefined split. These are recorded movements, not generated
+Boolean worlds; no live video or actor-independent evaluation is claimed.
+See [the protocol](../../docs/PRIMITIVE_PROTOCOL.md) and
+[measured results](../../docs/ACQUIRED_OPERATIONS.md).

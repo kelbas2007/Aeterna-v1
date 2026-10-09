@@ -1,6 +1,9 @@
 //! Application I/O only. Image decoding and the externally annotated outcome
 //! live here; all acquired pattern memory and action selection live in EvoPhase.
-use aeterna_v1::carrier::{PhaseNativeConfig, PhaseOnlineConfig, PhaseVectorConfig};
+use aeterna_v1::carrier::{
+    PhaseInductionConfig, PhaseNativeConfig, PhaseOnlineConfig, PhasePrimitiveConfig,
+    PhaseVectorConfig,
+};
 use aeterna_v1::scientific_runtime::{ScientificRuntime, StepOutcome};
 use aeterna_v1::{EvoConfig, EvoPhase, HumanProtectionEvidence};
 use std::io::{Read, Write};
@@ -35,7 +38,7 @@ fn save_new(path: &str, e: &EvoPhase) -> Result<(), Error> {
     file.sync_all()?;
     Ok(())
 }
-fn fresh() -> EvoPhase {
+fn fresh(programs: bool) -> EvoPhase {
     let mut e = EvoPhase::new(EvoConfig {
         sensory_cells: 64,
         motor_cells: 11,
@@ -44,7 +47,30 @@ fn fresh() -> EvoPhase {
     });
     e.enable_phase_native_planning(PhaseNativeConfig::default());
     assert!(e.enable_phase_native_online_learning(PhaseOnlineConfig { max_states: 1 }));
-    assert!(e.enable_phase_vector_learning(PhaseVectorConfig::default()));
+    assert!(e.enable_phase_vector_learning(if programs {
+        PhaseVectorConfig {
+            slots_per_motor: 1,
+            exploration_observations: 64,
+            ..Default::default()
+        }
+    } else {
+        PhaseVectorConfig::default()
+    }));
+    if programs {
+        assert!(e.enable_phase_induction(PhaseInductionConfig {
+            search_expansions: 128,
+            min_future_checks: 2,
+            min_leaf_checks: 1,
+            coverage_radius: 0.25,
+            minimum_outcome: 0.6,
+            minimum_margin: 0.05,
+            ..Default::default()
+        }));
+        assert!(e.enable_phase_primitives(PhasePrimitiveConfig {
+            capacity: 4,
+            ..Default::default()
+        }));
+    }
     e
 }
 fn load(path: &str) -> Result<EvoPhase, Error> {
@@ -128,10 +154,10 @@ fn teach(rt: &mut ScientificRuntime, pixels: &[f32], annotation: usize) -> Resul
 fn run() -> Result<(), Error> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     match args.first().map(String::as_str) {
-        Some("train") if args.len()==3 => {
+        Some("train") if args.len()==3 || (args.len()==4 && args[3]=="--programs") => {
             if Path::new(&args[2]).exists() {return Err("output checkpoint already exists".into());}
             let data=String::from_utf8(read_bounded(&args[1],8*1024*1024)?)?;
-            let mut rt=ScientificRuntime::new(fresh())?;rt.set_outcome_goal(1.0)?;
+            let mut rt=ScientificRuntime::new(fresh(args.len()==4))?;rt.set_outcome_goal(1.0)?;
             let mut counts=[0;10];let mut records=0;let mut actions=0;
             for (line_no,line) in data.lines().enumerate() {
                 let (pixels,digit)=annotated_record(line).map_err(|e|format!("line {}: {e}",line_no+1))?;
@@ -140,13 +166,19 @@ fn run() -> Result<(), Error> {
             }
             if records==0 {return Err("no training records".into());}save_new(&args[2],rt.organism())?;
             println!("trained_records={records} actual_actions={actions} occupied_prototypes={} saved={}",rt.organism().phase_vector_info().unwrap().active_prototypes,args[2]);
+            if rt.organism().phase_induction_enabled() {println!("engine=acquired_programs operations={}",rt.organism().phase_primitives().len());}
         }
         Some("recognize") if args.len()==3 || (args.len()==4 && args[3]=="--invert") => {
             let pixels=image_pixels(&args[2],args.len()==4)?;
             let mut rt=ScientificRuntime::new(load(&args[1])?)?;rt.set_model_learning_enabled(false);rt.set_outcome_goal(1.0)?;
             rt.observe_external(&pixels)?;
             let before=rt.organism().phase_native_learned_fingerprint();
-            if let Some(p)=rt.organism().phase_vector_predict(&pixels.iter().copied().map(Some).collect::<Vec<_>>()) {
+            let frame=pixels.iter().copied().map(Some).collect::<Vec<_>>();
+            if rt.organism().phase_induction_enabled() {
+                if let Some(p)=rt.organism().phase_induction_predict(&frame) {
+                    println!("digit={} expected_outcome={:.5} margin={:.5} engine=acquired_programs authority=IMAGINED",p.action,p.expected_outcome,p.margin);
+                } else {println!("abstained=true engine=acquired_programs reason=insufficient_program_support");}
+            } else if let Some(p)=rt.organism().phase_vector_predict(&frame) {
                 println!("digit={} distance={:.5} vote_margin={:.5} authority=IMAGINED",p.action,p.nearest_distance,p.vote_margin);
             }else{println!("abstained=true reason=insufficient_pattern_support");}
             assert_eq!(before,rt.organism().phase_native_learned_fingerprint());
@@ -159,7 +191,7 @@ fn run() -> Result<(), Error> {
             let actions=teach(&mut rt,&pixels,label)?;save_new(&args[4],rt.organism())?;
             println!("corrected_annotation={label} actual_feedback_actions={actions} saved={}",args[4]);
         }
-        _=>return Err("usage: perception train <digits.csv> <new-checkpoint.json> | recognize <checkpoint.json> <image.png|jpg|pgm> [--invert] | correct <checkpoint.json> <image> <digit> <new-checkpoint.json> [--invert]".into()),
+        _=>return Err("usage: perception train <digits.csv> <new-checkpoint.json> [--programs] | recognize <checkpoint.json> <image.png|jpg|pgm> [--invert] | correct <checkpoint.json> <image> <digit> <new-checkpoint.json> [--invert]".into()),
     }
     Ok(())
 }

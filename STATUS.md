@@ -4,13 +4,14 @@
 
 ## Current development — 2026-10-09
 
-Nine opt-in modes are documented in [the guide index](docs/README.md): cold online
+Ten opt-in modes are documented in [the guide index](docs/README.md): cold online
 acquisition, acquired rules, expanded formulas, partial observations, inverse
 inference, full-observed conditional/noisy continual learning, and combined
 [noisy partial inference](docs/UNCERTAIN_LEARNING.md), plus
 [multivariate perception](docs/VECTOR_PERCEPTION.md) and
-[experience-built programs](docs/INDUCED_PROGRAMS.md). Checkpoint v8
-retains compatibility with v1–v7. Rule parameters reside in shared phase synapses;
+[experience-built programs](docs/INDUCED_PROGRAMS.md), with
+[acquired operations](docs/ACQUIRED_OPERATIONS.md). Checkpoint v9
+retains compatibility with v1–v8. Rule parameters reside in shared phase synapses;
 hypothesis fitting, context metadata and bounded planning are software.
 
 Open development comparisons: inverse inference reached 256/256 new goals versus
@@ -36,8 +37,7 @@ with seven abstentions and fourteen wrong responses. Three motor/pixel
 permutations reuse the same held-out images. Actual PNG/JPEG recognition and
 external correction run in separate processes; bounded pattern parameters live
 in physical phase links, while quantization and voting are inherited software.
-Recorded time-series signals and integration with symbolic planning remain
-unvalidated.
+Live signal streaming and integration with symbolic planning remain unvalidated.
 
 The new program mode learns inputs, thresholds and physical branch topology
 from factual differences without calling G23's fixed Atom/AND/XOR menu. Generic
@@ -46,7 +46,14 @@ matched prototype 704/704 and linear centroid 641/704, with 1408 actions each.
 Training visits every logical row; transfer is to new numeric values and
 distractor layouts. The initial greedy three-input parity failure 16/32 is
 preserved; subsequent algorithm revisions and synthetic limits are explicit.
-This program mode's real-image/signal performance is unmeasured.
+The acquired-operation extension learns callable physical definitions and
+factual constructor preferences for equal-loss inputs. Generic interpretation,
+midpoint generation and partition search remain inherited. The new engine was
+measured on recorded digits (143/364, 141 abstentions, 80 wrong) and GunPoint
+motion signals (104/150, 12 abstentions, 34 wrong). Both declared usefulness
+criteria FAIL; same-facts nearest-example controls scored 344/364 and 137/150.
+These weak results are retained alongside the stronger separate prototype mode.
+See [settings, first scores and limits](docs/ACQUIRED_OPERATIONS.md).
 
 The development source is integrated with TE5 through upstream `3e6fe616`.
 TE5 supports prepared physical belief-to-action learning and protected U1

@@ -41,6 +41,7 @@ pub use phase_native::{
     PhaseVectorConfig, PhaseVectorPrediction, PhaseVectorNeighbor,
     PhaseVectorDecision, PhaseVectorDecisionKind, PhaseVectorInfo,
     PhaseInductionConfig, PhaseInductionPrediction, PhaseInductionNodeInfo, PhaseInductionProgramInfo,
+    PhaseConstructorInfo, PhasePrimitiveConfig, PhasePrimitiveInfo,
     PhasePerceptWitness, PhaseRecursiveConceptInfo, META_FIELD_COUNT,
 };
 use phase_native::PhaseNativeState;
