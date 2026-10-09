@@ -84,5 +84,13 @@ fn chain_motor_affordance_is_physical_contextual_and_checkpointed(){
     assert_ne!(terminal.0,first);
     assert_ne!(terminal.0,probe,
         "an information-carrying motor is not an untried terminal candidate");
+    let terminal_post=foundation::scene(&l1,17,2);
+    assert!(restored.observe_phase_native_sensing_affordance(
+        terminal.0,&cue0,&terminal_post
+    ));
+    let (next,_,_)=restored.choose_phase_native_temporal_outcome_probe()
+        .expect("factual reward coverage must remain visible");
+    assert_ne!(next,terminal.0,
+        "hypothesizing a longer chain cannot erase executed terminal trials");
     println!("STRUCTURE1_CHAIN_MECHANISM physical_two_step=true prepost_context=true lesion_both=true checkpoint=true");
 }
