@@ -2,6 +2,30 @@
 
 **Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
+## Goal-conditioned causal replanning — 2026-10-09
+
+**New bounded GOAL-REPLAN-1 DEVELOPMENT PASS** on `research/beyond-intel4`:
+[mechanism Actions 37973110682](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37973110682)
+demonstrated **4/4** physical four-step goal routes through protected
+`step_unified`, followed by **4/4** same-organism recoveries after
+unannounced failed transitions. The generic carrier search recomputes from
+the *current factual state*, removing contradicted physical links and reusing
+a previously acquired but untaught complete detour.
+
+A separate preregistered, frozen-cognitive-source fresh confirmation
+[Actions 37973556878](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37973556878)
+was **first-attempt 12/12 PASS** across new random opaque role assignments:
+all intact 4-step goals and all changed-law 6-action recoveries succeeded.
+[Evidence, exact motor traces and boundaries](docs/GOAL_REPLAN1_RESULT.md);
+[predeclared fresh protocol](docs/GOAL_REPLAN_FRESH1_PROTOCOL.md).
+
+**Scientific limitation:** this task initially provides factual experience of
+each component transition, though not their complete composed detour. Cold
+self-discovery of all prerequisite edges, structural generalization beyond
+the fixed deterministic synthetic six-state topology and full SNN ownership
+of the graph-search algorithm remain **unqualified**. This does not repair or
+relabel the separate noisy depth-2–5 end-to-end FAIL 2/4.
+
 ## Latest multistep research — 2026-10-09
 
 **Variable-depth 2–5-step causal sensing has a physically verified mechanism PASS:** 12/12 shuffled
