@@ -26,6 +26,18 @@ struct PhasePrimitive {
 }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
+struct PhaseNativeBoundCall {
+    action: usize,
+    operation_index: usize,
+    source_inputs: Vec<usize>,
+    /// Source sensory cell -> acquired argument sensory cell.
+    binding_synapses: Vec<usize>,
+    fit_facts: usize,
+    future_checks: usize,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 struct PhasePrimitiveState {
     config: PhasePrimitiveConfig,
     operations: Vec<PhasePrimitive>,
@@ -33,6 +45,10 @@ struct PhasePrimitiveState {
     policy_updates: u64,
     #[serde(default)]
     argument_transfer_enabled: bool,
+    /// Acquired sensory argument wiring; indices refer to actual PhaseSynapse.
+    /// The original operation definitions are not mutated.
+    #[serde(default)]
+    bound_calls: Vec<PhaseNativeBoundCall>,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct PhasePrimitiveInfo {
@@ -125,6 +141,14 @@ impl PhasePrimitiveState {
         if self.argument_transfer_enabled {
             feed(0x4152475452414E53);
         }
+        for call in &self.bound_calls {
+            for n in [call.action,call.operation_index,call.fit_facts,call.future_checks] {
+                feed(n as u64);
+            }
+            for &i in call.source_inputs.iter().chain(call.binding_synapses.iter()) {
+                feed(i as u64);
+            }
+        }
         for &i in &self.priorities {
             feed(i as u64);
         }
@@ -154,7 +178,8 @@ impl PhasePrimitiveState {
         }
     }
     fn contains_synapse(&self, index: usize) -> bool {
-        self.priorities.contains(&index)
+        self.bound_calls.iter().any(|b|b.binding_synapses.contains(&index))
+            ||self.priorities.contains(&index)
             || self
                 .operations
                 .iter()
@@ -417,6 +442,7 @@ impl EvoPhase {
             priorities,
             policy_updates: 0,
             argument_transfer_enabled: false,
+            bound_calls:Vec::new(),
         });
         true
     }
