@@ -654,3 +654,5 @@ training-only normalization and fixed 150-to-50 averaging. No live-stream or
 actor-independent claim. The prototype digit path remains separate at 343/364;
 it never supplies a fallback in the new engine. Ordinary pipeline CI tests
 check integrity and frozen factual execution, not metric qualification.
+
+Concurrent upstream research `565f5a0` was preserved by merge `3a695b9`; final ordinary integration: 170 passed, zero failures. Compilation, correctness Clippy and separate-process demos PASS; recorded-data scores unchanged. Frozen fresh/fresh2 witness source/tests/workflows were preserved and not rerun.
