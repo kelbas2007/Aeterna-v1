@@ -148,3 +148,41 @@ fn completed_goal_is_not_an_unexplored_multistep_information_frontier(){
     assert_eq!(recovered.phase_native_temporal_rewarded_action_count(),1);
     println!("MULTISTEP_GOAL_WITNESS actual_reward=true physical_lesion=true checkpoint=true no_label=true");
 }
+
+
+#[test]
+fn factual_terminal_trials_preserve_belief_conditioned_ucb_in_multistep_carrier(){
+    let (mut evo,l1)=foundation::build24();
+    assert!(evo.enable_phase_native_temporal_evidence(
+        PhaseTemporalEvidenceConfig{
+            max_observations:8,minimum_observations:3,decisive_margin:0.125
+        }
+    ));
+    let raw=foundation::scene(&l1,2,0);
+    for cue in [2usize,9usize] {
+        assert!(evo.observe_phase_native_temporal_signal(
+            &foundation::scene(&l1,cue,0)
+        ));
+    }
+    assert!(evo.begin_phase_native_temporal_episode());
+    assert!(evo.set_phase_native_temporal_autonomous_probe(true));
+    assert!(evo.set_phase_native_temporal_multistep(true));
+    for _ in 0..3 {
+        assert!(evo.observe_phase_native_temporal_signal(&raw));
+    }
+    assert!(evo.phase_native_temporal_evidence().unwrap().winner_cell.is_some());
+    let first=evo.choose_phase_native_temporal_outcome_probe()
+        .expect("opaque terminal motor under conclusive belief").0;
+    let actual_post=foundation::scene(&l1,10,2);
+    assert!(evo.observe_phase_native_temporal_outcome(
+        first,&actual_post,0.0
+    ));
+    assert!(evo.observe_phase_native_sensing_affordance(
+        first,&raw,&actual_post
+    ));
+    let next=evo.choose_phase_native_temporal_outcome_probe()
+        .expect("observe untried alternative").0;
+    assert_ne!(first,next,
+        "factual failure must count against the executed motor in its physical belief context");
+    println!("MULTISTEP_TERMINAL_CREDIT first={} next={} failed_motor_counted=true",first,next);
+}
