@@ -11,16 +11,20 @@
 fn synaptic_argument_winner(
     action:usize,
     p:&PhasePrimitiveState,
+    cells:&[PhaseCell],
     links:&[PhaseSynapse],
+    coherence_floor:f32,
 )->Option<PrimitiveArgumentMatch>{
     if !p.native_argument_competition{return None;}
     let candidate=p.argument_candidates.iter()
         .filter(|c|c.action==action && c.observations>=16)
         .filter(|c|links.get(c.candidate_synapse)
-            .is_some_and(|l|l.confidence>=0.5 && l.weight>=0.83))
+            .is_some_and(|l|l.confidence>=0.5
+                &&conductance(cells,l,coherence_floor)>=0.83))
         .max_by(|a,b|{
-            links[a.candidate_synapse].weight
-                .total_cmp(&links[b.candidate_synapse].weight)
+            conductance(cells,&links[a.candidate_synapse],coherence_floor)
+                .total_cmp(&conductance(cells,&links[b.candidate_synapse],
+                    coherence_floor))
                 .then_with(||b.operation_index.cmp(&a.operation_index))
                 .then_with(||b.candidate_synapse.cmp(&a.candidate_synapse))
         })?;
@@ -175,7 +179,8 @@ impl EvoPhase {
         let mut most_uncertain=0.05f32;
         for action in 0..self.config.motor_cells {
             if rejected.get(action).copied().unwrap_or(true)
-                ||synaptic_argument_winner(action,p,&self.synapses).is_some(){
+                ||synaptic_argument_winner(action,p,&self.cells,&self.synapses,
+                    native.config.coherence_floor).is_some(){
                 continue;
             }
             let mut yes=0.0f32;
@@ -183,7 +188,9 @@ impl EvoPhase {
             let mut experience=0u32;
             for c in p.argument_candidates.iter().filter(|c|c.action==action){
                 let syn=&self.synapses[c.candidate_synapse];
-                if syn.confidence<0.5 || syn.weight<=0.1 {continue;}
+                let strength=conductance(&self.cells,syn,
+                    native.config.coherence_floor);
+                if syn.confidence<0.5 || strength<=0.1 {continue;}
                 let call=PrimitiveArgumentMatch{
                     operation_index:c.operation_index,
                     source_inputs:c.source_inputs.to_vec(),
@@ -193,8 +200,8 @@ impl EvoPhase {
                 if let Some((value,_))=primitive_argument_read(
                     &call,p,&state.config,&input,&self.cells,&self.synapses
                 ){
-                    total+=syn.weight;
-                    yes+=syn.weight*f32::from(value>=0.5);
+                    total+=strength;
+                    yes+=strength*f32::from(value>=0.5);
                     experience=experience.max(c.observations);
                 }
             }
@@ -218,7 +225,8 @@ impl EvoPhase {
     )->Option<(usize,Vec<usize>,usize,f32)>{
         let p=self.phase_native.as_ref()?.vector.as_ref()?.induction.as_ref()?
             .primitives.as_ref()?;
-        let winner=synaptic_argument_winner(action,p,&self.synapses)?;
+        let winner=synaptic_argument_winner(action,p,&self.cells,&self.synapses,
+            self.phase_native.as_ref()?.config.coherence_floor)?;
         let found=p.argument_candidates.iter().find(|c|
             c.action==action && c.operation_index==winner.operation_index
                 && self.synapses[c.candidate_synapse].from==winner.arguments[0]
@@ -226,7 +234,8 @@ impl EvoPhase {
         )?;
         Some((p.operations[winner.operation_index].program.nodes[0].cell,
             winner.arguments,found.candidate_synapse,
-            self.synapses[found.candidate_synapse].weight))
+            conductance(&self.cells,&self.synapses[found.candidate_synapse],
+                self.phase_native.as_ref()?.config.coherence_floor)))
     }
 
     pub fn phase_primitive_synaptic_argument_hypothesis_count(&self)->usize{
