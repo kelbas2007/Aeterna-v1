@@ -4,12 +4,13 @@
 
 ## Current development — 2026-10-09
 
-Eight opt-in modes are documented in [the guide index](docs/README.md): cold online
+Nine opt-in modes are documented in [the guide index](docs/README.md): cold online
 acquisition, acquired rules, expanded formulas, partial observations, inverse
 inference, full-observed conditional/noisy continual learning, and combined
 [noisy partial inference](docs/UNCERTAIN_LEARNING.md), plus
-[multivariate perception](docs/VECTOR_PERCEPTION.md). Checkpoint v7
-retains compatibility with v1–v6. Rule parameters reside in shared phase synapses;
+[multivariate perception](docs/VECTOR_PERCEPTION.md) and
+[experience-built programs](docs/INDUCED_PROGRAMS.md). Checkpoint v8
+retains compatibility with v1–v7. Rule parameters reside in shared phase synapses;
 hypothesis fitting, context metadata and bounded planning are software.
 
 Open development comparisons: inverse inference reached 256/256 new goals versus
@@ -38,6 +39,15 @@ in physical phase links, while quantization and voting are inherited software.
 Recorded time-series signals and integration with symbolic planning remain
 unvalidated.
 
+The new program mode learns inputs, thresholds and physical branch topology
+from factual differences without calling G23's fixed Atom/AND/XOR menu. Generic
+partition search remains inherited Rust code. Open tests scored 704/704 versus
+matched prototype 704/704 and linear centroid 641/704, with 1408 actions each.
+Training visits every logical row; transfer is to new numeric values and
+distractor layouts. The initial greedy three-input parity failure 16/32 is
+preserved; subsequent algorithm revisions and synthetic limits are explicit.
+This program mode's real-image/signal performance is unmeasured.
+
 The development source is integrated with TE5 through upstream `3e6fe616`.
 TE5 supports prepared physical belief-to-action learning and protected U1
 sensing-to-commit decisions. Its cold post-TE5 diagnostic remains **FAIL**:
@@ -46,7 +56,7 @@ TE4 and TE1 failures and references the exact results.
 
 Ordinary regressions, causal controls and separate-process demonstrations are
 available on the research branch. The [validation record](docs/DEVELOPMENT_VALIDATION.md)
-distinguishes the earlier 127/137-test integrations from the perception checks. These checks do not rerun
+distinguishes the earlier 127/137/147-test integrations from the program-induction checks. These checks do not rerun
 consumed authority packs or qualify a new scientific gate.
 
 ## Current scientific boundary — after qualified INTEL-4

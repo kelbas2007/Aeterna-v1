@@ -30,7 +30,7 @@ git diff --check
 
 `scripts/check.sh` selects ordinary and causal regression tests, including TE5.
 It excludes one-use authority packs and explicitly negative development scorers.
-`scripts/demo.sh` exercises seven prior examples and the perception utility through separate learning/restoration
+`scripts/demo.sh` exercises eight examples and the perception utility through separate learning/restoration
 processes and writes checkpoints to a new temporary directory.
 
 Active CI has three purposes: development regressions on the research branch,

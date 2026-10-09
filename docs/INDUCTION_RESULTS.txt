@@ -1,0 +1,80 @@
+OPEN DEVELOPMENT — 2026-10-09
+Uncommitted development from base 73456b4e; not sealed authority evidence.
+
+INITIAL GREEDY IMPLEMENTATION
+Report { function: Two(0), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82576 }
+Report { function: Two(0), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82631 }
+Report { function: Two(1), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 382, nodes: 11, checkpoint_bytes: 85519 }
+Report { function: Two(1), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85459 }
+Report { function: Two(2), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 378, nodes: 11, checkpoint_bytes: 85744 }
+Report { function: Two(2), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 85805 }
+Report { function: Two(3), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 378, nodes: 7, checkpoint_bytes: 86810 }
+Report { function: Two(3), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 7, checkpoint_bytes: 86524 }
+Report { function: Two(4), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85808 }
+Report { function: Two(4), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 380, nodes: 11, checkpoint_bytes: 85922 }
+Report { function: Two(5), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 374, nodes: 7, checkpoint_bytes: 86922 }
+Report { function: Two(5), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 373, nodes: 7, checkpoint_bytes: 86980 }
+Report { function: Two(6), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 9, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 15, checkpoint_bytes: 86862 }
+Report { function: Two(6), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 12, abstentions: 0, sensing_first: 16, actions: 32, tuition: 377, nodes: 23, checkpoint_bytes: 87263 }
+Report { function: Two(7), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 11, checkpoint_bytes: 85571 }
+Report { function: Two(7), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 383, nodes: 11, checkpoint_bytes: 85571 }
+Report { function: Two(8), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 380, nodes: 11, checkpoint_bytes: 85862 }
+Report { function: Two(8), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 85978 }
+Report { function: Two(9), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 9, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 15, checkpoint_bytes: 86980 }
+Report { function: Two(9), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 9, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 15, checkpoint_bytes: 86750 }
+Report { function: Two(10), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 376, nodes: 7, checkpoint_bytes: 86925 }
+Report { function: Two(10), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 7, checkpoint_bytes: 86692 }
+Report { function: Two(11), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 85922 }
+Report { function: Two(11), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85805 }
+Report { function: Two(12), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 7, checkpoint_bytes: 86636 }
+Report { function: Two(12), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 7, checkpoint_bytes: 86692 }
+Report { function: Two(13), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 380, nodes: 11, checkpoint_bytes: 85803 }
+Report { function: Two(13), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 375, nodes: 11, checkpoint_bytes: 85803 }
+Report { function: Two(14), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85517 }
+Report { function: Two(14), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 85516 }
+Report { function: Two(15), variant: 0, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82575 }
+Report { function: Two(15), variant: 1, tasks: 16, correct: 16, prototype: 16, linear: 16, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82575 }
+Report { function: Parity, variant: 0, tasks: 32, correct: 16, prototype: 32, linear: 18, abstentions: 16, sensing_first: 32, actions: 48, tuition: 864, nodes: 31, checkpoint_bytes: 106282 }
+Result: FAIL, first three-input parity 16/32; later three-input variants unscored.
+
+REVISED BOUNDED PROGRAM SEARCH / FACTUAL CONFIRMATION
+Report { function: Two(0), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82673 }
+Report { function: Two(0), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82728 }
+Report { function: Two(1), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 382, nodes: 11, checkpoint_bytes: 85620 }
+Report { function: Two(1), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85560 }
+Report { function: Two(2), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 378, nodes: 11, checkpoint_bytes: 85852 }
+Report { function: Two(2), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 85907 }
+Report { function: Two(3), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 378, nodes: 7, checkpoint_bytes: 86909 }
+Report { function: Two(3), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 7, checkpoint_bytes: 86618 }
+Report { function: Two(4), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85911 }
+Report { function: Two(4), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 380, nodes: 11, checkpoint_bytes: 86027 }
+Report { function: Two(5), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 374, nodes: 7, checkpoint_bytes: 87023 }
+Report { function: Two(5), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 373, nodes: 7, checkpoint_bytes: 87081 }
+Report { function: Two(6), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 9, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 15, checkpoint_bytes: 86960 }
+Report { function: Two(6), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 12, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 377, nodes: 15, checkpoint_bytes: 87136 }
+Report { function: Two(7), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 11, checkpoint_bytes: 85676 }
+Report { function: Two(7), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 383, nodes: 11, checkpoint_bytes: 85675 }
+Report { function: Two(8), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 380, nodes: 11, checkpoint_bytes: 85965 }
+Report { function: Two(8), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 86080 }
+Report { function: Two(9), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 9, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 15, checkpoint_bytes: 87078 }
+Report { function: Two(9), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 9, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 15, checkpoint_bytes: 86845 }
+Report { function: Two(10), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 376, nodes: 7, checkpoint_bytes: 87025 }
+Report { function: Two(10), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 7, checkpoint_bytes: 86791 }
+Report { function: Two(11), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 86026 }
+Report { function: Two(11), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85910 }
+Report { function: Two(12), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 7, checkpoint_bytes: 86734 }
+Report { function: Two(12), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 7, checkpoint_bytes: 86790 }
+Report { function: Two(13), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 380, nodes: 11, checkpoint_bytes: 85910 }
+Report { function: Two(13), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 375, nodes: 11, checkpoint_bytes: 85908 }
+Report { function: Two(14), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 381, nodes: 11, checkpoint_bytes: 85618 }
+Report { function: Two(14), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 379, nodes: 11, checkpoint_bytes: 85617 }
+Report { function: Two(15), variant: 0, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82672 }
+Report { function: Two(15), variant: 1, tasks: 16, correct: 16, prototype: 16, prototype_actions: 32, linear: 16, linear_actions: 32, abstentions: 0, sensing_first: 16, actions: 32, tuition: 385, nodes: 3, checkpoint_bytes: 82672 }
+Report { function: Parity, variant: 0, tasks: 32, correct: 32, prototype: 32, prototype_actions: 64, linear: 18, linear_actions: 64, abstentions: 0, sensing_first: 32, actions: 64, tuition: 635, nodes: 31, checkpoint_bytes: 98901 }
+Report { function: Parity, variant: 1, tasks: 32, correct: 32, prototype: 32, prototype_actions: 64, linear: 24, linear_actions: 64, abstentions: 0, sensing_first: 32, actions: 64, tuition: 641, nodes: 31, checkpoint_bytes: 98965 }
+Report { function: Majority, variant: 0, tasks: 32, correct: 32, prototype: 32, prototype_actions: 64, linear: 32, linear_actions: 64, abstentions: 0, sensing_first: 32, actions: 64, tuition: 641, nodes: 23, checkpoint_bytes: 98382 }
+Report { function: Majority, variant: 1, tasks: 32, correct: 32, prototype: 32, prototype_actions: 64, linear: 32, linear_actions: 64, abstentions: 0, sensing_first: 32, actions: 64, tuition: 635, nodes: 23, checkpoint_bytes: 98565 }
+Report { function: Selector, variant: 0, tasks: 32, correct: 32, prototype: 32, prototype_actions: 64, linear: 24, linear_actions: 64, abstentions: 0, sensing_first: 32, actions: 64, tuition: 637, nodes: 23, checkpoint_bytes: 98376 }
+Report { function: Selector, variant: 1, tasks: 32, correct: 32, prototype: 32, prototype_actions: 64, linear: 24, linear_actions: 64, abstentions: 0, sensing_first: 32, actions: 64, tuition: 637, nodes: 23, checkpoint_bytes: 98438 }
+Result: 704/704; prototype 704/704; linear centroid 641/704.
+Both revisions train all logical rows; evaluation uses novel numeric values.

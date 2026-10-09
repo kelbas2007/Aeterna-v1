@@ -23,7 +23,7 @@ Updated 2026-10-09. Four maintained GitHub branches have distinct roles. This is
 
 ## Current development — 2026-10-09
 
-The research branch now combines the latest TE5 source with eight opt-in learning
+The research branch now combines the latest TE5 source with nine opt-in learning
 modes: [raw online acquisition](docs/ONLINE_LEARNING.md),
 [acquired rules](docs/LEARNED_RULES.md),
 [expanded formulas](docs/EXPANDED_RULES.md),
@@ -31,7 +31,8 @@ modes: [raw online acquisition](docs/ONLINE_LEARNING.md),
 [inverse inference](docs/INVERSE_INFERENCE.md) and
 [conditional/noisy continual learning](docs/ADAPTIVE_RULES.md), plus the combined
 [noisy partial/inverse mode](docs/UNCERTAIN_LEARNING.md) and
-[multivariate perception](docs/VECTOR_PERCEPTION.md). An external recorded
+[multivariate perception](docs/VECTOR_PERCEPTION.md), plus
+[experience-built conditional programs](docs/INDUCED_PROGRAMS.md). An external recorded
 [Iris benchmark](docs/IRIS_BENCHMARK.md) scored 108/120 against the matched
 decision stump's 111/120; all 120 phase tasks began with acquired sensing.
 [Recorded digit images](docs/DIGITS_BENCHMARK.md) scored 343/364 against bounded
@@ -39,7 +40,7 @@ decision stump's 111/120; all 120 phase tasks began with acquired sensing.
 PNG/JPEG files, freezes recognition, and accepts external factual correction.
 
 On `research/beyond-intel4`, run `bash scripts/check.sh` for ordinary regressions
-and `bash scripts/demo.sh` for seven prior learn/restore examples and the new perception utility. Development
+and `bash scripts/demo.sh` for eight learn/restore examples and the perception utility. Development
 CI runs on research pushes and pull requests; documentation links are checked on
 both maintained working branches. Main CI verifies its exact frozen cognitive
 source and runs ordinary baseline regressions. Historical authority workflows
@@ -48,7 +49,7 @@ remain separate.
 The numeric rule modes combine acquired physical phase parameters with software
 hypothesis fitting and bounded search. The combined mode uses circular intervals
 and bounded joint inverse equations; factual full-tuple numeric tuition remains
-required. Checkpoint v7 reads v1–v6. These development results do
+required. Checkpoint v8 reads v1–v7. These development results do
 not promote a new scientific gate or change the frozen INTEL-4 evidence. The main
 cognitive source remains the qualified baseline; its guides link to current
 research code.

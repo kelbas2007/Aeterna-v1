@@ -16,17 +16,20 @@ Start with [the README](../README.md), [project map](../PROJECT_MAP.md) and
 | [Adaptive rules](ADAPTIVE_RULES.md) | Observed threshold conditions, bounded noise and retained old models | `adaptive_learning` |
 | [Uncertain learning](UNCERTAIN_LEARNING.md) | Combined noisy partial inference, joint equations and acquired sensing | `uncertain_learning` |
 | [Multivariate perception](VECTOR_PERCEPTION.md) | Bounded numeric patterns, PNG/JPEG files and factual correction | `perception` |
+| [Induced programs](INDUCED_PROGRAMS.md), [protocol](INDUCTION_PROTOCOL.md) | Experience-built predicates/topology, subsequent validation and bounded physical programs | `induced_programs` |
 | [Recorded digit benchmark](DIGITS_BENCHMARK.md), [protocol](VECTOR_PROTOCOL.md) | Frozen real 64-pixel images and same-facts centroid/3-NN controls | `real_digits` |
 | [Recorded Iris benchmark](IRIS_BENCHMARK.md) | External measurements, hidden features and matched decision stump | `iris_grounded` |
 
 The seventh opt-in mode combines partial inverse inference with adaptive noisy
 models. Numeric tuition still requires actual full PRE/POST; inferred centers
-cannot teach. The checkpoint writer is v7 and accepts v1–v6. The Iris benchmark
+cannot teach. The checkpoint writer is v8 and accepts v1–v7. The Iris benchmark
 extends open development validation beyond synthetic generators and preserves
 the simple comparator's higher aggregate score. The eighth mode learns bounded
 multivariate patterns in shared phase synapses, with inherited distance and
 voting algorithms. Its digit benchmark and actual file utility add external
-image use; integration with the separate symbolic rule modes remains future work.
+image use; integration with the separate symbolic rule modes remains future work. The ninth mode augments vector
+learning with data-driven conditional programs; generic branch search remains
+inherited software, and the initial three-input failure is retained.
 
 ## Scientific evidence
 
