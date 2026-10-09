@@ -303,6 +303,36 @@ impl EvoPhase {
         // phase is imported. All learned value resides in conducting physical
         // source->motor->destination synapses, not in the address record.
         if evidence.multistep_enabled {
+            // The old one-step TE5 reward explorer reads belief-conditioned
+            // factual action counts from sampler links. Never lose that
+            // information merely because the same action also participates
+            // in a new variable-depth transition graph. Without this, UCB
+            // permanently treats a repeatedly chosen terminal motor as
+            // untried and collapses to an opaque index tie.
+            if let Some(source)=belief_source {
+                if evidence.cues.iter().any(|c|c.source_cell==pre.cell) {
+                    if let Some(cue_index)=evidence.cues.iter()
+                        .position(|c|c.source_cell==source)
+                    {
+                        let i=if let Some(i)=evidence.samplers.iter()
+                            .position(|m|m.motor_action==action){i}else{
+                            let link=self.native_synapse(
+                                self.motor_cell(action),evidence.hub_cell
+                            );
+                            evidence.samplers.push(PhaseTemporalSampler{
+                                motor_action:action,sensory_synapse:link,
+                                trials:0,distinctions:0,belief_trials:[0;2]
+                            });
+                            evidence.samplers.len()-1
+                        };
+                        evidence.samplers[i].trials=
+                            evidence.samplers[i].trials.saturating_add(1);
+                        evidence.samplers[i].belief_trials[cue_index]=
+                            evidence.samplers[i].belief_trials[cue_index]
+                                .saturating_add(1);
+                    }
+                }
+            }
             let trial=if let Some(t)=evidence.action_trials.iter_mut()
                 .find(|t|t.from_cell==pre.cell&&t.motor_action==action)
             {t}else{
