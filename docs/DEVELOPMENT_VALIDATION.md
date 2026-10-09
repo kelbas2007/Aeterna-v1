@@ -1,7 +1,49 @@
 # Development integration validation — 2026-10-09
 
-The latest section covers acquired operations and actual recorded images/signals. Earlier induction, perception and combined-uncertainty records remain below.
+The latest section covers current-source integration into main. Earlier acquired-operation, induction, perception and combined-uncertainty records remain below.
 These are open development checks, not sealed intelligence qualifications.
+
+## Main/research integration and variable-depth controls
+
+Reviewed research `3248fc09e8346731b5d680ae1a3fc9fb88b3607d` retains the
+cognitive source of `28764868d9f22891d0e8e30ce335e8b69fef25cb` and adds the
+published variable-depth result documentation. Current main advances from
+`6c6bb4d597619060449cb0f63d4266b3b283271d` by fast-forward, preserving all
+source history. [Branch integration record](BRANCH_INTEGRATION_20261009.md).
+
+The runner adds four exact mechanism selectors: one two-action sensing test
+and three variable-depth tests. These cover phase-link lesions, checkpoint
+recovery, completed-goal exclusion and factual terminal-trial coverage. An
+initial unfiltered test-file invocation included an imported INTEL-2 authority
+test and stopped because `AETERNA_INTEL2_SEED` was absent. No authority seed or
+new qualification was supplied; the initial failure log is retained locally.
+The corrected runner selects only the intended ordinary tests with `--exact`.
+
+The baseline workflow now checks out original qualified cognitive source
+`c7b5455ba006b297288fa8d16ef6300c8a19ceca` before ordinary tests; it cannot be
+interpreted as qualifying later main code. Historical qualification files and
+used protocols are unchanged by this integration. Planned push-trigger review
+selects only development regressions, documentation and archived-baseline
+checks. No consumed authority workflow is selected.
+
+Verified local checks on the reviewed cognitive source:
+
+| Check | Outcome |
+|---|---|
+| `cargo check --locked --all-targets` | PASS |
+| Ordinary and causal test selections in `scripts/check.sh` | **174 passed, 0 failed**, 8 ignored, 181 filtered across 50 test-binary runs |
+| Release binaries/examples, statistical crosscheck | PASS |
+| `bash scripts/demo.sh` | Nine examples plus perception trained and resumed in separate processes; PASS |
+| Recorded dataset checksums | Iris, digits and GunPoint PASS |
+| Markdown links | 211 documents, no missing local targets |
+| Preserved authority files and planned workflow triggers | PASS; no used qualification pack selected |
+
+Published scientific results remain distinct: Fresh-2 is a same-family
+bounded DEVELOPMENT PASS; variable-depth cold transfer is **2/4, overall FAIL**,
+250/320 responses; acquired-operation recorded-data usefulness is **FAIL** on
+both datasets. Integration and green software checks change none of these
+verdicts. Administrative merge-settings update returned HTTP 403, so no branch
+protection or repository administration is claimed.
 
 ## Acquired-operation and recorded-data validation
 

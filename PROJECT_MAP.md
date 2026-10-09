@@ -23,7 +23,7 @@ Updated 2026-10-09. Four maintained GitHub branches have distinct roles. This is
 
 ## Current development — 2026-10-09
 
-The research branch now combines the latest TE5 source with ten opt-in learning
+The integrated main source combines temporal-evidence research with ten opt-in learning
 modes: [raw online acquisition](docs/ONLINE_LEARNING.md),
 [acquired rules](docs/LEARNED_RULES.md),
 [expanded formulas](docs/EXPANDED_RULES.md),

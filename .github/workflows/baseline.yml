@@ -42,11 +42,11 @@ jobs:
         run: |
           set -euo pipefail
           {
-            cargo test --release --test g20_continual_reasoning --test g21_contextual_state_refinement --test g22_perceptual_variable_invention --test u1_meta_control --test u2_hypothesis_ecology --test u3_cross_mechanism_allocation --test human_protection
-            cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
-            cargo test --release --test e_model_revalidation e_model_revalidation_depends_on_factual_local_support -- --exact
-            cargo test --release --test e_model_revalidation e_goal_route_coverage_comes_from_acquired_physical_successors -- --exact
-            cargo build --release
+            cargo test --locked --release --test g20_continual_reasoning --test g21_contextual_state_refinement --test g22_perceptual_variable_invention --test u1_meta_control --test u2_hypothesis_ecology --test u3_cross_mechanism_allocation --test human_protection
+            cargo test --locked --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+            cargo test --locked --release --test e_model_revalidation e_model_revalidation_depends_on_factual_local_support -- --exact
+            cargo test --locked --release --test e_model_revalidation e_goal_route_coverage_comes_from_acquired_physical_successors -- --exact
+            cargo build --locked --release
           } 2>&1 | tee baseline.log
       - name: Preserve baseline regression output
         if: always()

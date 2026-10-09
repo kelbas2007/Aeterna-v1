@@ -20,8 +20,8 @@ and complete pre-cleanup history retain their separate immutable references.
   `c7b5455ba006b297288fa8d16ef6300c8a19ceca`.
 - Archive remains at `46c8e64562de7b9e300cb65ddcacc89b4e652d1f`.
 
-After verification, publish the integration commit atomically to main and
-research. Future research starts from this common point. Keep all four branch
+The publication procedure advances main and research atomically to the verified
+integration commit. Future research starts from this common point. Keep all four branch
 roles; do not merge the archive or overwrite the scientific snapshot.
 
 ## Verification and CI
@@ -55,4 +55,7 @@ must not be reported as configured merely because checks and pushes succeed.
 An authorized attempt to preserve merge history in repository merge settings
 (`allow_merge_commit=true`, squash/rebase disabled) returned HTTP 403,
 `Resource not accessible by integration`. No administrative settings were
-changed. Branch protection is therefore not claimed as configured.
+changed. Branch protection is therefore not claimed as configured. The planned
+push workflow audit selects only current regressions, documentation checks and
+the archived-baseline job; no consumed qualification trigger matches either
+branch update.
