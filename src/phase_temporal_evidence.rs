@@ -84,6 +84,17 @@ struct PhaseTemporalGoalWitness {
     observations:u32,
 }
 
+/// Carrier-owned, bounded route from a factual current state to the raw
+/// goal, read through physically conducting state->motor->state links.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseTemporalGoalPlan {
+    pub action:usize,
+    pub synapse:usize,
+    pub steps:usize,
+    pub strength:f32,
+    pub target_cell:usize,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PhaseTemporalSensingDecision {
     pub action: usize,
@@ -124,6 +135,7 @@ pub(super) struct PhaseTemporalEvidenceState {
     chains: Vec<PhaseTemporalChain>,
     /// Open development: the same evidence carrier handles variable depth.
     multistep_enabled:bool,
+    goal_replan_enabled:bool,
     transitions:Vec<PhaseTemporalTransition>,
     action_trials:Vec<PhaseTemporalActionTrial>,
     goal_witnesses:Vec<PhaseTemporalGoalWitness>,
@@ -184,6 +196,7 @@ impl EvoPhase {
             pending_chain: None,
             chains: Vec::new(),
             multistep_enabled:false,
+            goal_replan_enabled:false,
             transitions:Vec::new(),
             action_trials:Vec::new(),
             goal_witnesses:Vec::new(),
@@ -342,6 +355,22 @@ impl EvoPhase {
                 evidence.action_trials.last_mut().expect("factual trial")
             };
             trial.observations=trial.observations.saturating_add(1);
+            if evidence.goal_replan_enabled && native.config.learning_enabled {
+                // Factual contradiction to an expected state/action outcome:
+                // retire every stale competing PHYSICAL path from that same
+                // PRE/motor pair. A no-op is also genuine counterevidence.
+                // This rule is opt-in to deterministic causal planning and
+                // does not rewrite noisy multi-outcome sensory models.
+                for edge in evidence.transitions.iter().filter(|e|
+                    e.from_cell==pre.cell && e.motor_action==action
+                        && e.to_cell!=post.cell
+                ){
+                    self.synapses[edge.entry_synapse].weight=0.0;
+                    self.synapses[edge.exit_synapse].weight=0.0;
+                    self.synapses[edge.entry_synapse].eligibility=0.0;
+                    self.synapses[edge.exit_synapse].eligibility=0.0;
+                }
+            }
             if native.config.learning_enabled && pre.cell!=post.cell {
                 let index=if let Some(i)=evidence.transitions.iter().position(
                     |e|e.from_cell==pre.cell&&e.to_cell==post.cell
@@ -778,6 +807,88 @@ impl EvoPhase {
             .and_then(|n|n.temporal_evidence.as_mut()) else{return false;};
         state.multistep_enabled=enabled;
         true
+    }
+
+    /// Opt-in goal reasoning over the same acquired physical transition
+    /// graph. No external plan, motor-role semantics, or goal oracle supplied.
+    pub fn set_phase_native_temporal_goal_replanning(&mut self,enabled:bool)->bool{
+        let Some(t)=self.phase_native.as_mut()
+            .and_then(|n|n.temporal_evidence.as_mut()) else{return false;};
+        if enabled && !t.multistep_enabled{return false;}
+        t.goal_replan_enabled=enabled;
+        true
+    }
+
+    pub fn phase_native_temporal_goal_replanning_enabled(&self)->bool{
+        self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref())
+            .map(|t|t.goal_replan_enabled).unwrap_or(false)
+    }
+
+    /// Re-run bounded physical prediction from ACTUAL current observation on
+    /// each query. No route is stored as the authoritative answer; a factual
+    /// contradiction to any necessary synapse removes that route immediately.
+    pub fn choose_phase_native_temporal_goal_plan(
+        &self,goal_sensory:&[f32]
+    )->Option<PhaseTemporalGoalPlan>{
+        let native=self.phase_native.as_ref()?;
+        let t=native.temporal_evidence.as_ref()?;
+        if !t.multistep_enabled || !t.goal_replan_enabled {return None;}
+        let real=self.current_real.as_ref()?;
+        let origin=self.phase_native_abstract_state(&real.sensory)?.cell;
+        let goal=self.phase_native_abstract_state(goal_sensory)?.cell;
+        if origin==goal{return None;}
+        let floor=native.config.coherence_floor;
+        let mut queue=std::collections::VecDeque::new();
+        queue.push_back((origin,None,1.0f32,0usize,vec![origin]));
+        let mut considered=0usize;
+        let mut best:Option<PhaseTemporalGoalPlan>=None;
+        let mut tied=false;
+        while let Some((cell,first,strength,depth,visited))=queue.pop_front(){
+            if considered>=1024 {break;}
+            considered+=1;
+            if depth>=8 || best.is_some_and(|p|depth>=p.steps){continue;}
+            for edge in t.transitions.iter().filter(|e|
+                e.from_cell==cell && e.observations>0
+            ){
+                let a=conductance(&self.cells,
+                    &self.synapses[edge.entry_synapse],floor);
+                let b=conductance(&self.cells,
+                    &self.synapses[edge.exit_synapse],floor);
+                let value=strength.min(a).min(b);
+                if value<=1.0e-8{continue;}
+                let next_depth=depth+1;
+                let first_step=first.unwrap_or((edge.motor_action,edge.entry_synapse));
+                if edge.to_cell==goal {
+                    let proposal=PhaseTemporalGoalPlan{
+                        action:first_step.0,synapse:first_step.1,
+                        steps:next_depth,strength:value,target_cell:goal,
+                    };
+                    match best {
+                        None=>{best=Some(proposal);tied=false;},
+                        Some(prev) if proposal.steps<prev.steps
+                            ||(proposal.steps==prev.steps
+                                && proposal.strength>prev.strength+1.0e-6)=>{
+                            best=Some(proposal);tied=false;
+                        }
+                        Some(prev) if proposal.steps==prev.steps
+                            && (proposal.strength-prev.strength).abs()<=1.0e-6
+                            && proposal.action!=prev.action => {tied=true;}
+                        _=>{}
+                    }
+                } else if !visited.contains(&edge.to_cell)
+                    && next_depth<8
+                {
+                    let mut seen=visited.clone();
+                    seen.push(edge.to_cell);
+                    queue.push_back((
+                        edge.to_cell,Some(first_step),
+                        value,next_depth,seen
+                    ));
+                }
+            }
+        }
+        if tied {None}else{best}
     }
 
     pub fn phase_native_temporal_multistep_enabled(&self)->bool{
