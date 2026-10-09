@@ -2,6 +2,32 @@
 
 **Qualified baseline: `main`; active development: `research/beyond-intel4`.** Main was promoted from the original successful INTEL-4 branch by a non-squashed two-parent history-preserving integration. Evidence remains pinned to its exact frozen cognitive source; later documentation/branch changes do not create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) for branch purposes and archival records.
 
+## Latest bounded autonomous-cycle evidence — 2026-10-09
+
+**Fresh-2 DEVELOPMENT PASS: 4/4 new seeded stochastic worlds.** First-attempt
+[Actions 37934001957](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37934001957),
+frozen cognitive `src/` tree checked against `f8a4047ea22e0d96fd0b8dba0c218e6259324774`.
+After one 192-episode A→B→A self-directed acquisition lifetime **per world**,
+the four 80-episode frozen holdouts obtained **69/80, 64/80, 72/80, 68/80**,
+or **273/320 (85.31%)**. All four acquired their physical sensing motor,
+self-selected 2+ measurements in all 80/80 holdout episodes each,
+used physical belief-conditioned terminal policies, restored checkpoint, and
+had zero unavailable/blocked actions. The first-cue oracle scored 228/320
+and the three-cue oracle 251/320. Exact [preregistered protocol](docs/AUTONOMOUS_CYCLE_FRESH2_PROTOCOL.md),
+[results and limitations](docs/AUTONOMOUS_CYCLE_FRESH2_RESULT.md).
+
+The distinct first fresh-seed attempt **FAILED 1/4** [Actions 37932975901](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37932975901):
+40/80, 73/80, 40/80, 40/80. A generic physical causal reward-credit
+correction followed; fresh2 then froze the corrected source and a new seed.
+No exposed failure has been relabeled or silently repeated.
+
+**Scope remains narrow:** fresh2 randomizes new sensor/motor assignments and
+noisy episodes within the *same synthetic task family*, with a pretrained
+generic visual/U1 foundation; four separate lifetimes, not one single
+organism across all worlds. This is NOT independent qualification across new
+stochastic environment structures, AGI, or real-world autonomy. Earlier
+FRONTIER-1, TE1 and TE4 FAIL verdicts remain unchanged.
+
 ## Current development — 2026-10-09
 
 Ten opt-in modes are documented in [the guide index](docs/README.md): cold online
