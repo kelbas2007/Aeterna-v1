@@ -267,6 +267,22 @@ impl EvoPhase {
         let Some(primitives)=state.primitives.as_ref() else{return 0;};
         if !primitives.argument_transfer_enabled{return 0;}
         let width=self.config.sensory_cells;
+        // Factual contradictions can invalidate a previously acquired
+        // connection even when no replacement has earned enough support.
+        // This is evidence withdrawal, never binding revision on a query.
+        let mut revoked=Vec::new();
+        for bound in &primitives.bound_calls {
+            let Some(last)=state.programs.get(bound.action)
+                .and_then(|p|p.facts.back()) else {continue;};
+            let Some(call)=primitive_argument_physical_call(
+                bound.action,primitives,&self.synapses,width
+            ) else {continue;};
+            let agrees=primitive_argument_read(&call,primitives,&state.config,
+                &last.input,&self.cells,&self.synapses)
+                .is_some_and(|(v,_)|(v-f32::from(last.success)).abs()
+                    <=1.0-state.config.minimum_outcome);
+            if !agrees {revoked.push(bound.action);}
+        }
         let mut candidates=Vec::new();
         for (action,p) in state.programs.iter().enumerate() {
             if let Some(candidate)=primitive_argument_match(
@@ -282,8 +298,20 @@ impl EvoPhase {
                 if !unchanged {candidates.push((action,candidate));}
             }
         }
-        if candidates.is_empty(){return 0;}
+        if candidates.is_empty() && revoked.is_empty(){return 0;}
         let Some(mut native)=self.phase_native.take() else{return 0;};
+        for action in revoked {
+            if let Some(bound)=native.vector.as_ref()
+                .and_then(|v|v.induction.as_ref())
+                .and_then(|i|i.primitives.as_ref())
+                .and_then(|p|p.bound_calls.iter().find(|b|b.action==action)) {
+                for &address in &bound.binding_synapses {
+                    let syn=&mut self.synapses[address];
+                    syn.weight=0.0;
+                    syn.confidence=0.0;
+                }
+            }
+        }
         let mut installed=0usize;
         for (action,call) in candidates {
             // Each slot owns a real synapse. Rebinding changes where that
