@@ -1,0 +1,45 @@
+name: Native synaptic argument competition development
+
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_primitive_synaptic_competition.rs'
+      - 'src/phase_primitives.rs'
+      - 'src/phase_primitive_arguments.rs'
+      - 'src/phase_induction.rs'
+      - 'tests/primitive_native_synaptic_competition.rs'
+      - '.github/workflows/primitive-synaptic-competition-development.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: primitive-neural-comp-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  neural-candidates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile all targets and keep checkpoint valid
+        run: cargo check --locked --all-targets
+      - name: Open native argument competition witness
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test primitive_native_synaptic_competition physical_synaptic_competition_learns_argument_calls_from_factual_outcomes -- --exact --nocapture 2>&1 | tee neural-competition.log
+      - name: Preserve failures and winners
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: primitive-native-candidate-evidence
+          path: neural-competition.log
+          if-no-files-found: ignore
