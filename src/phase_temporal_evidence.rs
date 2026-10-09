@@ -39,6 +39,23 @@ struct PhaseTemporalSampler {
     belief_trials: [u32;2],
 }
 
+#[derive(Debug, Clone)]
+struct PhaseTemporalPendingChain {
+    first_action: usize,
+    marker_cell: usize,
+    trials: Vec<u32>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PhaseTemporalChain {
+    first_action: usize,
+    second_action: usize,
+    marker_cell: usize,
+    entry_synapse: usize,
+    read_synapse: usize,
+    support: u32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PhaseTemporalSensingDecision {
     pub action: usize,
@@ -74,6 +91,9 @@ pub(super) struct PhaseTemporalEvidenceState {
     episodes: u64,
     /// Opt-in carrier-owned exploration from factual motor coverage.
     autonomous_probe_enabled: bool,
+    chain_learning_enabled: bool,
+    pending_chain: Option<PhaseTemporalPendingChain>,
+    chains: Vec<PhaseTemporalChain>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -127,6 +147,9 @@ impl EvoPhase {
             observations: 0,
             episodes: 0,
             autonomous_probe_enabled: false,
+            chain_learning_enabled: false,
+            pending_chain: None,
+            chains: Vec::new(),
         });
         self.phase_native = Some(state);
         true
@@ -140,7 +163,9 @@ impl EvoPhase {
             .and_then(|state| state.temporal_evidence.as_ref())
             .map(|p|p.cues.iter().any(|c|c.evidence_synapse==synapse_index)
                 || p.samplers.iter().any(|m|m.sensory_synapse==synapse_index)
-                || p.outcomes.iter().any(|m|m.value_synapse==synapse_index))
+                || p.outcomes.iter().any(|m|m.value_synapse==synapse_index)
+                || p.chains.iter().any(|m|m.entry_synapse==synapse_index
+                    || m.read_synapse==synapse_index))
             .unwrap_or(false)
     }
 
@@ -338,6 +363,29 @@ impl EvoPhase {
             .and_then(|n|n.temporal_evidence.as_mut()) else {return false;};
         temporal.autonomous_probe_enabled=enabled;
         true
+    }
+
+    /// Opt-in generalization of a single-step sensory affordance to a
+    /// physically learned two-motor chain with an observed intermediate.
+    /// This does not expose the required motor identities to cognition.
+    pub fn set_phase_native_temporal_chain_learning(&mut self, enabled:bool)->bool{
+        let Some(state)=self.phase_native.as_mut()
+            .and_then(|n|n.temporal_evidence.as_mut()) else {return false;};
+        state.chain_learning_enabled=enabled;
+        if !enabled {state.pending_chain=None;}
+        true
+    }
+
+    pub fn phase_native_temporal_chain_learning(&self)->bool{
+        self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref())
+            .map(|t|t.chain_learning_enabled).unwrap_or(false)
+    }
+
+    pub fn phase_native_temporal_chain_count(&self)->usize{
+        self.phase_native.as_ref()
+            .and_then(|n|n.temporal_evidence.as_ref())
+            .map(|t|t.chains.len()).unwrap_or(0)
     }
 
     pub fn phase_native_temporal_autonomous_probe(&self)->bool{
@@ -668,6 +716,7 @@ impl EvoPhase {
             syn.eligibility=0.0;
         }
         evidence.observations=0;
+        evidence.pending_chain=None;
         evidence.episodes=evidence.episodes.saturating_add(1);
         true
     }
