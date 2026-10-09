@@ -994,7 +994,29 @@ impl EvoPhase {
                     n.config.coherence_floor
                 ))).fold(0.0_f32,f32::max)
         }else{0.0};
-        let value=direct.max(chain);
+        let mut multi=0.0f32;
+        if p.multistep_enabled {
+            let cues=p.cues.iter().map(|c|c.source_cell)
+                .collect::<Vec<_>>();
+            for edge in p.transitions.iter().filter(|e|
+                e.motor_action==action && cues.contains(&e.to_cell)
+            ){
+                let before=cues.contains(&edge.from_cell)
+                    ||cues.iter().any(|source|
+                        self.phase_native_temporal_multistep_route(
+                            *source,&[edge.from_cell],1
+                        ).is_some()
+                    );
+                if !before {continue;}
+                let strength=conductance(&self.cells,
+                    &self.synapses[edge.entry_synapse],n.config.coherence_floor
+                ).min(conductance(&self.cells,
+                    &self.synapses[edge.exit_synapse],n.config.coherence_floor
+                ));
+                multi=multi.max(strength);
+            }
+        }
+        let value=direct.max(chain).max(multi);
         if value>1.0e-8 {Some(value)}else{None}
     }
 
@@ -1017,6 +1039,21 @@ impl EvoPhase {
                     && conductance(&self.cells,
                         &self.synapses[m.sensory_synapse],floor)>1.0e-8
             );
+        let variable_depth=t.multistep_enabled &&t.transitions.iter().any(|e|
+            e.from_cell==before.cell && e.motor_action==action
+                &&e.to_cell==after.cell
+                &&conductance(&self.cells,
+                    &self.synapses[e.entry_synapse],floor)>1.0e-8
+                &&conductance(&self.cells,
+                    &self.synapses[e.exit_synapse],floor)>1.0e-8
+        ) && (
+            t.cues.iter().any(|cue|cue.source_cell==before.cell)
+            ||t.cues.iter().any(|cue|
+                self.phase_native_temporal_multistep_route(
+                    cue.source_cell,&[before.cell],1
+                ).is_some()
+            )
+        );
         let two_step=t.chain_learning_enabled && t.chains.iter().any(|c|
             c.second_action==action && c.marker_cell==before.cell
                 && conductance(&self.cells,
@@ -1024,7 +1061,7 @@ impl EvoPhase {
                 && conductance(&self.cells,
                     &self.synapses[c.read_synapse],floor)>1.0e-8
         );
-        immediate || two_step
+        immediate || two_step || variable_depth
     }
 
     /// TE5: learn the factual value of an actually executed opaque motor
