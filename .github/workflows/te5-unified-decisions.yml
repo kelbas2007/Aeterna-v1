@@ -1,0 +1,40 @@
+name: TE5 unified learned temporal outcome selection
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/beyond-intel4]
+    paths:
+      - 'src/scientific_runtime.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/phase_temporal_evidence.rs'
+      - 'tests/te5_unified_decisions.rs'
+      - '.github/workflows/te5-unified-decisions.yml'
+
+jobs:
+  integrated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Six physical U1 sensing then factual belief-action decisions
+        run: cargo test --release --test te5_unified_decisions te5_unified_selects_acquired_sensing_then_belief_grounded_goal_motor -- --nocapture
+      - name: TE5 factual outcome link and revision
+        run: cargo test --release --test te5_belief_action te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary
+      - name: TE1-TE3 physical and protected sensing regressions
+        run: |
+          cargo test --release --test te1_temporal_evidence te1_physically_accumulates_contradictory_raw_cues_and_restores
+          cargo test --release --test te2_sensing_affordance te2_opaque_sensing_action_is_acquired_physically_in_six_permutations
+          cargo test --release --test te3_unified_sensing te3_physical_sensing_project_competes_in_unified_without_host_priority
+      - name: G20-G23 U1-U3 and Human Protection
+        run: |
+          cargo test --release --test g20_continual_reasoning
+          cargo test --release --test g21_contextual_state_refinement
+          cargo test --release --test g22_perceptual_variable_invention
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+          cargo test --release --test human_protection
+      - name: Release
+        run: cargo build --release

@@ -501,6 +501,33 @@ impl EvoPhase {
             }
         }
 
+        // TE5: when factual temporal evidence has become decisive, a
+        // conducting acquired cue→motor reward synapse can compete as
+        // ordinary goal value. No motor is privileged by its research role.
+        if let Some(learned)=self.choose_phase_native_temporal_outcome_action(){
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,learned.action
+            ){
+                fields[0]=fields[0].max(
+                    learned.learned_value
+                ).clamp(0.0,1.0);
+                fields[3]=fields[3].max(
+                    learned.learned_value
+                ).clamp(0.0,1.0);
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[
+                            0x7E51u64,learned.action as u64
+                        ]),
+                        action:learned.action,
+                        fields,
+                    }
+                });
+            }
+        }
+
         let mut rival=self.clone();
         if let Some(action)=rival.choose_phase_native_goal_rival_probe(goal_sensory){
             self.push_unified_proposal(

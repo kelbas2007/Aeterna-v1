@@ -1,0 +1,38 @@
+name: TE5 native belief-to-action physical qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/beyond-intel4]
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/carrier.rs'
+      - 'tests/te5_belief_action.rs'
+      - '.github/workflows/te5-belief-action.yml'
+
+jobs:
+  belief-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Distinct factual cues and opaque terminal action mappings, physical controls and revisions
+        run: cargo test --release --test te5_belief_action te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary -- --nocapture
+      - name: TE1 phase-native accumulation
+        run: cargo test --release --test te1_temporal_evidence te1_physically_accumulates_contradictory_raw_cues_and_restores
+      - name: TE2 factual sensing affordance
+        run: cargo test --release --test te2_sensing_affordance te2_opaque_sensing_action_is_acquired_physically_in_six_permutations
+      - name: TE3 physical sensor choice by U1
+        run: cargo test --release --test te3_unified_sensing te3_physical_sensing_project_competes_in_unified_without_host_priority
+      - name: G20 through G23, U1 through U3, Human Protection
+        run: |
+          cargo test --release --test g20_continual_reasoning
+          cargo test --release --test g21_contextual_state_refinement
+          cargo test --release --test g22_perceptual_variable_invention
+          cargo test --release --test g23_compositional_perceptual_function g23_synthesizes_composed
+          cargo test --release --test u1_meta_control
+          cargo test --release --test u2_hypothesis_ecology
+          cargo test --release --test u3_cross_mechanism_allocation
+          cargo test --release --test human_protection
+      - name: Release
+        run: cargo build --release

@@ -27,6 +27,7 @@ pub use phase_native::{
     PhaseUnifiedCognitiveProposal, PhaseUnifiedDecision, PhaseUnifiedKnowledgeSnapshot,
     PhaseNativeCheckpoint, PhaseNativeConfig, PhasePerceptFeature, PhasePerceptProgram,
     PhaseTemporalEvidenceConfig, PhaseTemporalEvidenceReadout, PhaseTemporalSensingDecision,
+    PhaseTemporalOutcomeDecision,
     PhaseOnlineConfig,
     PhaseRuleConfig, PhaseRuleActionInfo, PhaseRuleForecast, PhaseRuleDecision, PhaseRuleDecisionKind,
     PhaseRuleLanguage, PhaseRuleFamily, PhaseRuleFormula, PhaseRuleTerm,

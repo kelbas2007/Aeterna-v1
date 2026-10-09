@@ -1,0 +1,34 @@
+name: TE4 already exposed post-TE5 development replay
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/beyond-intel4]
+    paths:
+      - '.github/workflows/te4-post-te5-development.yml'
+
+jobs:
+  development:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Replay unchanged TE4 cold diagnostic after generic TE5 work
+        shell: bash
+        run: |
+          set +e
+          cargo test --release --test te4_cold_discovery te4_cold_no_tuition_one_lifetime_four_independent_worlds -- --nocapture > te4-post-te5.log 2>&1
+          result=$?
+          set -e
+          grep -E 'TE4_COLD_(ARM|SUMMARY)' te4-post-te5.log || {
+            tail -80 te4-post-te5.log
+            exit 1
+          }
+          echo "TE4_BURNED_DEVELOPMENT_EXIT=$result; no independent qualification is inferred"
+      - name: Preserve all new development evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: te4-post-te5-burned-replay
+          path: te4-post-te5.log
+          if-no-files-found: warn
