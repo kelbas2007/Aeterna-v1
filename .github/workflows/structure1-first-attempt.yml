@@ -1,0 +1,52 @@
+name: Structure-1 two-stage active sensing first attempt
+
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'tests/structure1_two_stage_sensing.rs'
+      - '.github/workflows/structure1-first-attempt.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  structural-first-attempt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Enforce preregistered source and evaluator bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$(git rev-parse HEAD:src)" = "$(git rev-parse 13e2c4677e5bfee68ea706a19ac2b9d74a05dfbb:src)"
+          test "$(git rev-parse HEAD:tests/structure1_two_stage_sensing.rs)" = "e1db204edbbc7d0ed14cf150498aea0497dd6629"
+          test "$(git rev-parse HEAD:docs/STRUCTURE1_PROTOCOL.md)" = "df25daca66417f22c7da4c7f1121609e11a1c55d"
+          grep -Fq '0x57A7_2026_5E71_0001' docs/STRUCTURE1_PROTOCOL.md
+          grep -Fq 'const SEED:u64=0x57A7_2026_5E71_0001' tests/structure1_two_stage_sensing.rs
+      - name: First-attempt structurally different two-step diagnostic
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test structure1_two_stage_sensing structure1_two_stage_sensing_first_attempt_diagnostic -- --exact --nocapture 2>&1 | tee structure1.log
+      - name: Enforce independently predeclared four-world criterion
+        run: grep -F 'STRUCTURE1_SUMMARY passed=4/4 verdict=STRUCTURE1_DEVELOPMENT_PASS' structure1.log
+      - name: Preserve both passing and failing scientific evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: structure1-first-attempt-evidence
+          path: structure1.log
+          if-no-files-found: ignore
