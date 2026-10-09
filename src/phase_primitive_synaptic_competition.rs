@@ -61,12 +61,13 @@ impl EvoPhase {
             }
         }
         if available.is_empty(){return false;}
-        let required=i.programs.len()*available.len()*width*(width-1);
+        let action_count=i.programs.len();
+        let required=action_count*available.len()*width*(width-1);
         if self.synapses.len().saturating_add(required)>MAX_VECTOR_SYNAPSES{
             return false;
         }
         let mut hypotheses=Vec::with_capacity(required);
-        for action in 0..i.programs.len(){
+        for action in 0..action_count{
             for &(op_index,sources) in &available {
                 for from in 0..width {
                     for to in 0..width {
@@ -132,12 +133,10 @@ impl EvoPhase {
             let syn=&mut self.synapses[address];
             syn.weight=(syn.weight*(1.0-step)+step*agreement).clamp(0.0,1.0);
             syn.eligibility=1.0;
-            self.phase_native.as_mut().unwrap().vector.as_mut().unwrap()
-                .induction.as_mut().unwrap().primitives.as_mut().unwrap()
-                .argument_candidates[index].observations=self.phase_native
-                    .as_ref().unwrap().vector.as_ref().unwrap()
-                    .induction.as_ref().unwrap().primitives.as_ref().unwrap()
-                    .argument_candidates[index].observations.saturating_add(1);
+            let p=self.phase_native.as_mut().unwrap().vector.as_mut().unwrap()
+                .induction.as_mut().unwrap().primitives.as_mut().unwrap();
+            let c=&mut p.argument_candidates[index];
+            c.observations=c.observations.saturating_add(1);
         }
         reinforcement.len()
     }
