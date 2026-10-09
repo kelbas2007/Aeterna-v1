@@ -6,6 +6,7 @@ on:
       - 'src/phase_temporal_evidence.rs'
       - 'src/scientific_runtime.rs'
       - 'tests/multistep_physical_path.rs'
+      - 'tests/multistep_cold_development.rs'
       - '.github/workflows/multistep-causal-development.yml'
   workflow_dispatch:
 permissions:
@@ -31,3 +32,15 @@ jobs:
         run: cargo check --locked --all-targets
       - name: Causal 2-to-5-action physical path mechanism controls
         run: cargo test --locked --release --test multistep_physical_path physical_sensing_paths_of_variable_depth_are_reused_and_lesionable -- --exact --nocapture
+      - name: Untrained two-to-five-action cold variable-depth development
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test multistep_cold_development multistep_unknown_depth_cold_open_development -- --exact --nocapture 2>&1 | tee multistep-cold.log
+      - name: Preserve development metrics even when scientific threshold fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multistep-cold-development
+          path: multistep-cold.log
+          if-no-files-found: ignore
