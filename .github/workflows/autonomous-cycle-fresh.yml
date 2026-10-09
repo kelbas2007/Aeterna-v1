@@ -1,0 +1,34 @@
+name: EvoPhase fresh autonomous-cycle witness
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'tests/u1_cold_fresh.rs'
+      - '.github/workflows/autonomous-cycle-fresh.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  fresh-first-attempt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify preregistered cognitive source freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:src)" = "$(git rev-parse b5a21f5d6a761b463ecacc6dfcbb5a5c65895fca:src)"
+          grep -Fq '0xF2A7_2026_19C4_5B0E' docs/AUTONOMOUS_CYCLE_FRESH_PROTOCOL.md
+          grep -Fq 'const SEED:u64=0xF2A7_2026_19C4_5B0E' tests/u1_cold_fresh.rs
+      - name: First-attempt frozen-source fresh witness (do not rerun on failure)
+        run: cargo test --locked --release --test u1_cold_fresh u1_fresh_seeded_autonomous_cognitive_cycle -- --exact --nocapture

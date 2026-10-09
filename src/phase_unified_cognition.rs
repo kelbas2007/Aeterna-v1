@@ -21,6 +21,15 @@ pub struct PhaseUnifiedDecision {
     pub score: f32,
 }
 
+/// Read-only evidence of the *actual* coalesced U1 action competition.
+/// Action IDs are opaque; fields and scores come from physical readout.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseUnifiedActionTrace {
+    pub action: usize,
+    pub fields: [f32; META_FIELD_COUNT],
+    pub score: f32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PhaseUnifiedKnowledgeSnapshot {
     pub circuits: u64,
@@ -83,6 +92,12 @@ impl EvoPhase {
                 _ => 0.0,
             }
         };
+
+        // A native physical belief can lower the certainty of an optimistic
+        // goal path. Once evidence becomes decisive the full learned goal
+        // value is restored. No motor/task identity is inspected here.
+        let goal_value=goal_value
+            *self.phase_native_temporal_goal_evidence_coverage().unwrap_or(1.0);
 
         let frontier = self.phase_drive_frontier_activity_for_cells(state, &state_cells);
         let drive_features = self.phase_drive_features(state, operational, action, &frontier);
@@ -466,6 +481,36 @@ impl EvoPhase {
             );
         }
 
+        // Before a useful sampling affordance has been discovered, give one
+        // least-verified opaque motor a GENERAL epistemic proposal backed by
+        // actual transition-coverage deficit. This is a carrier hypothesis
+        // about information, not a sensor label, permission, or host schedule.
+        if let Some((action,novelty))=
+            self.choose_phase_native_temporal_unknown_probe()
+        {
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,action
+            ){
+                fields[1]=fields[1].max(novelty).clamp(0.0,1.0);
+                // The two acquired rival cue identities are not yet
+                // discriminable in this episode. This pressure decays with
+                // factual trials and does not invent a positive sensor link.
+                let unresolved=1.0
+                    -self.phase_native_temporal_goal_evidence_coverage()
+                        .unwrap_or(1.0);
+                fields[2]=fields[2].max(novelty*unresolved)
+                    .clamp(0.0,1.0);
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[0x7E32u64,action as u64]),
+                        action,fields
+                    },
+                });
+            }
+        }
+
         // TE3: a genuinely acquired sensory motor can compete for authority
         // while two temporally integrated raw hypotheses remain unresolved.
         // Physical uncertainty and phase-conducting affordance determine the
@@ -524,6 +569,28 @@ impl EvoPhase {
                         action:learned.action,
                         fields,
                     }
+                });
+            }
+        }
+
+        // After a decisive physical belief, terminal alternatives must
+        // still be investigated when their observed reward coverage is weak.
+        // The motor and its value come from the SAME causal phase evidence,
+        // not from a host-provided correct-action or fixed motor schedule.
+        if let Some((action,value,uncertainty))=
+            self.choose_phase_native_temporal_outcome_probe()
+        {
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,action
+            ){
+                fields[0]=fields[0].max(value).clamp(0.0,1.0);
+                fields[1]=fields[1].max(uncertainty).clamp(0.0,1.0);
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[0x7E57u64,action as u64]),
+                        action,fields
+                    },
                 });
             }
         }
@@ -606,25 +673,12 @@ impl EvoPhase {
         out
     }
 
-    pub fn choose_phase_native_unified_proposal(
+    /// Coalesce proposals by physical motor. This is shared by authority and
+    /// read-only diagnostics so traces cannot silently score another policy.
+    fn coalesced_phase_native_unified_actions(
         &self,
         proposals:&[PhaseUnifiedCognitiveProposal],
-    )->Option<PhaseUnifiedDecision>{
-        if proposals.is_empty(){return None;}
-        if self.phase_native_online_enabled() {
-            let [item] = proposals else { return None; };
-            if item.proposal.action >= self.config.motor_cells
-                || !Self::valid_meta_fields(item.proposal.fields)
-            {
-                return None;
-            }
-            return Some(PhaseUnifiedDecision {
-                supporting_candidate_ids: Vec::new(),
-                proposal_id: item.proposal.proposal_id,
-                action: item.proposal.action,
-                score: item.proposal.fields[0].max(item.proposal.fields[1]),
-            });
-        }
+    )->Option<Vec<(usize,[f32;META_FIELD_COUNT],Vec<u64>)>>{
         let native=self.phase_native.as_ref()?;
         let ecology=native.meta_control.as_ref()?.ecology.as_ref()?;
 
@@ -673,8 +727,56 @@ impl EvoPhase {
             }
         }
 
+        // Evidence-ownership contract: do not let an optimistic goal route
+        // masquerade as informed while a physically acquired sensor can
+        // still resolve the current competing hypotheses. When sufficient
+        // raw facts make the belief decisive, ordinary U1 resumes unaltered.
+        groups.retain(|(action,_,_)|
+            self.phase_native_temporal_action_evidence_admissible(*action)
+        );
         if groups.is_empty(){return None;}
         for (_,_,supporters) in &mut groups {supporters.sort_unstable();}
+
+        Some(groups)
+    }
+
+    /// The audit is read-only; it never reveals evaluator labels or selects an
+    /// action, and uses exactly the same U1/U2 filtering as the actuator.
+    pub fn trace_phase_native_unified_competition(
+        &self,
+        proposals:&[PhaseUnifiedCognitiveProposal],
+    )->Option<Vec<PhaseUnifiedActionTrace>>{
+        if self.phase_native_online_enabled(){return None;}
+        let groups=self.coalesced_phase_native_unified_actions(proposals)?;
+        let mut trace=Vec::with_capacity(groups.len());
+        for (action,fields,_) in groups {
+            trace.push(PhaseUnifiedActionTrace{
+                action,fields,score:self.phase_native_meta_score(fields)?,
+            });
+        }
+        Some(trace)
+    }
+
+    pub fn choose_phase_native_unified_proposal(
+        &self,
+        proposals:&[PhaseUnifiedCognitiveProposal],
+    )->Option<PhaseUnifiedDecision>{
+        if proposals.is_empty(){return None;}
+        if self.phase_native_online_enabled() {
+            let [item] = proposals else { return None; };
+            if item.proposal.action >= self.config.motor_cells
+                || !Self::valid_meta_fields(item.proposal.fields)
+            {
+                return None;
+            }
+            return Some(PhaseUnifiedDecision {
+                supporting_candidate_ids: Vec::new(),
+                proposal_id: item.proposal.proposal_id,
+                action: item.proposal.action,
+                score: item.proposal.fields[0].max(item.proposal.fields[1]),
+            });
+        }
+        let groups=self.coalesced_phase_native_unified_actions(proposals)?;
 
         let adjusted=groups.iter().map(|(action,fields,_)|
             PhaseCognitiveProposal{

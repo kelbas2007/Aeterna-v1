@@ -35,6 +35,8 @@ struct PhaseTemporalSampler {
     sensory_synapse: usize,
     trials: u32,
     distinctions: u32,
+    /// Factual terminal/motor coverage conditioned on the physical belief.
+    belief_trials: [u32;2],
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -70,6 +72,8 @@ pub(super) struct PhaseTemporalEvidenceState {
     outcomes: Vec<PhaseTemporalOutcomeLink>,
     observations: u32,
     episodes: u64,
+    /// Opt-in carrier-owned exploration from factual motor coverage.
+    autonomous_probe_enabled: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -122,6 +126,7 @@ impl EvoPhase {
             outcomes: Vec::new(),
             observations: 0,
             episodes: 0,
+            autonomous_probe_enabled: false,
         });
         self.phase_native = Some(state);
         true
@@ -217,6 +222,10 @@ impl EvoPhase {
         let Some(post)=self.phase_native_abstract_state(post_sensory) else {
             return false;
         };
+        // Snapshot the factual pre-action belief BEFORE moving native state
+        // out for mutation; otherwise the readout would always be None.
+        let belief_source=self.phase_native_temporal_evidence()
+            .and_then(|readout|readout.winner_cell);
         let Some(mut native)=self.phase_native.take() else {
             return false;
         };
@@ -249,13 +258,20 @@ impl EvoPhase {
                 sensory_synapse:link,
                 trials:0,
                 distinctions:0,
+                belief_trials:[0;2],
             });
             evidence.samplers.len()-1
         };
         let changed=pre.cell!=post.cell
             && evidence.cues.iter().any(|c|c.source_cell==post.cell);
+        let belief_index=belief_source.and_then(|source|
+            evidence.cues.iter().position(|cue|cue.source_cell==source)
+        );
         let sampler=&mut evidence.samplers[sampler_index];
         sampler.trials=sampler.trials.saturating_add(1);
+        if let Some(i)=belief_index {
+            sampler.belief_trials[i]=sampler.belief_trials[i].saturating_add(1);
+        }
         if changed {
             sampler.distinctions=sampler.distinctions.saturating_add(1);
             let syn=&mut self.synapses[sampler.sensory_synapse];
@@ -314,6 +330,152 @@ impl EvoPhase {
         })
     }
 
+    /// Opt in to evidence-driven unknown-motor coverage, not a prescribed
+    /// action schedule. The physical sampling affordance still must be learned
+    /// from a real permitted PRE/action/POST difference.
+    pub fn set_phase_native_temporal_autonomous_probe(&mut self, enabled: bool)->bool{
+        let Some(temporal)=self.phase_native.as_mut()
+            .and_then(|n|n.temporal_evidence.as_mut()) else {return false;};
+        temporal.autonomous_probe_enabled=enabled;
+        true
+    }
+
+    pub fn phase_native_temporal_autonomous_probe(&self)->bool{
+        self.phase_native.as_ref().and_then(|n|n.temporal_evidence.as_ref())
+            .map(|t|t.autonomous_probe_enabled).unwrap_or(false)
+    }
+
+    /// An intrinsically uncertain organism can investigate an as-yet
+    /// unverified opaque actuator. Pick the motor with least factual local
+    /// coverage; never use latent classes, correct motor labels or reward maps.
+    /// A conducting acquired sensor makes this cold probe unnecessary.
+    /// Candidate is NOT a permit and must still compete in U1.
+    pub fn choose_phase_native_temporal_unknown_probe(&self)
+        ->Option<(usize,f32)>{
+        let belief=self.phase_native_temporal_evidence()?;
+        let native=self.phase_native.as_ref()?;
+        let temporal=native.temporal_evidence.as_ref()?;
+        if !temporal.autonomous_probe_enabled
+            || temporal.cues.len()!=2 || !belief.needs_more
+            || !native.config.learning_enabled {
+            return None;
+        }
+        // Already-acquired physically conducting information paths use TE3.
+        if temporal.samplers.iter().any(|model|
+            model.distinctions>0
+                && conductance(&self.cells,
+                    &self.synapses[model.sensory_synapse],
+                    native.config.coherence_floor)>1.0e-8
+        ){return None;}
+        let (motor,trials)=(0..self.config.motor_cells).map(|action|{
+            let n=temporal.samplers.iter()
+                .find(|m|m.motor_action==action)
+                .map(|m|m.trials).unwrap_or(0);
+            (action,n)
+        }).min_by_key(|(action,trials)|(*trials,*action))?;
+        Some((motor,(1.0/(1.0+trials as f32)).clamp(0.0,1.0)))
+    }
+
+    /// Acquired physical cue evidence limits certainty of an otherwise
+    /// optimistic goal route. A conclusive belief (or exhausted evidence)
+    /// restores normal goal value. Only used in explicit autonomous mode.
+    pub fn phase_native_temporal_goal_evidence_coverage(&self)->Option<f32>{
+        let native=self.phase_native.as_ref()?;
+        let temporal=native.temporal_evidence.as_ref()?;
+        if !temporal.autonomous_probe_enabled || temporal.cues.len()!=2 {
+            return None;
+        }
+        let belief=self.phase_native_temporal_evidence()?;
+        if !belief.needs_more {return Some(1.0);}
+        let observed=(belief.observations as f32
+            /temporal.config.minimum_observations as f32).clamp(0.0,1.0);
+        let margin=(belief.evidence_margin
+            /temporal.config.decisive_margin).clamp(0.0,1.0);
+        Some((observed*margin).clamp(0.0,1.0))
+    }
+
+    /// Optimistic but evidence-based search of opaque outcome motors for a
+    /// specific physically acquired belief. The reward estimate is read from
+    /// the EXISTING phase-sensitive cue->motor synapse; the uncertainty bonus
+    /// uses only self-executed factual action coverage. There is no known
+    /// correct action, world ID, response table or external training schedule.
+    /// Disabled during frozen evaluation: use the acquired policy then.
+    pub fn choose_phase_native_temporal_outcome_probe(&self)
+        ->Option<(usize,f32,f32)>{
+        let belief=self.phase_native_temporal_evidence()?;
+        let cue=belief.winner_cell?;
+        let native=self.phase_native.as_ref()?;
+        let temporal=native.temporal_evidence.as_ref()?;
+        if !temporal.autonomous_probe_enabled || !native.config.learning_enabled {
+            return None;
+        }
+        let cue_index=temporal.cues.iter()
+            .position(|c|c.source_cell==cue)?;
+        let sensor=self.choose_phase_native_temporal_sensing_action();
+        // SensingAction readout requires needs_more, which is false after
+        // decisiveness. Exclude physical sensor paths directly instead.
+        let _=sensor;
+        let total:u32=temporal.samplers.iter().map(|m|m.belief_trials[cue_index])
+            .fold(0u32,|a,b|a.saturating_add(b));
+        let log_term=(total as f32+2.0).ln();
+        let floor=native.config.coherence_floor;
+        let mut best:Option<(usize,f32,f32)>=None;
+        let mut best_score=f32::NEG_INFINITY;
+        for action in 0..self.config.motor_cells {
+            let known_sensor=temporal.samplers.iter().any(|m|
+                m.motor_action==action && m.distinctions>0
+                && conductance(&self.cells,
+                    &self.synapses[m.sensory_synapse],floor)>1.0e-8
+            );
+            if known_sensor {continue;}
+            let trials=temporal.samplers.iter()
+                .find(|m|m.motor_action==action)
+                .map(|m|m.belief_trials[cue_index]).unwrap_or(0);
+            let value=temporal.outcomes.iter()
+                .filter(|o|o.source_cell==cue && o.motor_action==action)
+                .map(|o|conductance(
+                    &self.cells,&self.synapses[o.value_synapse],floor
+                )).fold(0.0f32,f32::max).clamp(0.0,1.0);
+            // Standard upper confidence bound, computed only from factual
+            // sample counts and physically represented outcome values.
+            let uncertainty=(2.0*log_term/(1.0+trials as f32)).sqrt();
+            let score=value+uncertainty;
+            if score>best_score+1.0e-6 {
+                best_score=score;
+                best=Some((action,value,uncertainty.clamp(0.0,1.0)));
+            }
+        }
+        best
+    }
+
+    /// In an uncertain episode a physically verified information-producing
+    /// operation is the only currently supported way of changing the belief.
+    /// Do not treat an unsupported optimistic goal path as an informed action.
+    /// When belief becomes decisive, all normal motor proposals return.
+    /// No source class, hidden cause, reward motor or host phase is inspected.
+    pub fn phase_native_temporal_action_evidence_admissible(
+        &self,action:usize
+    )->bool{
+        if !self.phase_native_temporal_autonomous_probe(){return true;}
+        let Some(belief)=self.phase_native_temporal_evidence()
+            else{return true;};
+        if !belief.needs_more {
+            // In a plastic lifetime evaluate unverified terminal alternatives
+            // using physical reward + uncertainty; in frozen evaluation
+            // execute the acquired phase-conditioned best outcome.
+            if let Some((probe,_,_))=self.choose_phase_native_temporal_outcome_probe(){
+                return probe==action;
+            }
+            return self.choose_phase_native_temporal_outcome_action()
+                .map(|policy|policy.action==action).unwrap_or(true);
+        }
+        let Some(sensor)=self.choose_phase_native_temporal_sensing_action()
+            else{return true;};
+        // If the physical sensor loses its conducting path, no metadata
+        // whitelist may continue to force the same motor.
+        sensor.action==action
+    }
+
     pub fn phase_native_temporal_evidence_enabled(&self)->bool{
         self.phase_native.as_ref()
             .and_then(|n|n.temporal_evidence.as_ref()).is_some()
@@ -360,6 +522,10 @@ impl EvoPhase {
         let Some(post)=self.phase_native_abstract_state(post_sensory) else {
             return false;
         };
+        // Capture the *pre-action* physical belief before mutating native
+        // state; never infer the latent cause from POST/reward.
+        let factual_winner=self.phase_native_temporal_evidence()
+            .and_then(|readout|readout.winner_cell);
         let Some(mut native)=self.phase_native.take() else {
             return false;
         };
@@ -370,6 +536,7 @@ impl EvoPhase {
         let ready=native.config.learning_enabled
             && evidence.cues.len()==2
             && evidence.observations>=1
+            && (!evidence.autonomous_probe_enabled || factual_winner.is_some())
             // A cue-to-cue observation is a sample, not a terminal result.
             && !evidence.cues.iter().any(|cue|cue.source_cell==post.cell);
         if !ready {
@@ -392,7 +559,16 @@ impl EvoPhase {
             .collect::<Vec<_>>();
         let mut updated=0usize;
         for (cue_index,source_cell) in source_cells.into_iter().enumerate(){
-            let credit=(observations[cue_index]/mass).clamp(0.0,1.0);
+            // In explicit autonomous inference, an already decisive physical
+            // hypothesis owns the observed consequence. Crediting its rejected
+            // rival would invent an unsupported cue->motor value and mix the
+            // two alternative policies. Legacy prepared TE5 soft-credit mode
+            // remains unchanged when this integration is not enabled.
+            let credit=if evidence.autonomous_probe_enabled {
+                if Some(source_cell)==factual_winner {1.0} else {0.0}
+            } else {
+                (observations[cue_index]/mass).clamp(0.0,1.0)
+            };
             if credit<=1.0e-8 {continue;}
             let policy_index=match evidence.outcomes.iter()
                 .position(|w|w.source_cell==source_cell
@@ -515,9 +691,39 @@ impl EvoPhase {
             ).clamp(0.0,1.0);
         }
         let margin=(signal[0]-signal[1]).abs();
+        // A belief should carry greater factual support before selecting
+        // between *different* physically learned goal actions. When both
+        // hypotheses recommend the same motor, extra observations cannot
+        // change the choice and the old minimum margin remains sufficient.
+        // This is a generic, action-consequence-dependent information demand,
+        // not a fixed number of observations or a world/role lookup.
+        let mut required_margin=state.config.decisive_margin;
+        if state.autonomous_probe_enabled && state.cues.len()==2 {
+            let best_for=|source:usize| {
+                state.outcomes.iter()
+                    .filter(|o|o.source_cell==source && o.observations>0)
+                    .map(|o|(o.motor_action,conductance(
+                        &self.cells,&self.synapses[o.value_synapse],floor
+                    )))
+                    .filter(|(_,value)|*value>0.05)
+                    .max_by(|a,b|a.1.total_cmp(&b.1))
+            };
+            if let (Some(a),Some(b))=(
+                best_for(state.cues[0].source_cell),
+                best_for(state.cues[1].source_cell)
+            ){
+                if a.0!=b.0 {
+                    // Require two net physical observations of support
+                    // (rather than one) when a mistaken belief would change
+                    // the chosen real-world action.
+                    let extra=2.0/state.config.max_observations as f32;
+                    required_margin=required_margin.max(extra);
+                }
+            }
+        }
         let decisive = state.cues.len()==2
             && state.observations>=state.config.minimum_observations
-            && margin+1.0e-7>=state.config.decisive_margin;
+            && margin+1.0e-7>=required_margin;
         let winner_cell = if decisive {
             if signal[0]>signal[1] {sources[0]} else {sources[1]}
         }else{

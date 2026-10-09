@@ -1,0 +1,41 @@
+name: EvoPhase autonomous-cycle diagnostics
+on:
+  workflow_dispatch:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/phase_meta_control.rs'
+      - 'src/scientific_runtime.rs'
+      - 'tests/te6_cold_probe_control.rs'
+      - 'tests/u1_cold_lifetime.rs'
+      - '.github/workflows/autonomous-cycle-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: autonomous-cycle-development-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  causal-and-cold:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile modified targets
+        run: cargo check --locked --test te6_cold_probe_control --test u1_cold_lifetime --test u1_meta_control
+      - name: Verify physical sensor acquisition and U1 causality
+        run: |
+          cargo test --locked --release --test te6_cold_probe_control te6_autonomous_motor_coverage_discovers_sensing_affordance_physically -- --exact --nocapture
+          cargo test --locked --release --test te6_cold_probe_control te6_terminal_experiment_moves_away_from_factually_checked_motor -- --exact --nocapture
+          cargo test --locked --release --test te6_cold_probe_control te6_rival_physical_outcomes_make_organism_seek_more_evidence -- --exact --nocapture
+          cargo test --locked --release --test te6_cold_probe_control te6_decisive_reward_does_not_create_unsupported_rival_policy -- --exact --nocapture
+          cargo test --locked --release --test u1_meta_control u1_positive_evidence_does_not_dilute_factual_utility_in_online_mode -- --exact --nocapture
+      - name: Measure unchanged A-B-A cold organism
+        run: cargo test --locked --release --test u1_cold_lifetime u1_new_cold_no_curriculum_continual_lifetime_development -- --exact --nocapture

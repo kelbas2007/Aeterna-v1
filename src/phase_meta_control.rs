@@ -48,6 +48,8 @@ pub(super) struct PhaseMetaControlState {
     utility_cell: usize,
     weight_synapses: [usize; META_FIELD_COUNT],
     observations: u64,
+    /// Opt-in, non-diluting score for evidence bearing feature vectors.
+    monotone_evidence_score: bool,
     ecology: Option<PhaseHypothesisEcologyState>,
 }
 
@@ -56,6 +58,7 @@ pub struct PhaseMetaControlCheckpoint {
     config: PhaseMetaControlConfig,
     learned_synapses: [PhaseSynapse; META_FIELD_COUNT],
     observations: u64,
+    monotone_evidence_score: bool,
 }
 
 impl EvoPhase {
@@ -93,7 +96,7 @@ impl EvoPhase {
 
         native.meta_control=Some(PhaseMetaControlState{
             config,feature_cells,utility_cell,weight_synapses,observations:0,
-            ecology:None,
+            monotone_evidence_score:false,ecology:None,
         });
         self.phase_native=Some(native);
         true
@@ -148,11 +151,25 @@ impl EvoPhase {
         if mass<=1.0e-8{return Some(0.0);}
         let floor=native.config.coherence_floor;
         let mut score=0.0f32;
+        let mut available_weight=0.0f32;
         for i in 0..META_FIELD_COUNT{
-            score+=fields[i]
-                * conductance(&self.cells,&self.synapses[meta.weight_synapses[i]],floor);
+            let physical=conductance(
+                &self.cells,&self.synapses[meta.weight_synapses[i]],floor
+            );
+            score+=fields[i]*physical;
+            available_weight+=physical;
         }
-        Some((score/mass).clamp(0.0,1.0))
+        // A normalized feature *mass* can make stronger positive evidence
+        // decrease a candidate's value. During opt-in cold online learning
+        // divide by the total PHYSICAL U1 capacity instead, which is shared
+        // across rival actions and independent of their number of features.
+        // A stronger positive field cannot dilute the existing evidence.
+        let divisor=if meta.monotone_evidence_score {
+            available_weight.max(1.0)
+        } else {
+            mass
+        };
+        Some((score/divisor).clamp(0.0,1.0))
     }
 
     pub fn phase_native_meta_score(
@@ -182,7 +199,14 @@ impl EvoPhase {
         };
         let config=meta.config.clone();
         let synapses=meta.weight_synapses;
-        let mass=fields.into_iter().sum::<f32>().max(1.0e-8);
+        let mass=if meta.monotone_evidence_score {
+            meta.weight_synapses.iter().map(|&index|
+                conductance(&self.cells,&self.synapses[index],
+                    native.config.coherence_floor)
+            ).sum::<f32>().max(1.0)
+        } else {
+            fields.into_iter().sum::<f32>().max(1.0e-8)
+        };
         let predicted=self.phase_meta_score_with_state(&native,fields).unwrap_or(0.0);
         let error=factual_utility-predicted;
 
@@ -255,6 +279,7 @@ impl EvoPhase {
                 self.synapses[meta.weight_synapses[i]].clone()
             ),
             observations:meta.observations,
+            monotone_evidence_score:meta.monotone_evidence_score,
         })
     }
 
@@ -281,8 +306,25 @@ impl EvoPhase {
             syn.plastic=learned.plastic;
         }
         meta.observations=checkpoint.observations;
+        meta.monotone_evidence_score=checkpoint.monotone_evidence_score;
         self.phase_native=Some(native);
         true
+    }
+
+    /// Preserve the frozen historical U1 policy unless explicitly enabled.
+    /// This is an alternate readout of the SAME physical synapses, not a
+    /// privileged source class, motor name, or external exploration schedule.
+    pub fn set_phase_native_meta_monotone_evidence(&mut self,enabled:bool)->bool{
+        let Some(meta)=self.phase_native.as_mut()
+            .and_then(|n|n.meta_control.as_mut()) else{return false;};
+        meta.monotone_evidence_score=enabled;
+        true
+    }
+
+    pub fn phase_native_meta_monotone_evidence(&self)->bool{
+        self.phase_native.as_ref()
+            .and_then(|n|n.meta_control.as_ref())
+            .map(|m|m.monotone_evidence_score).unwrap_or(false)
     }
 
     pub fn set_phase_native_meta_learning_enabled(&mut self,enabled:bool){
