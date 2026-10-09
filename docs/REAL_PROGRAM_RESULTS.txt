@@ -13,3 +13,10 @@ Report { corpus: Images, tasks: 364, correct: 143, abstentions: 141, wrong: 80, 
 open_usefulness_target=FAIL
 Report { corpus: Signals, tasks: 150, correct: 104, abstentions: 12, wrong: 34, nearest: 137, linear: 113, nearest_actions: 300, linear_actions: 300, training_actions: 329, test_actions: 288, sensing_first: 150, primitives: 2, primitive_uses: 5, constructor_updates: 234, checkpoint_bytes: 1450803, useful: false }
 open_usefulness_target=FAIL
+
+After preserving concurrent upstream research 565f5a025bd242a6faf252acae4b64fd69e335e8 (merge 3a695b9), the same recorded-data measurements remained:
+
+Report { corpus: Images, tasks: 364, correct: 143, abstentions: 141, wrong: 80, nearest: 344, linear: 328, nearest_actions: 728, linear_actions: 728, training_actions: 6503, test_actions: 587, sensing_first: 364, primitives: 4, primitive_uses: 4, constructor_updates: 4896, checkpoint_bytes: 3926691, useful: false }
+open_usefulness_target=FAIL
+Report { corpus: Signals, tasks: 150, correct: 104, abstentions: 12, wrong: 34, nearest: 137, linear: 113, nearest_actions: 300, linear_actions: 300, training_actions: 329, test_actions: 288, sensing_first: 150, primitives: 2, primitive_uses: 5, constructor_updates: 234, checkpoint_bytes: 1450803, useful: false }
+open_usefulness_target=FAIL
