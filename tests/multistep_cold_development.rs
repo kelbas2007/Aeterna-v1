@@ -34,6 +34,8 @@ struct Measures{
     correct:usize,commits:usize,actions:usize,blocked:usize,unavailable:usize,
     sampled:usize,repeated:usize,completed_chains:usize,first_cue_oracle:usize,
     triple_cue_oracle:usize,
+    entered_stage:[usize;6], staged_attempts:[usize;6],
+    first_motor_counts:[usize;6],
 }
 fn perform(rt:&mut ScientificRuntime,l1:&[[usize;2];8],w:&World,
     ep:&Episode,ordinal:usize,flipped:bool,m:&mut Measures)
@@ -56,9 +58,12 @@ fn perform(rt:&mut ScientificRuntime,l1:&[[usize;2];8],w:&World,
     let mut current_cue=ep.cues[0];
     for step in 0..16usize {
         if commit {break;}
+        let stage_before=state;
         let result=rt.step_unified(
             |_|Some(safe()),
             |motor|{
+                if step==0 {m.first_motor_counts[motor]+=1;}
+                m.staged_attempts[stage_before]+=1;
                 let layout=(ordinal+step+1)%6;
                 if motor==w.terminal[0]||motor==w.terminal[1]{
                     commit=true;
@@ -69,6 +74,7 @@ fn perform(rt:&mut ScientificRuntime,l1:&[[usize;2];8],w:&World,
                 }
                 if motor==w.chain[state] {
                     state+=1;
+                    m.entered_stage[state]+=1;
                     if state==w.depth {
                         state=0;
                         index=(index+1).min(ep.cues.len()-1);
@@ -165,6 +171,9 @@ fn multistep_unknown_depth_cold_open_development(){
             && after.repeated>=PASS_MULTI &&after.blocked==0
             &&after.unavailable==0 &&stable &&read>1.0e-8;
         passes+=usize::from(pass);
+        println!("MULTISTEP_STAGES depth={} train_reached={:?} train_attempts={:?} train_first_motors={:?} held_reached={:?}",
+            depth,before.entered_stage,before.staged_attempts,
+            before.first_motor_counts,after.entered_stage);
         println!("MULTISTEP_COLD depth={} chain={:?} terminal={:?} train_correct={}/192 train_chains={} transition_links={} final_sensor={:.6} heldout_correct={}/80 heldout_commit={} heldout_samples={} heldout_multi={} firstcue={}/80 threecue={}/80 blocked={} unavailable={} u1_frozen={} development_pass={}",
             depth,w.chain,w.terminal,before.correct,before.completed_chains,
             edges,read,after.correct,after.commits,after.sampled,after.repeated,
