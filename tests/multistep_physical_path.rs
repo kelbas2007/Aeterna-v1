@@ -1,0 +1,95 @@
+#![allow(dead_code)]
+// Open mechanism witness, not a cold autonomous intelligence qualification.
+// The learner sees factual PRE/action/POST observations only. All motor names,
+// intermediate classes and path lengths below are evaluator-private controls.
+include!("intel2_unified_worlds.rs");
+use aeterna_v1::carrier::PhaseTemporalEvidenceConfig;
+
+#[test]
+fn physical_sensing_paths_of_variable_depth_are_reused_and_lesionable(){
+    let mut rng=Rng::new(0x9D47_2026_5E12_4481);
+    for depth in 2..=5usize {
+        for arm in 0..3usize {
+            let (mut evo,l1)=foundation::build24();
+            assert!(evo.enable_phase_native_temporal_evidence(
+                PhaseTemporalEvidenceConfig{
+                    max_observations:8,minimum_observations:3,
+                    decisive_margin:0.125,
+                }
+            ));
+            assert!(evo.set_phase_native_temporal_multistep(true));
+            assert!(evo.set_phase_native_temporal_autonomous_probe(true));
+            let mut states=(0..24usize).collect::<Vec<_>>();
+            shuffle(&mut rng,&mut states);
+            let cues=[states[0],states[1]];
+            let mut waypoints=vec![cues[0]];
+            waypoints.extend_from_slice(&states[2..2+depth-1]);
+            waypoints.push(cues[1]);
+            let mut motors=(0..6usize).collect::<Vec<_>>();
+            shuffle(&mut rng,&mut motors);
+            let motors=&motors[..depth];
+            for cue in cues{
+                assert!(evo.observe_phase_native_temporal_signal(
+                    &foundation::scene(&l1,cue,0)
+                ));
+            }
+            assert!(evo.begin_phase_native_temporal_episode());
+            // Factual demonstrations exercise carrier storage only; the
+            // independent challenge must later test self-directed discovery.
+            for step in 0..depth {
+                let before=foundation::scene(&l1,waypoints[step],0);
+                let after=foundation::scene(&l1,waypoints[step+1],1);
+                assert!(evo.observe_phase_native_sensing_affordance(
+                    motors[step],&before,&after
+                ));
+                assert_eq!(
+                    evo.phase_native_temporal_factual_sample_from(
+                        motors[step],&before,&after
+                    ),step+1==depth,
+                    "only a physically complete path to a cue yields a sample"
+                );
+            }
+            assert_eq!(evo.phase_native_temporal_transition_count(),depth);
+            assert!(evo.phase_native_temporal_action_affordance(
+                motors[depth-1]
+            ).unwrap_or(0.0)>0.0);
+            assert!(evo.begin_phase_native_temporal_episode());
+            assert!(evo.observe_phase_native_temporal_signal(
+                &foundation::scene(&l1,cues[0],0)
+            ));
+            let checkpoint=evo.phase_native_checkpoint().unwrap();
+            let mut restored=EvoPhase::new(evo.config().clone());
+            assert!(restored.restore_phase_native_checkpoint(checkpoint));
+            assert!(restored.phase_native_temporal_multistep_enabled());
+            assert_eq!(restored.phase_native_temporal_transition_count(),depth);
+            let mut synapses=Vec::new();
+            for step in 0..depth {
+                restored.observe_initial_real(
+                    &foundation::scene(&l1,waypoints[step],0),false
+                );
+                let decision=restored.choose_phase_native_temporal_sensing_action()
+                    .expect("variable depth physical path");
+                assert_eq!(decision.action,motors[step],
+                    "must select next motor in present factual state");
+                synapses.push(decision.synapse);
+            }
+            for synapse in synapses {
+                let saved=restored.perturb_phase_native_synapse_for_control(
+                    synapse,0.0,0.0
+                ).expect("phase-native witness");
+                restored.observe_initial_real(
+                    &foundation::scene(&l1,cues[0],0),false
+                );
+                assert!(restored.choose_phase_native_temporal_sensing_action()
+                    .is_none(),"lesion of any essential link invalidates route");
+                restored.restore_phase_native_synapse_for_control(
+                    synapse,saved
+                );
+                assert!(restored.choose_phase_native_temporal_sensing_action()
+                    .is_some(),"restoring the phase synapse restores route");
+            }
+            println!("MULTISTEP_PHYSICAL depth={} arm={} links={} checkpoint=true lesions=true samples_factual=true",
+                depth,arm,restored.phase_native_temporal_transition_count());
+        }
+    }
+}
