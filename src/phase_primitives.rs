@@ -567,3 +567,5 @@ impl EvoPhase {
 
 // Parameterized views of the same acquired physical definitions.
 include!("phase_primitive_arguments.rs");
+// Alternative local synaptic winner-take-all over observed argument hypotheses.
+include!("phase_primitive_synaptic_competition.rs");
