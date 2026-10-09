@@ -330,6 +330,19 @@ impl EvoPhase {
                 };
                 evidence.samplers[index].trials=
                     evidence.samplers[index].trials.saturating_add(1);
+                // A novel external state can represent an intermediate or
+                // an eventual terminal outcome. Until later factual evidence
+                // disambiguates the two, preserve BOTH learning pathways.
+                // The chain hypothesis must not erase belief-conditioned
+                // factual motor coverage used by terminal reward search.
+                if let Some(source)=belief_source {
+                    if let Some(i)=evidence.cues.iter()
+                        .position(|cue|cue.source_cell==source) {
+                        evidence.samplers[index].belief_trials[i]=
+                            evidence.samplers[index].belief_trials[i]
+                                .saturating_add(1);
+                    }
+                }
                 evidence.pending_chain=Some(PhaseTemporalPendingChain{
                     first_action:action,
                     marker_cell:post.cell,
