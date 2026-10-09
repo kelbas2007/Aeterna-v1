@@ -1,6 +1,34 @@
 # Development integration validation — 2026-10-09
 
-This record covers the six opt-in development modes integrated with TE5 upstream
+The latest section covers the seventh combined uncertainty mode and recorded
+Iris measurements. The earlier integration record is retained below. Both are
+open development validation, not new sealed intelligence qualifications.
+
+## Combined uncertainty validation — completed locally
+
+| Check | Outcome |
+|---|---|
+| `cargo check --locked --all-targets` | PASS |
+| `bash scripts/check.sh` | **137 passed, 0 failed**, 8 ignored, 93 filtered in 33 test-binary runs; statistical crosscheck, dataset checksum and release builds PASS |
+| New interval/continual tests | 9 passed; two-equation modular inverse, noise enclosure, cap/budget widening, factual-only tuition, causal cut/π/restore, sensing/no-loop and atomic checkpoint checks |
+| Recorded Iris comparison | 108/120 phase, 111/120 matched stump; phase sensing first 120/120, one wrong commitment and 11 abstentions; [full task contract](IRIS_BENCHMARK.md) |
+| One mixed noisy partial lifetime | A → B → A, 768 actual actions, sparse every 17th POST, acquired archives/reactivation; additional 2048 actions kept 29 cells / 420 synapses and bounded evidence |
+| `bash scripts/demo.sh` | All **seven** examples learned and resumed in separate processes |
+| New `uncertain_learning` demonstration | Restored hidden-context sensing then conditional commitment, actions `[2, 0]`, factual goal, unchanged frozen knowledge |
+| Actual previously saved v5 files | Original inverse/adaptive checkpoints resumed successfully using the v6 reader |
+| `cargo clippy --locked --lib -- -D clippy::correctness` | PASS; nonfatal style/legacy warnings remain |
+| Documentation, shell and diff checks | No missing Markdown targets; `bash -n` and `git diff --check` PASS |
+
+The new writer is v6; numerical tuition still requires actual full PRE/POST.
+Examples saved new files in a fresh temporary directory. The common regression
+runner now includes `uncertain_learning` and `iris_grounded`; 137 invocations
+include shared fixtures and do not represent independent scientific trials.
+Consumed authority packs and negative cold scorers were not rerun. Remote checks
+for this new publication are separate from the historical run IDs listed below.
+
+## Earlier six-mode integration
+
+This earlier record covers the six opt-in development modes integrated with TE5 upstream
 `3e6fe616` and the repository navigation/CI update. The original development
 commit is `1c89e96`. It is an open regression record, not a sealed authority
 qualification. Scientific verdicts retain their original scope.

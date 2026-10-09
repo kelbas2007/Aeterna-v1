@@ -4,10 +4,11 @@
 
 ## Current development — 2026-10-09
 
-Six opt-in modes are documented in [the guide index](docs/README.md): cold online
+Seven opt-in modes are documented in [the guide index](docs/README.md): cold online
 acquisition, acquired rules, expanded formulas, partial observations, inverse
-inference and full-observed conditional/noisy continual learning. Checkpoint v5
-retains compatibility with v1–v4. Rule parameters reside in shared phase synapses;
+inference, full-observed conditional/noisy continual learning, and combined
+[noisy partial inference](docs/UNCERTAIN_LEARNING.md). Checkpoint v6
+retains compatibility with v1–v5. Rule parameters reside in shared phase synapses;
 hypothesis fitting, context metadata and bounded planning are software.
 
 Open development comparisons: inverse inference reached 256/256 new goals versus
@@ -16,6 +17,15 @@ Open development comparisons: inverse inference reached 256/256 new goals versus
 A → B → A lifetime demonstrated revision/recall, and a 2048-action memory check
 kept fixed topology and a bounded checkpoint. These are bounded synthetic
 development results; they do not qualify a new independent intelligence gate.
+The combined mode additionally solves independent two-operand equations with
+interval error and all modular alternatives, chooses measurements, and retains
+bounded models through one noisy partial A → B → A lifetime.
+
+[Recorded Iris measurements](docs/IRIS_BENCHMARK.md) broaden validation beyond
+synthetic generators: 108/120 frozen binary decisions versus the same-facts
+decision stump's 111/120, with a two-action budget. The phase agent measured
+first in all 120 tasks, made one wrong commitment and abstained eleven times.
+The corpus is small and familiar; the result is open development evidence.
 
 The development source is integrated with TE5 through upstream `3e6fe616`.
 TE5 supports prepared physical belief-to-action learning and protected U1
@@ -24,8 +34,8 @@ sensing-to-commit decisions. Its cold post-TE5 diagnostic remains **FAIL**:
 TE4 and TE1 failures and references the exact results.
 
 Ordinary regressions, causal controls and separate-process demonstrations are
-available on the research branch. Integration validation completed with 127
-successful test invocations, zero failures and all six separate-process examples.
+available on the research branch. The [validation record](docs/DEVELOPMENT_VALIDATION.md)
+distinguishes the earlier 127-test integration from the new combined-mode checks.
 [Validation record](docs/DEVELOPMENT_VALIDATION.md). These checks do not rerun
 consumed authority packs or qualify a new scientific gate.
 

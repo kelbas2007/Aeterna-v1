@@ -7,7 +7,7 @@ It does not change the recorded INTEL-4, FRONTIER-1, TE1 or TE4 verdicts.
 An additional, explicitly selected [learned-rule mode](LEARNED_RULES.md) now
 supports generalizing circular channel transformations and choosing experiments.
 The P1/P3 receptor-based behavior described below remains available independently.
-The current checkpoint writer uses v5; it also reads v1–v4 snapshots.
+The current checkpoint writer uses v6; it also reads v1–v5 snapshots.
 The optional [partial-observation extension](PARTIAL_OBSERVATION.md) adds
 explicit missing channels and informative actions over acquired circular rules.
 The [expanded vocabulary](EXPANDED_RULES.md) supports constants, integer gains,
