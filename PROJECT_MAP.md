@@ -63,6 +63,12 @@ The historical `main` and the successful INTEL-4 line had diverged. The integrat
 
 Exact old branch SHAs and their recovery procedure: [ARCHIVE_MANIFEST.md](https://github.com/kelbas2007/Aeterna-v1/blob/archive/evidence-20261008/ARCHIVE_MANIFEST.md).
 
+## Autonomous cognitive-cycle development result — 2026-10-09
+
+**First-attempt Fresh-2 DEVELOPMENT PASS (4/4):** [run 37934001957](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37934001957), heldout 69/80, 64/80, 72/80, 68/80 (total 273/320) versus one-cue oracle 228/320 and fixed three-cue oracle 251/320. Each independently started target lifetime learned the unknown physical sampling motor, repeatedly sampled without an evaluator motor schedule, revised its phase-native belief-to-outcome associations during A→B→A, then executed goal actions with a frozen cognitive model after checkpoint. [Full documented evidence](docs/AUTONOMOUS_CYCLE_FRESH2_RESULT.md) · [preregistration](docs/AUTONOMOUS_CYCLE_FRESH2_PROTOCOL.md).
+
+First separate frozen fresh attempt [37932975901](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37932975901) **FAILED 1/4**; a generic physical terminal credit defect was repaired before preregistering fresh2. These are fixed, distinct experiments; neither has been erased or re-scored. **No structurally different stochastic family or open-world AGI qualification has passed.** The four arms are four separate organisms, each one continuous lifetime, with pretrained generic perception/U1 foundation.
+
 ## Next scientific boundary
 
 INTEL-4 established bounded adaptive behavior across deterministic A–E families. It did **not** qualify long noisy inference. The first different-family test **FRONTIER-1** independently failed: 40/80 correct latent decisions, zero repeated sensing, last noisy-cue oracle 56/80 and 8-cue majority oracle 69/80. Do not relabel or patch its consumed authority seed. The research branch contains these physically tested components and cold diagnostics:
@@ -74,7 +80,7 @@ INTEL-4 established bounded adaptive behavior across deterministic A–E familie
 - **[TE4 cold autonomous evaluation](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE4_RESULT_FAIL.md):** **DEVELOPMENT_FAIL** on 4 new worlds with no matched motor tuition. Frozen holdouts: 40/80, 55/80, 40/80, 38/80; despite some discovered sensors, evidence did not reliably control final action.
 - **[TE5 physical belief-conditioned action](https://github.com/kelbas2007/Aeterna-v1/blob/research/beyond-intel4/docs/TE5_RESULT.md):** prepared facts learned 12/12 cue-conditional action associations and revised 12/12; **6/6 protected U1 sensing→commit mechanism runs passed**, [Actions 37842428971](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37842428971). However post-TE5 replay of the unchanged burned TE4 generator **still failed**: 40/80, 55/80, 40/80, 40/80. Its CI completed, but its actual diagnostic scorer returned FAIL.
 
-**Not yet solved:** untrained cold discovery of the sensor action, physical delayed credit for seeking information, and learning the final response from stochastic observations. No end-to-end new-world stochastic qualification has passed. Do not convert the burned FRONTIER-1 FAIL or the TE1 strict noisy FAIL into PASS. TE1–TE3 remain opted-in experimental research, not merged into qualified `main`.
+**Historical TE4/TE5 failure boundary (before later Fresh-2 development):** untrained cold sensor discovery, delayed information credit, and stochastic terminal response were not then solved. The new Fresh-2 development evidence above supports all three **within the same bounded task family**, but no independently qualified structurally new-world stochastic generality has been established. Do not convert the burned FRONTIER-1 FAIL or the TE1 strict noisy FAIL into PASS. TE1–TE3 remain opted-in experimental research, not merged into qualified `main`.
 
 The next architecture question is carrier-owned **uncertainty reduction and self-initiated active sensing from cold experience**, not another permutation of A–E.
 
