@@ -31,6 +31,7 @@ cargo test --locked --release --test te3_unified_sensing te3_
 cargo test --locked --release --test te5_belief_action te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary -- --exact
 cargo test --locked --release --test te5_unified_decisions te5_unified_selects_acquired_sensing_then_belief_grounded_goal_motor -- --exact
 cargo test --locked --release --test u1_live_credit u1_online_credit_depends_on_protected_factual_sensing_and_freezes -- --exact
+cargo test --locked --release --test u1_cold_lifetime u1_new_cold_no_curriculum_continual_lifetime_development -- --exact --nocapture
 python3 scripts/g21_statistical_crosscheck.py
 python3 scripts/check_docs.py
 cargo build --locked --release --bins --examples
