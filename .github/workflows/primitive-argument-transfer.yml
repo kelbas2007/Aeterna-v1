@@ -4,21 +4,30 @@ on:
   push:
     branches: ['research/beyond-intel4']
     paths:
-      - 'scripts/apply_primitive_argument_transfer.py'
-      - 'scripts/probes/primitive_argument_transfer.rs'
+      - 'src/phase_primitives.rs'
+      - 'src/phase_induction.rs'
       - 'src/phase_primitive_arguments.rs'
+      - 'tests/primitive_argument_transfer.rs'
+      - 'tests/acquired_primitives.rs'
+      - '.github/workflows/primitive-argument-transfer.yml'
+  pull_request:
+    paths:
+      - 'src/phase_primitives.rs'
+      - 'src/phase_induction.rs'
+      - 'src/phase_primitive_arguments.rs'
+      - 'tests/primitive_argument_transfer.rs'
       - '.github/workflows/primitive-argument-transfer.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: primitive-argument-transfer-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  validate-and-publish:
+  regression:
     runs-on: ubuntu-latest
     timeout-minutes: 18
     env:
@@ -26,89 +35,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.99.0'
           components: rustfmt
       - uses: Swatinem/rust-cache@v2
-      - name: Apply guarded integration in the temporary checkout
-        run: python3 scripts/apply_primitive_argument_transfer.py
-      - name: Format touched Rust files and compile every target
+      - name: Check committed source without applying patches
         run: |
-          rustfmt --edition 2021 src/phase_primitives.rs src/phase_induction.rs src/phase_primitive_arguments.rs tests/primitive_argument_transfer.rs
+          rustfmt --edition 2021 --check src/phase_primitives.rs src/phase_induction.rs src/phase_primitive_arguments.rs tests/primitive_argument_transfer.rs
           cargo check --locked --all-targets
-          git diff --check
-      - name: Run transfer witness and existing acquired-operation regressions
+          git diff --exit-code
+      - name: Argument transfer and existing acquired-operation regressions
         shell: bash
         run: |
           set -euo pipefail
           cargo test --locked --release --test primitive_argument_transfer --test acquired_primitives --test real_programs -- --nocapture 2>&1 | tee primitive-transfer.log
           grep -F 'PRIMITIVE_ARGUMENT_MECHANISM correct=96/96 old_unbound=48/96' primitive-transfer.log
           grep -F 'PRIMITIVE_ARGUMENT_RUNTIME correct=48/48' primitive-transfer.log
-      - name: Record measured result with explicit ownership limits
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import os
-          log=Path('primitive-transfer.log').read_text()
-          metrics='\n'.join(line for line in log.splitlines() if line.startswith('PRIMITIVE_ARGUMENT_'))
-          report=f'''# Existing operation definitions with acquired argument bindings
-
-          Status: OPEN DEVELOPMENT MECHANISM AND RUNTIME TEST PASS.
-          Evidence run: https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}
-          Starting source commit: `{os.environ['GITHUB_SHA']}` (guarded integration applied in this run, then tested).
-
-          ## What was measured
-
-          The existing acquired-operation learner first acquired a two-input relation from factual environment outcomes. No target function is added to the new engine code. Its original definition and physical synapses then remain unchanged while argument calls are transferred to different sensor channels.
-
-          Explicit argument-call mechanism control: 96/96 correct across four new ordered argument pairs, eight Boolean cases and three new numeric magnitudes. The original unbound call scores 48/96 on those same target cases. This is a control of argument mapping, NOT a superiority claim over another fully retrained learner.
-
-          Runtime control: one continuing training organism encounters two externally scheduled new input-pair tasks. It receives only the ordinary selected action and factual outcome, never the correct pair or a binding. The binding selector uses the existing bounded per-action factual buffers. It selects on an earlier prefix and requires at least eight subsequent validating facts; a failing suffix does not select an alternative binding. On 48 heldout numeric cases, the existing protected runtime performs correct goal actions using original source-operation roots. Checkpoint/restart preserves the operation and factual evidence used to reconstruct the bindings. Direct prediction and binding inspection do not update any retained state.
-
-          The feature is opt-in (`set_phase_primitive_argument_transfer`). The normal induction prediction path uses validated calls before ordinary program prediction. Factual observation checks reuse before rebuilding a definition. Existing acquired-operation and real-program pipeline regressions ran in the same job. Their previously published real-dataset performance FAIL verdicts are not altered by this test.
-
-          ## Exact emitted measurements
-
-          ```text
-          {metrics}
-          ```
-
-          ## Boundaries — essential to interpreting this result
-
-          This does NOT establish spontaneous invention of a new phase-native constructor or general intelligence. The source relation and the two later tasks are externally scheduled synthetic curricula. Generic perception, branch interpreter, and bounded argument-search algorithm remain inherited software. Binding views are reconstructed from factual buffers; they are not independently learned physical argument-binding synapses. The original computation is read through its physical definition, whose lesion makes the parameterized call unavailable.
-
-          Current limit: at most eight channels and three structurally used raw arguments, with injective binding candidates. Explicit calls retain original support guards and require a fully observed frame of the existing width. Search is capped at 32768 definition evaluations per action. This does not yet establish transfer to arbitrary input width, unrestricted objects, new computational node types, speed advantage or cold open-ended primitive invention.
-
-          The concrete new capability is reuse of an unchanged, acquired computational definition on new evidence-derived argument mappings inside the existing predictor. No MAIN or frozen INTEL-4 source is modified by this workflow.
-          '''
-          # Dedent the common indentation without changing the log's contents.
-          import textwrap
-          Path('docs/PRIMITIVE_ARGUMENT_TRANSFER_RESULT.md').write_text(textwrap.dedent(report))
-          PY
-      - name: Publish only tested source with non-forced fast-forward
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF" = 'refs/heads/research/beyond-intel4'
-          git fetch origin research/beyond-intel4
-          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/phase_primitives.rs src/phase_induction.rs src/phase_primitive_arguments.rs tests/primitive_argument_transfer.rs docs/PRIMITIVE_ARGUMENT_TRANSFER_RESULT.md
-          git commit -m 'feat: reuse acquired physical operations through fact-validated argument bindings'
-          git push origin HEAD:research/beyond-intel4
-          echo "PRIMITIVE_ARGUMENT_PUBLISHED=$(git rev-parse HEAD)"
-      - name: Preserve all positive or negative evidence
+      - name: Preserve positive or negative evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: primitive-argument-transfer-evidence
-          path: |
-            primitive-transfer.log
-            src/phase_primitive_arguments.rs
-            tests/primitive_argument_transfer.rs
-            docs/PRIMITIVE_ARGUMENT_TRANSFER_RESULT.md
+          path: primitive-transfer.log
           if-no-files-found: ignore
