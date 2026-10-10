@@ -160,6 +160,7 @@ def main():
     parser.add_argument("--agent", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path("external-world1.json"))
     parser.add_argument("--budget", type=int, default=64)
+    parser.add_argument("--seed-offset", type=int, default=0)
     args = parser.parse_args()
     if not args.agent.exists():
         raise SystemExit(f"missing native agent executable: {args.agent}")
@@ -171,8 +172,8 @@ def main():
         "library": f"minigrid-{version}",
         "observation": "public partial 7x7x3 categorical tiles, four binary bits/field",
         "mission_visible_to_agent": False,
-        "training_seeds": list(range(100, 108)),
-        "heldout_seeds": list(range(900, 904)),
+        "training_seeds": list(range(100 + args.seed_offset, 108 + args.seed_offset)),
+        "heldout_seeds": list(range(900 + args.seed_offset, 904 + args.seed_offset)),
         "steps_budget": args.budget,
         "results": {},
     }
