@@ -1,0 +1,77 @@
+name: Developmental history - independent Farama MemoryS7 benchmark
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'tests/developmental_history_alias.rs'
+      - 'scripts/external_memory_history.py'
+      - 'docs/HISTORY_MEMORY1_PROTOCOL.md'
+      - '.github/workflows/history-memory1-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  test-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install untouched independent Farama Memory environment
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Factual history alias unit and native action gates
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test developmental_history_alias -- --nocapture
+          cargo build --locked --release --bin external_world_agent
+      - name: Memoryless native actor, exact same outside world seeds
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --output history-memory1-no-memory.json \
+            2>&1 | tee history-memory1-no-memory.log
+      - name: Continuous lived experience internal trace actor
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --memory --output history-memory1-memory.json \
+            2>&1 | tee history-memory1-memory.log
+      - name: Compare genuine terminal rewards and forbid invented PASS
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('history-memory1-no-memory.json'))
+          m=json.load(open('history-memory1-memory.json'))
+          assert not a["memory"] and m["memory"]
+          assert a["heldout_seeds"]==m["heldout_seeds"]==list(range(81000,81024))
+          assert a["training_seeds"]==m["training_seeds"]==list(range(80000,80128))
+          assert a["budget"]==m["budget"]==200
+          assert a["frozen_executions"]>0 and m["frozen_executions"]>0
+          assert a["random_successes"]==m["random_successes"]
+          passed=m["heldout_successes"]>=12 and m["heldout_successes"]>a["heldout_successes"] and m["heldout_successes"]>m["random_successes"]
+          print(f"HISTORY_MEMORY1_RESULT memory={m['heldout_successes']}/24 "
+                f"no_memory={a['heldout_successes']}/24 "
+                f"random={m['random_successes']}/24 "
+                f"memory_train={m['train_successes']}/128 "
+                f"verdict={'DEVELOPMENT_PASS' if passed else 'DEVELOPMENT_FAIL'}")
+          PY
+      - name: Keep positive and negative full source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-memory1-external-pomdp-evidence
+          path: |
+            history-memory1-no-memory.json
+            history-memory1-no-memory.log
+            history-memory1-memory.json
+            history-memory1-memory.log
+          if-no-files-found: ignore
