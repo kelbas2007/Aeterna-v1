@@ -171,3 +171,25 @@ INTEL-4 established bounded adaptive behavior across deterministic A–E familie
 The next architecture question is carrier-owned **uncertainty reduction and self-initiated active sensing from cold experience**, not another permutation of A–E.
 
 The scientific runtime still uses a trusted physical-action protection callback, not qualified real-world human-safety hardware. No changes to the separate mature Codex-AETERNA have been made.
+
+## Factorized property composition — 2026-10-10 negative control
+
+**FACTOR-WORLD-1 first development diagnostic: FAIL 0/4**
+([Actions 38029493198](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38029493198)).
+All four continuing organisms acquired 19 whole-state factual
+transition links and learned the separated key and supply contexts;
+none produced a causal starting plan or solved the unseen conjunction.
+Training excluded every joint key-plus-supply state (4/4 split-valid)
+and a five-step evaluator-only route existed. This is a negative
+control of **whole-state graph transfer**, using 24 arbitrarily coded
+complete-state classes, NOT an identifiable factorized perceptual test.
+The run did not test mid-episode battery drain. Preserve the consumed
+first source/seed and do not call green CI a cognitive PASS.
+[Detailed evidence](docs/FACTOR_WORLD1_RESULT.md) ·
+[Protocol](docs/FACTOR_WORLD1_PROTOCOL.md).
+
+Next: separately preregister identifiable per-property sensory
+structure, learn counterfactual invariants from factual actions
+without teaching motor roles, combine them in an unseen cross-product
+and test actual battery depletion/replanning. The algorithm may not
+import evaluator-specified factors or a privileged route.
