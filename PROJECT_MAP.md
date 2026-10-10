@@ -246,3 +246,33 @@ Green CI verifies actual execution, NOT task success.
 The open barrier is object/spatial identity, temporal partial-view
 integration and goal-directed exploration under sparse reward;
 another fixed graph permutation cannot solve it.
+
+## Shared visual/word memory between independent external worlds — 2026-10-10
+
+An optional \`PhaseGroundedObjects\` now lives inside EvoPhase native
+checkpoint and fingerprint. It accumulates stable category signatures
+from actual external observations independent of camera-frame position,
+and learns a lexicon only from **explicit deictic word+point
+supervision**, not from supplied model semantics. Learned visual-category
+→ lexical links are native phase synapses: lesion makes recall disappear,
+restore makes it return. Source:
+[src/phase_grounded_objects.rs](src/phase_grounded_objects.rs).
+[Physical and persistence controls 2/2](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38037092648).
+
+A new cross-world runner uses **one continuing Rust organism** over
+training in Farama DoorKey followed by frozen unseen DoorKey,
+MultiRoom and Empty, rather than reinitializing cognition per
+environment family. [External run 38037219734](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38037219734)
+reported 725/725 correct visible referents, zero false
+positives, 115/115 doors in never-taught MultiRoom settings
+and **zero task rewards**. [Detailed result](docs/CROSSWORLD_OBJECT1_RESULT.md)
+· [protocol](docs/CROSSWORLD_OBJECT1_PROTOCOL.md).
+
+**Important limitation:** MiniGrid supplied category-coded partial
+tile images; an external teacher repeatedly pointed to visible
+objects and said the word. This was supervised category reference
+transfer across worlds sharing the same coding, not discovery of
+objects from RGB, unsupervised language understanding, learned
+affordances or functional goal solving. One-shot external
+cross-world generalization is being tested separately as
+[CROSSWORLD-OBJECT-2](docs/CROSSWORLD_OBJECT2_PROTOCOL.md).
