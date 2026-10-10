@@ -1,0 +1,54 @@
+name: Self object effect 1 - zero-motor-tuition external Farama
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_grounded_objects.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'tests/self_object_effect_native.rs'
+      - 'scripts/external_self_affordances.py'
+      - 'docs/SELF_OBJECT1_PROTOCOL.md'
+      - '.github/workflows/self-object1-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  actual-experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Actual externally maintained task physics
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Compile and test self-discovered protected native motor
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test self_object_effect_native -- --nocapture
+          cargo build --locked --release --bin external_world_agent
+      - name: Execute without motor demonstration on real external world families
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_self_affordances.py \
+            --agent target/release/external_world_agent \
+            --output external-self-object1.json \
+            2>&1 | tee external-self-object1.log
+      - name: Preserve actual cognitive result whether pass or fail
+        run: grep -F 'SELF_AFFORDANCE1_SUMMARY verdict=' external-self-object1.log
+      - name: Retain negative or positive raw evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-self-object1-zero-tuition-evidence
+          path: |
+            external-self-object1.json
+            external-self-object1.log
+          if-no-files-found: ignore
