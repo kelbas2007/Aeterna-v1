@@ -264,6 +264,7 @@ impl EvoPhase {
         }
         if let Some(policy)=state.general_policy.as_ref() {
             let mut persistent=policy.clone();
+            persistent.steps=0; // observed attempts are not acquired policy
             persistent.recent.clear();
             for trace in &mut persistent.eligibility {trace.fill(0.0);}
             text.push_str(&format!("|{:?}",persistent));
@@ -311,6 +312,7 @@ impl EvoPhase {
             }
         }
         if let Some(policy)=state.general_policy.as_mut() {
+            policy.steps=0;
             policy.recent.clear();
             for trace in &mut policy.eligibility{trace.fill(0.0);}
         }
