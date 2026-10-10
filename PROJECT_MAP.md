@@ -593,3 +593,50 @@ history-aliasing task with no motor labels/teacher and
 show a necessary memory ablation on full external
 task rewards. Do not bolt on correct-branch code or
 repeat fixed-seed repair until CI becomes green.
+
+## CHILD-EVENT-1/2 — factual autobiography works but actual past-cue choices DO NOT (2026-10-10)
+
+An opt-in, physical native generic learner now stores actually executed
+sensorimotor histories across an episode rather than only its
+last successful motor. On true environment reward it assigns
+positive retrospective experience to prior actions; after
+a no-reward terminated episode it stores failure
+associations. It receives NO correct motor, object name,
+hidden map, or world reward oracle. Checkpoint/frozen
+readout and lesion controls passed:
+[AUTOBIOGRAPHICAL_REPLAY_NATIVE_PASS, run 38068337538](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38068337538).
+
+**CRITICAL first external diagnostic FAIL despite green CI:**
+CHILD-EVENT-1 reported 14/24 external MemoryS7
+frozen rewards vs no-memory 10/24 and random 6/24;
+but forensic auditor confirmed episodic organism
+selected **lower exit 24/24**, while control
+selected upper 24/24. First score improvement was
+entirely explained by the fact lower happened
+to be correct 14/24 times. Absolutely NO
+evidence of cue-conditioned behavior.
+[Original forensic result](docs/CHILD_EVENT1_RESULT.md).
+
+**IMMUTABLE-SOURCE CLEAN REPLICATION FAIL:**
+Exact original source commit
+\`855b58c1d3e680509ce629b02731d78f2a453eb0\`,
+independent unused seeds 120000/121000:
+episodic **7/24**, no-memory **7/24**,
+random **6/24**, and optimal constant
+exit **17/24**! Both memory and reactive
+agents selected **lower 24/24**, despite
+higher targets in 17/24. Zero
+branch-choice diversity; history not used.
+[Run 38068884815](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38068884815)
+· [Predeclared branch control](docs/CHILD_EVENT2_PROTOCOL.md)
+· [Full audited result](docs/CHILD_EVENT2_RESULT.md).
+
+This is a fundamental limitation of current frame-hash
+and positive/negative episode reward-learning,
+NOT a deficient number of additional MiniGrid
+motor routines. Do not merge as general intelligence.
+Next useful architecture needs causally grounded
+persistent relational object identity and
+comparative choice after occlusion, tested against
+true different-history identical-current-frame
+controls plus independent cross-ontology worlds.
