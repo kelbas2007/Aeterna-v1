@@ -63,8 +63,8 @@ are shuffled with seed 198001 and remain evaluator-only. A trial receives
 only actual success reward. Native acquisition is unchanged between corpora.
 
 Frozen one-action classification compares rules with a physical rule-access
-lesion and 3-NN using only records/actions identified by actual rewarded
-training attempts. Report actual training actions. Recorded-data gates:
+lesion and 3-NN using the same serialized measurements and only records/actions
+identified by actual rewarded training attempts. Report actual training actions. Recorded-data gates:
 digits >=75%, GunPoint >=80%, and >=20 percentage points over each corpus's
 lesioned control. Report 3-NN without claiming superiority unless measured.
 Save acquired predicate programs, source/binary/fixture hashes and raw actions.

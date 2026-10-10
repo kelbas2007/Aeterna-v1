@@ -83,7 +83,7 @@ def records(corpus):
             text,label=line.rsplit(':',1);values=list(map(float,text.split(',')))
             # Fixed measurement serialization, not extracted signal features.
             quantized=[round(max(0.0,min(1.0,(v+4.0)/8.0))*63) for v in values]
-            out.append({"id":len(out),"numeric":values,"label":int(label)-1,
+            out.append({"id":len(out),"numeric":quantized,"label":int(label)-1,
                         "bits":encode(quantized,6)})
         return out
     return read(ROOT/"tests/data/GunPoint_TRAIN.ts"),read(ROOT/"tests/data/GunPoint_TEST.ts"),2,16,8
