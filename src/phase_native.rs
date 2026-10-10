@@ -75,6 +75,7 @@ pub(super) struct PhaseNativeState {
     factor_causality: Option<PhaseFactorState>,
     grounded_objects: Option<PhaseGroundedObjects>,
     general_policy: Option<PhaseGeneralPolicy>,
+    innate_scaffold: Option<PhaseInnateScaffold>,
     online: Option<PhaseOnlineConfig>,
     rules: Option<PhaseRuleState>,
     partial: Option<PhasePartialState>,
@@ -133,6 +134,7 @@ impl EvoPhase {
             factor_causality: None,
             grounded_objects: None,
             general_policy: None,
+            innate_scaffold: None,
             online: None,
             rules: None,
             partial: None,
@@ -173,6 +175,7 @@ impl EvoPhase {
         let action_affordance_synapse = self.is_phase_native_affordance_synapse(index);
         let self_affordance_synapse = self.is_phase_native_self_object_synapse(index);
         let general_synapse = self.is_phase_native_general_synapse(index);
+        let innate_synapse = self.is_phase_native_innate_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
@@ -188,6 +191,7 @@ impl EvoPhase {
             && !action_affordance_synapse
             && !self_affordance_synapse
             && !general_synapse
+            && !innate_synapse
             && !self.is_phase_rule_synapse(index)
             && !self.is_native_decoder_synapse(index)
             && !self.is_phase_induction_synapse(index)
@@ -266,7 +270,15 @@ impl EvoPhase {
             let mut persistent=policy.clone();
             persistent.steps=0; // observed attempts are not acquired policy
             persistent.recent.clear();
+            persistent.working_trace.fill(0.0);
+            persistent.retained_events=0;
             for trace in &mut persistent.eligibility {trace.fill(0.0);}
+            text.push_str(&format!("|{:?}",persistent));
+        }
+        if let Some(innate)=state.innate_scaffold.as_ref() {
+            let mut persistent=innate.clone();
+            persistent.last_sense=None;
+            persistent.intrinsic_energy=1.0;
             text.push_str(&format!("|{:?}",persistent));
         }
         if let Some(online) = state.online.as_ref() {
@@ -313,8 +325,14 @@ impl EvoPhase {
         }
         if let Some(policy)=state.general_policy.as_mut() {
             policy.steps=0;
+            policy.working_trace.fill(0.0);
+            policy.retained_events=0;
             policy.recent.clear();
             for trace in &mut policy.eligibility{trace.fill(0.0);}
+        }
+        if let Some(innate)=state.innate_scaffold.as_mut(){
+            innate.last_sense=None;
+            innate.intrinsic_energy=1.0;
         }
         if let Some(vector) = state.vector.as_mut() { vector.episode = None; }
         if let Some(context) = state.contextual.as_mut() {
@@ -806,3 +824,4 @@ include!("phase_temporal_evidence.rs");
 include!("phase_factor_causality.rs");
 include!("phase_grounded_objects.rs");
 include!("phase_general_policy.rs");
+include!("phase_innate_scaffold.rs");
