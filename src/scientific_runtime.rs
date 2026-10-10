@@ -218,6 +218,12 @@ impl ScientificRuntime {
         self.organism.set_phase_native_temporal_multistep(enabled)
     }
 
+    /// Opt into cold action/state acquisition using the existing physical
+    /// carrier, bounded epistemic exploration and protected U1 execution.
+    pub fn set_temporal_cold_goal_acquisition(&mut self,enabled:bool)->bool{
+        self.organism.set_phase_native_temporal_cold_goal_acquisition(enabled)
+    }
+
     /// Enable carrier-owned multistep planning to the factual sensory goal.
     /// This never bypasses the ordinary U1 selector or Human Protection.
     pub fn set_temporal_goal_replanning(&mut self,enabled:bool)->bool{
@@ -396,6 +402,10 @@ impl ScientificRuntime {
         } else {
             self.validate_raster(raster)?;
         }
+        // The caller's explicit raw desired observation is the only
+        // high-level goal supplied to the physical cold learner. Failed
+        // recognition cannot compromise the ordinary goal transport.
+        let _=self.organism.set_phase_native_temporal_executive_goal(raster);
         self.goal_epoch = self.goal_epoch.checked_add(1)
             .expect("goal epoch exhausted");
         self.goal = Some(raster.to_vec());
