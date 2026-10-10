@@ -144,6 +144,15 @@ impl EvoPhase {
             .map_or(0, |g| g.frames_seen)
     }
 
+    pub fn phase_native_grounded_affordance_synapse(
+        &self, word: &str, tile: usize,
+    ) -> Option<usize> {
+        self.phase_native.as_ref()?.grounded_objects.as_ref()?
+            .affordances.iter().find(|a|
+                a.word == word.trim().to_lowercase() && a.tile == tile)
+            .map(|a| a.synapse)
+    }
+
     pub fn phase_native_learned_affordances(&self) -> usize {
         self.phase_native.as_ref().and_then(|n| n.grounded_objects.as_ref())
             .map_or(0, |g| g.affordances.len())
