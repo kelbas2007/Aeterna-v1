@@ -199,8 +199,21 @@ def main():
             f"EXTERNAL_WORLD env={env_id} trained={trained}/8 "
             f"frozen_heldout={held}/4 random={baseline}/4 "
             f"rules={model['rules']} positive_rewards={model['rewarded_examples']} "
-            f"contradictions={model['contradictions']}", flush=True
+            f"contradictions={model['contradictions']} "
+            f"stop_causes={sorted(set(str(ep.get('stopped')) for ep in organism['train']+organism['eval'] if ep.get('stopped')))}", flush=True
         )
+    executed = sum(
+        ep["steps"]
+        for result in report["results"].values()
+        for stage in ("training", "heldout")
+        for ep in result[stage]
+    )
+    # Distinguish genuinely attempted task failure from an agent transport
+    # or U1-arbitration failure. The first run had zero steps in every arm.
+    if executed == 0:
+        args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        raise RuntimeError("INVALID_EXTERNAL_RUN: zero protected motor executions")
+    report["protected_executions"] = executed
     report["all_heldout_successes"] = sum(
         r["heldout_successes"] for r in report["results"].values())
     report["random_heldout_successes"] = sum(
