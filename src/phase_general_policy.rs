@@ -217,6 +217,7 @@ impl EvoPhase {
         state.retained_events=1;
         if let Some(value)=state.value_learning.as_mut(){
             value.initial=Self::general_hash(raw);
+            if value.abstraction.is_some() {value.initial_frame=PhaseValueAbstraction::pack(raw);}
         }
         true
     }
@@ -264,7 +265,8 @@ impl EvoPhase {
     pub fn is_phase_native_general_synapse(&self,index:usize)->bool{
         self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
             .is_some_and(|s|s.physical_links.contains(&index)
-                || s.value_learning.as_ref().is_some_and(|v|v.memory_link==Some(index)))
+                || s.value_learning.as_ref().is_some_and(|v|v.memory_link==Some(index)
+                    || v.abstraction.as_ref().is_some_and(|a|a.link==index)))
     }
     pub fn begin_phase_native_general_episode(&mut self){
         let learning=self.phase_native.as_ref()

@@ -29,6 +29,7 @@ struct PhaseRelationalWorkspace {
     online_acquisition:bool,
     first_appearances:Vec<Vec<u8>>,
     subject_scene:u64,
+    subject_observation:Vec<f32>,
 }
 impl PhaseRelationalWorkspace{
     fn raw_dim(&self)->usize {
@@ -81,13 +82,17 @@ impl PhaseRelationalWorkspace{
             candidates.iter().take(12).map(|(_,sig)|sig.clone()).collect()
         } else {Vec::new()};
         self.subject_scene=0;
+        self.subject_observation.clear();
         let mut unique=Vec::<Vec<u8>>::new();
         for (_,sig) in &candidates {
             if !unique.contains(sig){unique.push(sig.clone());}
         }
         if unique.len()==1 {
             self.subject=unique.first().cloned();
-            if self.online_acquisition {self.subject_scene=EvoPhase::general_hash(raw);}
+            if self.online_acquisition {
+                self.subject_scene=EvoPhase::general_hash(raw);
+                self.subject_observation=raw.to_vec();
+            }
         }
         // No arbitrary single guess when multiple plausible foreground
         // objects exist; retain a bounded uncertainty SET. A later
@@ -117,6 +122,7 @@ impl PhaseRelationalWorkspace{
                 // a singleton seen at a branch is not automatically a goal cue.
                 self.subject=unique.first().cloned();
                 self.subject_scene=EvoPhase::general_hash(raw);
+                self.subject_observation=raw.to_vec();
             }
         }
         if !self.hypotheses.is_empty(){
@@ -203,7 +209,7 @@ impl EvoPhase {
             first_view_had_subject:false,
             seen_frames:0,observed_matches:0,observed_contrasts:0,
             online_acquisition:false,
-            first_appearances:Vec::new(),subject_scene:0,
+            first_appearances:Vec::new(),subject_scene:0,subject_observation:Vec::new(),
         });
         true
     }

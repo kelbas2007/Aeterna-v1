@@ -236,6 +236,21 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                 send(out,&json!({"type":"context_value_learning_ack",
                     "accepted":accepted}))?;
             }
+            "value_abstraction" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                send(out,&json!({"type":"value_abstraction_ack",
+                    "accepted":rt.enable_value_abstraction()}))?;
+            }
+            "value_abstraction_lesion" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                send(out,&json!({"type":"value_abstraction_lesion_ack",
+                    "accepted":rt.lesion_value_abstraction_for_control()}))?;
+            }
+            "value_predicates" => {
+                let rt=runtime.as_ref().ok_or("init required")?;
+                send(out,&json!({"type":"value_predicates",
+                    "nodes":rt.organism().phase_native_value_predicate_programs()}))?;
+            }
             "embodied_navigation" => {
                 let rt=runtime.as_mut().ok_or("init required")?;
                 let accepted=rt.enable_embodied_navigation();
@@ -294,6 +309,7 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "general_rewards":rt.organism().phase_native_general_rewards(),
                     "general_updates":rt.organism().phase_native_general_updates(),
                     "value_states":rt.organism().phase_native_value_state_count(),
+                    "value_abstraction":rt.organism().phase_native_value_abstraction_status(),
                     "innate_bias_enabled":rt.organism().phase_native_innate_enabled(),
                     "innate_experience_events":rt.organism().phase_native_innate_readout()
                         .map_or(0,|r|r.observed_events),

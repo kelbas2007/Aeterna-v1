@@ -4,12 +4,27 @@
 const GENERAL_VALUE_CAPACITY: usize = 2048;
 const GENERAL_VALUE_EPISODE_CAPACITY: usize = 256;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct PhaseGeneralValueState {
     key: u64,
+    // Packed factual observations for opt-in acquired predicate rules.
+    features: Vec<u64>,
     values: Vec<f32>,
     visits: Vec<u32>,
     outcomes: Vec<Vec<PhaseGeneralValueOutcome>>,
+}
+
+impl std::fmt::Debug for PhaseGeneralValueState {
+    fn fmt(&self, f:&mut std::fmt::Formatter<'_>)->std::fmt::Result {
+        // Fingerprinting every protected action must cover acquired features
+        // without formatting thousands of packed sensor words as decimal text.
+        let digest=self.features.iter().fold(0xcbf29ce484222325u64,
+            |h,&word|(h^word).wrapping_mul(0x100000001b3));
+        f.debug_struct("PhaseGeneralValueState").field("key",&self.key)
+            .field("feature_words",&self.features.len()).field("feature_digest",&digest)
+            .field("values",&self.values).field("visits",&self.visits)
+            .field("outcomes",&self.outcomes).finish()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -34,6 +49,8 @@ struct PhaseGeneralValueLearning {
     states: Vec<PhaseGeneralValueState>,
     episode: Vec<PhaseGeneralValueTransition>,
     initial: u64,
+    initial_frame: Vec<u64>,
+    abstraction: Option<PhaseValueAbstraction>,
     memory_link: Option<usize>,
     motors: usize,
 }
@@ -42,6 +59,7 @@ impl PhaseGeneralValueLearning {
     fn clear_episode(&mut self) {
         self.episode.clear();
         self.initial = 0;
+        self.initial_frame.clear();
     }
 
     fn state(&self, key: u64) -> Option<&PhaseGeneralValueState> {
@@ -64,6 +82,7 @@ impl PhaseGeneralValueLearning {
         }
         self.states.push(PhaseGeneralValueState {
             key,
+            features: Vec::new(),
             values: vec![0.0; self.motors],
             visits: vec![0; self.motors],
             outcomes: vec![Vec::new(); self.motors],
@@ -165,6 +184,12 @@ impl PhaseGeneralValueLearning {
         if rewarded {
             self.episode.clear();
         }
+        if let Some(abstraction) = self.abstraction.as_mut() {
+            abstraction.completed = abstraction.completed.saturating_add(1);
+            if abstraction.completed % 16 == 0 {
+                abstraction.fit(&self.states);
+            }
+        }
     }
 }
 
@@ -218,6 +243,8 @@ impl EvoPhase {
             states: Vec::new(),
             episode: Vec::new(),
             initial: 0,
+            initial_frame: Vec::new(),
+            abstraction: None,
             memory_link,
             motors: self.config.motor_cells,
         });
@@ -320,7 +347,10 @@ impl EvoPhase {
                     .count()
             })
             .collect::<Vec<_>>();
-        let unknown = state.is_none();
+        let inferred = if state.is_none() && !learning {
+            self.value_abstraction_prediction(raw)
+        } else { None };
+        let unknown = state.is_none() && inferred.is_none();
         let untried = attempts.iter().any(|&n| n == 0);
         let mut best = None::<PhaseGeneralDecision>;
         for action in 0..self.config.motor_cells {
@@ -336,7 +366,7 @@ impl EvoPhase {
             if unknown && untried && attempts[action] > 0 {
                 continue;
             }
-            let q = state.map_or(0.0, |s| s.values[action]);
+            let q = state.map_or_else(|| inferred.as_ref().map_or(0.0, |p| p[action]), |s| s.values[action]);
             let visits = state.map_or(0, |s| s.visits[action]);
             let jitter = ((salt ^ (action as u64).wrapping_mul(0xD6E8FEB86659FD93))
                 .wrapping_mul(0xA0761D6478BD642F)
@@ -382,6 +412,8 @@ impl EvoPhase {
         let Some(after) = self.general_value_key(post, true) else {
             return false;
         };
+        let before_features = self.value_abstraction_features(pre, false);
+        let after_features = self.value_abstraction_features(post, true);
         let native = self.phase_native.as_mut().unwrap();
         let learning = native.config.learning_enabled;
         let policy = native.general_policy.as_mut().unwrap();
@@ -396,6 +428,12 @@ impl EvoPhase {
         let value = policy.value_learning.as_mut().unwrap();
         value.ensure(before);
         value.ensure(after);
+        if let Some(features) = before_features {
+            value.states.iter_mut().find(|s|s.key==before).unwrap().features=features;
+        }
+        if let Some(features) = after_features {
+            value.states.iter_mut().find(|s|s.key==after).unwrap().features=features;
+        }
         let state = value.states.iter_mut().find(|s| s.key == before).unwrap();
         state.visits[action] = state.visits[action].saturating_add(1);
         let transition = PhaseGeneralValueTransition {

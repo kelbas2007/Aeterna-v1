@@ -56,6 +56,7 @@ cargo test --locked --release --test grounded_object_memory \
     --test innate_scaffold_native --test developmental_history_alias \
     --test episode_sequence_replay --test relational_workspace_native
 cargo test --locked --release --test context_value_learning
+cargo test --locked --release --test value_abstraction_learning
 cargo test --locked --release --test primitive_argument_transfer same_acquired_definition_accepts_new_arguments_without_retraining -- --exact
 cargo test --locked --release --test primitive_argument_transfer factual_experience_selects_rebinding_and_runtime_reuses_original_operations -- --exact
 cargo test --locked --release --test primitive_argument_transfer factual_argument_calls_have_synapse_addresses_and_lesion_controls -- --exact

@@ -256,6 +256,13 @@ impl ScientificRuntime {
     pub fn enable_context_value_learning(&mut self)->bool{
         self.organism.enable_phase_native_context_value_learning()
     }
+    pub fn enable_value_abstraction(&mut self)->bool{
+        self.organism.enable_phase_native_value_abstraction()
+    }
+    pub fn lesion_value_abstraction_for_control(&mut self)->bool{
+        let Some(link)=self.organism.phase_native_value_abstraction_link() else{return false;};
+        self.organism.perturb_phase_native_synapse_for_control(link,0.0,0.0).is_some()
+    }
 
     pub fn enable_innate_scaffold(&mut self)->bool{
         self.organism.enable_phase_native_innate_scaffold()

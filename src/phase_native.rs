@@ -280,6 +280,7 @@ impl EvoPhase {
                 work.subject=None;
                 work.first_appearances.clear();
                 work.subject_scene=0;
+                work.subject_observation.clear();
                 work.hypotheses.clear();
                 work.first_view_had_subject=false;
                 work.seen_frames=0;
@@ -352,6 +353,7 @@ impl EvoPhase {
                 work.subject=None;
                 work.first_appearances.clear();
                 work.subject_scene=0;
+                work.subject_observation.clear();
                 work.hypotheses.clear();
                 work.first_view_had_subject=false;
                 work.seen_frames=0;
@@ -854,6 +856,7 @@ include!("phase_temporal_evidence.rs");
 include!("phase_factor_causality.rs");
 include!("phase_grounded_objects.rs");
 include!("phase_general_policy.rs");
+include!("phase_value_abstraction.rs");
 include!("phase_general_value.rs");
 include!("phase_relational_workspace.rs");
 include!("phase_innate_scaffold.rs");
