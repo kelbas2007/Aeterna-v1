@@ -175,6 +175,22 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                 send(out,&json!({"type":"innate_scaffold_ack",
                     "accepted":accepted}))?;
             }
+            "relational_workspace" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                let accepted=rt.enable_relational_workspace();
+                send(out,&json!({"type":"relational_workspace_ack",
+                    "accepted":accepted}))?;
+            }
+            "relation_status" => {
+                let rt=runtime.as_ref().ok_or("init required")?;
+                let readout=rt.organism().current_real()
+                    .and_then(|real|rt.organism()
+                        .phase_native_relational_readout(&real.sensory));
+                send(out,&json!({"type":"relation_status",
+                    "bound":rt.organism().phase_native_relational_held_subject(),
+                    "features":readout,
+                    "frames":rt.organism().phase_native_relational_subject_frames()}))?;
+            }
             "sequence_replay" => {
                 let rt=runtime.as_mut().ok_or("init required")?;
                 let accepted=rt.enable_sequence_replay();
@@ -263,6 +279,8 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "developmental_memory_events":rt.organism().phase_native_developmental_retained_events(),
                     "rewarded_episodic_memories":rt.organism().phase_native_episodic_count(),
                     "failed_episodic_experiences":rt.organism().phase_native_episodic_failures(),
+                    "relational_bound":rt.organism().phase_native_relational_held_subject(),
+                    "relational_frames":rt.organism().phase_native_relational_subject_frames(),
                     "learned_affordances":rt.organism().phase_native_learned_affordances()
                 }))?;
             }
