@@ -1,0 +1,42 @@
+name: Cold self-acquired causal goal model development
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/scientific_runtime.rs'
+      - 'tests/cold_goal1_development.rs'
+      - '.github/workflows/cold-goal1-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cold-goal1-develop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cold-autonomy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile self-acquisition and existing physical replanning targets
+        run: cargo check --locked --test cold_goal1_development --test goal_replan_physical
+      - name: Measure unguided acquisition and changed-world planning
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test cold_goal1_development cold_goal1_unguided_causal_model_to_goal_and_drift_development -- --exact --nocapture 2>&1 | tee cold-goal1.log
+      - name: Preserve complete positive and negative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cold-goal1-development
+          path: cold-goal1.log
+          if-no-files-found: ignore
