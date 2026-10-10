@@ -266,8 +266,19 @@ impl EvoPhase {
         for trace in &mut model.eligibility{
             for v in trace.iter_mut(){*v*=GENERAL_TRACE_DECAY;}
         }
-        for (trace,feature) in model.eligibility[action].iter_mut().zip(&actor_before){
-            *trace=(*trace+*feature).clamp(-8.0,8.0);
+        // Competitive temporal synapses: when a physically selected motor
+        // succeeds, its actual cue-action state strengthens while other
+        // alternatives at the *same preceding state* are inhibited.
+        // This prevents a common preparatory motor from absorbing all
+        // delayed reward across distinct later decisions.
+        // These signed traces are based ONLY on executed action and factual
+        // PRE, never on evaluator-supplied correct action labels.
+        let rivals=(model.eligibility.len().saturating_sub(1)).max(1) as f32;
+        for (motor,trace) in model.eligibility.iter_mut().enumerate(){
+            let direction=if motor==action{1.0}else{-1.0/rivals};
+            for (t,feature) in trace.iter_mut().zip(&actor_before){
+                *t=(*t+direction*(*feature)).clamp(-8.0,8.0);
+            }
         }
         // Positive factual terminal reward beats weak novelty by design.
         // Near-zero nonterminal effects are not task-success substitutes.
