@@ -13,6 +13,14 @@ const GENERAL_TRACE_DECAY:f32=0.91;
 const GENERAL_LEARNING_RATE:f32=0.10;
 
 #[derive(Debug,Clone)]
+struct PhaseGeneralRememberedEvent {
+    // Learned from REAL PRE/action/POST and positive external outcome.
+    // Includes remembered earlier context, never a teacher's object labels.
+    context: Vec<f32>,
+    action: usize,
+    rewarded_experiences: u32,
+}
+#[derive(Debug,Clone)]
 struct PhaseGeneralPolicy {
     weights: Vec<Vec<f32>>,
     predictions: Vec<Vec<f32>>,
@@ -26,6 +34,8 @@ struct PhaseGeneralPolicy {
     developmental_memory:bool,
     working_trace:Vec<f32>,
     retained_events:u64,
+    episodic_recall:bool,
+    rewarded_event_memory:Vec<PhaseGeneralRememberedEvent>,
     // Temporary lifetime-episode history, never transferred as knowledge.
     recent:Vec<(u64,usize)>,
     eligibility:Vec<Vec<f32>>,
@@ -96,6 +106,7 @@ impl EvoPhase {
             steps:0,updates:0,positive_rewards:0,
             developmental_memory:false,
             working_trace:vec![0.0;GENERAL_DIM],retained_events:0,
+            episodic_recall:false,rewarded_event_memory:Vec::new(),
             recent:Vec::new(),
             eligibility:vec![vec![0.0;GENERAL_ACTOR_DIM];n],
         });
@@ -113,6 +124,28 @@ impl EvoPhase {
         state.working_trace.fill(0.0);
         state.retained_events=0;
         true
+    }
+    /// Richer autobiographical representation: persist successful factual
+    /// experience-context-action bindings, not only average motor utilities.
+    /// Requires a history state and has NO world names or motor semantics.
+    pub fn enable_phase_native_episodic_recall(&mut self)->bool{
+        let Some(model)=self.phase_native.as_mut()
+            .and_then(|n|n.general_policy.as_mut()) else{return false;};
+        if !model.developmental_memory||model.episodic_recall{return false;}
+        model.episodic_recall=true;
+        true
+    }
+    pub fn phase_native_episodic_count(&self)->usize{
+        self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
+            .map_or(0,|m|m.rewarded_event_memory.len())
+    }
+    fn general_cosine(a:&[f32],b:&[f32])->f32{
+        if a.len()!=b.len(){return 0.0;}
+        let dot=a.iter().zip(b).map(|(x,y)|x*y).sum::<f32>();
+        let aa=a.iter().map(|x|x*x).sum::<f32>();
+        let bb=b.iter().map(|x|x*x).sum::<f32>();
+        if aa<1.0e-8||bb<1.0e-8 {return 0.0;}
+        dot/(aa.sqrt()*bb.sqrt())
     }
     pub fn phase_native_developmental_memory_enabled(&self)->bool{
         self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
@@ -184,6 +217,33 @@ impl EvoPhase {
         let h=Self::general_hash(raw);
         let seen=|a:usize|model.recent.iter().any(|&(state,action)|
             state==h && action==a);
+        // A past successful experience can be RECOGNIZED as a distinct
+        // embodied event even when the currently visible pixels are identical
+        // after different histories. Real physical synapses are required.
+        if model.episodic_recall {
+            let mut matches=model.rewarded_event_memory.iter()
+                .filter_map(|event|{
+                    let link=*model.physical_links.get(event.action)?;
+                    let physical=conductance(&self.cells,&self.synapses[link],
+                        native.config.coherence_floor);
+                    if physical<=1e-7{return None;}
+                    let similarity=Self::general_cosine(
+                        &features,&event.context);
+                    Some((event.action,similarity,link))
+                }).collect::<Vec<_>>();
+            matches.sort_by(|a,b|b.1.total_cmp(&a.1));
+            if let Some(&(action,score,synapse))=matches.first(){
+                let runner=matches.iter().skip(1)
+                    .filter(|entry|entry.0!=action)
+                    .map(|entry|entry.1)
+                    .fold(f32::NEG_INFINITY,f32::max);
+                if score>=0.975 && score>runner+0.01 {
+                    return Some(PhaseGeneralDecision{
+                        action,score:score*3.0,synapse
+                    });
+                }
+            }
+        }
         let novelty_possible=(0..self.config.motor_cells).any(|a|!seen(a));
         let mut best=None::<PhaseGeneralDecision>;
         for action in 0..self.config.motor_cells{
@@ -284,6 +344,25 @@ impl EvoPhase {
         // Near-zero nonterminal effects are not task-success substitutes.
         let feedback=if reward>0.0{
             model.positive_rewards=model.positive_rewards.saturating_add(1);
+            if model.episodic_recall {
+                let previous=model.rewarded_event_memory.iter_mut()
+                    .find(|e|e.action==action &&
+                        Self::general_cosine(&e.context,&actor_before)>=0.998);
+                if let Some(event)=previous {
+                    event.rewarded_experiences=
+                        event.rewarded_experiences.saturating_add(1);
+                } else {
+                    if model.rewarded_event_memory.len()>=128 {
+                        model.rewarded_event_memory.remove(0);
+                    }
+                    model.rewarded_event_memory.push(
+                        PhaseGeneralRememberedEvent {
+                            context:actor_before.clone(),action,
+                            rewarded_experiences:1,
+                        }
+                    );
+                }
+            }
             4.0*reward
         }else{
             0.008*novelty-0.002
