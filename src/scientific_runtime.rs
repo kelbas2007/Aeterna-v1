@@ -247,6 +247,12 @@ impl ScientificRuntime {
 
     /// Optional real-world egocentric movement acquisition with no map or
     /// motor-role labels. Keeps original local object skill controls intact.
+    /// Alternative architecture: learned distributed temporal policy,
+    /// bypassing all handwritten object/space motor strategies.
+    pub fn enable_general_policy(&mut self)->bool{
+        self.organism.enable_phase_native_general_policy()
+    }
+
     pub fn enable_embodied_navigation(&mut self)->bool{
         self.organism.enable_phase_native_embodied_navigation()
     }
@@ -458,6 +464,7 @@ impl ScientificRuntime {
         self.prepare_factual_observation(raster)?;
         self.organism.clear_phase_native_context_history();
         self.organism.begin_phase_native_self_object_episode();
+        self.organism.begin_phase_native_general_episode();
         // A new external real observation begins a fresh evidence episode,
         // while preserving acquired cue and motor synapses across the lifetime.
         if self.organism.phase_native_temporal_evidence_enabled() {
@@ -788,6 +795,12 @@ impl ScientificRuntime {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
         }
 
+        // General policy receives only real PRE/action/POST and actual reward;
+        // temporal credit stays internal to the same native carrier.
+        if self.organism.phase_native_general_enabled(){
+            let _=self.organism.observe_phase_native_general_transition(
+                action,&factual_pre,&post,task_outcome);
+        }
         // Sparse external reward is factual only after the protected motor
         // has produced its validated POST. It is neither a privileged goal
         // image nor an environment-provided transition model.
