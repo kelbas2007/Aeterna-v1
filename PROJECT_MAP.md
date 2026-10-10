@@ -640,3 +640,63 @@ persistent relational object identity and
 comparative choice after occlusion, tested against
 true different-history identical-current-frame
 controls plus independent cross-ontology worlds.
+
+## Relational perception and uncertain object identity — 2026-10-10
+
+The independent outside MemoryS7 information-intervention
+[CUE-ACCESS-1](docs/CUE_ACCESS1_RESULT.md) identified TWO
+causally separable deficits: on 22/32 paired layouts the
+relevant initial object was never available to public
+observation, and on the other 10 cue-visible pairs the
+learner's choice did not change when the cue changed.
+Neither episode memory nor motor reward updates alone
+provide useful perceptual inquiry + causal comparison.
+
+**RELATIONAL-WORKSPACE-1 (first architectural attempt):**
+new opt-in [native relational readout](src/phase_relational_workspace.rs)
+feeds actual previous appearance vs later possible
+same/different positional evidence to the SINGLE
+existing learned motor policy, rather than a
+specialized key/ball/motor/route policy.
+Native history+lesion tests PASSED, but on new
+real balanced MemoryS7 pairs external source
+**32/64** rewards vs same-source no-relation
+**32/64** and **0/32** cue-swapped dual successes.
+Cues appeared in 8/32 pairs; the rigid
+single-candidate first-frame constraint bound
+**ZERO** real subjects. Genuine cognitive FAIL.
+[Run 38074563658](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38074563658)
+· [audited result](docs/RELATIONAL_WORKSPACE1_RESULT.md).
+
+**RELATIONAL-HYPOTHESES-2 (new open research):**
+replace the exclusive one-subject initial
+assumption with a bounded SET of uncertain
+observed appearance hypotheses. The same
+generic learned policy receives relation
+features, not raw correct-answer route labels.
+Native tests PASSED **4/4**:
+ambiguous first scene, object absence/occlusion,
+same current pixels with different past,
+physical phase-link lesion/restore, and invariance
+to unseen numeric appearance-code renaming
+with correct response when the matching candidate
+position changes.
+[Native run 38075216087](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38075216087).
+The critical *external* balanced paired MemoryS7
+causal cue-use test was launched separately on
+new train 160000 and heldout 161000 seeds;
+[run 38074923612](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38074923612)
+and [protocol](docs/RELATIONAL_HYPOTHESES2_PROTOCOL.md).
+Do not claim an outside full-goal PASS until actual
+real simulator reward and paired exit-switch
+scorer finish.
+
+Fundamental open challenge: the same carrier
+must **actively acquire relevant missing
+information** (when starting cue wasn't seen),
+retain and revise candidate relations, and
+let the learned relation influence a
+future practical choice. A better native
+binding readout is not yet baby-like
+general intelligence or successful
+autonomous outside reasoning.
