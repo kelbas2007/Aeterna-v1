@@ -1,16 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Embodied-world 1 - paired outside navigation vs unchanged ablation
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_grounded_objects.rs'
-      - 'src/phase_unified_cognition.rs'
-      - 'src/phase_native.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'scripts/external_unstaged_world1.py'
-      - 'docs/EMBODIED_WORLD1_PROTOCOL.md'
-      - '.github/workflows/embodied-world1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

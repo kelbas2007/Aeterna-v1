@@ -1,9 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: General policy 2 - frozen-source new seeds independent replication
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - '.github/workflows/general-policy2-frozen-source.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

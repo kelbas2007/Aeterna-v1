@@ -6,6 +6,10 @@ Start with [the README](../README.md), [project map](../PROJECT_MAP.md) and
 
 ## Current development modes
 
+The [2026-10-10 review](GITHUB_REVIEW_20261010.md) covers integrated external
+MiniGrid interaction, argument transfer, episodic and relational memory,
+their failed external cue-use evaluations, and the consolidated CI.
+
 | Guide | What it covers | Example |
 |---|---|---|
 | [Online learning](ONLINE_LEARNING.md) | Cold raw sensors, bounded receptors and disk checkpoints | `online_learning` |

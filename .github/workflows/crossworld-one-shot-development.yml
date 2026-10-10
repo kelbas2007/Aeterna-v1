@@ -1,11 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Cross-world grounded object memory - one-shot fresh diagnostic
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'scripts/external_crossworld_grounding.py'
-      - 'docs/CROSSWORLD_OBJECT2_PROTOCOL.md'
-      - '.github/workflows/crossworld-one-shot-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

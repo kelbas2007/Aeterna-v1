@@ -1,12 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Developmental history - independent Farama MemoryS7 benchmark
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'tests/developmental_history_alias.rs'
-      - 'scripts/external_memory_history.py'
-      - 'docs/HISTORY_MEMORY1_PROTOCOL.md'
-      - '.github/workflows/history-memory1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

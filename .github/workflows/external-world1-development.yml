@@ -1,14 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: External worlds 1 - Farama MiniGrid real simulator diagnostic
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/bin/external_world_agent.rs'
-      - 'src/phase_factor_causality.rs'
-      - 'src/scientific_runtime.rs'
-      - 'scripts/external_minigrid_benchmark.py'
-      - 'docs/EXTERNAL_WORLD1_PROTOCOL.md'
-      - '.github/workflows/external-world1-development.yml'
   workflow_dispatch:
 permissions:
   contents: read

@@ -1,10 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Child Event 2 - immutable source and branch-conditional MemoryS7 test
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'docs/CHILD_EVENT2_PROTOCOL.md'
-      - '.github/workflows/child-event2-branch-replication.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

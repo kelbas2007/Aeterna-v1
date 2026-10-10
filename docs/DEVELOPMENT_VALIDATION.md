@@ -1,7 +1,31 @@
 # Development integration validation — 2026-10-09
 
-The latest section covers current-source integration into main. Earlier acquired-operation, induction, perception and combined-uncertainty records remain below.
+The latest section covers the 2026-10-10 reviewed integration into main. Earlier acquired-operation, induction, perception and combined-uncertainty records remain below.
 These are open development checks, not sealed intelligence qualifications.
+
+## Reviewed 2026-10-10 integration
+
+Reviewed research `7b84027bb63ba3821e96754d3225df2fc17f773e` contains
+283 commits since previous main `3d53b7461be3599bed857b7c44c3124e22aae7c1`.
+The [review](GITHUB_REVIEW_20261010.md) records bounded external input,
+consolidated ordinary checks and the separation of manual scientific diagnostics.
+
+| Check | Outcome |
+|---|---|
+| `cargo check --locked --all-targets` | PASS after the complete adapter fix |
+| `bash scripts/check.sh` | **201 Rust tests passed, 0 failed**, 8 ignored, 231 filtered across 67 test-binary runs; **6 Python scorer tests passed** |
+| Dataset checksums and statistical crosscheck | PASS |
+| `bash scripts/demo.sh` | Nine learn/restore examples and perception in separate processes, PASS |
+| External bridge readiness | Five actual protected steps in MiniGrid-Empty-5x5-v0, seed 2026101001; **transport smoke only**, no cognitive score |
+| Markdown links | 275 documents, no missing local targets |
+| 28 completed diagnostic workflows | Job bodies and scoring assertions identical; automatic push triggers retired, manual dispatch retained |
+
+The new actor tests reject oversized top-level and factual POST frames before
+the unread tail can become another command. Ordinary frame boundaries and
+native protected-action execution are also checked. Scientific records,
+used seeds, protocols and dataset contents are unchanged. External memory and
+relation failures remain failures; unexamined artifact scores are not inferred
+from green Actions. Original frozen INTEL-4 and archive references remain pinned.
 
 ## Main/research integration and variable-depth controls
 

@@ -1,12 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: External worlds 2 - balanced curiosity on new MiniGrid seeds
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_factor_causality.rs'
-      - 'scripts/external_minigrid_benchmark.py'
-      - 'docs/EXTERNAL_WORLD2_PROTOCOL.md'
-      - '.github/workflows/external-world2-development.yml'
   workflow_dispatch:
 permissions:
   contents: read

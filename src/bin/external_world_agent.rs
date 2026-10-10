@@ -7,7 +7,10 @@ use aeterna_v1::carrier::{EvoConfig, EvoPhase, PhaseMetaControlConfig, PhaseNati
 use aeterna_v1::human_protection::HumanProtectionEvidence;
 use aeterna_v1::scientific_runtime::{ScientificRuntime, StepOutcome};
 use serde_json::{json, Value};
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead, Read, Write};
+
+const MAX_JSONL_FRAME_BYTES: usize = 64 * 1024;
+const FRAME_TOO_LARGE: &str = "JSONL frame exceeds 64 KiB limit";
 
 fn valid_bits(msg: &Value, key: &str, len: usize) -> Result<Vec<f32>, String> {
     let data = msg.get(key).and_then(Value::as_array)
@@ -25,10 +28,12 @@ fn send<W: Write>(out: &mut W, value: &Value) -> Result<(), String> {
     out.flush().map_err(|e| e.to_string())
 }
 fn read<R: BufRead>(input: &mut R) -> Result<Value, String> {
-    let mut line = String::new();
-    let n = input.read_line(&mut line).map_err(|e| e.to_string())?;
+    let mut line = Vec::new();
+    let n = input.take((MAX_JSONL_FRAME_BYTES + 1) as u64)
+        .read_until(b'\n', &mut line).map_err(|e| e.to_string())?;
     if n == 0 { return Err("stdin EOF".into()); }
-    serde_json::from_str(&line).map_err(|e| e.to_string())
+    if n > MAX_JSONL_FRAME_BYTES { return Err(FRAME_TOO_LARGE.into()); }
+    serde_json::from_slice(&line).map_err(|e| e.to_string())
 }
 fn safe() -> HumanProtectionEvidence {
     // These virtual motor actions have no physical human-world effect.
@@ -78,6 +83,8 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
         let msg = match read(input) {
             Ok(v) => v,
             Err(e) if e == "stdin EOF" => return Ok(()),
+            // The oversized frame's unread tail must never become commands.
+            Err(e) if e == FRAME_TOO_LARGE => return Err(e),
             Err(e) => { send(out, &json!({"type":"error","message":e}))?; continue; }
         };
         let operation = msg.get("cmd").and_then(Value::as_str).unwrap_or("");
@@ -105,13 +112,20 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
             "advance" => {
                 let rt = runtime.as_mut().ok_or("init required")?;
                 let mut selected: Option<usize> = None;
+                let mut oversized_post = false;
                 let r = rt.step_unified(
                     |_| Some(safe()),
                     |motor| {
                         selected = Some(motor);
                         send(out, &json!({"type":"action","action":motor}))
                             .map_err(|e| format!("send action: {e}"))?;
-                        let post = read(input)?;
+                        let post = match read(input) {
+                            Ok(post) => post,
+                            Err(e) => {
+                                oversized_post = e == FRAME_TOO_LARGE;
+                                return Err(e);
+                            }
+                        };
                         if post.get("cmd").and_then(Value::as_str) != Some("post") {
                             return Err("expected factual post".into());
                         }
@@ -124,6 +138,7 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                         Ok((sensory, reward))
                     },
                 );
+                if oversized_post { return Err(FRAME_TOO_LARGE.into()); }
                 match r {
                     Ok(StepOutcome::Executed { proposal, .. }) =>
                         send(out, &json!({
@@ -301,6 +316,52 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn oversized_jsonl_frame_terminates_without_interpreting_its_tail() {
+        let mut bytes = vec![b' '; MAX_JSONL_FRAME_BYTES + 1024];
+        bytes.extend_from_slice(b"\n{\"cmd\":\"init\",\"dimension\":8,\"motors\":2}\n");
+        let mut input = io::Cursor::new(bytes);
+        let mut output = Vec::new();
+        assert_eq!(main_loop(&mut input, &mut output), Err(FRAME_TOO_LARGE.into()));
+        assert!(output.is_empty(), "the trailing command must not initialize cognition");
+        assert_eq!(input.position(), (MAX_JSONL_FRAME_BYTES + 1) as u64);
+    }
+
+    #[test]
+    fn normal_jsonl_frames_stay_separate_and_eof_is_preserved() {
+        let mut input = io::Cursor::new(b"{\"cmd\":\"status\"}\n{\"cmd\":\"quit\"}\n");
+        assert_eq!(read(&mut input).unwrap()["cmd"], "status");
+        assert_eq!(read(&mut input).unwrap()["cmd"], "quit");
+        assert_eq!(read(&mut input), Err("stdin EOF".into()));
+    }
+
+    #[test]
+    fn oversized_factual_post_stops_without_acknowledging_or_reading_commands() {
+        let mut observation = vec![0; 588];
+        observation[7] = 1;
+        let messages = [
+            json!({"cmd":"init","dimension":588,"motors":7}),
+            json!({"cmd":"reset","observation":observation,"learning":true}),
+            json!({"cmd":"advance"}),
+        ];
+        let mut bytes = Vec::new();
+        for message in messages {
+            bytes.extend_from_slice(message.to_string().as_bytes());
+            bytes.push(b'\n');
+        }
+        let prefix_len = bytes.len();
+        bytes.extend(std::iter::repeat_n(b' ', MAX_JSONL_FRAME_BYTES + 1024));
+        bytes.extend_from_slice(b"\n{\"cmd\":\"status\"}\n{\"cmd\":\"quit\"}\n");
+        let mut input = io::Cursor::new(bytes);
+        let mut output = Vec::new();
+        assert_eq!(main_loop(&mut input, &mut output), Err(FRAME_TOO_LARGE.into()));
+        let frames: Vec<Value> = String::from_utf8(output).unwrap().lines()
+            .map(|line| serde_json::from_str(line).unwrap()).collect();
+        assert_eq!(frames.iter().filter(|frame| frame["type"] == "action").count(), 1);
+        assert!(!frames.iter().any(|frame| frame["type"] == "advance_ack" || frame["type"] == "status"));
+        assert_eq!(input.position() as usize, prefix_len + MAX_JSONL_FRAME_BYTES + 1);
+    }
+
     #[test]
     fn live_external_bridge_emits_a_native_action_before_any_reward() {
         let mut rt = init(588, 7).unwrap();

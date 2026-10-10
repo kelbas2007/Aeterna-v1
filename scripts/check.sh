@@ -50,6 +50,20 @@ cargo test --locked --release --test goal_replan_physical goal_replan_composes_p
 # edges are acquired only from self-executed protected PRE/action/POST.
 # The first-attempt source-frozen Fresh1 twelve-world evidence is NOT rerun here.
 cargo test --locked --release --test cold_goal1_development cold_goal1_unguided_causal_model_to_goal_and_drift_development -- --exact
+# Current native mechanisms; exact filters keep imported fixtures separate.
+cargo test --locked --release --test grounded_object_memory \
+    --test functional_grounding_native --test general_policy_native \
+    --test innate_scaffold_native --test developmental_history_alias \
+    --test episode_sequence_replay --test relational_workspace_native
+cargo test --locked --release --test primitive_argument_transfer same_acquired_definition_accepts_new_arguments_without_retraining -- --exact
+cargo test --locked --release --test primitive_argument_transfer factual_experience_selects_rebinding_and_runtime_reuses_original_operations -- --exact
+cargo test --locked --release --test primitive_argument_transfer factual_argument_calls_have_synapse_addresses_and_lesion_controls -- --exact
+cargo test --locked --release --test primitive_intrinsic_experiments intrinsic_argument_disagreement_selects_its_own_protected_experiment -- --exact
+cargo test --locked --release --test primitive_native_synaptic_competition physical_synaptic_competition_learns_argument_calls_from_factual_outcomes -- --exact
+cargo test --locked --release --test self_object_effect_native protected_self_experiment_acquires_object_motor_without_teacher_action -- --exact
+cargo test --locked --release --test self_object_effect_native self_object_episode_does_not_repeat_same_motor_at_identical_observation -- --exact
+cargo test --locked --release --bin external_world_agent
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_cue_access_audit.py
 python3 scripts/g21_statistical_crosscheck.py
 python3 scripts/check_docs.py
 cargo build --locked --release --bins --examples

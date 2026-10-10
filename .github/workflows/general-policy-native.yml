@@ -1,15 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: General policy replacement native scientific checks
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_general_policy.rs'
-      - 'src/phase_native.rs'
-      - 'src/phase_unified_cognition.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'tests/general_policy_native.rs'
-      - '.github/workflows/general-policy-native.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

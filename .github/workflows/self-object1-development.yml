@@ -1,16 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Self object effect 1 - zero-motor-tuition external Farama
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_grounded_objects.rs'
-      - 'src/phase_unified_cognition.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'tests/self_object_effect_native.rs'
-      - 'scripts/external_self_affordances.py'
-      - 'docs/SELF_OBJECT1_PROTOCOL.md'
-      - '.github/workflows/self-object1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

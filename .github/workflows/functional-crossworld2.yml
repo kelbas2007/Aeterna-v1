@@ -1,14 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Functional cross-world 2 - external staged skill transfer
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'scripts/external_functional_crossworld.py'
-      - 'scripts/external_functional_grounding.py'
-      - 'src/phase_grounded_objects.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'docs/FUNCTIONAL_CROSSWORLD2_PROTOCOL.md'
-      - '.github/workflows/functional-crossworld2.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

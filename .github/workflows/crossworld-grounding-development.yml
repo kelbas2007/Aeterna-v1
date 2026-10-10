@@ -1,13 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Cross-world grounded object memory - real Farama simulator
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_grounded_objects.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'scripts/external_crossworld_grounding.py'
-      - 'docs/CROSSWORLD_OBJECT1_PROTOCOL.md'
-      - '.github/workflows/crossworld-grounding-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

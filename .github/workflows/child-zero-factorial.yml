@@ -1,9 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Child Zero 1b - isolate innate bias versus experienced-event memory
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - '.github/workflows/child-zero-factorial.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

@@ -1,16 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Child Event 1 - factual whole-episode autobiographical learning
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_general_policy.rs'
-      - 'src/phase_native.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'scripts/external_memory_history.py'
-      - 'tests/episode_sequence_replay.rs'
-      - 'docs/CHILD_EVENT1_PROTOCOL.md'
-      - '.github/workflows/child-event1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

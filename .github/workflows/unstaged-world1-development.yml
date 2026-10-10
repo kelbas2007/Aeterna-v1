@@ -1,14 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Unstaged external world 1 - truly autonomous MiniGrid tasks
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'scripts/external_unstaged_world1.py'
-      - 'src/phase_grounded_objects.rs'
-      - 'src/phase_unified_cognition.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'docs/UNSTAGED_WORLD1_PROTOCOL.md'
-      - '.github/workflows/unstaged-world1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

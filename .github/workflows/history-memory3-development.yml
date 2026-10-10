@@ -1,15 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: History-memory 3 - factual autobiographical recall in real Farama MemoryS7
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_general_policy.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'tests/developmental_history_alias.rs'
-      - 'scripts/external_memory_history.py'
-      - 'docs/HISTORY_MEMORY3_PROTOCOL.md'
-      - '.github/workflows/history-memory3-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

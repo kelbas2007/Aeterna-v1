@@ -2,6 +2,24 @@
 
 **Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
+## Reviewed integration — 2026-10-10
+
+The latest research source at `7b84027` brings 283 commits since the last
+common main/research state. It is integrated as development, with historical
+INTEL-4 source and verdicts preserved. See the [code and GitHub review](docs/GITHUB_REVIEW_20261010.md).
+
+New code includes learned argument bindings, a generic native actor, factual
+episode memory, and relational appearance hypotheses. Physical/native controls
+and limited synthetic causal routes pass. Independent external MemoryS7
+cue-use remains unproven: the corrected 14/24 first report and 7/24 replication
+are FAIL; the first relational test also failed. Raw observations are
+pre-categorized MiniGrid tiles, not learned RGB vision. Full EvoPhase ownership
+and general intelligence remain open.
+
+Ordinary CI now checks these native components and the external JSONL adapter.
+Completed diagnostic jobs are manual, preserving their original scientific
+scores. Green software CI does not qualify an external cognitive gate.
+
 ## Complex 14-state causal world — 2026-10-10
 
 **COMPLEX-WORLD-FRESH1 first-attempt DEVELOPMENT PASS 6/6:**
@@ -31,8 +49,8 @@ This is **bounded synthetic development**, not open-world AGI. These
 world states are separately acquired abstract identifiers; no proof of
 independent internal key/power factorization, noisy action inference,
 learned search algorithm or genuine unseen-topology generality.
-Current changes remain on `research/beyond-intel4`; baseline `main`
-and frozen INTEL-4 snapshot were not altered.
+At the original experiment these changes were research-only. They now enter
+current main as development; the frozen INTEL-4 snapshot is unchanged.
 
 ## Cold self-acquired causal goal replanning — 2026-10-10
 
@@ -61,7 +79,8 @@ synapses, not demonstrably self-invented neural algorithms. Open-world,
 different-topology, noisy-action, multi-goal and completely untrained
 organism qualifications remain absent. The previously guided-edge
 GOAL-REPLAN-1 result and the separate negative stochastic tests remain intact.
-This work is research-only and has NOT been promoted to current `main`.
+This source now enters current main as development, without extending the
+historical INTEL-4 qualification.
 
 ## Goal-conditioned causal replanning — 2026-10-09
 
@@ -105,7 +124,8 @@ The earlier independently consumed STRUCTURE-1 first attempt remains FAIL
 0/4, and these open, feedback-driven diagnostics are *not* sealed new-world
 generality. They establish bounded self-discovery of prerequisites with
 variable length; cost-sensitive terminal correctness at all depths is
-still unqualified. `main` and frozen INTEL-4 remain untouched.
+still unqualified. Current main includes later development; the frozen INTEL-4
+snapshot remains untouched.
 
 ## Latest bounded autonomous-cycle evidence — 2026-10-09
 

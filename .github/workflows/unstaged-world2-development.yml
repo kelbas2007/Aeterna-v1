@@ -1,14 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Unstaged world 2 - generic repetition arbitration
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_grounded_objects.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/phase_native.rs'
-      - 'scripts/external_unstaged_world1.py'
-      - 'docs/UNSTAGED_WORLD2_PROTOCOL.md'
-      - '.github/workflows/unstaged-world2-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

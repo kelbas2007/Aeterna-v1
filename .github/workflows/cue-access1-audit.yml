@@ -1,12 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Cue access 1 - paired causal perception audit without controller changes
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'scripts/external_cue_access_audit.py'
-      - 'tests/test_cue_access_audit.py'
-      - 'docs/CUE_ACCESS1_PROTOCOL.md'
-      - '.github/workflows/cue-access1-audit.yml'
   workflow_dispatch:
 permissions: {contents: read}
 concurrency:

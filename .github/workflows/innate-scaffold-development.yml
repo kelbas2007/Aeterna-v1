@@ -1,15 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Innate developmental scaffold - physical priors and factual learning
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_innate_scaffold.rs'
-      - 'src/phase_native.rs'
-      - 'src/phase_general_policy.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'tests/innate_scaffold_native.rs'
-      - '.github/workflows/innate-scaffold-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

@@ -1,11 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Embodied-world 2 - 4 real outside worlds 256-step matched curriculum
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'scripts/external_unstaged_world1.py'
-      - 'docs/EMBODIED_WORLD2_PROTOCOL.md'
-      - '.github/workflows/embodied-world2-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

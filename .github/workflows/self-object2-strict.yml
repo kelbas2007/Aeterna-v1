@@ -1,11 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Self object 2 - strict outside simulator physical facts
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'scripts/external_self_affordances.py'
-      - 'docs/SELF_OBJECT2_PROTOCOL.md'
-      - '.github/workflows/self-object2-strict.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

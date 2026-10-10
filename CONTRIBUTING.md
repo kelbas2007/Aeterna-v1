@@ -19,7 +19,7 @@ pinned to their original sources and runs.
 
 ## Development checks
 
-The research branch pins Rust 1.99.0. It requires Python 3 for documentation and
+Both working branches pin Rust 1.99.0. It requires Python 3 for documentation and
 statistical checks and Bash for the runners.
 
 ```bash
@@ -65,3 +65,10 @@ and bounded search. Describe both parts accurately. Human Protection and factual
 execution boundaries remain part of the runtime contract.
 
 Recorded-data pipeline integrity and metric qualification are separate: the acquired-operation engine currently misses both declared usefulness targets. Preserve these FAIL reports; do not infer scientific PASS from ordinary CI success. See [the protocol](docs/PRIMITIVE_PROTOCOL.md).
+
+Completed external-world diagnostic workflows are manual. Ordinary pushes
+exercise the native components and Python causal-scorer contracts through
+`scripts/check.sh`; they do not rescore consumed external samples. Optional
+MiniGrid runs need Python 3.10+ and `minigrid==3.1.0`. The external agent accepts
+JSONL frames up to 64 KiB and terminates on oversize input. See the
+[latest integration review](docs/GITHUB_REVIEW_20261010.md).

@@ -1,15 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Functional-grounding 1 - external witnessed motor meaning
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_grounded_objects.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'src/phase_unified_cognition.rs'
-      - 'tests/functional_grounding_native.rs'
-      - 'scripts/external_functional_grounding.py'
-      - 'docs/FUNCTIONAL_GROUNDING1_PROTOCOL.md'
-      - '.github/workflows/functional-grounding-external.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

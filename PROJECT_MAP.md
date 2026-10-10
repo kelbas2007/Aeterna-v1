@@ -1,8 +1,10 @@
 # AETERNA-v1 — project map
 
-Updated 2026-10-09. Four maintained GitHub branches have distinct roles. This is the separate EvoPhase/no-LLM research repository. The mature Codex-AETERNA project is separate.
+Updated 2026-10-10. Four maintained GitHub branches have distinct roles. This is the separate EvoPhase/no-LLM research repository. The mature Codex-AETERNA project is separate.
 
 ## Start here
+
+- **[Latest code and GitHub review](docs/GITHUB_REVIEW_20261010.md)** — 283-commit integration, external-task limitations, bounded JSONL input and consolidated ordinary checks.
 
 - **[Verified INTEL-4 evidence](docs/INTEL4_RESULT_PASS.md)** — first complete independently seeded frozen five-world deterministic system PASS, [Actions 37821849040](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37821849040). Does **not** establish general AGI.
 - **[Current status](STATUS.md)** — qualifications and unresolved capabilities.

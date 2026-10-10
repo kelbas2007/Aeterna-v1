@@ -1,17 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Relation Workspace 1 - balanced external cue causal use and motor ablation
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_relational_workspace.rs'
-      - 'src/phase_general_policy.rs'
-      - 'src/phase_native.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'tests/relational_workspace_native.rs'
-      - 'scripts/external_relational_pairs.py'
-      - 'docs/RELATIONAL_WORKSPACE1_PROTOCOL.md'
-      - '.github/workflows/relational-workspace1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

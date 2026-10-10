@@ -1,16 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: General policy 1 - replace task-authored cognition on independent worlds
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_general_policy.rs'
-      - 'src/phase_unified_cognition.rs'
-      - 'src/phase_native.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'scripts/external_unstaged_world1.py'
-      - 'docs/GENERAL_POLICY1_PROTOCOL.md'
-      - '.github/workflows/general-policy1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

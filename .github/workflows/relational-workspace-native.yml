@@ -1,15 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Relational workspace - same image different history native controls
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_relational_workspace.rs'
-      - 'src/phase_general_policy.rs'
-      - 'src/phase_native.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'tests/relational_workspace_native.rs'
-      - '.github/workflows/relational-workspace-native.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:

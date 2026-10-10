@@ -1,16 +1,7 @@
+# Manual diagnostic: repeatable native controls are covered by scripts/check.sh.
+# Preserve original runs and score verdicts; ordinary pushes do not rescore them.
 name: Child Zero 1 - innate priors and episode memory vs identical learner
 on:
-  push:
-    branches: ['research/beyond-intel4']
-    paths:
-      - 'src/phase_innate_scaffold.rs'
-      - 'src/phase_general_policy.rs'
-      - 'src/phase_native.rs'
-      - 'src/scientific_runtime.rs'
-      - 'src/bin/external_world_agent.rs'
-      - 'scripts/external_unstaged_world1.py'
-      - 'docs/CHILD_ZERO_WORLD1_PROTOCOL.md'
-      - '.github/workflows/child-zero1-development.yml'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
