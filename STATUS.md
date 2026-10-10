@@ -2,6 +2,38 @@
 
 **Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
+## Complex 14-state causal world — 2026-10-10
+
+**COMPLEX-WORLD-FRESH1 first-attempt DEVELOPMENT PASS 6/6:**
+[Actions 38026527091](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38026527091).
+The same frozen EvoPhase `src/` tree was verified before running an
+unused seed with six shuffled raw visual-state and opaque motor assignments.
+Each separate organism cold-acquired all **17 physical factual transitions**
+in a new **14-state** key→generator→gate labyrinth with misleading
+branches, recoverable traps and a **nine-action** shortest goal route.
+All 6 executed that 9-action route after checkpoint with frozen U1,
+then actually observed a hidden blocked transition, executed both
+state-conditioned detour links and reached the target again in 11–16
+protected actions (0 blocked/unsupported).
+
+The first uncorrected open trial [38025843171](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38025843171)
+is preserved as **FAIL 0/4** on its full causal criterion: equally long
+routes prevented any actual contradictory edge observation. The
+[recorded open benchmark correction](docs/COMPLEX_WORLD1_AMENDMENT.md)
+made the detour longer; a subsequent open [4/4](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38026192943)
+passed before preregistering fresh1. The source-frozen fresh result
+is thus **independent in motor/state roles, not independent in graph
+topology**.
+
+[Detailed evidence and interpretation](docs/COMPLEX_WORLD1_RESULT.md) ·
+[First-attempt protocol](docs/COMPLEX_WORLD_FRESH1_PROTOCOL.md).
+This is **bounded synthetic development**, not open-world AGI. These
+world states are separately acquired abstract identifiers; no proof of
+independent internal key/power factorization, noisy action inference,
+learned search algorithm or genuine unseen-topology generality.
+Current changes remain on `research/beyond-intel4`; baseline `main`
+and frozen INTEL-4 snapshot were not altered.
+
 ## Cold self-acquired causal goal replanning — 2026-10-10
 
 **First-attempt COLD-GOAL-FRESH1 DEVELOPMENT PASS — 12/12** new opaque
