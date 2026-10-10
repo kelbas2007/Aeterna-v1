@@ -233,8 +233,16 @@ impl EvoPhase {
             && changed_tiles.iter().copied().find(|&i| i != tile)
                 .and_then(|i| memory.tile_signature(after, i))
                 .as_ref() == target.as_ref();
+        // Opening an occluding object can reveal previously unobserved
+        // pixels behind it. Those new observations are a legitimate
+        // consequence, not evidence the camera moved.
+        let reveal = changed_tiles.contains(&tile)
+            && changed_tiles.iter().copied().all(|i| {
+                i == tile || before[i * stride..(i + 1) * stride]
+                    .iter().all(|&value| value == 0.0)
+            });
         let witness = correct && local_changed
-            && (changed_tiles == vec![tile] || transfer);
+            && (changed_tiles == vec![tile] || transfer || reveal);
         if witness && memory.affordances.len() < 64 {
             if let Some(record) = memory.affordances.iter_mut().find(|a|
                 a.category == lex.category && a.tile == tile && a.action == action
