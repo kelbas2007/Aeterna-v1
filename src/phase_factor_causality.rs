@@ -296,6 +296,71 @@ impl EvoPhase {
         }
         let start = factor_bits(&self.current_real.as_ref()?.sensory)?;
         if factor_bits(goal)?.len() != start.len() { return None; }
+
+        // External sparse-reward worlds have no pre-specified goal image.
+        // Before any rewarding outcome, acquire broad motor experience
+        // rather than repeatedly taking the lowest motor ID in every unseen
+        // camera frame. No simulator action/observation meanings are used.
+        if model.external_reward_mode {
+            let mut seed = self.tick ^ 0xC0DE_5EED_E701_u64;
+            for &bit in &start {
+                seed ^= u64::from(bit);
+                seed = seed.wrapping_mul(0x100_0000_01b3);
+            }
+            let mut best: Option<(usize, f32)> = None;
+            for action in 0..self.config.motor_cells {
+                let local: u32 = model.trials.iter().filter(|trial|
+                    trial.motor == action && trial.before == start)
+                    .map(|trial| trial.observations).sum();
+                let total: u32 = model.trials.iter().filter(|trial|
+                    trial.motor == action).map(|trial| trial.observations).sum();
+                let noop: u32 = model.trials.iter().filter(|trial|
+                    trial.motor == action && trial.no_op)
+                    .map(|trial| trial.observations).sum();
+                let change_reliability = if total > 0 {
+                    (total - noop.min(total)) as f32 / total as f32
+                } else { 0.5 };
+
+                let predicted_novelty = model.rules.iter()
+                    .filter(|rule| rule.motor == action
+                        && self.phase_factor_live(rule) > 1.0e-8
+                        && factor_match(&start, &rule.guards))
+                    .map(|rule| {
+                        let mut future = start.clone();
+                        for &(index, _, value) in &rule.effects {
+                            future[index] = value;
+                        }
+                        if future == start { return 0.0; }
+                        let known = model.trials.iter()
+                            .filter(|trial| trial.before == future)
+                            .map(|trial| trial.observations).sum::<u32>();
+                        1.0 / (1.0 + known as f32)
+                    }).fold(0.0f32, f32::max);
+
+                // Deterministic episode-varying stochastic tie break.
+                // These bits are derived only from carrier time/real senses.
+                let mut noise = seed ^ (action as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+                noise ^= noise >> 12;
+                noise ^= noise << 25;
+                noise ^= noise >> 27;
+                let jitter = ((noise.wrapping_mul(0x2545_F491_4F6C_DD1D) >> 40)
+                    as f32) / (1u32 << 24) as f32;
+                let score = 0.46 / (1.0 + local as f32)
+                    + 0.13 / (1.0 + total as f32).sqrt()
+                    + 0.13 * change_reliability
+                    + 0.15 * predicted_novelty
+                    + 0.13 * jitter;
+                if best.is_none_or(|(_, old)| score > old + 1.0e-6) {
+                    best = Some((action, score));
+                }
+            }
+            let (action, score) = best?;
+            return Some(PhaseFactorChoice {
+                action, evidence_synapse: None,
+                steps: 1, planned: false, support: score.clamp(0.0, 1.0),
+            });
+        }
+
         let mut q = std::collections::VecDeque::from([
             (start.clone(), None::<usize>, 0usize),
         ]);
