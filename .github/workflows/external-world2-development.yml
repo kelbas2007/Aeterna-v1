@@ -1,0 +1,62 @@
+name: External worlds 2 - balanced curiosity on new MiniGrid seeds
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_factor_causality.rs'
+      - 'scripts/external_minigrid_benchmark.py'
+      - 'docs/EXTERNAL_WORLD2_PROTOCOL.md'
+      - '.github/workflows/external-world2-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent-simulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      SDL_VIDEODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Fetch independent environments from Farama release
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Check protected motor and build CPU-first runtime
+        run: |
+          cargo test --locked --release --bin external_world_agent
+          cargo build --locked --release --bin external_world_agent
+      - name: Execute three new external world seed families
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_minigrid_benchmark.py \
+            --agent target/release/external_world_agent \
+            --output external-world2.json --budget 64 \
+            --seed-offset 1000 2>&1 | tee external-world2.log
+      - name: Enforce nonzero protected actions without changing cognitive score
+        run: |
+          python - <<'PY'
+          import json
+          x = json.load(open("external-world2.json"))
+          assert x["protected_executions"] > 0
+          assert x["heldout_seeds"] == [1900,1901,1902,1903]
+          PY
+          grep -F 'EXTERNAL_WORLD_SUMMARY' external-world2.log
+      - name: Keep factual failures and positives
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-world2-new-seed-evidence
+          path: |
+            external-world2.json
+            external-world2.log
+          if-no-files-found: ignore
