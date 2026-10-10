@@ -1,0 +1,75 @@
+name: Relational Hypotheses 2 - balanced external cue uncertainty controls
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_relational_workspace.rs'
+      - 'src/phase_general_policy.rs'
+      - 'src/phase_native.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'tests/relational_workspace_native.rs'
+      - 'scripts/external_relational_hypothesis_pairs.py'
+      - 'docs/RELATIONAL_HYPOTHESES2_PROTOCOL.md'
+      - '.github/workflows/relational-hypotheses2-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  actual-causal-pairs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install independently maintained Farama physics
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Native real phase comparison and episode controls
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test relational_workspace_native -- --nocapture
+          cargo test --locked --release --test general_policy_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Execute genuinely paired counterfactual cue interventions
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_relational_hypothesis_pairs.py \
+            --agent target/release/external_world_agent \
+            --output relational-hypotheses2.json \
+            2>&1 | tee relational-hypotheses2.log
+      - name: Check paired input history and actual cognitive score
+        run: |
+          python - <<'PY'
+          import json
+          result=json.load(open('relational-hypotheses2.json'))
+          assert result['test_seeds']==list(range(161000,161032))
+          assert result['train_seeds']==list(range(160000,160128))
+          a=result['arms']['autobiographical_no_relation']
+          b=result['arms']['autobiographical_with_relation']
+          assert not a['relational'] and b['relational']
+          assert a['summary']['pairs']==b['summary']['pairs']==32
+          assert a['summary']['constant_exit_upper_bound']==32
+          assert b['summary']['constant_exit_upper_bound']==32
+          print('RELATIONAL_HYPOTHESES2_SCORE '
+                f"status={result['verdict']} "
+                f"control_rewards={a['summary']['successes']}/64 "
+                f"relation_rewards={b['summary']['successes']}/64 "
+                f"both_correct_pairs={b['summary']['both_correct']}/32 "
+                f"exit_switches={b['summary']['exit_switch_pairs']}/32 "
+                f"initial_information_observed={b['summary']['exposed_pairs']}/32")
+          PY
+      - name: Preserve all raw evidence even when cognitive result FAILS
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relational-hypotheses2-balanced-cue-causality
+          path: |
+            relational-hypotheses2.json
+            relational-hypotheses2.log
+          if-no-files-found: ignore
