@@ -1,0 +1,90 @@
+name: Child Event 1 - factual whole-episode autobiographical learning
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_general_policy.rs'
+      - 'src/phase_native.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'scripts/external_memory_history.py'
+      - 'tests/episode_sequence_replay.rs'
+      - 'docs/CHILD_EVENT1_PROTOCOL.md'
+      - '.github/workflows/child-event1-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  actual-memory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Load independent maintained Farama world
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Native whole-event, history-alias, freeze and physical lesion checks
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test episode_sequence_replay -- --nocapture
+          cargo test --locked --release --test developmental_history_alias -- --nocapture
+          cargo test --locked --release --test general_policy_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Same trained generic learner WITHOUT episodic history
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --seed-offset 30000 \
+            --output child-event1-control.json \
+            2>&1 | tee child-event1-control.log
+      - name: Whole autobiographical success and failure sequence recall
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --memory --episodic-recall --sequence-replay \
+            --seed-offset 30000 \
+            --output child-event1-memory.json \
+            2>&1 | tee child-event1-memory.log
+      - name: Report only independently rewarded outside task outcomes
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('child-event1-control.json'))
+          m=json.load(open('child-event1-memory.json'))
+          assert a['training_seeds']==m['training_seeds']==list(range(110000,110128))
+          assert a['heldout_seeds']==m['heldout_seeds']==list(range(111000,111024))
+          assert not a['memory'] and not a['episodic_recall'] and not a['sequence_replay']
+          assert m['memory'] and m['episodic_recall'] and m['sequence_replay']
+          assert a['budget']==m['budget']==200
+          assert a['frozen_executions']>0 and m['frozen_executions']>0
+          assert a['random_successes']==m['random_successes']
+          passed=(m['heldout_successes']>=12 and m['heldout_successes']>a['heldout_successes'] and m['heldout_successes']>m['random_successes'])
+          print('CHILD_EVENT1_REAL_TASKS '
+                f"episodic={m['heldout_successes']}/24 "
+                f"reactive={a['heldout_successes']}/24 "
+                f"random={m['random_successes']}/24 "
+                f"episodic_train={m['train_successes']}/128 "
+                f"reward_memory={m['carrier_train'].get('rewarded_episodic_memories',0)} "
+                f"failure_memory={m['carrier_train'].get('failed_episodic_experiences',0)} "
+                f"verdict={'DEVELOPMENT_PASS' if passed else 'DEVELOPMENT_FAIL'}")
+          PY
+      - name: Always retain exact source truth (including failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: child-event1-autobiographical-causal-history
+          path: |
+            child-event1-control.json
+            child-event1-control.log
+            child-event1-memory.json
+            child-event1-memory.log
+          if-no-files-found: ignore
