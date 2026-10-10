@@ -475,3 +475,59 @@ MiniGrid-specific routes or skill modules. Next discriminating
 test requires a history-dependent prediction/belief representation,
 memory lesion, different observations/action compositions, and
 repeated full external heldout success. Do not merge as AGI.
+
+## CHILD-ZERO — biologically inspired initial readiness, NOT preloaded knowledge (2026-10-10)
+
+The user made an explicit architectural requirement that EvoPhase
+should start as a developing infant-like organism, rather than a
+blank frame-reactive RL optimizer: initial needs, unconditioned
+sensorimotor learning biases, attention and early working memory
+should exist BEFORE empirical knowledge of keys, doors or worlds.
+An exhaustive list of specifically INNATE human concepts is not
+scientifically settled. Some newborn abilities also reflect
+prenatal sensory learning. Do not load adult object semantics
+or fabricated human social/language experiences at birth.
+
+[Evidence-graded newborn capability catalogue](docs/CHILD_ZERO_INNATE_SCAFFOLD.md)
+distinguishes neonatal physiological reflexes and general
+preparedness, experimentally observed but contested perceptual
+biases, prenatal familiarity and concepts emerging after birth.
+
+**INNATE-SCAFFOLD-1 implemented (opt-in):**
+[src/phase_innate_scaffold.rs](src/phase_innate_scaffold.rs)
+creates eight conducting physical phase prior connections
+for continuity, orienting, agency, habituation, magnitude,
+regulation, social and speech readiness. No object words,
+faces, language or task models are installed. Generic
+observed protected PRE/ACTION/POST changes gradually acquire
+sensorimotor contingency, novelty/habituation and bounded
+artificial activity/fatigue signals. Social/speech activation
+requires real dedicated sensors, not MiniGrid category bits.
+The physical prior synapses can be lesioned and restored.
+[Native CI 38063663971](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38063663971):
+2/2 innate controls, 2/2 general-policy controls, 2/2
+prior word-grounding controls, plus bridge test PASS.
+
+**CHILD-ZERO-WORLD-1 open development result: 9/16 actual
+heldout full external Farama task rewards** with
+innate scaffold PLUS opt-in within-episode experience memory,
+against 6/16 matched same-source general learner without
+either feature and 2/16 random. Per-world child variant
+4/4 Empty, 4/4 DoorKey, 0/4 MultiRoom, 1/4 Unlock;
+baseline 0/4 Empty, 2/4 DoorKey, 3/4 MultiRoom,
+1/4 Unlock. The pattern is NOT uniform improvement.
+[Actual external run 38063925133](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38063925133)
+· [Protocol](docs/CHILD_ZERO_WORLD1_PROTOCOL.md)
+· [Detailed result](docs/CHILD_ZERO_WORLD1_RESULT.md).
+
+**Confound:** innate initial bias and history-dependent
+working memory were activated TOGETHER, so this success
+CANNOT establish which factor caused the gain. The
+[immutable-source single-factor ablation](.github/workflows/child-zero-factorial.yml)
+tests these separately on the SAME experimental seeds and
+is not a new independent replication. These are soft
+engineered developmental analogies with category-coded
+vision only, not a newborn brain or AGI. Full goal-free,
+self-supervised formation of object identity, proprioception,
+multimodal speech/social perception and human-like
+homeostasis remain open research.
