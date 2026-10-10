@@ -201,8 +201,13 @@ impl EvoPhase {
         let correct = target.as_ref()
             == Some(&memory.categories[lex.category].signature);
         let stride = memory.channels * memory.bits_per_channel;
-        let start = tile * stride;
-        let end = start + stride;
+        let start = tile.saturating_mul(stride);
+        let end = start.saturating_add(stride);
+        if end > before.len() {
+            native.grounded_objects = Some(memory);
+            self.phase_native = Some(native);
+            return false;
+        }
         let local_changed = tile < memory.width * memory.height
             && before[start..end] != after[start..end];
         let rest_stable = before.iter().zip(after).enumerate()
