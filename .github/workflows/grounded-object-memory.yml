@@ -1,0 +1,30 @@
+name: Grounded object memory native controls
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_grounded_objects.rs'
+      - 'src/phase_native.rs'
+      - 'src/carrier.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'tests/grounded_object_memory.rs'
+      - '.github/workflows/grounded-object-memory.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Native grounding and language controls
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test grounded_object_memory -- --nocapture
+          cargo test --locked --release --bin external_world_agent
