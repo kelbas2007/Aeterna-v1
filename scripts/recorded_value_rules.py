@@ -125,7 +125,8 @@ def run(binary, corpus, train_only=False):
                 out.append({"id":r["id"],"input_sha256":hashlib.sha256(bytes(r["bits"])).hexdigest(),
                             "action":action,"success":bool(success),"knn_success":nearest==roles[r["label"]]})
             after=agent.status()
-            for field in ["general_updates","general_rewards","value_states","value_abstraction"]:
+            for field in ["general_updates","general_rewards","value_states","value_abstraction",
+                          "value_representation","value_effects"]:
                 if before[field]!=after[field]:raise ValueError("frozen learned metadata changed")
             report["evaluations"][arm]={"before":before,"after":after,"records":out,
                 "successes":sum(x["success"] for x in out),"knn_successes":sum(x["knn_success"] for x in out)}
@@ -144,6 +145,8 @@ def main():
     if not args.train_only and subprocess.check_output(["git","status","--porcelain","--","src","Cargo.toml","Cargo.lock"],cwd=ROOT,text=True):
         raise SystemExit("Freeze cognitive source before recorded evaluation")
     report={"source":subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip(),
+            "protocol":"VALUE-RULE-TRANSFER-2",
+            "evaluation_scope":"iterative public validation; test records already scored by protocol 1",
             "binary_sha256":hashlib.sha256(args.agent.read_bytes()).hexdigest(),
             "fixture_sha256":{name:hashlib.sha256((ROOT/"tests/data"/name).read_bytes()).hexdigest()
                 for name in (["digits.csv"] if args.corpus=="digits" else ["GunPoint_TRAIN.ts","GunPoint_TEST.ts"])},

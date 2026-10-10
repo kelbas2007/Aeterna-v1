@@ -157,3 +157,73 @@ fn transferred_predicates_use_factual_past_and_lose_it_after_memory_lesion() {
     }
     assert_eq!(actions[0],actions[1]);
 }
+
+#[test]
+fn representation_is_selected_from_acquired_evidence_without_declaring_sensor_units() {
+    let mut e=newborn();
+    let encode=|a:usize,b:usize,new:bool| {
+        let mut raw=vec![0.0;32];
+        for bit in 0..4 {raw[bit]=((a>>bit)&1) as f32;raw[4+bit]=((b>>bit)&1) as f32;}
+        raw[31]=f32::from(new);raw
+    };
+    for _ in 0..8 {
+        for a in 0..16 {
+            for b in 0..16 {
+                if a==b {continue;}
+                let raw=encode(a,b,false);let correct=usize::from(a<b);
+                e.begin_phase_native_general_episode();e.observe_phase_native_general_initial(&raw);
+                for _ in 0..12 {
+                    let action=e.choose_phase_native_general_action(&raw).unwrap().action;
+                    let reward=f32::from(action==correct);
+                    e.observe_phase_native_general_transition(action,&raw,&raw,reward);
+                    if reward>0.0 {break;}
+                }
+            }
+        }
+    }
+    e.set_planning_learning_enabled(false);
+    let (width,cases,correct,total)=e.phase_native_value_representation_status();
+    assert!((1..=8).contains(&width),"a comparison representation should outperform sparse predicates on internal validation");
+    assert!(cases<=512 && correct>0 && total>0);
+    let mut success=0;let mut count=0;
+    for a in 0..16 {
+        for b in 0..16 {
+            if a==b {continue;}
+            let raw=encode(a,b,true);e.begin_phase_native_general_episode();e.observe_phase_native_general_initial(&raw);
+            success+=usize::from(e.choose_phase_native_general_action(&raw).unwrap().action==usize::from(a<b));count+=1;
+        }
+    }
+    assert!(success*100>=count*90,"acquired representation must survive a previously unseen independent sensor");
+}
+
+#[test]
+fn factual_effect_models_reuse_a_skill_at_new_frames_with_opaque_permuted_motors() {
+    for (goal_motor,change_motor) in [(0,1),(2,0)] {
+        let mut e=newborn();
+        for episode in 0..512 {
+            let mut raw=frame(0,episode%2,(episode/2)%32,false);
+            e.begin_phase_native_general_episode();e.observe_phase_native_general_initial(&raw);
+            for _ in 0..24 {
+                let action=e.choose_phase_native_general_action(&raw).unwrap().action;
+                let mut post=raw.clone();let mut reward=0.0;
+                if action==goal_motor && raw[0]==1.0 {post[1]=1.0;reward=1.0;}
+                else if action==change_motor {post[0]=1.0-raw[0];}
+                e.observe_phase_native_general_transition(action,&raw,&post,reward);raw=post;
+                if reward>0.0 {break;}
+            }
+        }
+        e.set_planning_learning_enabled(false);
+        let (active,nodes)=e.phase_native_value_effect_status();
+        assert!(active && nodes>0 && nodes<=3*63);
+        let fingerprint=e.phase_native_learned_fingerprint();
+        for nuisance in 32..48 {
+            for available in 0..2 {
+                let raw=frame(0,available,nuisance,true);
+                e.begin_phase_native_general_episode();e.observe_phase_native_general_initial(&raw);
+                assert_eq!(e.choose_phase_native_general_action(&raw).unwrap().action,
+                    if available==1 {goal_motor}else{change_motor});
+            }
+        }
+        assert_eq!(e.phase_native_learned_fingerprint(),fingerprint);
+    }
+}

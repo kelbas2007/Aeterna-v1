@@ -323,6 +323,8 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "general_updates":rt.organism().phase_native_general_updates(),
                     "value_states":rt.organism().phase_native_value_state_count(),
                     "value_abstraction":rt.organism().phase_native_value_abstraction_status(),
+                    "value_representation":rt.organism().phase_native_value_representation_status(),
+                    "value_effects":rt.organism().phase_native_value_effect_status(),
                     "innate_bias_enabled":rt.organism().phase_native_innate_enabled(),
                     "innate_experience_events":rt.organism().phase_native_innate_readout()
                         .map_or(0,|r|r.observed_events),

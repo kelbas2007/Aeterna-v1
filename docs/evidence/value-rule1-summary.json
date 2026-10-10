@@ -1,0 +1,27 @@
+{
+  "transfer": {
+    "sha256": "11e469c84c1a0b9926c500421c5b78df8cf8467a0cd676d2193b158323adf1ee",
+    "bytes": 736831,
+    "source": "dcd3fa5a0598a5464b5bb1d92a40c02e78990200",
+    "verdict": "CROSS_TASK_DEVELOPMENT_FAIL",
+    "s9": "FAIL"
+  },
+  "digits": {
+    "sha256": "16e704ae70d91157aceab9e11bee836f5b6a22bbbff1329177ab9b04f2882552",
+    "bytes": 58917,
+    "source": "dcd3fa5a0598a5464b5bb1d92a40c02e78990200",
+    "verdict": "RECORDED_RULE_DEVELOPMENT_FAIL",
+    "rules": 200,
+    "lesion": 48,
+    "knn": 353
+  },
+  "gunpoint": {
+    "sha256": "1f3eb51ad4a53003361b72d11cefdc4ef243ce584b7c150b44013a93e92c093c",
+    "bytes": 9480,
+    "source": "dcd3fa5a0598a5464b5bb1d92a40c02e78990200",
+    "verdict": "RECORDED_RULE_DEVELOPMENT_FAIL",
+    "rules": 104,
+    "lesion": 72,
+    "knn": 128
+  }
+}

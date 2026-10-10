@@ -17,11 +17,29 @@ struct PhaseValueRuleNode {
 #[derive(Debug, Clone)]
 struct PhaseValueAbstraction {
     dimension: usize,
+    raw_dimension: usize,
     link: usize,
     nodes: Vec<PhaseValueRuleNode>,
     completed: u32,
     fits: u32,
     trained_states: usize,
+    case_width: usize,
+    cases: Vec<PhaseValueCase>,
+    validation: (usize,usize),
+    effects:Vec<Vec<PhaseValueRuleNode>>,
+    reward_priors:Vec<f32>,
+    activity:Vec<f32>,
+    effect_transfer:bool,
+}
+
+#[derive(Clone)]
+struct PhaseValueCase { words:Vec<u64>, action:usize }
+impl std::fmt::Debug for PhaseValueCase {
+    fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result {
+        let digest=self.words.iter().fold(0xcbf29ce484222325u64,|h,&w|(h^w).wrapping_mul(0x100000001b3));
+        f.debug_struct("PhaseValueCase").field("action",&self.action).field("words",&self.words.len())
+            .field("digest",&digest).finish()
+    }
 }
 
 impl PhaseValueAbstraction {
@@ -52,14 +70,121 @@ impl PhaseValueAbstraction {
         if examples.len() < 8 { return; }
         let motors = states[examples[0].0].values.len();
         let mut nodes = Vec::new();
-        self.grow(states, &examples, motors, 0, VALUE_RULE_NODE_CAPACITY, &mut nodes);
+        self.grow(states, &examples, motors, 0, VALUE_RULE_NODE_CAPACITY, &mut nodes,self.dimension);
         self.nodes = nodes;
         self.trained_states = examples.len();
         self.fits = self.fits.saturating_add(1);
+        if self.completed % 128 == 0 {
+            self.select_representation(states,&examples,motors);
+            self.fit_effects(states,motors);
+        }
+    }
+
+    fn unit(words:&[u64],start:usize,width:usize)->u64 {
+        let shift=start%64;
+        let mut value=words.get(start/64).copied().unwrap_or(0)>>shift;
+        if shift+width>64 {value|=words.get(start/64+1).copied().unwrap_or(0)<<(64-shift);}
+        value&((1<<width)-1)
+    }
+
+    fn case_vote(cases:&[PhaseValueCase],words:&[u64],width:usize,dimension:usize,motors:usize)->Option<Vec<f32>> {
+        if cases.len()<3 {return None;}
+        let mut nearest=[(u64::MAX,usize::MAX);3];
+        for (index,case) in cases.iter().enumerate() {
+            let distance=if width==1 {
+                words.iter().zip(&case.words).map(|(a,b)|(a^b).count_ones() as u64).sum()
+            } else {
+                (0..dimension).step_by(width).map(|i| {
+                    let delta=Self::unit(words,i,width) as i64-Self::unit(&case.words,i,width) as i64;
+                    (delta*delta) as u64
+                }).sum()
+            };
+            let entry=(distance,index);
+            for slot in 0..3 {
+                if entry<nearest[slot] {
+                    for j in (slot+1..3).rev() {nearest[j]=nearest[j-1];}
+                    nearest[slot]=entry;break;
+                }
+            }
+        }
+        let mut out=vec![0.0;motors];
+        for (rank,&(_,index)) in nearest.iter().enumerate() {
+            out[cases[index].action]+=1.0/3.0+0.0001/(rank+1) as f32;
+        }
+        let total=out.iter().sum::<f32>();
+        for value in &mut out {*value/=total;}
+        Some(out)
+    }
+
+    fn select_representation(&mut self,states:&[PhaseGeneralValueState],examples:&[(usize,usize,f32)],motors:usize) {
+        // A bounded internal validation split uses MODEL targets acquired from
+        // real actions, never an external test label. Input packing width is
+        // inferred among generic 1..8-bit groupings; no dataset names/layouts.
+        let chosen=examples.iter().rev().take(512).copied().collect::<Vec<_>>();
+        let training=chosen.iter().enumerate().filter(|(i,_)|i%5!=0).map(|(_,r)|*r).collect::<Vec<_>>();
+        let held=chosen.iter().enumerate().filter(|(i,_)|i%5==0).map(|(_,r)|*r).take(64).collect::<Vec<_>>();
+        if training.len()<8 || held.len()<4 {return;}
+        let mut trial_nodes=Vec::new();
+        self.grow(states,&training,motors,0,VALUE_RULE_NODE_CAPACITY,&mut trial_nodes,self.dimension);
+        let top=|p:&[f32]|p.iter().enumerate().max_by(|(a,x),(b,y)|x.total_cmp(y).then_with(||b.cmp(a))).unwrap().0;
+        let mut best=held.iter().filter(|&&(s,a,_)|Self::tree_prediction(&trial_nodes,&states[s].features)
+            .is_some_and(|p|top(&p)==a)).count();
+        let tree_score=best;let mut width=0;
+        let cases=training.iter().map(|&(s,a,_)|PhaseValueCase {words:states[s].features.clone(),action:a}).collect::<Vec<_>>();
+        for candidate in 1..=8 {
+            let correct=held.iter().filter(|&&(s,a,_)|Self::case_vote(&cases,&states[s].features,candidate,
+                self.dimension,motors).is_some_and(|p|top(&p)==a)).count();
+            if correct>best || (correct==best && width>0 && candidate>width) {best=correct;width=candidate;}
+        }
+        self.validation=(best,held.len());
+        // Prefer the smaller existing predicate program on equal accuracy.
+        self.case_width=if best>tree_score {width} else {0};
+        self.cases=if self.case_width>0 {chosen.iter().map(|&(s,a,_)|
+            PhaseValueCase{words:states[s].features.clone(),action:a}).collect()} else {Vec::new()};
+    }
+
+    fn fit_effects(&mut self,states:&[PhaseGeneralValueState],motors:usize) {
+        let mut rewards=vec![0.0;motors];let mut changed_total=0.0;let mut trials_total=0.0;
+        self.effects=vec![Vec::new();motors];
+        for action in 0..motors {
+            let mut rows=Vec::new();
+            for (index,state) in states.iter().enumerate() {
+                if state.features.len()!=self.dimension.div_ceil(64) {continue;}
+                let outcomes=&state.outcomes[action];
+                let count=outcomes.iter().map(|o|o.count as f32).sum::<f32>();
+                if count<1.0 {continue;}
+                let cost=outcomes.iter().map(|o|o.cost_sum).sum::<f32>()/count;
+                let changed=(1.0-(cost-0.002)/0.010).clamp(0.0,1.0);
+                rewards[action]+=outcomes.iter().map(|o|o.reward_sum).sum::<f32>();
+                changed_total+=changed*count;trials_total+=count;
+                rows.push((index,usize::from(changed>=0.5),count.sqrt().min(8.0)));
+            }
+            if rows.len()>=6 {
+                let mut nodes=Vec::new();
+                self.grow(states,&rows,2,0,63,&mut nodes,self.raw_dimension);
+                self.effects[action]=nodes;
+            }
+        }
+        let total=rewards.iter().sum::<f32>();
+        self.effect_transfer=total>=8.0 && rewards.iter().copied().fold(0.0,f32::max)/total>=0.90
+            && trials_total>0.0 && changed_total/trials_total>=0.10;
+        self.reward_priors=if total>0.0 {rewards.iter().map(|r|r/total).collect()} else {vec![0.0;motors]};
+    }
+
+    fn effect_scores(&self,words:&[u64])->Option<Vec<f32>> {
+        if !self.effect_transfer {return None;}
+        let total=self.activity.iter().sum::<f32>().max(1.0);
+        Some(self.effects.iter().enumerate().map(|(action,nodes)| {
+            let changed=Self::tree_probabilities(nodes,words).map_or(0.5,|p|p[1]);
+            let goal=self.reward_priors[action];
+            // Preferences come from real completion motors and changed views
+            // on successful episodes. No turn/forward names or obstacle IDs.
+            goal*(changed+0.0001)+0.005*self.activity[action]/total*changed
+        }).collect())
     }
 
     fn grow(&self, states: &[PhaseGeneralValueState], rows: &[(usize, usize, f32)],
-        motors: usize, depth: usize, budget: usize, nodes: &mut Vec<PhaseValueRuleNode>) -> usize {
+        motors: usize, depth: usize, budget: usize, nodes: &mut Vec<PhaseValueRuleNode>,features_limit:usize) -> usize {
         let mut votes = vec![0.0; motors];
         for &(_, action, weight) in rows { votes[action] += weight; }
         let total: f32 = votes.iter().sum();
@@ -73,7 +198,7 @@ impl PhaseValueAbstraction {
         let parent = impurity(&votes, total);
         let mut best = None;
         let mut best_gain = 0.001f32;
-        for bit in 0..self.dimension {
+        for bit in 0..features_limit {
             let mut one = vec![0.0; motors];
             let mut count = 0;
             for &(s, action, weight) in rows {
@@ -92,9 +217,9 @@ impl PhaseValueAbstraction {
         let left_budget = if pure(&zero) {1} else if pure(&one) {budget-2}
             else {((budget-1)*zero.len()/rows.len()).clamp(1,budget-2)};
         let first_child=nodes.len();
-        let zero_index = self.grow(states, &zero, motors, depth+1, left_budget, nodes);
+        let zero_index = self.grow(states, &zero, motors, depth+1, left_budget, nodes,features_limit);
         let used=nodes.len()-first_child;
-        let one_index = self.grow(states, &one, motors, depth+1, budget-1-used, nodes);
+        let one_index = self.grow(states, &one, motors, depth+1, budget-1-used, nodes,features_limit);
         nodes[index].predicate = Some(bit);
         nodes[index].zero = zero_index;
         nodes[index].one = one_index;
@@ -103,11 +228,25 @@ impl PhaseValueAbstraction {
 
     fn predict(&self, words: &[u64]) -> Option<Vec<f32>> {
         if words.len() != self.dimension.div_ceil(64) { return None; }
-        let mut node = self.nodes.first()?;
-        while let Some(bit) = node.predicate {
-            node = self.nodes.get(if Self::bit(words, bit) { node.one } else { node.zero })?;
+        if let Some(scores)=self.effect_scores(words) {return Some(scores);}
+        if self.case_width>0 {
+            return Self::case_vote(&self.cases,words,self.case_width,self.dimension,self.nodes.first()?.probabilities.len());
         }
-        if node.support < 3 || node.probabilities.iter().copied().fold(0.0, f32::max) < 0.65 {
+        Self::tree_prediction(&self.nodes,words)
+    }
+
+    fn tree_prediction(nodes:&[PhaseValueRuleNode],words:&[u64])->Option<Vec<f32>> {
+        let p=Self::tree_probabilities(nodes,words)?;
+        if p.iter().copied().fold(0.0,f32::max)<0.65 {return None;}
+        Some(p)
+    }
+
+    fn tree_probabilities(nodes:&[PhaseValueRuleNode],words:&[u64])->Option<Vec<f32>> {
+        let mut node = nodes.first()?;
+        while let Some(bit) = node.predicate {
+            node = nodes.get(if Self::bit(words, bit) { node.one } else { node.zero })?;
+        }
+        if node.support < 3 {
             return None;
         }
         Some(node.probabilities.clone())
@@ -123,6 +262,8 @@ impl EvoPhase {
         if value.abstraction.is_some() || !value.states.is_empty() {return false;}
         let identity = policy.relational_workspace.as_ref().map_or(0, |w|w.identity_channels);
         let dimension = self.config.sensory_cells * 3 + 12 * identity * 8 + 8;
+        let raw_dimension=self.config.sensory_cells;
+        let motors=self.config.motor_cells;
         let Some(cell) = self.dormant_range().find(|&c|!self.cells[c].recruited) else {return false;};
         self.cells[cell].recruited = true;
         let link = self.native_synapse(0, cell);
@@ -131,7 +272,9 @@ impl EvoPhase {
         syn.phase_offset=wrap_phase(self.cells[syn.to].phase-self.cells[syn.from].phase);
         self.phase_native.as_mut().unwrap().general_policy.as_mut().unwrap()
             .value_learning.as_mut().unwrap().abstraction = Some(PhaseValueAbstraction {
-                dimension, link, nodes:Vec::new(), completed:0, fits:0, trained_states:0 });
+                dimension,raw_dimension, link, nodes:Vec::new(), completed:0, fits:0, trained_states:0,
+                case_width:0,cases:Vec::new(),validation:(0,0),effects:Vec::new(),reward_priors:Vec::new(),
+                activity:vec![0.0;motors],effect_transfer:false });
         true
     }
 
@@ -150,6 +293,18 @@ impl EvoPhase {
             .and_then(|p|p.value_learning.as_ref()).and_then(|v|v.abstraction.as_ref())
             .map_or_else(Vec::new,|a|a.nodes.iter().map(|n|
                 (n.predicate,n.zero,n.one,n.probabilities.clone(),n.support)).collect())
+    }
+
+    pub fn phase_native_value_representation_status(&self)->(usize,usize,usize,usize) {
+        self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
+            .and_then(|p|p.value_learning.as_ref()).and_then(|v|v.abstraction.as_ref())
+            .map_or((0,0,0,0),|a|(a.case_width,a.cases.len(),a.validation.0,a.validation.1))
+    }
+
+    pub fn phase_native_value_effect_status(&self)->(bool,usize) {
+        self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
+            .and_then(|p|p.value_learning.as_ref()).and_then(|v|v.abstraction.as_ref())
+            .map_or((false,0),|a|(a.effect_transfer,a.effects.iter().map(Vec::len).sum()))
     }
 
     fn value_abstraction_features(&self, raw: &[f32], post: bool) -> Option<Vec<u64>> {

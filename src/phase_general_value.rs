@@ -111,6 +111,13 @@ impl PhaseGeneralValueLearning {
             return;
         }
         let witnessed = self.episode.clone();
+        if rewarded {
+            if let Some(abstraction)=self.abstraction.as_mut() {
+                for transition in &witnessed {
+                    if !transition.unchanged {abstraction.activity[transition.action]+=1.0;}
+                }
+            }
+        }
         // Retain measured transition statistics across episodes. A reward
         // discovered later can inform earlier witnessed paths; merely
         // replaying the most recent episode could never do that.
@@ -351,6 +358,8 @@ impl EvoPhase {
             self.value_abstraction_prediction(raw)
         } else { None };
         let unknown = state.is_none() && inferred.is_none();
+        let effect_transfer=state.is_none() && inferred.is_some() && value.abstraction.as_ref()
+            .is_some_and(|a|a.effect_transfer);
         let untried = attempts.iter().any(|&n| n == 0);
         let mut best = None::<PhaseGeneralDecision>;
         for action in 0..self.config.motor_cells {
@@ -384,7 +393,9 @@ impl EvoPhase {
             // Frozen knowledge does not mean frozen behavior. Recovery from
             // a repeated context/action cycle uses only this episode's real
             // attempts, and never fabricates training rewards or a route.
-            if attempts[action] >= 8 {
+            if effect_transfer && attempts[action]>=2 {
+                score-=0.02*(attempts[action]-1) as f32;
+            } else if attempts[action] >= 8 {
                 score -= 0.15 * (attempts[action] - 7) as f32;
             }
             let decision = PhaseGeneralDecision {

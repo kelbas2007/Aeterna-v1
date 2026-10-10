@@ -65,24 +65,28 @@ def save(path,report):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--agent',type=Path,required=True)
-    parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
+    parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--protocol',choices=['1','2'],default='2');args=parser.parse_args()
+    train_start,s7_start,s9_start,nav_start=(194000,195000,196000,207000) if args.protocol=='1' else (211000,212000,213000,214000)
     if subprocess.check_output(['git','status','--porcelain','--','src','Cargo.toml','Cargo.lock'],text=True):
         raise SystemExit('Commit cognitive source before fresh evaluation')
-    report={'protocol':'VALUE-RULE-TRANSFER-1','status':'open development',
+    report={'protocol':'VALUE-RULE-TRANSFER-'+args.protocol,'status':'open development',
         'source':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
         'binary_sha256':hashlib.sha256(args.agent.read_bytes()).hexdigest(),
         'budget':200,'train':[],'arms':{}}
     agent=configure(args.agent)
     try:
-        for seed in range(194000,194512):
+        for seed in range(train_start,train_start+512):
             report['train'].append(paired.episode(agent,seed,True))
             if len(report['train'])%32==0:
                 print(json.dumps({'trained':len(report['train']),'successes':sum(e['success'] for e in report['train']),
-                    'rules':agent.status()['value_abstraction']}),flush=True);save(args.output,report)
+                    'rules':agent.status()['value_abstraction'],
+                    'representation':agent.status()['value_representation'],
+                    'effects':agent.status()['value_effects']}),flush=True);save(args.output,report)
         for arm in ['rules','lesioned']:
             if arm=='lesioned':paired.checked_command(agent,'value_abstraction_lesion','value_abstraction_lesion_ack')
             before=agent.status();results={'memory':{},'navigation':[]}
-            for world,start in [('MiniGrid-MemoryS7-v0',195000),('MiniGrid-MemoryS9-v0',196000)]:
+            for world,start in [('MiniGrid-MemoryS7-v0',s7_start),('MiniGrid-MemoryS9-v0',s9_start)]:
                 paired.WORLD=world;pairs=[]
                 for seed in range(start,start+32):
                     a=paired.episode(agent,seed,False,restart=True)
@@ -90,12 +94,13 @@ def main():
                     pairs.append({'seed':seed,'original':a,'cue_swapped':b})
                 results['memory'][world]={'summary':paired.score_pairs(pairs),'pairs':pairs}
                 print(json.dumps({'arm':arm,'world':world,**paired.score_pairs(pairs)}),flush=True)
-            for world,start in [('MiniGrid-Empty-8x8-v0',207000),('MiniGrid-Empty-16x16-v0',207032)]:
+            for world,start in [('MiniGrid-Empty-8x8-v0',nav_start),('MiniGrid-Empty-16x16-v0',nav_start+32)]:
                 rows=[navigation(agent,world,s) for s in range(start,start+32)]
                 results['navigation'].extend(rows)
                 print(json.dumps({'arm':arm,'world':world,'successes':sum(r['success'] for r in rows),'episodes':len(rows)}),flush=True)
             after=agent.status()
             for key in ['general_updates','general_rewards','value_states','value_abstraction',
+                        'value_representation','value_effects',
                         'rewarded_episodic_memories','failed_episodic_experiences']:
                 if before[key]!=after[key]:raise ValueError('frozen knowledge changed')
             results.update(before=before,after=after);report['arms'][arm]=results;save(args.output,report)
@@ -105,7 +110,7 @@ def main():
         cold=configure(args.agent) if arm=='cold' else None
         try:
             rows=[]
-            for world,start in [('MiniGrid-Empty-8x8-v0',207000),('MiniGrid-Empty-16x16-v0',207032)]:
+            for world,start in [('MiniGrid-Empty-8x8-v0',nav_start),('MiniGrid-Empty-16x16-v0',nav_start+32)]:
                 rows.extend(navigation(cold,world,s,arm) for s in range(start,start+32))
             report['arms'][arm]={'navigation':rows}
             print(json.dumps({'arm':arm,'navigation_successes':sum(r['success'] for r in rows),'episodes':len(rows)}),flush=True)
