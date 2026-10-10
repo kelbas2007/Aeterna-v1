@@ -1,0 +1,51 @@
+name: Functional cross-world 2 - external staged skill transfer
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'scripts/external_functional_crossworld.py'
+      - 'scripts/external_functional_grounding.py'
+      - 'src/phase_grounded_objects.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'docs/FUNCTIONAL_CROSSWORLD2_PROTOCOL.md'
+      - '.github/workflows/functional-crossworld2.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Independent Farama world dependency
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Native causality and executable
+        run: |
+          cargo test --locked --release --test functional_grounding_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Actual cross-family heldout physics
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_functional_crossworld.py \
+            --agent target/release/external_world_agent \
+            --output functional-crossworld2.json \
+            2>&1 | tee functional-crossworld2.log
+      - name: Confirm scorer completed, not necessarily positive verdict
+        run: grep -F 'FUNCTIONAL_CROSSWORLD2_SUMMARY' functional-crossworld2.log
+      - name: Preserve first-pass failure and positive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-crossworld2-factual-transfer
+          path: |
+            functional-crossworld2.json
+            functional-crossworld2.log
+          if-no-files-found: ignore
