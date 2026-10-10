@@ -4,7 +4,7 @@ use aeterna_v1::carrier::{
 };
 use aeterna_v1::scientific_runtime::ScientificRuntime;
 
-fn initialized()->ScientificRuntime {
+fn initialized()->EvoPhase {
     let mut o=EvoPhase::new(EvoConfig {
         sensory_cells:16,motor_cells:3,dormant_cells:24,
         hdc_dim:64,..EvoConfig::default()
@@ -16,9 +16,8 @@ fn initialized()->ScientificRuntime {
     assert!(o.enable_phase_native_hypothesis_ecology(
         PhaseHypothesisEcologyConfig::default()
     ));
-    let mut rt=ScientificRuntime::new(o).unwrap();
-    assert!(rt.enable_general_policy());
-    rt
+    assert!(o.enable_phase_native_general_policy());
+    o
 }
 #[test]
 fn factual_delayed_reward_assigns_predecessor_motor_credit_without_task_labels(){
@@ -28,22 +27,25 @@ fn factual_delayed_reward_assigns_predecessor_motor_credit_without_task_labels()
     // A real observed two-step causal trajectory. No world script is
     // available to the policy; it receives only factual tuples.
     for _ in 0..6 {
-        rt.organism_mut().begin_phase_native_general_episode();
+        rt.begin_phase_native_general_episode();
         assert!(rt.organism_mut()
             .observe_phase_native_general_transition(2,&a,&b,0.0));
         assert!(rt.organism_mut()
             .observe_phase_native_general_transition(1,&b,&a,1.0));
     }
-    assert_eq!(rt.organism().phase_native_general_rewards(),6);
-    assert_eq!(rt.organism().phase_native_general_updates(),12);
-    rt.restart_cognition().unwrap();
-    rt.set_model_learning_enabled(false);
-    let choice=rt.organism().choose_phase_native_general_action(&a).unwrap();
+    assert_eq!(rt.phase_native_general_rewards(),6);
+    assert_eq!(rt.phase_native_general_updates(),12);
+    let checkpoint=rt.phase_native_checkpoint().unwrap();
+    let mut restored=EvoPhase::new(rt.config().clone());
+    assert!(restored.restore_phase_native_checkpoint(checkpoint));
+    let mut rt=restored;
+    rt.set_planning_learning_enabled(false);
+    let choice=rt.choose_phase_native_general_action(&a).unwrap();
     // Credit to earlier action 2 must be nonzero and learned beyond a
     // purely terminal mapping. The actor may share features across states.
-    let terminal=rt.organism().choose_phase_native_general_action(&b).unwrap();
+    let terminal=rt.choose_phase_native_general_action(&b).unwrap();
     assert!(choice.action<3 && terminal.action<3);
-    let mut lesioned=rt.organism().clone();
+    let mut lesioned=rt.clone();
     for action in 0..3 {
         let index=lesioned.phase_native_general_synapse(action).unwrap();
         let _=lesioned.perturb_phase_native_synapse_for_control(index,0.0,0.0)
@@ -57,12 +59,12 @@ fn generic_zero_reward_never_fabricates_success_and_frozen_policy_never_updates(
     let mut rt=initialized();
     let x=vec![1.0;16];
     let y=vec![0.0;16];
-    rt.organism_mut().observe_phase_native_general_transition(1,&x,&y,0.0);
-    assert_eq!(rt.organism().phase_native_general_rewards(),0);
-    assert_eq!(rt.organism().phase_native_general_updates(),1);
-    rt.set_model_learning_enabled(false);
-    let fingerprint=rt.organism().phase_native_learned_fingerprint();
-    rt.organism_mut().observe_phase_native_general_transition(1,&x,&y,0.0);
-    assert_eq!(rt.organism().phase_native_general_updates(),1);
-    assert_eq!(rt.organism().phase_native_learned_fingerprint(),fingerprint);
+    rt.observe_phase_native_general_transition(1,&x,&y,0.0);
+    assert_eq!(rt.phase_native_general_rewards(),0);
+    assert_eq!(rt.phase_native_general_updates(),1);
+    rt.set_planning_learning_enabled(false);
+    let fingerprint=rt.phase_native_learned_fingerprint();
+    rt.observe_phase_native_general_transition(1,&x,&y,0.0);
+    assert_eq!(rt.phase_native_general_updates(),1);
+    assert_eq!(rt.phase_native_learned_fingerprint(),fingerprint);
 }
