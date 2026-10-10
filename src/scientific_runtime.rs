@@ -259,10 +259,6 @@ impl ScientificRuntime {
     pub fn enable_value_abstraction(&mut self)->bool{
         self.organism.enable_phase_native_value_abstraction()
     }
-    pub fn lesion_value_abstraction_for_control(&mut self)->bool{
-        let Some(link)=self.organism.phase_native_value_abstraction_link() else{return false;};
-        self.organism.perturb_phase_native_synapse_for_control(link,0.0,0.0).is_some()
-    }
 
     pub fn enable_innate_scaffold(&mut self)->bool{
         self.organism.enable_phase_native_innate_scaffold()
@@ -1202,10 +1198,20 @@ impl ScientificRuntime {
     pub fn restart_cognition(&mut self) -> Result<(), RuntimeError> {
         let checkpoint: PhaseNativeCheckpoint = self.organism.phase_native_checkpoint()
             .ok_or(RuntimeError::NativeModelRequired)?;
+        self.restore_native_checkpoint(checkpoint)
+    }
+
+    /// Atomic cognition-only restoration. External safety, goal, learning mode
+    /// and lifetime audit survive; a fresh factual observation is mandatory.
+    /// The opaque checkpoint carries no actuator permit or external authority.
+    pub fn restore_native_checkpoint(&mut self, checkpoint:PhaseNativeCheckpoint) -> Result<(),RuntimeError> {
         let mut replacement = EvoPhase::new(self.organism.config().clone());
-        if !replacement.restore_phase_native_checkpoint(checkpoint) {
+        if !replacement.restore_phase_native_checkpoint(checkpoint)
+            || replacement.phase_partial_enabled()!=self.organism.phase_partial_enabled()
+            || replacement.phase_vector_enabled()!=self.organism.phase_vector_enabled() {
             return Err(RuntimeError::InvalidCheckpoint);
         }
+        replacement.set_planning_learning_enabled(self.model_learning_enabled);
         self.organism = replacement;
         self.fresh_observation_required = true;
         self.record(LifetimeEventKind::CognitiveRestart);

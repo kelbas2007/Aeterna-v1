@@ -243,8 +243,21 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
             }
             "value_abstraction_lesion" => {
                 let rt=runtime.as_mut().ok_or("init required")?;
+                // Evaluator-only intervention outside ScientificRuntime.
+                // Restore cognition through its checked boundary; safety
+                // authority and external audit must survive this diagnostic.
+                let checkpoint=rt.organism().phase_native_checkpoint().ok_or("native model required")?;
+                let mut controlled=EvoPhase::new(rt.organism().config().clone());
+                let mut accepted=controlled.restore_phase_native_checkpoint(checkpoint);
+                if let Some(link)=controlled.phase_native_value_abstraction_link() {
+                    accepted &= controlled.perturb_phase_native_synapse_for_control(link,0.0,0.0).is_some();
+                } else {accepted=false;}
+                if accepted {
+                    let checkpoint=controlled.phase_native_checkpoint().ok_or("controlled checkpoint required")?;
+                    accepted=rt.restore_native_checkpoint(checkpoint).is_ok();
+                }
                 send(out,&json!({"type":"value_abstraction_lesion_ack",
-                    "accepted":rt.lesion_value_abstraction_for_control()}))?;
+                    "accepted":accepted}))?;
             }
             "value_predicates" => {
                 let rt=runtime.as_ref().ok_or("init required")?;

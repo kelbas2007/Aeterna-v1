@@ -276,3 +276,34 @@ fn g20_runtime_delegates_reasoning_and_seals_every_execution() {
     assert!(consumption < execution);
     assert!(!source.contains("pub fn organism_mut"));
 }
+
+#[test]
+fn native_checkpoint_restoration_preserves_external_safety_and_rejects_wrong_shape_atomically() {
+    let (evo,world)=fixture::prepare(false);
+    let mut runtime=ScientificRuntime::new(evo).unwrap();
+    runtime.observe_external(&world.sense()).unwrap();
+    runtime.set_goal(&world.goal(true)).unwrap();
+    let mut emergency=safe();emergency.emergency_stop=true;
+    let result=runtime.step(|_|Some(emergency), |_|panic!("blocked motor executed")).unwrap();
+    assert!(matches!(result,StepOutcome::Blocked(_)));
+    assert!(runtime.emergency_latched());
+    let checkpoint=runtime.organism().phase_native_checkpoint().unwrap();
+    let fingerprint=runtime.organism().phase_native_learned_fingerprint();
+    let sequence=runtime.sequence();
+    runtime.restore_native_checkpoint(checkpoint).unwrap();
+    assert!(runtime.emergency_latched());
+    assert!(runtime.sequence()>sequence);
+    assert_eq!(runtime.organism().phase_native_learned_fingerprint(),fingerprint);
+    assert!(matches!(runtime.propose(),Err(RuntimeError::FreshObservationRequired)));
+    let mut wrong=EvoPhase::new(aeterna_v1::EvoConfig {sensory_cells:8,motor_cells:2,
+        dormant_cells:8,..aeterna_v1::EvoConfig::default()});
+    wrong.enable_phase_native_planning(aeterna_v1::carrier::PhaseNativeConfig::default());
+    let sequence=runtime.sequence();
+    assert!(matches!(runtime.restore_native_checkpoint(wrong.phase_native_checkpoint().unwrap()),
+        Err(RuntimeError::InvalidCheckpoint)));
+    assert_eq!(runtime.sequence(),sequence);
+    assert_eq!(runtime.organism().phase_native_learned_fingerprint(),fingerprint);
+    runtime.observe_external(&world.sense()).unwrap();
+    let result=runtime.step(|_|Some(safe()), |_|panic!("checkpoint cleared safety latch")).unwrap();
+    assert!(matches!(result,StepOutcome::Blocked(_)));
+}
