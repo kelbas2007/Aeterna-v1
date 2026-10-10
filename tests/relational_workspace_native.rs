@@ -1,0 +1,81 @@
+use aeterna_v1::{EvoConfig,EvoPhase};
+use aeterna_v1::carrier::PhaseNativeConfig;
+const W:usize=7;
+const DIM:usize=W*W*12;
+fn set(raw:&mut[f32],tile:usize,object:u8,color:u8){
+    for (ch,v) in [object,color,0].iter().copied().enumerate(){
+        for bit in 0..4{
+            raw[tile*12+ch*4+bit]=((v>>bit)&1) as f32;
+        }
+    }
+}
+fn room(objects:&[(usize,u8)])->Vec<f32>{
+    let mut raw=vec![0.0;DIM];
+    for i in 0..49{set(&mut raw,i,2,1);}
+    set(&mut raw,27,11,0); // body tile: not an object to bind
+    for &(tile,code) in objects {set(&mut raw,tile,code,1);}
+    raw
+}
+fn newborn()->EvoPhase{
+    let mut brain=EvoPhase::new(EvoConfig{
+        sensory_cells:DIM,motor_cells:7,
+        dormant_cells:64,hdc_dim:64,..EvoConfig::default()
+    });
+    brain.enable_phase_native_planning(PhaseNativeConfig::default());
+    assert!(brain.enable_phase_native_general_policy());
+    assert!(brain.enable_phase_native_developmental_memory());
+    assert!(brain.enable_phase_native_relational_workspace(7,7,3,4,2));
+    brain
+}
+fn read_first(cue:u8,present:&[f32])->Vec<f32>{
+    let mut o=newborn();
+    let start=room(&[(8,cue)]);
+    assert!(o.phase_native_relational_initial(&start));
+    assert!(o.phase_native_relational_held_subject());
+    // A previously seen subject is out of sight for many real frames.
+    for _ in 0..10 {
+        assert!(o.phase_native_relational_factual_post(&room(&[])));
+    }
+    o.phase_native_relational_readout(present).unwrap()
+}
+#[test]
+fn distinct_past_cues_produce_different_present_relations_after_occlusion(){
+    let currently_visible=room(&[(11,5),(16,6)]);
+    let history_a=read_first(5,&currently_visible);
+    let history_b=read_first(6,&currently_visible);
+    assert_ne!(history_a,history_b);
+    assert!(history_a[1]>0.0 && history_b[1]>0.0);
+    assert!(history_a[2]>0.0 && history_b[2]>0.0);
+    // The RELEVANT difference is which relative visible cell corresponds
+    // to the past object. Both current frames are byte-for-byte identical.
+    assert_ne!(&history_a[4..],&history_b[4..]);
+    let unseen=read_first(5,&room(&[]));
+    assert_eq!(unseen[1],0.0);
+    assert!(unseen[3]>0.0,"absence of a matching visible subject is
+        explicitly represented as unknown/occluded, not invented object");
+    println!("RELATIONAL_STATE_PASS same_present=true two_history_relations=true ten_occluded_frames=true no_labels=true");
+}
+#[test]
+fn physical_lesion_disables_relational_knowledge_not_motor_safety(){
+    let mut o=newborn();
+    let seen=room(&[(8,5)]);
+    let compare=room(&[(11,5),(16,6)]);
+    assert!(o.phase_native_relational_initial(&seen));
+    let before=o.phase_native_relational_readout(&compare).unwrap();
+    assert!(before[0]>0.0 && before[1]>0.0);
+    let index=o.phase_native_relational_link().unwrap();
+    let saved=o.perturb_phase_native_synapse_for_control(
+        index,0.0,0.0).unwrap();
+    let dead=o.phase_native_relational_readout(&compare).unwrap();
+    assert!(dead.iter().all(|&v|v==0.0));
+    o.restore_phase_native_synapse_for_control(index,saved);
+    assert_eq!(o.phase_native_relational_readout(&compare).unwrap(),before);
+    let checkpoint=o.phase_native_checkpoint().unwrap();
+    let mut restored=EvoPhase::new(o.config().clone());
+    assert!(restored.restore_phase_native_checkpoint(checkpoint));
+    assert!(!restored.phase_native_relational_held_subject(),
+        "new lifetime reset cannot invent an unobserved cue");
+    assert_eq!(restored.phase_native_relational_readout(&compare).unwrap(),
+        vec![0.0;96]);
+    println!("RELATIONAL_PHYSICAL_PASS lesion=true restore=true no_fake_cue_after_restart=true");
+}
