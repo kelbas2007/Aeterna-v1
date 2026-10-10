@@ -73,6 +73,7 @@ pub(super) struct PhaseNativeState {
     meta_control: Option<PhaseMetaControlState>,
     temporal_evidence: Option<PhaseTemporalEvidenceState>,
     factor_causality: Option<PhaseFactorState>,
+    grounded_objects: Option<PhaseGroundedObjects>,
     online: Option<PhaseOnlineConfig>,
     rules: Option<PhaseRuleState>,
     partial: Option<PhasePartialState>,
@@ -129,6 +130,7 @@ impl EvoPhase {
             meta_control: None,
             temporal_evidence: None,
             factor_causality: None,
+            grounded_objects: None,
             online: None,
             rules: None,
             partial: None,
@@ -165,6 +167,7 @@ impl EvoPhase {
         let hypothesis_synapse = self.is_native_hypothesis_synapse(index);
         let temporal_synapse = self.is_native_temporal_evidence_synapse(index);
         let factor_synapse = self.is_native_factor_synapse(index);
+        let object_word_synapse = self.is_phase_native_grounded_word_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
@@ -176,6 +179,7 @@ impl EvoPhase {
             && !hypothesis_synapse
             && !temporal_synapse
             && !factor_synapse
+            && !object_word_synapse
             && !self.is_phase_rule_synapse(index)
             && !self.is_native_decoder_synapse(index)
             && !self.is_phase_induction_synapse(index)
@@ -241,6 +245,9 @@ impl EvoPhase {
         }
         if let Some(factor) = state.factor_causality.as_ref() {
             text.push_str(&format!("|{:?}", factor));
+        }
+        if let Some(objects) = state.grounded_objects.as_ref() {
+            text.push_str(&format!("|{:?}", objects));
         }
         if let Some(online) = state.online.as_ref() {
             text.push_str(&format!("|{:?}", online));
@@ -766,3 +773,4 @@ include!("phase_hypothesis_ecology.rs");
 include!("phase_unified_cognition.rs");
 include!("phase_temporal_evidence.rs");
 include!("phase_factor_causality.rs");
+include!("phase_grounded_objects.rs");
