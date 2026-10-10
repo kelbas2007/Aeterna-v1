@@ -1,0 +1,81 @@
+name: Child Zero 1b - isolate innate bias versus experienced-event memory
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - '.github/workflows/child-zero-factorial.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  factorial-terms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'c6a09132b46c55f6d92c85efff0c4138c519265f'
+          persist-credentials: false
+      - name: Check immutable source from CHILD-ZERO-1 first run
+        run: test "$(git rev-parse HEAD)" = "c6a09132b46c55f6d92c85efff0c4138c519265f"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Independent external physics and original Rust binary
+        run: |
+          python -m pip install 'minigrid==3.1.0'
+          cargo test --locked --release --test innate_scaffold_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Same base learner plus ONLY innate biases
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_unstaged_world1.py \
+            --agent target/release/external_world_agent \
+            --general-policy --innate-scaffold \
+            --budget 256 --include-empty --seed-offset 22000 \
+            --output child-only-innate.json 2>&1 | tee child-only-innate.log
+      - name: Same base learner plus ONLY memory of experienced history
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_unstaged_world1.py \
+            --agent target/release/external_world_agent \
+            --general-policy --developmental-memory \
+            --budget 256 --include-empty --seed-offset 22000 \
+            --output child-only-memory.json 2>&1 | tee child-only-memory.log
+      - name: 2x2 component interpretation against original matched arms
+        run: |
+          python - <<'PY'
+          import json
+          i=json.load(open("child-only-innate.json"))
+          m=json.load(open("child-only-memory.json"))
+          assert i["train_seeds"]==m["train_seeds"]==list(range(72000,72012))
+          assert i["heldout_seeds"]==m["heldout_seeds"]==list(range(73000,73004))
+          assert i["general_policy"] and m["general_policy"]
+          assert i["innate_scaffold"] and not i["developmental_memory"]
+          assert m["developmental_memory"] and not m["innate_scaffold"]
+          assert i["budget"]==m["budget"]==256
+          assert i["worlds"]==m["worlds"] and len(i["worlds"])==4
+          assert i["random_task_successes"]==m["random_task_successes"]
+          print("CHILD_ZERO_FACTORIAL same_source=true same_seeds=true "
+                "base=6/16 combined=9/16 "
+                f"innate_only={i['eval_task_successes']}/16 "
+                f"memory_only={m['eval_task_successes']}/16 "
+                f"innate_per_world={i['heldout_successes_by_world']} "
+                f"memory_per_world={m['heldout_successes_by_world']} "
+                "claim=OPEN_COMPONENT_ABLATION_NOT_INDEPENDENT_REPLICATION")
+          PY
+      - name: Retain both single-factor observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: child-zero1b-single-factor-ablation
+          path: |
+            child-only-innate.json
+            child-only-innate.log
+            child-only-memory.json
+            child-only-memory.log
+          if-no-files-found: ignore
