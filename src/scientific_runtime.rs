@@ -261,6 +261,10 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_developmental_memory()
     }
 
+    pub fn enable_episodic_recall(&mut self)->bool{
+        self.organism.enable_phase_native_episodic_recall()
+    }
+
     pub fn enable_embodied_navigation(&mut self)->bool{
         self.organism.enable_phase_native_embodied_navigation()
     }
