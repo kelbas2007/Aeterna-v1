@@ -27,7 +27,7 @@ EVAL_SEEDS = tuple(range(51000,51004))
 BUDGET = 128
 
 
-def real_episode(agent, name, seed, learning):
+def real_episode(agent, name, seed, learning, budget=BUDGET):
     env = gym.make(name)
     try:
         obs, _ = env.reset(seed=seed)
@@ -37,7 +37,7 @@ def real_episode(agent, name, seed, learning):
             "actions":0,"reward":0.0,"actual_key_pickups":0,
             "actual_door_openings":0,"moves":0,"stopped":None
         }
-        for _ in range(BUDGET):
+        for _ in range(budget):
             # External OUTCOME auditor; no simulator variables enter cognition.
             world=env.unwrapped
             front=world.grid.get(*world.front_pos)
@@ -71,7 +71,13 @@ def main():
     parser.add_argument("--output",type=Path,default=Path("unstaged-crossworld1.json"))
     parser.add_argument("--seed-offset",type=int,default=0)
     parser.add_argument("--embodied",action="store_true")
+    parser.add_argument("--budget",type=int,default=BUDGET)
+    parser.add_argument("--include-empty",action="store_true")
     args=parser.parse_args()
+    if not 16<=args.budget<=256:
+        raise SystemExit("budget must be 16..256")
+    worlds=(("MiniGrid-Empty-5x5-v0",)+WORLDS
+        if args.include_empty else WORLDS)
     train_seeds=[x+args.seed_offset for x in TRAIN_SEEDS]
     eval_seeds=[x+args.seed_offset for x in EVAL_SEEDS]
     agent=Agent(args.agent)
@@ -87,21 +93,21 @@ def main():
         # Equal exposure to independent physics from a common persistent
         # organism, NOT a fresh model instance per family.
         for seed in train_seeds:
-            for env_id in WORLDS:
-                train.append(real_episode(agent,env_id,seed,True))
+            for env_id in worlds:
+                train.append(real_episode(agent,env_id,seed,True,args.budget))
         before_restart=agent.status()
         restart=send(agent,{"cmd":"restart"})
         if restart.get("type")!="restart_ack": raise RuntimeError("native restart failed")
         for seed in eval_seeds:
-            for env_id in WORLDS:
-                heldout.append(real_episode(agent,env_id,seed,False))
+            for env_id in worlds:
+                heldout.append(real_episode(agent,env_id,seed,False,args.budget))
         after_restart=agent.status()
     finally:
         agent.close()
     random_results={}
-    for name in WORLDS:
+    for name in worlds:
         random_results[name]=random_control(
-            name,eval_seeds,BUDGET,seed_base=616161 + len(name))
+            name,eval_seeds,args.budget,seed_base=616161 + len(name))
     train_tasks=sum(e["success"] for e in train)
     eval_tasks=sum(e["success"] for e in heldout)
     random_tasks=sum(e["success"] for batch in random_results.values() for e in batch)
@@ -109,7 +115,7 @@ def main():
         "task":"one lifetime unstaged external task-world transfer",
         "train_seeds":train_seeds,"heldout_seeds":eval_seeds,
         "seed_offset":args.seed_offset,
-        "worlds":WORLDS,"budget":BUDGET,
+        "worlds":worlds,"budget":args.budget,
         "embodied_navigation":args.embodied,
         "teacher_motor_demonstrations":0,
         "teacher_words":0,
@@ -119,6 +125,10 @@ def main():
         "before_restart":before_restart,"restart":restart,
         "after_restart":after_restart,
         "train_task_successes":train_tasks,"eval_task_successes":eval_tasks,
+        "heldout_successes_by_world":{
+            name:sum(e["success"] for e in heldout if e["world"]==name)
+            for name in worlds
+        },
         "random_task_successes":random_tasks,
         "trained_effects":before_restart["self_affordances"],
         "heldout_effects":after_restart["self_affordances"],
@@ -141,6 +151,10 @@ def main():
                   random_tasks,len(heldout),report["trained_effects"],
                   report["eval_key_pickups"],report["eval_door_openings"],
                   report["eval_executed_moves"]),flush=True)
+    print(f"UNSTAGED_EXTENDED_CURRICULUM include_empty={args.include_empty} "
+          f"budget={args.budget} worlds={len(worlds)} "
+          f"train={train_tasks}/{len(train)} heldout={eval_tasks}/{len(heldout)} "
+          f"per_world={report['heldout_successes_by_world']}",flush=True)
     print(f"UNSTAGED_MOTION_MODE embodied={args.embodied} native_inferred_motion="
           f"{report['native_inferred_motion_events']} physical_actions="
           f"{report['total_physical_actions']}",flush=True)
