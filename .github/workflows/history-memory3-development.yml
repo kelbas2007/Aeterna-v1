@@ -1,0 +1,84 @@
+name: History-memory 3 - factual autobiographical recall in real Farama MemoryS7
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_general_policy.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'tests/developmental_history_alias.rs'
+      - 'scripts/external_memory_history.py'
+      - 'docs/HISTORY_MEMORY3_PROTOCOL.md'
+      - '.github/workflows/history-memory3-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  true-memory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Real independently-authored memory task
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Native physical history distinction, freeze and compilation
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test developmental_history_alias -- --nocapture
+          cargo test --locked --release --test general_policy_native
+          cargo build --locked --release --bin external_world_agent
+      - name: No-memory control on exact same outside worlds
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --seed-offset 20000 \
+            --output memory3-no-memory.json 2>&1 | tee memory3-no-memory.log
+      - name: Autobiographical episodic memory and same task physics
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --memory --episodic-recall --seed-offset 20000 \
+            --output memory3-episodic.json 2>&1 | tee memory3-episodic.log
+      - name: Score true reward and declared experiment intent
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('memory3-no-memory.json'))
+          b=json.load(open('memory3-episodic.json'))
+          assert a['training_seeds']==b['training_seeds']==list(range(100000,100128))
+          assert a['heldout_seeds']==b['heldout_seeds']==list(range(101000,101024))
+          assert a['budget']==b['budget']==200
+          assert not a['memory'] and not a['episodic_recall']
+          assert b['memory'] and b['episodic_recall']
+          assert a['frozen_executions']>0 and b['frozen_executions']>0
+          assert a['random_successes']==b['random_successes']
+          passed=(b['heldout_successes']>=12 and b['heldout_successes']>a['heldout_successes'] and b['heldout_successes']>b['random_successes'])
+          print('HISTORY_MEMORY3_EXTERNAL '
+                f"episodic={b['heldout_successes']}/24 "
+                f"without_memory={a['heldout_successes']}/24 "
+                f"random={b['random_successes']}/24 "
+                f"episodic_train={b['train_successes']}/128 "
+                f"stored_real_successes={b['carrier_train'].get('rewarded_episodic_memories',0)} "
+                f"verdict={'DEVELOPMENT_PASS' if passed else 'DEVELOPMENT_FAIL'}")
+          PY
+      - name: Keep negative and positive first-source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-memory3-episodic-independent-world
+          path: |
+            memory3-no-memory.json
+            memory3-no-memory.log
+            memory3-episodic.json
+            memory3-episodic.log
+          if-no-files-found: ignore
