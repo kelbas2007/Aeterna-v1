@@ -65,8 +65,11 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--agent",type=Path,required=True)
     p.add_argument("--memory",action="store_true")
+    p.add_argument("--seed-offset",type=int,default=0)
     p.add_argument("--output",type=Path,required=True)
     args=p.parse_args()
+    train_seeds=[i+args.seed_offset for i in TRAIN_SEEDS]
+    test_seeds=[i+args.seed_offset for i in HELDOUT_SEEDS]
     native=Agent(args.agent)
     try:
         result=send(native,{"cmd":"general_policy"})
@@ -76,20 +79,20 @@ def main():
             result=send(native,{"cmd":"developmental_memory"})
             if result.get("type")!="developmental_memory_ack" or not result.get("accepted"):
                 raise RuntimeError(f"memory refused: {result}")
-        training=[run_episode(native,seed,True) for seed in TRAIN_SEEDS]
+        training=[run_episode(native,seed,True) for seed in train_seeds]
         learned=native.status()
         resumed=send(native,{"cmd":"restart"})
         if resumed.get("type")!="restart_ack":
             raise RuntimeError(f"native restart failed: {resumed}")
-        heldout=[run_episode(native,seed,False) for seed in HELDOUT_SEEDS]
+        heldout=[run_episode(native,seed,False) for seed in test_seeds]
         after=native.status()
     finally:native.close()
     randomizer=random.Random(0xABCEFF)
-    random_eval=[random_control(seed,randomizer) for seed in HELDOUT_SEEDS]
+    random_eval=[random_control(seed,randomizer) for seed in test_seeds]
     report={
         "library":"Farama MiniGrid 3.1.0",
-        "world":WORLD,"training_seeds":list(TRAIN_SEEDS),
-        "heldout_seeds":list(HELDOUT_SEEDS),"budget":BUDGET,
+        "world":WORLD,"training_seeds":train_seeds,
+        "heldout_seeds":test_seeds,"budget":BUDGET,
         "memory":args.memory,"mission_sent":False,
         "hidden_state_sent":False,"correct_exit_sent":False,
         "motor_demonstrations":0,"episode_staging":False,
