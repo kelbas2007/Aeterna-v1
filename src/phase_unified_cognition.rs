@@ -511,6 +511,32 @@ impl EvoPhase {
             }
         }
 
+        // Cold, goal-conditioned information-seeking over still untried
+        // ACTUAL state-action links. The proposer sees only the raw supplied
+        // goal and physically visited state/motor pairs. It neither imports
+        // nor selects an evaluator-defined correct path.
+        if let Some((action,novelty,steps))=
+            self.choose_phase_native_temporal_goal_frontier()
+        {
+            if let Some(mut fields)=self.unified_action_fields(
+                &sensory,goal_sensory,action
+            ){
+                fields[1]=fields[1].max(novelty).clamp(0.0,1.0);
+                fields[2]=fields[2].max(novelty).clamp(0.0,1.0);
+                fields[3]=fields[3].max(1.0/(1.0+steps as f32));
+                out.push(PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[
+                            0xC01D_u64,action as u64
+                        ]),
+                        action,fields,
+                    },
+                });
+            }
+        }
+
         // Goal-conditioned physical causal path. The route is inferred fresh
         // from the CURRENT observed state and the raw caller goal on every
         // step, including after factual drift. No evaluator-specified plan.
