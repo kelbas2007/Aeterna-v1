@@ -421,6 +421,31 @@ impl EvoPhase {
         }
         let Some(sensory)=self.current_real.as_ref().map(|r|r.sensory.clone())
             else{return Vec::new();};
+        // Opt-in factor mode recognizes a factual binary sensory vector
+        // without requiring a previously visited whole-state class.
+        // The single candidate still passes through U1 and Human Protection.
+        if self.phase_native_factor_causality_enabled() {
+            return self.choose_phase_native_factor_action(goal_sensory)
+                .map(|choice| {
+                    let value = choice.support.clamp(0.0, 1.0);
+                    vec![PhaseUnifiedCognitiveProposal {
+                        persistent_candidate_id: None,
+                        applicability: 1.0,
+                        proposal: PhaseCognitiveProposal {
+                            proposal_id: unified_hash(&[
+                                0xFAC7_u64, choice.action as u64,
+                                u64::from(choice.planned),
+                            ]),
+                            action: choice.action,
+                            fields: if choice.planned {
+                                [value, 0.0, 0.0, value, 1.0 / choice.steps as f32]
+                            } else {
+                                [0.0, value, value, 0.4, 1.0 / choice.steps as f32]
+                            },
+                        },
+                    }]
+                }).unwrap_or_default();
+        }
         if self.phase_native_abstract_state(goal_sensory).is_none(){
             return Vec::new();
         }
