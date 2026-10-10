@@ -41,6 +41,26 @@ pub struct PhaseWordAction {
 }
 
 #[derive(Debug, Clone)]
+struct PhaseSelfTrial {
+    category: usize,
+    action: usize,
+    count: u32,
+}
+#[derive(Debug, Clone)]
+struct PhaseSelfAffordance {
+    category: usize,
+    action: usize,
+    synapse: usize,
+    support: u32,
+}
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseSelfAction {
+    pub action: usize,
+    pub synapse: Option<usize>,
+    pub learned: bool,
+    pub strength: f32,
+}
+#[derive(Debug, Clone)]
 struct PhaseGroundedObjects {
     width: usize,
     height: usize,
@@ -52,6 +72,9 @@ struct PhaseGroundedObjects {
     frames_seen: u64,
     affordances: Vec<PhaseLearnedAffordance>,
     intent_word: Option<String>,
+    self_experiment_front: Option<usize>,
+    self_trials: Vec<PhaseSelfTrial>,
+    self_affordances: Vec<PhaseSelfAffordance>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -113,8 +136,164 @@ impl EvoPhase {
             width, height, channels, bits_per_channel, identity_channels,
             categories: Vec::new(), words: Vec::new(), frames_seen: 0,
             affordances: Vec::new(), intent_word: None,
+            self_experiment_front: None, self_trials: Vec::new(),
+            self_affordances: Vec::new(),
         });
         true
+    }
+
+    /// Experiment on the body-relative tile immediately in front of the
+    /// agent, if supported by the public sensor geometry. The caller supplies
+    /// a sensor coordinate only, never an object ID or motor semantics.
+    pub fn enable_phase_native_self_object_experiment(
+        &mut self, relative_front_tile: usize,
+    ) -> bool {
+        let Some(g) = self.phase_native.as_mut()
+            .and_then(|n| n.grounded_objects.as_mut()) else { return false; };
+        if relative_front_tile >= g.width * g.height { return false; }
+        g.self_experiment_front = Some(relative_front_tile);
+        true
+    }
+
+    pub fn phase_native_self_affordance_count(&self) -> usize {
+        self.phase_native.as_ref().and_then(|n| n.grounded_objects.as_ref())
+            .map_or(0, |g| g.self_affordances.len())
+    }
+
+    pub fn phase_native_self_trial_count(&self) -> u32 {
+        self.phase_native.as_ref().and_then(|n| n.grounded_objects.as_ref())
+            .map_or(0, |g| g.self_trials.iter().map(|t| t.count).sum())
+    }
+
+    pub fn is_phase_native_self_object_synapse(&self,index:usize)->bool {
+        self.phase_native.as_ref().and_then(|n| n.grounded_objects.as_ref())
+            .is_some_and(|g| g.self_affordances.iter()
+                .any(|a| a.synapse == index))
+    }
+
+    /// The same generic motor chooser can attempt unknown actions and later
+    /// exploit only a conducting causal witness. Frozen learners never probe
+    /// untried motors. No teacher word, object class, or action label.
+    pub fn choose_phase_native_self_object_action(
+        &self, raw: &[f32],
+    ) -> Option<PhaseSelfAction> {
+        let native = self.phase_native.as_ref()?;
+        let g = native.grounded_objects.as_ref()?;
+        let tile = g.self_experiment_front?;
+        let signature = g.tile_signature(raw,tile)?;
+        let category = g.categories.iter()
+            .position(|c| c.signature == signature)?;
+        let mut best: Option<PhaseSelfAction> = None;
+        for entry in g.self_affordances.iter()
+            .filter(|a| a.category == category) {
+            let strength = conductance(&self.cells,
+                &self.synapses[entry.synapse],native.config.coherence_floor);
+            if strength > best.map_or(1.0e-8,|b|b.strength + 1.0e-6) {
+                best = Some(PhaseSelfAction {
+                    action: entry.action, synapse: Some(entry.synapse),
+                    strength, learned: true
+                });
+            }
+        }
+        if best.is_some() {return best;}
+        if !native.config.learning_enabled {return None;}
+        let action = (0..self.config.motor_cells).min_by_key(|&a|
+            g.self_trials.iter().find(|t|
+                t.category==category && t.action==a)
+                .map_or(0,|t|t.count)
+        )?;
+        let trials = g.self_trials.iter().find(|t|
+            t.category==category && t.action==action)
+            .map_or(0,|t|t.count);
+        Some(PhaseSelfAction {
+            action, synapse: None, learned:false,
+            strength:1.0/(1.0+trials as f32)
+        })
+    }
+
+    /// Only the actual protected PRE/action/POST can create a motor effect.
+    /// A rotate/move that changes most visible cells is rejected as an object
+    /// affordance; it is still recorded as an unsuccessful probe.
+    pub fn observe_phase_native_self_object_effect(
+        &mut self,action:usize,pre:&[f32],post:&[f32],
+    )->bool {
+        if action>=self.config.motor_cells || pre.len()!=post.len()
+            || pre.len()!=self.config.sensory_cells {return false;}
+        let Some(mut native)=self.phase_native.take() else {return false;};
+        let Some(mut g)=native.grounded_objects.take() else {
+            self.phase_native=Some(native); return false;
+        };
+        let Some(front)=g.self_experiment_front else {
+            native.grounded_objects=Some(g);self.phase_native=Some(native);
+            return false;
+        };
+        if !native.config.learning_enabled {
+            native.grounded_objects=Some(g);self.phase_native=Some(native);
+            return false;
+        }
+        let cat = g.tile_signature(pre,front).and_then(|signature|
+            g.categories.iter().position(|c|c.signature==signature));
+        let Some(category) = cat else {
+            native.grounded_objects=Some(g);self.phase_native=Some(native);
+            return false;
+        };
+        if let Some(t)=g.self_trials.iter_mut().find(|t|
+            t.category==category&&t.action==action) {
+            t.count=t.count.saturating_add(1);
+        } else if g.self_trials.len() < 512 {
+            g.self_trials.push(PhaseSelfTrial {
+                category,action,count:1
+            });
+        }
+        let stride=g.channels*g.bits_per_channel;
+        let changed=(0..g.width*g.height).filter(|&tile| {
+            let from=tile*stride;
+            pre[from..from+stride]!=post[from..from+stride]
+        }).collect::<Vec<_>>();
+        let source=g.tile_signature(pre,front);
+        let transferable=changed.len()==2 && changed.contains(&front)
+            && changed.iter().copied().find(|&i|i!=front)
+                .and_then(|i|g.tile_signature(post,i))
+                .as_ref()==source.as_ref();
+        let revealed=changed.contains(&front)
+            && changed.iter().all(|&i| i==front
+                || pre[i*stride..(i+1)*stride]
+                    .iter().all(|&v|v==0.0));
+        let local = changed==vec![front] || transferable || revealed;
+        if local {
+            if let Some(a)=g.self_affordances.iter_mut().find(|a|
+                a.category==category&&a.action==action) {
+                a.support=a.support.saturating_add(1);
+                let syn=&mut self.synapses[a.synapse];
+                syn.weight=(syn.weight+0.125).min(1.0);
+            } else if g.self_affordances.len()<32 {
+                let link=self.native_synapse(
+                    g.categories[category].cell,self.motor_cell(action));
+                let syn=&mut self.synapses[link];
+                syn.phase_offset=wrap_phase(
+                    self.cells[syn.to].phase-self.cells[syn.from].phase);
+                syn.weight=0.125;
+                syn.confidence=1.0;
+                syn.eligibility=1.0;
+                g.self_affordances.push(PhaseSelfAffordance {
+                    category,action,synapse:link,support:1
+                });
+            }
+        }
+        native.grounded_objects=Some(g);
+        self.phase_native=Some(native);
+        local
+    }
+
+    pub fn phase_native_self_affordance_synapse(
+        &self,raw:&[f32],
+    )->Option<usize>{
+        self.choose_phase_native_self_object_action(raw)?.synapse
+    }
+
+    pub fn phase_native_self_experiment_enabled(&self)->bool {
+        self.phase_native.as_ref().and_then(|n|n.grounded_objects.as_ref())
+            .is_some_and(|g|g.self_experiment_front.is_some())
     }
 
     pub fn phase_native_grounded_categories(&self) -> usize {
