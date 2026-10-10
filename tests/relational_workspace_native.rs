@@ -102,3 +102,28 @@ fn ambiguity_is_retained_as_hypotheses_not_discarded_or_given_a_correct_label(){
     assert!(av[1]>0.0 && bv[1]>0.0);
     println!("RELATIONAL_HYPOTHESES_PASS ambiguous_first_view=true distinct_cue_histories=true missing_frames=8 no_target_labels=true");
 }
+
+#[test]
+fn relation_stays_invariant_under_unseen_symbol_code_permutation(){
+    // Two independently coded environments: no learned MiniGrid ID table,
+    // only equal/different relational structure and spatial location.
+    let mut a=newborn();
+    let mut b=newborn();
+    assert!(a.phase_native_relational_initial(&room(&[(8,5)])));
+    assert!(b.phase_native_relational_initial(&room(&[(8,9)])));
+    for _ in 0..4{
+        assert!(a.phase_native_relational_factual_post(&room(&[])));
+        assert!(b.phase_native_relational_factual_post(&room(&[])));
+    }
+    let first=a.phase_native_relational_readout(
+        &room(&[(16,5),(19,6)])).unwrap();
+    let transformed=b.phase_native_relational_readout(
+        &room(&[(16,9),(19,10)])).unwrap();
+    assert_eq!(first,transformed,
+        "same relation must not depend on absolute source category IDs");
+    let changed=b.phase_native_relational_readout(
+        &room(&[(16,10),(19,9)])).unwrap();
+    assert_ne!(first,changed,
+        "reversal of matching candidate must modify relation");
+    println!("RELATIONAL_PERMUTATION_PASS unseen_codes=true same_structure=true different_candidate=true");
+}
