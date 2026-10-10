@@ -68,7 +68,13 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--agent", type=Path, required=True)
     p.add_argument("--output", type=Path, default=Path("external-object-lexicon.json"))
+    p.add_argument("--max-lessons", type=int, default=100000)
+    p.add_argument("--seed-offset", type=int, default=0)
     args = p.parse_args()
+    if args.max_lessons < 1 or args.max_lessons > 100000:
+        raise SystemExit("invalid max-lessons")
+    train_seeds = [x + args.seed_offset for x in TRAIN_SEEDS]
+    test_seeds = [x + args.seed_offset for x in TEST_SEEDS]
     agent = Agent(args.agent)
     teaching = {w: 0 for w in WORDS}
     actions = 0
@@ -84,13 +90,14 @@ def main():
         # Every movement is an unmodified protected native proposal.
         env = gym.make("MiniGrid-DoorKey-5x5-v0")
         try:
-            for seed in TRAIN_SEEDS:
+            for seed in train_seeds:
                 obs, _ = env.reset(seed=seed)
                 agent.reset(obs, learning=True)
                 for _ in range(BUDGET):
                     for word in WORDS:
-                        for tile in targets(obs, word)[:1]:
-                            teaching[word] += int(teach(agent, word, tile))
+                        if teaching[word] < args.max_lessons:
+                            for tile in targets(obs, word)[:1]:
+                                teaching[word] += int(teach(agent, word, tile))
                     post, reward, terminated, truncated, event = agent.act_in(env)
                     if post is None:
                         raise RuntimeError(f"native action unavailable: {event}")
@@ -121,7 +128,7 @@ def main():
             executed = 0
             success = 0
             try:
-                for seed in TEST_SEEDS:
+                for seed in test_seeds:
                     obs, _ = env.reset(seed=seed)
                     agent.reset(obs, learning=False)
                     score_current(agent, name, obs, measurements)
@@ -147,8 +154,9 @@ def main():
         "teacher": "deictic word+visible tile; category ID used by teacher ONLY",
         "world_names_sent_to_agent": False,
         "mission_sent_to_agent": False,
-        "training_seeds": TRAIN_SEEDS,
-        "holdout_seeds": TEST_SEEDS,
+        "training_seeds": train_seeds,
+        "holdout_seeds": test_seeds,
+        "max_lessons": args.max_lessons,
         "teacher_acceptances": teaching,
         "teaching_world": "MiniGrid-DoorKey-5x5-v0",
         "first_status": first_status,
