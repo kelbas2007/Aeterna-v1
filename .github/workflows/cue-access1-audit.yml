@@ -1,0 +1,54 @@
+name: Cue access 1 - paired causal perception audit without controller changes
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'scripts/external_cue_access_audit.py'
+      - 'tests/test_cue_access_audit.py'
+      - 'docs/CUE_ACCESS1_PROTOCOL.md'
+      - '.github/workflows/cue-access1-audit.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+concurrency:
+  group: cue-access1-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Confirm original native controller and actuator bridge are unchanged
+        run: |
+          git diff --exit-code 9e923f410b87214faa4f99ff237ef745248ac3b5 -- src/ Cargo.toml Cargo.lock scripts/external_minigrid_benchmark.py
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install pinned independent simulator and check audit scorer
+        run: |
+          python -m pip install 'minigrid==3.1.0'
+          python -m unittest discover -s tests -p 'test_cue_access_audit.py' -v
+      - name: Verify existing native controls and build the actual agent
+        run: |
+          cargo test --locked --release --test episode_sequence_replay --test developmental_history_alias --test general_policy_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Audit actual cue acquisition and balanced causal pairs
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_cue_access_audit.py --agent target/release/external_world_agent --output cue-access1.json 2>&1 | tee cue-access1.log
+      - name: Confirm evaluator produced a verdict without forcing a positive cognitive outcome
+        run: grep -F 'CUE_ACCESS_VERDICT' cue-access1.log
+      - name: Preserve sensory hashes, actions, interventions and outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cue-access1-paired-information-evidence
+          path: |
+            cue-access1.json
+            cue-access1.log
+          if-no-files-found: ignore
