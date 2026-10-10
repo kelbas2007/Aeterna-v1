@@ -168,6 +168,7 @@ impl EvoPhase {
         let temporal_synapse = self.is_native_temporal_evidence_synapse(index);
         let factor_synapse = self.is_native_factor_synapse(index);
         let object_word_synapse = self.is_phase_native_grounded_word_synapse(index);
+        let action_affordance_synapse = self.is_phase_native_affordance_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
@@ -180,6 +181,7 @@ impl EvoPhase {
             && !temporal_synapse
             && !factor_synapse
             && !object_word_synapse
+            && !action_affordance_synapse
             && !self.is_phase_rule_synapse(index)
             && !self.is_native_decoder_synapse(index)
             && !self.is_phase_induction_synapse(index)
