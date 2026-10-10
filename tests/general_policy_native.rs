@@ -28,10 +28,8 @@ fn factual_delayed_reward_assigns_predecessor_motor_credit_without_task_labels()
     // available to the policy; it receives only factual tuples.
     for _ in 0..6 {
         rt.begin_phase_native_general_episode();
-        assert!(rt.organism_mut()
-            .observe_phase_native_general_transition(2,&a,&b,0.0));
-        assert!(rt.organism_mut()
-            .observe_phase_native_general_transition(1,&b,&a,1.0));
+        assert!(rt.observe_phase_native_general_transition(2,&a,&b,0.0));
+        assert!(rt.observe_phase_native_general_transition(1,&b,&a,1.0));
     }
     assert_eq!(rt.phase_native_general_rewards(),6);
     assert_eq!(rt.phase_native_general_updates(),12);
