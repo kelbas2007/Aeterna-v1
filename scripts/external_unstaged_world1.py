@@ -70,6 +70,7 @@ def main():
     parser.add_argument("--agent",type=Path,required=True)
     parser.add_argument("--output",type=Path,default=Path("unstaged-crossworld1.json"))
     parser.add_argument("--seed-offset",type=int,default=0)
+    parser.add_argument("--embodied",action="store_true")
     args=parser.parse_args()
     train_seeds=[x+args.seed_offset for x in TRAIN_SEEDS]
     eval_seeds=[x+args.seed_offset for x in EVAL_SEEDS]
@@ -79,6 +80,10 @@ def main():
     try:
         reply=send(agent,{"cmd":"self_experiment","front_tile":FRONT})
         if not reply.get("accepted"): raise RuntimeError(f"embodiment refused: {reply}")
+        if args.embodied:
+            motion=send(agent,{"cmd":"embodied_navigation"})
+            if motion.get("type")!="embodied_navigation_ack" or not motion.get("accepted"):
+                raise RuntimeError(f"motion exploration refused: {motion}")
         # Equal exposure to independent physics from a common persistent
         # organism, NOT a fresh model instance per family.
         for seed in train_seeds:
@@ -105,6 +110,7 @@ def main():
         "train_seeds":train_seeds,"heldout_seeds":eval_seeds,
         "seed_offset":args.seed_offset,
         "worlds":WORLDS,"budget":BUDGET,
+        "embodied_navigation":args.embodied,
         "teacher_motor_demonstrations":0,
         "teacher_words":0,
         "staged_objects":0,
@@ -119,6 +125,8 @@ def main():
         "eval_key_pickups":sum(e["actual_key_pickups"] for e in heldout),
         "eval_door_openings":sum(e["actual_door_openings"] for e in heldout),
         "eval_executed_moves":sum(e["moves"] for e in heldout),
+        "native_inferred_motion_events":after_restart.get("inferred_motion",0),
+        "total_physical_actions":sum(e["actions"] for e in train+heldout),
     }
     report["verdict"]=(
         "DEVELOPMENT_PASS" if eval_tasks>=6
@@ -133,6 +141,9 @@ def main():
                   random_tasks,len(heldout),report["trained_effects"],
                   report["eval_key_pickups"],report["eval_door_openings"],
                   report["eval_executed_moves"]),flush=True)
+    print(f"UNSTAGED_MOTION_MODE embodied={args.embodied} native_inferred_motion="
+          f"{report['native_inferred_motion_events']} physical_actions="
+          f"{report['total_physical_actions']}",flush=True)
     print(f"UNSTAGED_WORLD1_SUMMARY verdict={report['verdict']} "
           "claim=UNSTAGED_EXTERNAL_TASK_SUCCESS_ONLY_IF_REWARDED",
           flush=True)
