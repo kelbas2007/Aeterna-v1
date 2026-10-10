@@ -54,3 +54,31 @@ fn protected_self_experiment_acquires_object_motor_without_teacher_action() {
     assert_eq!(native_motor,Some(3));
     println!("SELF_OBJECT_NATIVE_PASS trials=4 self_discovered_motor=3 checkpoint=true lesion=true U1=true HP=true");
 }
+
+#[test]
+fn self_object_episode_does_not_repeat_same_motor_at_identical_observation() {
+    let mut rt=organism();
+    assert!(rt.enable_self_object_experiment(FRONT));
+    let initial=scene(5,2,0);
+    rt.observe_external(&initial).unwrap();
+    rt.set_goal(&vec![0.0;DIM]).unwrap();
+    let first=rt.organism().choose_phase_native_self_object_action(&initial)
+        .unwrap().action;
+    assert_eq!(first,0);
+    let chosen=rt.step_unified(|_|Some(safe()),|motor|{
+        assert_eq!(motor,first);
+        Ok((initial.clone(),0.0))
+    }).unwrap();
+    assert!(matches!(chosen,StepOutcome::Executed{..}));
+    let next=rt.organism().choose_phase_native_self_object_action(&initial)
+        .unwrap().action;
+    assert_ne!(next,first, "identical local motor retry must not monopolize U1");
+    // A real external reset begins another episode and forgets only the
+    // transient motor try, not physical learned knowledge.
+    rt.observe_external(&initial).unwrap();
+    let restarted=rt.organism().choose_phase_native_self_object_action(&initial)
+        .unwrap().action;
+    assert_eq!(restarted,first);
+    println!("SELF_OBJECT_EPISODIC_COOLDOWN_PASS first={} next={} reset={}",
+        first,next,restarted);
+}
