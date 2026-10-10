@@ -72,11 +72,15 @@ def main():
     parser.add_argument("--seed-offset",type=int,default=0)
     parser.add_argument("--embodied",action="store_true")
     parser.add_argument("--general-policy",action="store_true")
+    parser.add_argument("--innate-scaffold",action="store_true")
+    parser.add_argument("--developmental-memory",action="store_true")
     parser.add_argument("--budget",type=int,default=BUDGET)
     parser.add_argument("--include-empty",action="store_true")
     args=parser.parse_args()
     if args.general_policy and args.embodied:
         raise SystemExit("choose either general-policy or embodied baseline")
+    if (args.innate_scaffold or args.developmental_memory) and not args.general_policy:
+        raise SystemExit("developmental settings require general-policy mode")
     if not 16<=args.budget<=256:
         raise SystemExit("budget must be 16..256")
     worlds=(("MiniGrid-Empty-5x5-v0",)+WORLDS
@@ -93,6 +97,14 @@ def main():
             decision=send(agent,{"cmd":"general_policy"})
             if decision.get("type")!="general_policy_ack" or not decision.get("accepted"):
                 raise RuntimeError(f"replacement policy refused: {decision}")
+        if args.innate_scaffold:
+            response=send(agent,{"cmd":"innate_scaffold"})
+            if response.get("type")!="innate_scaffold_ack" or not response.get("accepted"):
+                raise RuntimeError(f"innate scaffold refused: {response}")
+        if args.developmental_memory:
+            response=send(agent,{"cmd":"developmental_memory"})
+            if response.get("type")!="developmental_memory_ack" or not response.get("accepted"):
+                raise RuntimeError(f"developmental memory refused: {response}")
         if args.embodied:
             motion=send(agent,{"cmd":"embodied_navigation"})
             if motion.get("type")!="embodied_navigation_ack" or not motion.get("accepted"):
@@ -125,6 +137,8 @@ def main():
         "worlds":worlds,"budget":args.budget,
         "embodied_navigation":args.embodied,
         "general_policy":args.general_policy,
+        "innate_scaffold":args.innate_scaffold,
+        "developmental_memory":args.developmental_memory,
         "teacher_motor_demonstrations":0,
         "teacher_words":0,
         "staged_objects":0,
@@ -141,6 +155,8 @@ def main():
         "trained_effects":before_restart["self_affordances"],
         "general_training_rewards":before_restart.get("general_rewards",0),
         "general_training_updates":before_restart.get("general_updates",0),
+        "innate_acquired_events":before_restart.get("innate_experience_events",0),
+        "memory_hold_events":before_restart.get("developmental_memory_events",0),
         "heldout_effects":after_restart["self_affordances"],
         "eval_key_pickups":sum(e["actual_key_pickups"] for e in heldout),
         "eval_door_openings":sum(e["actual_door_openings"] for e in heldout),
@@ -165,6 +181,9 @@ def main():
           f"budget={args.budget} worlds={len(worlds)} "
           f"train={train_tasks}/{len(train)} heldout={eval_tasks}/{len(heldout)} "
           f"per_world={report['heldout_successes_by_world']}",flush=True)
+    print(f"CHILD_ZERO_MODE innate={args.innate_scaffold} "
+          f"memory={args.developmental_memory} "
+          f"acquired_events={report['innate_acquired_events']}",flush=True)
     print(f"GENERAL_POLICY_MODE enabled={args.general_policy} "
           f"reward_events={report['general_training_rewards']} "
           f"updates={report['general_training_updates']}",flush=True)
