@@ -75,6 +75,10 @@ struct PhaseGroundedObjects {
     self_experiment_front: Option<usize>,
     self_trials: Vec<PhaseSelfTrial>,
     self_affordances: Vec<PhaseSelfAffordance>,
+    // Episodic action traces are TRANSIENT, not acquired knowledge.
+    // They prevent repeating an already attempted motor at an identical
+    // factual visible state. Cleared on real reset and on checkpoint.
+    self_recent_choices: Vec<(Vec<u8>,usize)>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -138,6 +142,7 @@ impl EvoPhase {
             affordances: Vec::new(), intent_word: None,
             self_experiment_front: None, self_trials: Vec::new(),
             self_affordances: Vec::new(),
+            self_recent_choices: Vec::new(),
         });
         true
     }
@@ -153,6 +158,13 @@ impl EvoPhase {
         if relative_front_tile >= g.width * g.height { return false; }
         g.self_experiment_front = Some(relative_front_tile);
         true
+    }
+
+    pub fn begin_phase_native_self_object_episode(&mut self) {
+        if let Some(g)=self.phase_native.as_mut()
+            .and_then(|n| n.grounded_objects.as_mut()) {
+            g.self_recent_choices.clear();
+        }
     }
 
     pub fn phase_native_self_affordance_count(&self) -> usize {
@@ -181,11 +193,14 @@ impl EvoPhase {
         let g = native.grounded_objects.as_ref()?;
         let tile = g.self_experiment_front?;
         let signature = g.tile_signature(raw,tile)?;
+        let episode_frame = factor_bits(raw)?;
+        let already_tried = |a:usize| g.self_recent_choices.iter()
+            .any(|(seen,motor)| seen==&episode_frame && *motor==a);
         let category = g.categories.iter()
             .position(|c| c.signature == signature)?;
         let mut best: Option<PhaseSelfAction> = None;
         for entry in g.self_affordances.iter()
-            .filter(|a| a.category == category) {
+            .filter(|a| a.category == category && !already_tried(a.action)) {
             let strength = conductance(&self.cells,
                 &self.synapses[entry.synapse],native.config.coherence_floor);
             if strength > best.map_or(1.0e-8,|b|b.strength + 1.0e-6) {
@@ -197,7 +212,10 @@ impl EvoPhase {
         }
         if best.is_some() {return best;}
         if !native.config.learning_enabled {return None;}
-        let action = (0..self.config.motor_cells).min_by_key(|&a|
+        // After identical-state motor repetition, delegate to the normal
+        // factor/exploration proposal instead of getting stuck on an object.
+        let action = (0..self.config.motor_cells)
+            .filter(|&a| !already_tried(a)).min_by_key(|&a|
             g.self_trials.iter().find(|t|
                 t.category==category && t.action==a)
                 .map_or(0,|t|t.count)
@@ -227,6 +245,16 @@ impl EvoPhase {
             native.grounded_objects=Some(g);self.phase_native=Some(native);
             return false;
         };
+        if let Some(frame)=factor_bits(pre) {
+            if !g.self_recent_choices.iter()
+                .any(|(seen,motor)| *seen==frame && *motor==action)
+            {
+                if g.self_recent_choices.len()>=128 {
+                    g.self_recent_choices.remove(0);
+                }
+                g.self_recent_choices.push((frame,action));
+            }
+        }
         if !native.config.learning_enabled {
             native.grounded_objects=Some(g);self.phase_native=Some(native);
             return false;
