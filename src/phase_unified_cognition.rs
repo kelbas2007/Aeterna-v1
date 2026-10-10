@@ -446,7 +446,13 @@ impl EvoPhase {
         // still goes through native U1 and Human Protection. If there is no
         // visible supported object, generic factor exploration may proceed.
         if self.phase_native_self_experiment_enabled() {
-            if let Some(witness)=self.choose_phase_native_self_object_action(&sensory) {
+            let embodied=self.phase_native_embodied_navigation_enabled();
+            let candidate=if embodied {
+                self.choose_phase_native_embodied_action(&sensory)
+            }else{
+                self.choose_phase_native_self_object_action(&sensory)
+            };
+            if let Some(witness)=candidate {
                 let strength=witness.strength.clamp(0.0,1.0);
                 return vec![PhaseUnifiedCognitiveProposal {
                     persistent_candidate_id:None,
