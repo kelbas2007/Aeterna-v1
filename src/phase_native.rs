@@ -175,6 +175,7 @@ impl EvoPhase {
         let action_affordance_synapse = self.is_phase_native_affordance_synapse(index);
         let self_affordance_synapse = self.is_phase_native_self_object_synapse(index);
         let general_synapse = self.is_phase_native_general_synapse(index);
+        let relation_synapse = self.is_phase_native_relational_synapse(index);
         let innate_synapse = self.is_phase_native_innate_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
@@ -191,6 +192,7 @@ impl EvoPhase {
             && !action_affordance_synapse
             && !self_affordance_synapse
             && !general_synapse
+            && !relation_synapse
             && !innate_synapse
             && !self.is_phase_rule_synapse(index)
             && !self.is_native_decoder_synapse(index)
@@ -273,6 +275,13 @@ impl EvoPhase {
             persistent.episode_trace.clear();
             persistent.episode_reward_seen=false;
             persistent.episode_ends=0;
+            if let Some(work)=persistent.relational_workspace.as_mut(){
+                work.subject=None;
+                work.first_view_had_subject=false;
+                work.seen_frames=0;
+                work.observed_matches=0;
+                work.observed_contrasts=0;
+            }
             persistent.working_trace.fill(0.0);
             persistent.retained_events=0;
             for trace in &mut persistent.eligibility {trace.fill(0.0);}
@@ -334,6 +343,13 @@ impl EvoPhase {
             policy.episode_trace.clear();
             policy.episode_reward_seen=false;
             policy.episode_ends=0;
+            if let Some(work)=policy.relational_workspace.as_mut(){
+                work.subject=None;
+                work.first_view_had_subject=false;
+                work.seen_frames=0;
+                work.observed_matches=0;
+                work.observed_contrasts=0;
+            }
             for trace in &mut policy.eligibility{trace.fill(0.0);}
         }
         if let Some(innate)=state.innate_scaffold.as_mut(){
@@ -830,4 +846,5 @@ include!("phase_temporal_evidence.rs");
 include!("phase_factor_causality.rs");
 include!("phase_grounded_objects.rs");
 include!("phase_general_policy.rs");
+include!("phase_relational_workspace.rs");
 include!("phase_innate_scaffold.rs");
