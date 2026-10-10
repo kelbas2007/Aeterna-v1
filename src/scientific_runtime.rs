@@ -239,6 +239,12 @@ impl ScientificRuntime {
         self.organism.teach_phase_native_pointed_word(word, tile)
     }
 
+    /// Ground self-driven intervention in a known body-relative visual tile.
+    /// No object word, type ID or motor hint is accepted here.
+    pub fn enable_self_object_experiment(&mut self, front_tile:usize)->bool {
+        self.organism.enable_phase_native_self_object_experiment(front_tile)
+    }
+
     /// A named-object intent supplies only an object word, never a motor ID.
     /// Native factor memory must have separately witnessed the relevant action.
     pub fn set_grounded_word_intent(&mut self, word: &str) -> bool {
@@ -783,6 +789,14 @@ impl ScientificRuntime {
         {
             let _ = self.organism.observe_phase_native_factor_positive_reward(
                 &post, task_outcome,
+            );
+        }
+
+        if self.model_learning_enabled
+            && self.organism.phase_native_self_experiment_enabled()
+        {
+            let _=self.organism.observe_phase_native_self_object_effect(
+                action,&factual_pre,&post
             );
         }
 
