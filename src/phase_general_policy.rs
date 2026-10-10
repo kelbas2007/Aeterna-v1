@@ -205,7 +205,10 @@ impl EvoPhase {
             let jitter=(salt.wrapping_mul(0x2545F4914F6CDD1D)>>40)
                 as f32/(1u32<<24) as f32;
             let learning=native.config.learning_enabled;
-            let score=acquired
+            let inherited=if learning {
+                self.phase_native_innate_action_bias(action)
+            }else{0.0};
+            let score=acquired+inherited
                 +if learning {0.20*surprise+0.10*coverage+0.15*jitter}
                     else {0.07*surprise+0.025*jitter};
             let candidate=PhaseGeneralDecision{
