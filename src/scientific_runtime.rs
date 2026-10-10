@@ -253,6 +253,14 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_general_policy()
     }
 
+    pub fn enable_innate_scaffold(&mut self)->bool{
+        self.organism.enable_phase_native_innate_scaffold()
+    }
+
+    pub fn enable_developmental_memory(&mut self)->bool{
+        self.organism.enable_phase_native_developmental_memory()
+    }
+
     pub fn enable_embodied_navigation(&mut self)->bool{
         self.organism.enable_phase_native_embodied_navigation()
     }
@@ -465,6 +473,8 @@ impl ScientificRuntime {
         self.organism.clear_phase_native_context_history();
         self.organism.begin_phase_native_self_object_episode();
         self.organism.begin_phase_native_general_episode();
+        let _=self.organism.begin_phase_native_innate_episode(raster);
+        let _=self.organism.observe_phase_native_general_initial(raster);
         // A new external real observation begins a fresh evidence episode,
         // while preserving acquired cue and motor synapses across the lifetime.
         if self.organism.phase_native_temporal_evidence_enabled() {
@@ -797,6 +807,10 @@ impl ScientificRuntime {
 
         // General policy receives only real PRE/action/POST and actual reward;
         // temporal credit stays internal to the same native carrier.
+        if self.organism.phase_native_innate_enabled(){
+            let _=self.organism.observe_phase_native_innate_contingency(
+                action,&factual_pre,&post);
+        }
         if self.organism.phase_native_general_enabled(){
             let _=self.organism.observe_phase_native_general_transition(
                 action,&factual_pre,&post,task_outcome);
