@@ -16,6 +16,7 @@ fn organism(memory:bool)->EvoPhase{
     assert!(e.enable_phase_native_general_policy());
     if memory {
         assert!(e.enable_phase_native_developmental_memory());
+        assert!(e.enable_phase_native_episodic_recall());
     }
     e
 }
@@ -65,6 +66,8 @@ fn final_motor(e:&mut EvoPhase,condition:usize)->usize{
 #[test]
 fn same_visible_frame_can_have_history_dependent_action_but_reactive_policy_cannot(){
     let mut recurrent=trained(true);
+    assert!(recurrent.phase_native_episodic_count()>=2,
+        "real successful experiences must produce event memories");
     recurrent.set_planning_learning_enabled(false);
     let a=final_motor(&mut recurrent,0);
     let b=final_motor(&mut recurrent,1);
