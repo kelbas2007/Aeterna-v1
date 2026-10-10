@@ -1,0 +1,40 @@
+name: General policy replacement native scientific checks
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_general_policy.rs'
+      - 'src/phase_native.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'tests/general_policy_native.rs'
+      - '.github/workflows/general-policy-native.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Check all variants
+        run: cargo check --locked --all-targets
+      - name: Generic temporal credit and physical lesion
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test general_policy_native -- --nocapture 2>&1 | tee general-policy-native.log
+      - name: Existing learned object behavior is still isolated
+        run: cargo test --locked --release --test self_object_effect_native
+      - name: Keep failures and exact native evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: general-policy-native
+          path: general-policy-native.log
+          if-no-files-found: ignore
