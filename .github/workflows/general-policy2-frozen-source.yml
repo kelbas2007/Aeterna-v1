@@ -1,0 +1,84 @@
+name: General policy 2 - frozen-source new seeds independent replication
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - '.github/workflows/general-policy2-frozen-source.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  source-frozen-replication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '58d204089eff50a36793397bad3407f30b249e56'
+          persist-credentials: false
+      - name: Verify same immutable controller source as original qualified run
+        run: test "$(git rev-parse HEAD)" = "58d204089eff50a36793397bad3407f30b249e56"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install untouched independent Farama physics
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Compile exactly original learned controller and physical checks
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test general_policy_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Same source hand-authored control on completely NEW seeds
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_unstaged_world1.py \
+            --agent target/release/external_world_agent \
+            --embodied --budget 256 --include-empty --seed-offset 16000 \
+            --output general2-authored.json 2>&1 | tee general2-authored.log
+      - name: Same source generic learning without task-specific controller
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_unstaged_world1.py \
+            --agent target/release/external_world_agent \
+            --general-policy --budget 256 --include-empty --seed-offset 16000 \
+            --output general2-learned.json 2>&1 | tee general2-learned.log
+      - name: Compare strict complete external task success on unopened seeds
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('general2-authored.json'))
+          p=json.load(open('general2-learned.json'))
+          assert a['train_seeds']==p['train_seeds']==list(range(66000,66012))
+          assert a['heldout_seeds']==p['heldout_seeds']==list(range(67000,67004))
+          assert a['worlds']==p['worlds'] and len(a['worlds'])==4
+          assert a['budget']==p['budget']==256
+          assert p['general_policy'] and not a['general_policy']
+          assert a['embodied_navigation'] and not p['embodied_navigation']
+          assert a['random_task_successes']==p['random_task_successes']
+          assert a['total_physical_actions']>0 and p['total_physical_actions']>0
+          complex=p['heldout_successes_by_world']['MiniGrid-DoorKey-5x5-v0']+p['heldout_successes_by_world']['MiniGrid-MultiRoom-N2-S4-v0']
+          passed=p['eval_task_successes']>=6 and p['eval_task_successes']>a['eval_task_successes'] and p['eval_task_successes']>p['random_task_successes'] and complex>0
+          print('GENERAL_POLICY2_FROZEN_RESULT '
+                f"learned={p['eval_task_successes']}/16 "
+                f"authored={a['eval_task_successes']}/16 "
+                f"random={p['random_task_successes']}/16 "
+                f"complex_wins={complex}/8 "
+                f"per_world={p['heldout_successes_by_world']} "
+                f"reward_events={p['general_training_rewards']} "
+                f"verdict={'REPLICATION_PASS' if passed else 'REPLICATION_FAIL'}")
+          PY
+      - name: Retain all frozen-source replication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: general-policy2-immutable-source-new-seeds
+          path: |
+            general2-authored.json
+            general2-authored.log
+            general2-learned.json
+            general2-learned.log
+          if-no-files-found: ignore
