@@ -1,0 +1,45 @@
+name: Factor-world 2 compositional causal development
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_factor_causality.rs'
+      - 'src/phase_native.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/scientific_runtime.rs'
+      - 'tests/factorized_world2_development.rs'
+      - '.github/workflows/factor-world2-development.yml'
+      - 'docs/FACTOR_WORLD2_PROTOCOL.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  factor-composition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile causal factor experiment
+        run: cargo check --locked --test factorized_world2_development
+      - name: Execute and retain actual cognitive verdict
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test factorized_world2_development factor_world2_composition_battery_surprise_and_carrier_control -- --exact --nocapture 2>&1 | tee factor-world2.log
+      - name: Report cognitive outcome without promoting it to PASS
+        run: grep -F 'FACTOR_WORLD2_SUMMARY' factor-world2.log
+      - name: Preserve result and errors
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: factor-world2-development-evidence
+          path: factor-world2.log
+          if-no-files-found: ignore
