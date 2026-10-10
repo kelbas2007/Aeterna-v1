@@ -62,6 +62,12 @@ fn init(len: usize, motors: usize) -> Result<ScientificRuntime, String> {
     if !rt.enable_factor_causality() || !rt.enable_factor_external_reward_goal() {
         return Err("carrier-owned external reward mode refused".into());
     }
+    // Public MiniGrid 7x7x3 categorical view: two stable appearance fields
+    // and an independent mutable state field. This is a sensor LAYOUT,
+    // not a mapping from simulator category indexes to word meanings.
+    if len == 588 && !rt.enable_object_grounding(7, 7, 3, 4, 2) {
+        return Err("object grounding memory creation failed".into());
+    }
     Ok(rt)
 }
 fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), String> {
@@ -136,6 +142,25 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                             "previous_action":selected}))?,
                 }
             }
+            "teach_word" => {
+                let rt = runtime.as_mut().ok_or("init required")?;
+                let word = msg.get("word").and_then(Value::as_str)
+                    .ok_or("word required")?;
+                let tile = msg.get("tile").and_then(Value::as_u64)
+                    .ok_or("pointed tile required")? as usize;
+                let learned = rt.teach_pointed_word(word, tile);
+                send(out, &json!({"type":"lesson_ack", "learned":learned,
+                    "word_count":rt.organism().phase_native_grounded_words()}))?;
+            }
+            "locate_word" => {
+                let rt = runtime.as_ref().ok_or("init required")?;
+                let word = msg.get("word").and_then(Value::as_str)
+                    .ok_or("word required")?;
+                let found = rt.locate_grounded_word(word);
+                send(out, &json!({"type":"referents", "word":word,
+                    "tiles":found.iter().map(|r|r.tile_index).collect::<Vec<_>>(),
+                    "strengths":found.iter().map(|r|r.strength).collect::<Vec<_>>() }))?;
+            }
             "status" => {
                 let rt = runtime.as_ref().ok_or("init required")?;
                 send(out, &json!({
@@ -143,7 +168,10 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "rules":rt.organism().phase_native_factor_rule_count(),
                     "rewarded_examples":rt.organism().phase_native_factor_rewarded_examples(),
                     "contradictions":rt.organism().phase_native_factor_contradictions(),
-                    "safety_latched":rt.emergency_latched()
+                    "safety_latched":rt.emergency_latched(),
+                    "visual_categories":rt.organism().phase_native_grounded_categories(),
+                    "word_count":rt.organism().phase_native_grounded_words(),
+                    "visual_frames":rt.organism().phase_native_grounded_frames()
                 }))?;
             }
             "quit" => return Ok(()),
