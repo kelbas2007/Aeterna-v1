@@ -874,7 +874,7 @@ impl EvoPhase {
         while let Some((cell,first,depth,visited))=queue.pop_front(){
             if considered>=1024 {break;}
             considered+=1;
-            if depth>7{continue;}
+            if depth>11{continue;}
             for action in 0..self.config.motor_cells {
                 let trials=t.action_trials.iter()
                     .find(|tr|tr.from_cell==cell&&tr.motor_action==action)
@@ -886,7 +886,7 @@ impl EvoPhase {
                     best=Some((first_action,novelty,depth+1));
                 }
             }
-            if depth>=7{continue;}
+            if depth>=11{continue;}
             for e in t.transitions.iter().filter(|e|
                 e.from_cell==cell&&e.observations>0
                     &&e.to_cell!=goal&&!visited.contains(&e.to_cell)
@@ -939,7 +939,7 @@ impl EvoPhase {
         while let Some((cell,first,strength,depth,visited))=queue.pop_front(){
             if considered>=1024 {break;}
             considered+=1;
-            if depth>=8 || best.is_some_and(|p|depth>=p.steps){continue;}
+            if depth>=12 || best.is_some_and(|p|depth>=p.steps){continue;}
             for edge in t.transitions.iter().filter(|e|
                 e.from_cell==cell && e.observations>0
             ){
@@ -969,7 +969,7 @@ impl EvoPhase {
                         _=>{}
                     }
                 } else if !visited.contains(&edge.to_cell)
-                    && next_depth<8
+                    && next_depth<12
                 {
                     let mut seen=visited.clone();
                     seen.push(edge.to_cell);
