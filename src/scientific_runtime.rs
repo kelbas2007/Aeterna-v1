@@ -214,6 +214,12 @@ impl ScientificRuntime {
 
     /// Open research: general multi-step physical state-action-state
     /// evidence learning. No desired action length or motor roles are passed.
+    /// Opt-in factorwise, raw PRE/action/POST causal model.
+    /// No externally named features or correct motors are accepted.
+    pub fn enable_factor_causality(&mut self) -> bool {
+        self.organism.enable_phase_native_factor_causality()
+    }
+
     pub fn set_temporal_multistep(&mut self,enabled:bool)->bool{
         self.organism.set_phase_native_temporal_multistep(enabled)
     }
@@ -341,6 +347,9 @@ impl ScientificRuntime {
 
     fn validate_raster(&self, raster: &[f32]) -> Result<(), RuntimeError> {
         self.validate_sensor_values(raster)?;
+        if self.organism.phase_native_factor_causality_enabled() {
+            return Ok(());
+        }
         if self.organism.phase_rules_enabled() {
             // A feature vector need not be a previously memorized state. Its
             // transition remains unknown until factual support confirms a rule.
@@ -354,7 +363,9 @@ impl ScientificRuntime {
 
     fn prepare_factual_observation(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
         self.validate_sensor_values(raster)?;
-        if self.organism.phase_rules_enabled() { return Ok(()); }
+        if self.organism.phase_rules_enabled()
+            || self.organism.phase_native_factor_causality_enabled()
+        { return Ok(()); }
         if self.organism.phase_native_online_enabled()
             && !self.organism.acquire_phase_native_online_observation(raster)
         {
@@ -395,7 +406,9 @@ impl ScientificRuntime {
             let goal = raster.iter().copied().map(Some).collect::<Vec<_>>();
             return self.set_partial_goal(&goal);
         }
-        if self.organism.phase_native_online_enabled() {
+        if self.organism.phase_native_online_enabled()
+            || self.organism.phase_native_factor_causality_enabled()
+        {
             // A desired observation is not factual experience. Recognition
             // and a route may be acquired later from actual consequences.
             self.validate_sensor_values(raster)?;
@@ -462,6 +475,9 @@ impl ScientificRuntime {
         let goal = self.goal.as_ref().ok_or(RuntimeError::GoalRequired)?;
         let real = self.organism.current_real()
             .ok_or(RuntimeError::FreshObservationRequired)?;
+        if self.organism.phase_native_factor_causality_enabled() {
+            return Ok(real.sensory == *goal);
+        }
         if self.organism.phase_rules_enabled() {
             if self.organism.phase_adaptive_rules_enabled() {
                 return Ok(self.organism.phase_adaptive_goal_matches(&real.sensory, goal));
@@ -735,7 +751,14 @@ impl ScientificRuntime {
             self.organism.phase_native_compositional_enabled()
                 || self.organism.phase_native_perceptual_enabled()
                 || self.organism.phase_native_context_enabled();
-        let suppressed = if self.organism.phase_rules_enabled() {
+        let suppressed = if self.organism.phase_native_factor_causality_enabled() {
+            if self.model_learning_enabled {
+                let _ = self.organism.observe_phase_native_factor_transition(
+                    action, &factual_pre, &post);
+            }
+            self.organism.observe_initial_real(&post, false);
+            0
+        } else if self.organism.phase_rules_enabled() {
             let count = if self.model_learning_enabled {
                 match self.organism.observe_phase_rule_result(action,&factual_pre,&post) {
                     Some(count) => count,
