@@ -85,6 +85,31 @@ FAIL 0/4. Further cost-sensitive evidence/goal arbitration required.
 
 First separate frozen fresh attempt [37932975901](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37932975901) **FAILED 1/4**; a generic physical terminal credit defect was repaired before preregistering fresh2. These are fixed, distinct experiments; neither has been erased or re-scored. **No structurally different stochastic family or open-world AGI qualification has passed.** The four arms are four separate organisms, each one continuous lifetime, with pretrained generic perception/U1 foundation.
 
+## Self-acquired cold causal goal planning — 2026-10-10
+
+**First-attempt source-frozen COLD-GOAL-FRESH1 DEVELOPMENT PASS: 12/12**
+[GitHub Actions 38025296916](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38025296916).
+No target-world state/action transitions or motor plans supplied: each separate
+organism received the raw goal, exercised opaque motors through
+`ScientificRuntime::step_unified` over 192 bounded training episodes,
+learned six conducting physical transition links, saved/restarted cognition,
+solved its own four-action goal plan, and recovered from a hidden changed-law
+no-op by executing an independently acquired detour. The first two physical
+link controls proved necessary synapse/restore dependence in each arm; model
+learning stayed frozen during the initial heldout goal. All 12 passed with
+zero unavailable/blocked action. The consumed first-attempt seed and exact
+source tree were checked before evaluation.
+
+[Full results and scientific limits](docs/COLD_GOAL_FRESH1_RESULT.md) ·
+[preregistered Fresh1 protocol](docs/COLD_GOAL_FRESH1_PROTOCOL.md) ·
+[open 4/4 pilot](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38025025890).
+
+This **surpasses guided-edge GOAL-REPLAN-1** by removing *all target-model
+tuition*, but does not generalize beyond role permutations in a fixed
+six-state deterministic topology, does not prove that the physical network
+invented its Rust exploration/search controller, and is not human/open-world
+AGI. Current research has not been promoted to `main`.
+
 ## Goal-conditioned physical replanning (new development result)
 
 The active research branch now supports an opt-in, goal-conditioned bounded
