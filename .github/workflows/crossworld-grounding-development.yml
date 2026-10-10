@@ -1,0 +1,49 @@
+name: Cross-world grounded object memory - real Farama simulator
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_grounded_objects.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'scripts/external_crossworld_grounding.py'
+      - 'docs/CROSSWORLD_OBJECT1_PROTOCOL.md'
+      - '.github/workflows/crossworld-grounding-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  crossworld:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Independent environment
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Grounded-carrier physical and checkpoint controls
+        run: |
+          cargo test --locked --release --test grounded_object_memory -- --nocapture
+          cargo build --locked --release --bin external_world_agent
+      - name: Execute real external-world lexical transfer
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_crossworld_grounding.py \
+            --agent target/release/external_world_agent \
+            --output crossworld-object1.json 2>&1 | tee crossworld-object1.log
+      - name: Require a factual result line, not positive cognitive score
+        run: grep -F 'CROSSWORLD_OBJECT_SUMMARY verdict=' crossworld-object1.log
+      - name: Retain positive and negative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crossworld-object1-external-grounding
+          path: |
+            crossworld-object1.json
+            crossworld-object1.log
+          if-no-files-found: ignore
