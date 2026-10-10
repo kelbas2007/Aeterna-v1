@@ -175,6 +175,12 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                 send(out,&json!({"type":"innate_scaffold_ack",
                     "accepted":accepted}))?;
             }
+            "episodic_recall" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                let accepted=rt.enable_episodic_recall();
+                send(out,&json!({"type":"episodic_recall_ack",
+                    "accepted":accepted}))?;
+            }
             "developmental_memory" => {
                 let rt=runtime.as_mut().ok_or("init required")?;
                 let accepted=rt.enable_developmental_memory();
@@ -249,6 +255,7 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                         .map_or(0,|r|r.observed_events),
                     "developmental_memory":rt.organism().phase_native_developmental_memory_enabled(),
                     "developmental_memory_events":rt.organism().phase_native_developmental_retained_events(),
+                    "rewarded_episodic_memories":rt.organism().phase_native_episodic_count(),
                     "learned_affordances":rt.organism().phase_native_learned_affordances()
                 }))?;
             }
