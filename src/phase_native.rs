@@ -277,6 +277,7 @@ impl EvoPhase {
             persistent.episode_ends=0;
             if let Some(work)=persistent.relational_workspace.as_mut(){
                 work.subject=None;
+                work.hypotheses.clear();
                 work.first_view_had_subject=false;
                 work.seen_frames=0;
                 work.observed_matches=0;
@@ -345,6 +346,7 @@ impl EvoPhase {
             policy.episode_ends=0;
             if let Some(work)=policy.relational_workspace.as_mut(){
                 work.subject=None;
+                work.hypotheses.clear();
                 work.first_view_had_subject=false;
                 work.seen_frames=0;
                 work.observed_matches=0;
