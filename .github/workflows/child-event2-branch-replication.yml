@@ -1,0 +1,103 @@
+name: Child Event 2 - immutable source and branch-conditional MemoryS7 test
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'docs/CHILD_EVENT2_PROTOCOL.md'
+      - '.github/workflows/child-event2-branch-replication.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  exact-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '855b58c1d3e680509ce629b02731d78f2a453eb0'
+          persist-credentials: false
+      - name: Source must be identical to FIRST original cognitive run
+        run: test "$(git rev-parse HEAD)" = "855b58c1d3e680509ce629b02731d78f2a453eb0"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Independently maintained Farama Memory task
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Exact native memory and physical motor controls
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test episode_sequence_replay
+          cargo test --locked --release --test developmental_history_alias
+          cargo build --locked --release --bin external_world_agent
+      - name: Source-identical memoryless control on fresh 120K seeds
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --seed-offset 40000 \
+            --output child-event2-control.json 2>&1 | tee child-event2-control.log
+      - name: Source-identical genuine whole-episode memories on SAME seeds
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --memory --episodic-recall --sequence-replay \
+            --seed-offset 40000 \
+            --output child-event2-memory.json 2>&1 | tee child-event2-memory.log
+      - name: Reject always-upper/always-lower policies even with reward
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open('child-event2-control.json'))
+          m=json.load(open('child-event2-memory.json'))
+          assert a['training_seeds']==m['training_seeds']==list(range(120000,120128))
+          assert a['heldout_seeds']==m['heldout_seeds']==list(range(121000,121024))
+          assert not a['sequence_replay'] and m['sequence_replay']
+          assert a['random_successes']==m['random_successes']
+          episodes=m['heldout']
+          target_counts={}
+          chosen_counts={}
+          wins_by_exit={}
+          for x in episodes:
+              goal=tuple(x['success_position'])
+              chosen=tuple(x['terminal_position'])
+              target_counts[goal]=target_counts.get(goal,0)+1
+              chosen_counts[chosen]=chosen_counts.get(chosen,0)+1
+              if x['success']:
+                  wins_by_exit[goal]=wins_by_exit.get(goal,0)+1
+          fixed_side_best=max(target_counts.values())
+          varied=len(chosen_counts)>=2
+          correct_both=all(wins_by_exit.get(place,0)>=1
+                           for place in target_counts)
+          passed=(m['heldout_successes']>=12
+                  and m['heldout_successes']>fixed_side_best
+                  and m['heldout_successes']>a['heldout_successes']
+                  and m['heldout_successes']>m['random_successes']
+                  and varied and correct_both)
+          print('CHILD_EVENT2_CAUSAL_BRANCH_AUDIT '
+                f"episodic={m['heldout_successes']}/24 "
+                f"no_memory={a['heldout_successes']}/24 "
+                f"random={m['random_successes']}/24 "
+                f"best_fixed_side={fixed_side_best}/24 "
+                f"distinct_chosen_exits={len(chosen_counts)} "
+                f"correct_goal_branches={len(wins_by_exit)} "
+                f"chosen={chosen_counts} "
+                f"verdict={'BEHAVIOR_PASS' if passed else 'BEHAVIOR_FAIL'}")
+          PY
+      - name: Preserve score and positional forensic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: child-event2-immutable-causal-branch-evidence
+          path: |
+            child-event2-control.json
+            child-event2-control.log
+            child-event2-memory.json
+            child-event2-memory.log
+          if-no-files-found: ignore
