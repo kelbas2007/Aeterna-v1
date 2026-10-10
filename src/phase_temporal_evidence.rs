@@ -136,6 +136,8 @@ pub(super) struct PhaseTemporalEvidenceState {
     /// Open development: the same evidence carrier handles variable depth.
     multistep_enabled:bool,
     goal_replan_enabled:bool,
+    cold_goal_acquisition:bool,
+    executive_goal_cell:Option<usize>,
     transitions:Vec<PhaseTemporalTransition>,
     action_trials:Vec<PhaseTemporalActionTrial>,
     goal_witnesses:Vec<PhaseTemporalGoalWitness>,
@@ -197,6 +199,8 @@ impl EvoPhase {
             chains: Vec::new(),
             multistep_enabled:false,
             goal_replan_enabled:false,
+            cold_goal_acquisition:false,
+            executive_goal_cell:None,
             transitions:Vec::new(),
             action_trials:Vec::new(),
             goal_witnesses:Vec::new(),
@@ -817,6 +821,94 @@ impl EvoPhase {
         if enabled && !t.multistep_enabled{return false;}
         t.goal_replan_enabled=enabled;
         true
+    }
+
+    /// Experimental autonomous acquisition for a goal the user already
+    /// supplied as a RAW sensory target. No state/action route is provided.
+    /// The same carrier stores its live objective, per-state motor trials
+    /// and physically acquired PRE/motor/POST links.
+    pub fn set_phase_native_temporal_cold_goal_acquisition(
+        &mut self,enabled:bool
+    )->bool{
+        let Some(t)=self.phase_native.as_mut()
+            .and_then(|n|n.temporal_evidence.as_mut()) else{return false;};
+        if enabled&&!t.goal_replan_enabled{return false;}
+        t.cold_goal_acquisition=enabled;
+        if !enabled{t.executive_goal_cell=None;}
+        true
+    }
+
+    pub fn set_phase_native_temporal_executive_goal(
+        &mut self,goal:&[f32]
+    )->bool{
+        let Some(cell)=self.phase_native_abstract_state(goal)
+            .map(|state|state.cell) else{return false;};
+        let Some(t)=self.phase_native.as_mut()
+            .and_then(|n|n.temporal_evidence.as_mut()) else{return false;};
+        if !t.cold_goal_acquisition{return false;}
+        t.executive_goal_cell=Some(cell);
+        true
+    }
+
+    /// An optimistic state-conditioned motor coverage policy. It searches
+    /// only PHYSICALLY CONDUCTING actual transition links; no hidden world
+    /// depth, correct motor identity, taught order or synthetic plan.
+    /// Every action is still protected and its observed POST is learnt by
+    /// the existing phase-native transition code.
+    pub fn choose_phase_native_temporal_goal_frontier(
+        &self
+    )->Option<(usize,f32,usize)>{
+        let native=self.phase_native.as_ref()?;
+        let t=native.temporal_evidence.as_ref()?;
+        if !t.cold_goal_acquisition || !t.goal_replan_enabled
+            || !native.config.learning_enabled{return None;}
+        let goal=t.executive_goal_cell?;
+        let sensory=&self.current_real.as_ref()?.sensory;
+        let origin=self.phase_native_abstract_state(sensory)?.cell;
+        if origin==goal{return None;}
+        let floor=native.config.coherence_floor;
+        let mut queue=std::collections::VecDeque::new();
+        queue.push_back((origin,None,0usize,vec![origin]));
+        let mut considered=0usize;
+        let mut best:Option<(usize,f32,usize)>=None;
+        while let Some((cell,first,depth,visited))=queue.pop_front(){
+            if considered>=1024 {break;}
+            considered+=1;
+            if depth>7{continue;}
+            for action in 0..self.config.motor_cells {
+                let trials=t.action_trials.iter()
+                    .find(|tr|tr.from_cell==cell&&tr.motor_action==action)
+                    .map(|tr|tr.observations).unwrap_or(0);
+                let novelty=1.0/(1.0+trials as f32)
+                    /(1.0+depth as f32*0.15);
+                let first_action=first.unwrap_or(action);
+                if best.is_none_or(|b|novelty>b.1+1.0e-6){
+                    best=Some((first_action,novelty,depth+1));
+                }
+            }
+            if depth>=7{continue;}
+            for e in t.transitions.iter().filter(|e|
+                e.from_cell==cell&&e.observations>0
+                    &&e.to_cell!=goal&&!visited.contains(&e.to_cell)
+            ){
+                let entry=conductance(&self.cells,
+                    &self.synapses[e.entry_synapse],floor);
+                let exit=conductance(&self.cells,
+                    &self.synapses[e.exit_synapse],floor);
+                if entry.min(exit)<=1.0e-8{continue;}
+                let mut seen=visited.clone();
+                seen.push(e.to_cell);
+                queue.push_back((
+                    e.to_cell,Some(first.unwrap_or(e.motor_action)),
+                    depth+1,seen
+                ));
+            }
+        }
+        // When novelty is exhausted, act on the acquired causal model
+        // rather than continuously probing a known complete world.
+        let (motor,value,steps)=best?;
+        if value<0.14{return None;}
+        Some((motor,value,steps))
     }
 
     pub fn phase_native_temporal_goal_replanning_enabled(&self)->bool{
