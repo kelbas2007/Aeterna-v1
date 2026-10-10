@@ -193,3 +193,26 @@ structure, learn counterfactual invariants from factual actions
 without teaching motor roles, combine them in an unseen cross-product
 and test actual battery depletion/replanning. The algorithm may not
 import evaluator-specified factors or a privileged route.
+
+## Independent raw-feature causal composition — open development, 2026-10-10
+
+**FACTOR-WORLD-2: DEVELOPMENT PASS 4/4**,
+[Actions 38030652151](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38030652151).
+After autonomously acquired key-only and supply-only physical actions,
+four independent continuing organisms composed an unseen joint-inventory
+goal in **exactly 5 planned actions**, then recovered from an actual
+hidden battery-discharge gate failure in **7 actions** each. Six causal
+effect rules per arm were gated by conducting phase synapses; causal
+lesion/restore of the required link broke/restored the composed plan.
+Zero protected/unsupported action violations. The frozen first heldout
+retained U1 weights. [Full evidence and limits](docs/FACTOR_WORLD2_RESULT.md) ·
+[open protocol](docs/FACTOR_WORLD2_PROTOCOL.md).
+
+**Not equivalent to general open-world factor discovery:** sensory
+factors are deliberately distinguishable as persistent binary pixel
+positions, permuted in each arm. The first FACTOR-WORLD-1 FAIL used
+arbitrary complete-state codes, so their 0/4 and this 4/4 are **not a
+matched ablation**. Factor rule discovery and BFS are explicit Rust
+algorithms. Neither the original FAIL nor these caveats are removed.
+Next: objectively detect objects and continuous resources from unlabelled
+raw scenes with unseen topology and a separately sealed fresh gate.
