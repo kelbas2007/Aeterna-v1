@@ -1,0 +1,43 @@
+name: Innate developmental scaffold - physical priors and factual learning
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_innate_scaffold.rs'
+      - 'src/phase_native.rs'
+      - 'src/phase_general_policy.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'tests/innate_scaffold_native.rs'
+      - '.github/workflows/innate-scaffold-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  native-innate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Check every native target
+        run: cargo check --locked --all-targets
+      - name: Verify no pretrained object concepts and physical orienting
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test innate_scaffold_native -- --nocapture 2>&1 | tee innate-development.log
+      - name: Existing generic delayed-credit and old object skill tests
+        run: |
+          cargo test --locked --release --test general_policy_native
+          cargo test --locked --release --test grounded_object_memory
+          cargo test --locked --release --bin external_world_agent
+      - name: Preserve evidence even when checks fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: innate-scaffold-first-evidence
+          path: innate-development.log
+          if-no-files-found: ignore
