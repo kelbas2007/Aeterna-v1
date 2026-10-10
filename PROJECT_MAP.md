@@ -216,3 +216,33 @@ matched ablation**. Factor rule discovery and BFS are explicit Rust
 algorithms. Neither the original FAIL nor these caveats are removed.
 Next: objectively detect objects and continuous resources from unlabelled
 raw scenes with unseen topology and a separately sealed fresh gate.
+
+## Independent external worlds — first actual interoperation (2026-10-10)
+
+The Rust EvoPhase organism now connects to independent Farama
+`minigrid==3.1.0` software environments through a live JSONL
+observation→protected native U1 action→actual POST/reward bridge.
+Three external tasks: Empty-5x5, DoorKey-5x5 and MultiRoom-N2-S4.
+Input is the public **partially observable** 7×7×3 categorical tile view
+converted to 588 binary sensory channels, not a hidden simulator map
+and not RGB image understanding. Motor command meanings and mission
+strings are never passed into cognition.
+
+**First external source run INVALID:** [38033213634](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38033213634)
+ran zero actions because U2 was missing from the new adapter.
+This was fixed and a protected action smoke test was added.
+**First valid external development: FAIL 0/12** frozen heldout vs
+2/12 random, [38033397140](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38033397140),
+[full evidence](docs/EXTERNAL_WORLD1_RESULT.md).
+
+**EXTERNAL-WORLD-2, genuinely new seeds: FAIL 0/12** frozen heldout,
+2/12 random. The organism achieved **1/8 training goals in Empty** and
+stored its first actual external rewarded goal, but did not transfer it
+to any of four heldout seeds. DoorKey/MultiRoom had zero goals.
+[Run 38033662625](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38033662625),
+[full evidence](docs/EXTERNAL_WORLD2_RESULT.md) ·
+[protocol](docs/EXTERNAL_WORLD2_PROTOCOL.md).
+Green CI verifies actual execution, NOT task success.
+The open barrier is object/spatial identity, temporal partial-view
+integration and goal-directed exploration under sparse reward;
+another fixed graph permutation cannot solve it.
