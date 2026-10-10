@@ -295,3 +295,42 @@ already coded object type across different worlds with a shared
 categorical visual code. It does not confirm self-discovered
 object ontologies, unsupervised language, RGB recognition or
 causal affordance/action transfer. Those remain open.
+
+## Functional word grounding: externally observed object use (2026-10-10)
+
+The prior one-shot object lexicon was restricted to word↔visual
+category recognition. The new \`PhaseLearnedAffordance\` adds
+word/category-relative-place→motor effect links that arise only
+after factual changed-object PRE/action/POST, and are enabled by
+real phase synapses. A named-object intent now proposes an acquired
+motor via existing native U1 and Human Protection, or fails
+closed when its grounded object is absent or its synapse is
+lesioned. This is opt-in, and checkpoint/restart retains the
+learned relations.
+
+**FUNCTIONAL-GROUNDING-1: OPEN DEVELOPMENT PASS 24/24**
+on 12 novel DoorKey-key and 12 novel MultiRoom-door object
+interaction setups, following exactly two explicit tutor
+demonstrations of real outside motors.
+[Actions 38041549234](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38041549234)
+· [details](docs/FUNCTIONAL_GROUNDING1_RESULT.md).
+
+**FUNCTIONAL-CROSSWORLD-2: OPEN DEVELOPMENT PASS 24/24**
+on the *different* real MiniGrid-Unlock key-pickup and
+DoorKey locked-door toggle task families. The examiner stages
+target objects immediately ahead and provides an already carried
+key to make a locked door unlockable; EvoPhase selects the
+motor without heldout action tuition. **Zero terminal task rewards**.
+[Actions 38041785647](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38041785647)
+· [results](docs/FUNCTIONAL_CROSSWORLD2_RESULT.md)
+· [protocol](docs/FUNCTIONAL_CROSSWORLD2_PROTOCOL.md).
+
+**Science boundary:** these PASS reports demonstrate
+**supervised, staged, category-coded motor-affordance transfer**,
+NOT autonomous discovery of how keys/doors work, learned
+precondition chains, independent navigation, raw RGB
+object recognition, or general AGI. Whole-task external
+MiniGrid performance remains at the previously measured
+0/12 heldout successes. Next: fully autonomous
+object/space persistence and key→door prerequisites without
+evaluator stages, paired against stripped-carrier controls.
