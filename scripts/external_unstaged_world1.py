@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""Unstaged cross-world MiniGrid test: no teacher, no object placement, no hints.
+
+ONE continuous EvoPhase organism encounters independent DoorKey,
+MultiRoom and Unlock worlds interleaved. The environment gives only its
+public image and real reward. Evaluator may inspect simulator INTERNAL
+object states solely for OUTCOME SCORING; none are sent to Rust.
+"""
+import argparse
+import json
+import random
+from pathlib import Path
+
+import gymnasium as gym
+import minigrid  # noqa: F401
+
+from external_minigrid_benchmark import Agent, random_control
+from external_functional_grounding import FRONT, send
+
+WORLDS = (
+    "MiniGrid-DoorKey-5x5-v0",
+    "MiniGrid-MultiRoom-N2-S4-v0",
+    "MiniGrid-Unlock-v0",
+)
+TRAIN_SEEDS = tuple(range(50000,50012))
+EVAL_SEEDS = tuple(range(51000,51004))
+BUDGET = 128
+
+
+def real_episode(agent, name, seed, learning):
+    env = gym.make(name)
+    try:
+        obs, _ = env.reset(seed=seed)
+        agent.reset(obs,learning=learning)
+        facts = {
+            "seed":seed,"world":name,"learning":learning,
+            "actions":0,"reward":0.0,"actual_key_pickups":0,
+            "actual_door_openings":0,"moves":0,"stopped":None
+        }
+        for _ in range(BUDGET):
+            # External OUTCOME auditor; no simulator variables enter cognition.
+            world=env.unwrapped
+            front=world.grid.get(*world.front_pos)
+            carrying_before=world.carrying
+            open_before=bool(getattr(front, "is_open", False))
+            position_before=tuple(world.agent_pos)
+            obs, reward, terminated, truncated, response=agent.act_in(env)
+            if obs is None:
+                facts["stopped"]=response.get("reason")
+                break
+            facts["actions"]+=1
+            facts["reward"]+=float(reward)
+            facts["moves"]+=int(tuple(world.agent_pos)!=position_before)
+            facts["actual_key_pickups"]+=int(
+                front is not None and getattr(front,"type",None)=="key"
+                and carrying_before is None and world.carrying is front)
+            facts["actual_door_openings"]+=int(
+                front is not None and getattr(front,"type",None)=="door"
+                and not open_before and bool(getattr(front,"is_open",False)))
+            if terminated or truncated: break
+        facts["success"]=facts["reward"]>0
+        facts["reward"]=round(facts["reward"],6)
+        return facts
+    finally:
+        env.close()
+
+
+def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--agent",type=Path,required=True)
+    parser.add_argument("--output",type=Path,default=Path("unstaged-crossworld1.json"))
+    args=parser.parse_args()
+    agent=Agent(args.agent)
+    train=[]
+    heldout=[]
+    try:
+        reply=send(agent,{"cmd":"self_experiment","front_tile":FRONT})
+        if not reply.get("accepted"): raise RuntimeError(f"embodiment refused: {reply}")
+        # Equal exposure to independent physics from a common persistent
+        # organism, NOT a fresh model instance per family.
+        for seed in TRAIN_SEEDS:
+            for env_id in WORLDS:
+                train.append(real_episode(agent,env_id,seed,True))
+        before_restart=agent.status()
+        restart=send(agent,{"cmd":"restart"})
+        if restart.get("type")!="restart_ack": raise RuntimeError("native restart failed")
+        for seed in EVAL_SEEDS:
+            for env_id in WORLDS:
+                heldout.append(real_episode(agent,env_id,seed,False))
+        after_restart=agent.status()
+    finally:
+        agent.close()
+    random_results={}
+    for name in WORLDS:
+        random_results[name]=random_control(
+            name,EVAL_SEEDS,BUDGET,seed_base=616161 + len(name))
+    train_tasks=sum(e["success"] for e in train)
+    eval_tasks=sum(e["success"] for e in heldout)
+    random_tasks=sum(e["success"] for batch in random_results.values() for e in batch)
+    report={
+        "task":"one lifetime unstaged external task-world transfer",
+        "train_seeds":TRAIN_SEEDS,"heldout_seeds":EVAL_SEEDS,
+        "worlds":WORLDS,"budget":BUDGET,
+        "teacher_motor_demonstrations":0,
+        "teacher_words":0,
+        "staged_objects":0,
+        "staged_prerequisites":0,
+        "train":train,"heldout":heldout,"random":random_results,
+        "before_restart":before_restart,"restart":restart,
+        "after_restart":after_restart,
+        "train_task_successes":train_tasks,"eval_task_successes":eval_tasks,
+        "random_task_successes":random_tasks,
+        "trained_effects":before_restart["self_affordances"],
+        "heldout_effects":after_restart["self_affordances"],
+        "eval_key_pickups":sum(e["actual_key_pickups"] for e in heldout),
+        "eval_door_openings":sum(e["actual_door_openings"] for e in heldout),
+        "eval_executed_moves":sum(e["moves"] for e in heldout),
+    }
+    report["verdict"]=(
+        "DEVELOPMENT_PASS" if eval_tasks>=6
+        and eval_tasks>random_tasks
+        and report["eval_key_pickups"]>0
+        and report["eval_door_openings"]>0
+        else "DEVELOPMENT_FAIL")
+    args.output.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
+    print("UNSTAGED_WORLD1 train_goals={}/{} frozen_goals={}/{} random={}/{} "
+          "learned_effects={} heldout_pickups={} heldout_door_openings={} heldout_moves={}"
+          .format(train_tasks,len(train),eval_tasks,len(heldout),
+                  random_tasks,len(heldout),report["trained_effects"],
+                  report["eval_key_pickups"],report["eval_door_openings"],
+                  report["eval_executed_moves"]),flush=True)
+    print(f"UNSTAGED_WORLD1_SUMMARY verdict={report['verdict']} "
+          "claim=UNSTAGED_EXTERNAL_TASK_SUCCESS_ONLY_IF_REWARDED",
+          flush=True)
+
+if __name__=="__main__":
+    main()
