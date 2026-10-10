@@ -1,0 +1,48 @@
+name: Fresh1 frozen-source cold causal goal transfer
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'tests/cold_goal_fresh1.rs'
+      - '.github/workflows/cold-goal-fresh1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  first-attempt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify preregistered frozen cognitive source and first-attempt evaluator
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD:src)" = "$(git rev-parse 1405d2f2af9b5ba3a1eb76481488f0f9d96c5173:src)"
+          test "$(git rev-parse HEAD:tests/cold_goal_fresh1.rs)" = "c8a972a8a7f76e7357b5329483632e27eae7a641"
+          grep -Fq '0xC01D_2026_FE57_1010' docs/COLD_GOAL_FRESH1_PROTOCOL.md
+          grep -Fq 'const SEED:u64=0xC01D_2026_FE57_1010' tests/cold_goal_fresh1.rs
+      - name: Exactly one frozen-source twelve-world unguided acquisition test
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test cold_goal_fresh1 cold_goal_fresh1_twelve_frozen_source_untaught_worlds -- --exact --nocapture 2>&1 | tee cold-goal-fresh1.log
+      - name: Enforce individually passed twelve-world verdict
+        run: grep -F 'COLD_GOAL_FRESH1_SUMMARY passed=12/12 verdict=DEVELOPMENT_PASS' cold-goal-fresh1.log
+      - name: Preserve evidence regardless of result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cold-goal-fresh1-first-attempt-evidence
+          path: cold-goal-fresh1.log
+          if-no-files-found: ignore
