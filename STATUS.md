@@ -2,6 +2,29 @@
 
 **Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
+## Acquired representation and motor-skill transfer — 2026-10-10
+
+[VALUE-RULE-TRANSFER-3](docs/VALUE_RULE_TRANSFER3_RESULT.md) passed its frozen
+cross-task development criterion on source `5a92918`: **60/64** random-start
+navigation tasks (30/32 at each size) after training only in MemoryS7. Physical
+rule-access lesion and cold native each scored 12/64; random scored 14/64;
+the explicit authored navigation controller scored 64/64. Acquired knowledge
+stayed frozen, with bounded temporary beliefs allowed after actual failed probes.
+All 512 training traces match the previous failed iteration.
+
+The same constructor, in separate learned lives, scored **353/364** real digit
+images and **127/150** real GunPoint signals; matched 3-NN scored 353 and 128.
+These public examples are repeatedly used development data, not independent
+qualification or image-to-signal knowledge transfer. Previous navigation
+failures are preserved: iteration 1 scored 8/64, iteration 2 scored 0/64.
+
+MemoryS7 retained 64/64. MemoryS9 remains **FAIL: 32/64, 0/32 both-correct cue
+pairs**. CART, grouping selection, analogy and uncertainty algorithms remain
+authored software. Primitive invention, full physical ownership, live robot
+adaptation and general intelligence are unresolved. The new head supports
+in-process native checkpoints but not Online v9 disk persistence.
+[Usage and storage bounds](docs/ACQUIRED_VALUE_REPRESENTATIONS.md).
+
 ## Contextual memory development — 2026-10-10
 
 [CONTEXT-VALUE-1](docs/CONTEXT_VALUE1_RESULT.md) passed its new predeclared

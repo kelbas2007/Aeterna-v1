@@ -6,6 +6,16 @@ Start with [the README](../README.md), [project map](../PROJECT_MAP.md) and
 
 ## Current development modes
 
+The [acquired representation guide](ACQUIRED_VALUE_REPRESENTATIONS.md) and
+[frozen transfer result](VALUE_RULE_TRANSFER3_RESULT.md) cover learned
+predicates, measurement grouping and factual motor-effect models. MemoryS7
+training transferred to random-start navigation at 60/64 versus lesion/cold
+12/64 and random 14/64; the authored controller scored 64/64. Separate learned
+lives scored real images 353/364 and signals 127/150 on reused public fixtures.
+The [first](VALUE_RULE_TRANSFER1_RESULT.md) and
+[second](VALUE_RULE_TRANSFER2_RESULT.md) failures remain preserved.
+MemoryS9 cue-use transfer is still FAIL; generic algorithms remain authored.
+
 The [context-value guide](CONTEXT_VALUE_LEARNING.md) and
 [new result](CONTEXT_VALUE1_RESULT.md) add measured causal cue use:
 MemoryS7 64/64, with MemoryS9 transfer FAIL 10/32. They do not qualify general

@@ -79,3 +79,23 @@ part of `scripts/check.sh`; the fixed-source external result is in
 [CONTEXT-VALUE-1](docs/CONTEXT_VALUE1_RESULT.md). Its heldout samples are used
 and are not automatic regressions. Preserve both the MemoryS7 PASS and
 the MemoryS9 transfer FAIL; generic learning math remains authored software.
+
+Acquired predicates, measurement grouping and factual motor-effect models are
+described in [the representation guide](docs/ACQUIRED_VALUE_REPRESENTATIONS.md).
+`value_abstraction_learning` is part of ordinary regression checks. External
+transfer remains a separately preregistered development experiment:
+
+```bash
+cargo build --locked --release --bin external_world_agent
+python3 scripts/external_value_transfer.py --agent target/release/external_world_agent \
+  --protocol 3 --output /tmp/value-transfer-repeat.json.gz
+python3 scripts/recorded_value_rules.py --agent target/release/external_world_agent \
+  --corpus digits --protocol 3 --output /tmp/value-digits-repeat.json.gz
+python3 scripts/recorded_value_rules.py --agent target/release/external_world_agent \
+  --corpus gunpoint --protocol 3 --output /tmp/value-signals-repeat.json.gz
+```
+
+These commands replay consumed seeds and public recordings after the original
+experiment. They provide reproduction, not new independent evidence. Preserve
+the original source/binary hashes and prior failed reports. A cognitive edit
+requires a new protocol and fresh held navigation seeds before a fresh claim.

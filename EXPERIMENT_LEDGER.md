@@ -681,3 +681,35 @@ EvoPhase cognitive ownership, individual object identity and disk persistence
 of the new value head are not established. Historical qualification verdicts
 remain unchanged. Full regression validation: 208 Rust and six Python tests
 passed, together with release examples and perception learn/restore demos.
+
+## 2026-10-10 — VALUE-RULE-TRANSFER: acquired representations and motor-law reuse
+
+| Iteration | Frozen cognitive source | Navigation /64 | Recorded digits /364 | Recorded signals /150 | Status |
+|---|---|---:|---:|---:|---|
+| 1 | `dcd3fa5a0598a5464b5bb1d92a40c02e78990200` | 8 | 200 | 104 | Navigation and recorded-data gates FAIL |
+| 2 | `f934442ffeae897fa1d8914a8c262506235949ff` | 0 | 353 | 127 | Navigation FAIL; repeated recorded-data gates PASS |
+| 3 | `5a929189253662b9299aba504c4ff93697c50dde` | **60** | 353 | 127 | Fresh frozen navigation DEVELOPMENT PASS; repeated recorded-data gates PASS |
+
+[Third protocol](docs/VALUE_RULE_TRANSFER3_PROTOCOL.md),
+[third result and raw provenance](docs/VALUE_RULE_TRANSFER3_RESULT.md).
+All source fixes were frozen before their new held navigation seeds. Iteration
+3 deliberately reused iteration-2 training; all 512 factual trajectories match.
+The native constructor learns predicate indices, bounded case representations,
+measurement grouping and action effects from its own actual rewarded trials.
+Unsupported joint sensor tuples now yield uncertainty; a failed protected
+probe revises only temporary episode belief, not frozen acquired knowledge.
+
+Iteration 3 scored 30/32 at each navigation size, versus physical rule-access
+lesion 12/64, cold native 12/64 and random 14/64 under the same 200-action cap.
+The explicit authored wall-turn controller scored 64/64. All 2,400 observations
+(79 distinct views) of the rules arm were absent from its training hashes.
+S7 retained 64/64; S9 remained **FAIL 32/64 and 0/32 both-correct pairs**, versus
+lesion 21/64 and 2/32 pairs. Navigation success does not repair this memory failure.
+
+Images/signals are actual recorded measurements, with separately trained lives
+and previously consumed public test examples. Matched 3-NN scored 353/364 and
+128/150; there is no advantage over that reference. Acquired grouping was 5
+for images and 7 for signals despite true signal serialization width 6.
+The constructor, algorithms and uncertainty heuristic remain authored Rust;
+primitive invention, full ownership and general intelligence are unproved.
+Prior failures and historical scientific snapshots remain unchanged.

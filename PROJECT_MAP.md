@@ -4,6 +4,8 @@ Updated 2026-10-10. Four maintained GitHub branches have distinct roles. This is
 
 ## Start here
 
+- **[Acquired representation and skill transfer](docs/VALUE_RULE_TRANSFER3_RESULT.md)** — frozen MemoryS7-to-navigation 60/64 versus lesion/cold 12/64 and random 14/64; authored controller 64/64. Real recorded images 353/364 and signals 127/150 are iterative validation. Longer-memory transfer remains FAIL. [Usage and limits](docs/ACQUIRED_VALUE_REPRESENTATIONS.md).
+
 - **[Contextual cue-use result](docs/CONTEXT_VALUE1_RESULT.md)** — new fixed-source MemoryS7 64/64 and both-correct 32/32; MemoryS9 transfer FAIL 10/32. Authored learning math, categorical input and exact-state memory remain bounded.
 
 - **[Latest code and GitHub review](docs/GITHUB_REVIEW_20261010.md)** — 283-commit integration, external-task limitations, bounded JSONL input and consolidated ordinary checks.

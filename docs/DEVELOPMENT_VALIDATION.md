@@ -3,6 +3,30 @@
 The latest section covers the 2026-10-10 reviewed integration into main. Earlier acquired-operation, induction, perception and combined-uncertainty records remain below.
 These are open development checks, not sealed intelligence qualifications.
 
+## Acquired-representation validation — 2026-10-10
+
+Frozen cognitive source `5a929189253662b9299aba504c4ff93697c50dde` passed
+all-target compilation, **216 Rust tests with zero failures**, six Python causal
+scorer tests, fixture checksums, statistical crosscheck and all nine learn/restore
+examples plus perception in separate processes. Eight historical authority tests
+remain explicitly ignored in ordinary regressions; no consumed scientific pack
+was rescored. Demonstration checkpoints used `/tmp/aeterna-demos.KYTbJB`.
+Seven new causal abstraction tests cover acquired predicate changes, opaque
+motor permutations, inferred measurement grouping, actual view-effect learning,
+physical access/memory lesions, native checkpoint restoration, unsupported tuple
+probing and revision of temporary belief without changed learned fingerprints.
+The added runtime restoration test preserves the external protection latch and
+rejects incompatible checkpoints atomically.
+
+[VALUE-RULE-TRANSFER-3](VALUE_RULE_TRANSFER3_RESULT.md) passed frozen cross-task
+navigation at 60/64 against lesion/cold 12/64 and random 14/64; the authored
+controller scored 64/64. Longer-memory transfer remains FAIL. Separate learned
+lives scored real recorded images 353/364 and signals 127/150 on reused public
+fixtures; this repeated validation does not beat the matched 3-NN reference.
+The previous failed navigation iterations and their raw records are retained.
+All three task reports identify the same frozen source and executable hash.
+Publishing documentation does not alter that tested cognitive source.
+
 ## Context-value development validation — 2026-10-10
 
 Fixed cognitive source `c812b17074ebc4a75551ff15ac816bd08975c90e` passed

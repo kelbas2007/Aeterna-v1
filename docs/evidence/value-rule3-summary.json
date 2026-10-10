@@ -1,0 +1,57 @@
+{
+  "digits": {
+    "source": "5a929189253662b9299aba504c4ff93697c50dde",
+    "binary_sha256": "eabc479fd1e355c3df9c4c7d42f4eb67d3f0611ddd54398e7c9135f6a1301fcf",
+    "sha256": "8d8b14197a1c51d5434eb2d993be5e189d84d90e54ec448a36aab7808bae5eab",
+    "bytes": 59060,
+    "verdict": "RECORDED_RULE_DEVELOPMENT_PASS",
+    "rules": 353,
+    "lesion": 48,
+    "knn": 353,
+    "training_actions": 16489,
+    "representation": [
+      5,
+      320,
+      61,
+      64
+    ]
+  },
+  "gunpoint": {
+    "source": "5a929189253662b9299aba504c4ff93697c50dde",
+    "binary_sha256": "eabc479fd1e355c3df9c4c7d42f4eb67d3f0611ddd54398e7c9135f6a1301fcf",
+    "sha256": "21da6176e200208518af2a5a81750ac8d21865c314cd7119d61a26e1ba2b3e3e",
+    "bytes": 9701,
+    "verdict": "RECORDED_RULE_DEVELOPMENT_PASS",
+    "rules": 127,
+    "lesion": 72,
+    "knn": 128,
+    "training_actions": 1108,
+    "representation": [
+      7,
+      50,
+      9,
+      10
+    ]
+  },
+  "transfer": {
+    "source": "5a929189253662b9299aba504c4ff93697c50dde",
+    "binary_sha256": "eabc479fd1e355c3df9c4c7d42f4eb67d3f0611ddd54398e7c9135f6a1301fcf",
+    "sha256": "9f429a1c7db976e5e05c7be763bf1caa16602be17aa1f48f17546dc1eea593fb",
+    "bytes": 602902,
+    "verdict": "CROSS_TASK_DEVELOPMENT_PASS",
+    "memory_s9_verdict": "FAIL",
+    "scores": {
+      "authored": 64,
+      "cold": 12,
+      "lesioned": 12,
+      "random": 14,
+      "rules": 60
+    },
+    "navigation_observations": 2400,
+    "observations_not_in_training": 2400,
+    "distinct_observations": 79,
+    "distinct_starts": 59,
+    "mean_actions": 37.5,
+    "training_traces_equal_iteration2": true
+  }
+}
