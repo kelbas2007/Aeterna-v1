@@ -421,6 +421,24 @@ impl EvoPhase {
         }
         let Some(sensory)=self.current_real.as_ref().map(|r|r.sensory.clone())
             else{return Vec::new();};
+        // Radical experimental replacement: learned distributed policy is
+        // the only action source. It cannot call the authored object,
+        // factor, navigation or task-specific selectors below.
+        if self.phase_native_general_enabled(){
+            return self.choose_phase_native_general_action(&sensory)
+                .map(|learned|vec![PhaseUnifiedCognitiveProposal{
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal{
+                        proposal_id:unified_hash(&[0x6E60_u64,learned.action as u64]),
+                        action:learned.action,
+                        fields:[
+                            (0.5+0.025*learned.score.tanh()).clamp(0.0,1.0),
+                            0.4,0.4,0.4,0.6
+                        ]
+                    }
+                }]).unwrap_or_default();
+        }
         // A learned word-action relation may control one native proposal.
         // No motor ID, interaction script or external permit is embedded in
         // the spoken word. Unknown/not-visible relation fails closed.
