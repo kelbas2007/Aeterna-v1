@@ -18,6 +18,10 @@ struct PhaseRelationalWorkspace {
     // Episode-local remembered observational content; RESET every
     // actual episode and excluded from learned model fingerprint.
     subject:Option<Vec<u8>>,
+    // Multiple plausible observed object appearances remain live when
+    // a first view is ambiguous. No privileged label tells which is goal.
+    // Distinct possible hypotheses may later be supported/contradicted.
+    hypotheses:Vec<Vec<u8>>,
     first_view_had_subject:bool,
     seen_frames:u64,
     observed_matches:u64,
@@ -65,6 +69,7 @@ impl PhaseRelationalWorkspace{
     fn start(&mut self,raw:&[f32])->bool{
         let Some(candidates)=self.candidates(raw) else{return false;};
         self.subject=None;
+        self.hypotheses.clear();
         self.first_view_had_subject=false;
         self.seen_frames=1;
         self.observed_matches=0;
@@ -74,19 +79,23 @@ impl PhaseRelationalWorkspace{
             if !unique.contains(sig){unique.push(sig.clone());}
         }
         if unique.len()==1 {
-            self.subject=unique.into_iter().next();
-            self.first_view_had_subject=true;
+            self.subject=unique.first().cloned();
         }
+        // No arbitrary single guess when multiple plausible foreground
+        // objects exist; retain a bounded uncertainty SET. A later
+        // contradictory observation can be compared against every member.
+        self.hypotheses=unique.into_iter().take(12).collect();
+        self.first_view_had_subject=!self.hypotheses.is_empty();
         true
     }
     fn next(&mut self,raw:&[f32])->bool{
         let Some(candidates)=self.candidates(raw) else{return false;};
         self.seen_frames+=1;
-        if let Some(subject)=self.subject.as_ref(){
+        if !self.hypotheses.is_empty(){
             self.observed_matches+=candidates.iter()
-                .filter(|(_,s)|s==subject).count() as u64;
+                .filter(|(_,s)|self.hypotheses.contains(s)).count() as u64;
             self.observed_contrasts+=candidates.iter()
-                .filter(|(_,s)|s!=subject).count() as u64;
+                .filter(|(_,s)|!self.hypotheses.contains(s)).count() as u64;
         }
         true
     }
@@ -94,18 +103,21 @@ impl PhaseRelationalWorkspace{
         let candidates=self.candidates(raw)?;
         let mut out=vec![0.0f32;RELATION_FEATURE_DIM];
         if physical<=1e-8 {return Some(out);}
-        let Some(subject)=self.subject.as_ref() else{return Some(out);};
-        out[0]=physical; // An actual observed and retained event exists.
+        if self.hypotheses.is_empty(){return Some(out);}
+        out[0]=physical;
         let mut same=0usize;
         let mut other=0usize;
         for (tile,signature) in candidates{
-            let relation=if &signature==subject {same+=1;1u64}
+            let match_idx=self.hypotheses.iter()
+                .position(|subject|subject==&signature);
+            let relation=if match_idx.is_some(){same+=1;1u64}
                 else {other+=1;2u64};
-            // Relation+egocentric location is a GENERAL signed feature
-            // available to an ordinary learned motor actor. The feature
-            // does not encode the identity of any MiniGrid category.
+            // Relational status + physical position + uncertainty-slot
+            // reference, but NEVER symbol/category identity or task label.
+            let slot=match_idx.unwrap_or(self.hypotheses.len());
             let mut hash=(tile as u64).wrapping_mul(0x9E3779B97F4A7C15)
-                ^relation.wrapping_mul(0xD6E8FEB86659FD93);
+                ^relation.wrapping_mul(0xD6E8FEB86659FD93)
+                ^(slot as u64).wrapping_mul(0xA0761D6478BD642F);
             hash^=hash>>30;
             hash=hash.wrapping_mul(0xBF58476D1CE4E5B9);
             hash^=hash>>27;
@@ -159,7 +171,8 @@ impl EvoPhase {
         }
         model.relational_workspace=Some(PhaseRelationalWorkspace{
             width,height,channels,bits,identity_channels,synapse,
-            subject:None,first_view_had_subject:false,
+            subject:None,hypotheses:Vec::new(),
+            first_view_had_subject:false,
             seen_frames:0,observed_matches:0,observed_contrasts:0,
         });
         true
@@ -176,7 +189,7 @@ impl EvoPhase {
     pub fn phase_native_relational_held_subject(&self)->bool{
         self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
             .and_then(|m|m.relational_workspace.as_ref())
-            .is_some_and(|m|m.subject.is_some())
+            .is_some_and(|m|!m.hypotheses.is_empty())
     }
     pub fn phase_native_relational_subject_frames(&self)->u64{
         self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
