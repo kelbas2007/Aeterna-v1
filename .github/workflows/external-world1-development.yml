@@ -1,0 +1,60 @@
+name: External worlds 1 - Farama MiniGrid real simulator diagnostic
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/bin/external_world_agent.rs'
+      - 'src/phase_factor_causality.rs'
+      - 'src/scientific_runtime.rs'
+      - 'scripts/external_minigrid_benchmark.py'
+      - 'docs/EXTERNAL_WORLD1_PROTOCOL.md'
+      - '.github/workflows/external-world1-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  external-simulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      SDL_VIDEODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Install external world dependency
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Compile persistent native external-world agent
+        run: cargo build --locked --release --bin external_world_agent
+      - name: Actually run three external worlds and paired random controls
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_minigrid_benchmark.py \
+            --agent target/release/external_world_agent \
+            --output external-world1.json --budget 64 \
+            2>&1 | tee external-world1.log
+      - name: Ensure actual external per-world metrics were emitted
+        shell: bash
+        run: |
+          grep -F 'EXTERNAL_WORLD env=MiniGrid-Empty-5x5-v0' external-world1.log
+          grep -F 'EXTERNAL_WORLD env=MiniGrid-DoorKey-5x5-v0' external-world1.log
+          grep -F 'EXTERNAL_WORLD env=MiniGrid-MultiRoom-N2-S4-v0' external-world1.log
+          grep -F 'EXTERNAL_WORLD_SUMMARY frozen_heldout=' external-world1.log
+      - name: Retain raw metrics and errors even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-world1-independent-minigrid
+          path: |
+            external-world1.json
+            external-world1.log
+          if-no-files-found: ignore
