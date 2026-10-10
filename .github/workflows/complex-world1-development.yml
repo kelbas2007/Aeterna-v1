@@ -1,0 +1,42 @@
+name: Complex world 14-state unguided causal planning development
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_temporal_evidence.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/scientific_runtime.rs'
+      - 'tests/complex_world1_development.rs'
+      - '.github/workflows/complex-world1-development.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: complex-world1-research-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  labyrinth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile unknown labyrinth and frozen comparison target
+        run: cargo check --locked --test complex_world1_development --test cold_goal1_development
+      - name: Execute factual cold learning and nine-step goal/replan
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test complex_world1_development complex_world1_cold_gated_labyrinth_and_drift_development -- --exact --nocapture 2>&1 | tee complex-world1.log
+      - name: Preserve development evidence whether criteria pass or fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: complex-world1-development
+          path: complex-world1.log
+          if-no-files-found: ignore
