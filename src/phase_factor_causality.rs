@@ -27,6 +27,9 @@ struct PhaseFactorState {
     rules: Vec<PhaseFactorRule>,
     trials: Vec<PhaseFactorTrial>,
     contradictions: u32,
+    external_reward_mode: bool,
+    rewarded_goal: Option<Vec<u8>>,
+    rewarded_examples: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -101,8 +104,40 @@ impl EvoPhase {
             || self.config.sensory_cells > 1024 { return false; }
         native.factor_causality = Some(PhaseFactorState {
             rules: Vec::new(), trials: Vec::new(), contradictions: 0,
+            external_reward_mode: false, rewarded_goal: None,
+            rewarded_examples: 0,
         });
         true
+    }
+
+    /// A sparse terminal reward from an outside environment supplies a
+    /// factual target observation, never simulator state or an action script.
+    pub fn enable_phase_native_factor_external_reward_goal(&mut self) -> bool {
+        let Some(f) = self.phase_native.as_mut()
+            .and_then(|n| n.factor_causality.as_mut()) else { return false; };
+        f.external_reward_mode = true;
+        true
+    }
+
+    pub fn observe_phase_native_factor_positive_reward(
+        &mut self, post: &[f32], reward: f32,
+    ) -> bool {
+        if !(reward.is_finite() && reward > 0.0 && reward <= 1.0) {
+            return false;
+        }
+        let Some(native) = self.phase_native.as_mut() else { return false; };
+        if !native.config.learning_enabled { return false; }
+        let Some(f) = native.factor_causality.as_mut() else { return false; };
+        if !f.external_reward_mode { return false; }
+        let Some(bits) = factor_bits(post) else { return false; };
+        f.rewarded_goal = Some(bits);
+        f.rewarded_examples = f.rewarded_examples.saturating_add(1);
+        true
+    }
+
+    pub fn phase_native_factor_rewarded_examples(&self) -> u32 {
+        self.phase_native.as_ref().and_then(|n| n.factor_causality.as_ref())
+            .map(|f| f.rewarded_examples).unwrap_or(0)
     }
 
     pub fn phase_native_factor_causality_enabled(&self) -> bool {
@@ -247,10 +282,18 @@ impl EvoPhase {
     pub fn choose_phase_native_factor_action(
         &self, goal: &[f32],
     ) -> Option<PhaseFactorChoice> {
-        if let Some(plan) = self.choose_phase_native_factor_goal_plan(goal) {
+        let model = self.phase_native.as_ref()?.factor_causality.as_ref()?;
+        if model.external_reward_mode {
+            if let Some(target) = model.rewarded_goal.as_ref() {
+                let target_raw: Vec<f32> = target.iter()
+                    .map(|&value| f32::from(value)).collect();
+                if let Some(plan) = self.choose_phase_native_factor_goal_plan(&target_raw) {
+                    return Some(plan);
+                }
+            }
+        } else if let Some(plan) = self.choose_phase_native_factor_goal_plan(goal) {
             return Some(plan);
         }
-        let model = self.phase_native.as_ref()?.factor_causality.as_ref()?;
         let start = factor_bits(&self.current_real.as_ref()?.sensory)?;
         if factor_bits(goal)?.len() != start.len() { return None; }
         let mut q = std::collections::VecDeque::from([
