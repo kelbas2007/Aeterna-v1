@@ -239,6 +239,31 @@ impl ScientificRuntime {
         self.organism.teach_phase_native_pointed_word(word, tile)
     }
 
+    /// A named-object intent supplies only an object word, never a motor ID.
+    /// Native factor memory must have separately witnessed the relevant action.
+    pub fn set_grounded_word_intent(&mut self, word: &str) -> bool {
+        self.organism.set_phase_native_word_intent(word)
+    }
+
+    pub fn clear_grounded_word_intent(&mut self) {
+        self.organism.clear_phase_native_word_intent();
+    }
+
+    /// Training-only factual demonstration: an externally executed motor,
+    /// PRE, POST and a pointed word, not a fabricated consequence. The
+    /// teacher's action is explicitly supervised; heldout is U1-protected.
+    pub fn observe_demonstrated_object_action(
+        &mut self, word: &str, tile: usize, action: usize,
+        before: &[f32], after: &[f32],
+    ) -> bool {
+        if !self.model_learning_enabled || self.fresh_observation_required
+            || self.prepare_factual_observation(after).is_err() {
+            return false;
+        }
+        self.organism.learn_phase_native_demonstrated_affordance(
+            word, tile, action, before, after)
+    }
+
     pub fn locate_grounded_word(
         &self, word: &str
     ) -> Vec<crate::carrier::PhaseGroundedReferent> {
