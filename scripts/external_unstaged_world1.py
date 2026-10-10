@@ -69,7 +69,10 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--agent",type=Path,required=True)
     parser.add_argument("--output",type=Path,default=Path("unstaged-crossworld1.json"))
+    parser.add_argument("--seed-offset",type=int,default=0)
     args=parser.parse_args()
+    train_seeds=[x+args.seed_offset for x in TRAIN_SEEDS]
+    eval_seeds=[x+args.seed_offset for x in EVAL_SEEDS]
     agent=Agent(args.agent)
     train=[]
     heldout=[]
@@ -78,13 +81,13 @@ def main():
         if not reply.get("accepted"): raise RuntimeError(f"embodiment refused: {reply}")
         # Equal exposure to independent physics from a common persistent
         # organism, NOT a fresh model instance per family.
-        for seed in TRAIN_SEEDS:
+        for seed in train_seeds:
             for env_id in WORLDS:
                 train.append(real_episode(agent,env_id,seed,True))
         before_restart=agent.status()
         restart=send(agent,{"cmd":"restart"})
         if restart.get("type")!="restart_ack": raise RuntimeError("native restart failed")
-        for seed in EVAL_SEEDS:
+        for seed in eval_seeds:
             for env_id in WORLDS:
                 heldout.append(real_episode(agent,env_id,seed,False))
         after_restart=agent.status()
@@ -93,13 +96,14 @@ def main():
     random_results={}
     for name in WORLDS:
         random_results[name]=random_control(
-            name,EVAL_SEEDS,BUDGET,seed_base=616161 + len(name))
+            name,eval_seeds,BUDGET,seed_base=616161 + len(name))
     train_tasks=sum(e["success"] for e in train)
     eval_tasks=sum(e["success"] for e in heldout)
     random_tasks=sum(e["success"] for batch in random_results.values() for e in batch)
     report={
         "task":"one lifetime unstaged external task-world transfer",
-        "train_seeds":TRAIN_SEEDS,"heldout_seeds":EVAL_SEEDS,
+        "train_seeds":train_seeds,"heldout_seeds":eval_seeds,
+        "seed_offset":args.seed_offset,
         "worlds":WORLDS,"budget":BUDGET,
         "teacher_motor_demonstrations":0,
         "teacher_words":0,
