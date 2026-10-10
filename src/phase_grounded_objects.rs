@@ -22,6 +22,25 @@ struct PhaseGroundedWord {
 }
 
 #[derive(Debug, Clone)]
+struct PhaseLearnedAffordance {
+    category: usize,
+    tile: usize,
+    action: usize,
+    word: String,
+    synapse: usize,
+    observed_successes: u32,
+    // These are real measured changes in the target tile, not reward guesses.
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PhaseWordAction {
+    pub action: usize,
+    pub synapse: usize,
+    pub tile: usize,
+    pub strength: f32,
+}
+
+#[derive(Debug, Clone)]
 struct PhaseGroundedObjects {
     width: usize,
     height: usize,
@@ -31,6 +50,8 @@ struct PhaseGroundedObjects {
     categories: Vec<PhaseVisualCategory>,
     words: Vec<PhaseGroundedWord>,
     frames_seen: u64,
+    affordances: Vec<PhaseLearnedAffordance>,
+    intent_word: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -91,6 +112,7 @@ impl EvoPhase {
         native.grounded_objects = Some(PhaseGroundedObjects {
             width, height, channels, bits_per_channel, identity_channels,
             categories: Vec::new(), words: Vec::new(), frames_seen: 0,
+            affordances: Vec::new(), intent_word: None,
         });
         true
     }
@@ -120,6 +142,136 @@ impl EvoPhase {
         self.phase_native.as_ref()
             .and_then(|n| n.grounded_objects.as_ref())
             .map_or(0, |g| g.frames_seen)
+    }
+
+    pub fn phase_native_learned_affordances(&self) -> usize {
+        self.phase_native.as_ref().and_then(|n| n.grounded_objects.as_ref())
+            .map_or(0, |g| g.affordances.len())
+    }
+
+    pub fn is_phase_native_affordance_synapse(&self, index: usize) -> bool {
+        self.phase_native.as_ref().and_then(|n| n.grounded_objects.as_ref())
+            .is_some_and(|g| g.affordances.iter().any(|a| a.synapse == index))
+    }
+
+    /// A word-grounded interaction is a task request, not knowledge of which
+    /// motor works. An unknown word cannot invent a new motor.
+    pub fn set_phase_native_word_intent(&mut self, word: &str) -> bool {
+        let Some(g) = self.phase_native.as_mut()
+            .and_then(|n| n.grounded_objects.as_mut()) else { return false; };
+        let w = word.trim().to_lowercase();
+        if !g.words.iter().any(|learned| learned.word == w) { return false; }
+        g.intent_word = Some(w);
+        true
+    }
+
+    pub fn clear_phase_native_word_intent(&mut self) {
+        if let Some(g) = self.phase_native.as_mut()
+            .and_then(|n| n.grounded_objects.as_mut()) {
+            g.intent_word = None;
+        }
+    }
+
+    /// A human demonstrator has executed a real external motor, and submits
+    /// its *factual* before/after visual views with the pointed, already
+    /// named object. We credit only a local observed change at that object
+    /// and refuse a camera jump (any other pixel/tile changing).
+    /// This is explicitly motor-supervised learning, NOT autonomous discovery.
+    pub fn learn_phase_native_demonstrated_affordance(
+        &mut self, word: &str, tile: usize, action: usize,
+        before: &[f32], after: &[f32],
+    ) -> bool {
+        if action >= self.config.motor_cells || before.len() != after.len()
+            || before.len() != self.config.sensory_cells { return false; }
+        let learning = self.phase_native.as_ref()
+            .is_some_and(|n| n.config.learning_enabled && n.grounded_objects.is_some());
+        if !learning || self.current_real.as_ref()
+            .is_none_or(|r| r.sensory != before) { return false; }
+        let Some(mut native) = self.phase_native.take() else { return false; };
+        let Some(mut memory) = native.grounded_objects.take() else {
+            self.phase_native = Some(native); return false;
+        };
+        let normalized = word.trim().to_lowercase();
+        let lex = memory.words.iter().find(|w| w.word == normalized).cloned();
+        let Some(lex) = lex else {
+            native.grounded_objects = Some(memory);
+            self.phase_native = Some(native); return false;
+        };
+        let target = memory.tile_signature(before, tile);
+        let correct = target.as_ref()
+            == Some(&memory.categories[lex.category].signature);
+        let stride = memory.channels * memory.bits_per_channel;
+        let start = tile * stride;
+        let end = start + stride;
+        let local_changed = tile < memory.width * memory.height
+            && before[start..end] != after[start..end];
+        let rest_stable = before.iter().zip(after).enumerate()
+            .all(|(i, (a, b))| (i >= start && i < end) || a == b);
+        let witness = correct && local_changed && rest_stable;
+        if witness && memory.affordances.len() < 64 {
+            if let Some(record) = memory.affordances.iter_mut().find(|a|
+                a.category == lex.category && a.tile == tile && a.action == action
+            ) {
+                record.observed_successes = record.observed_successes.saturating_add(1);
+                let syn = &mut self.synapses[record.synapse];
+                syn.weight = (syn.weight + 0.125).min(1.0);
+            } else {
+                // Word -> action is only active when BOTH the word binding
+                // and this directly observed motor affordance conduct.
+                let link = self.native_synapse(
+                    lex.lexical_cell, self.motor_cell(action));
+                let syn = &mut self.synapses[link];
+                syn.phase_offset = wrap_phase(
+                    self.cells[syn.to].phase - self.cells[syn.from].phase);
+                syn.weight = 0.125;
+                syn.confidence = 1.0;
+                syn.eligibility = 1.0;
+                memory.affordances.push(PhaseLearnedAffordance {
+                    category: lex.category, tile, action, word: normalized,
+                    synapse: link, observed_successes: 1,
+                });
+            }
+        }
+        native.grounded_objects = Some(memory);
+        self.phase_native = Some(native);
+        witness
+    }
+
+    /// At inference, no demonstrator motor is available. Same lexical and
+    /// object-affordance physical synapses must both conduct. A novel room
+    /// may reuse a learned relative object position; otherwise abstain.
+    pub fn choose_phase_native_grounded_word_action(
+        &self, raw: &[f32],
+    ) -> Option<PhaseWordAction> {
+        let native = self.phase_native.as_ref()?;
+        let g = native.grounded_objects.as_ref()?;
+        let word = g.intent_word.as_ref()?;
+        let lex = g.words.iter().find(|w| &w.word == word)?;
+        let lexical = conductance(&self.cells,
+            &self.synapses[lex.evidence_synapse],native.config.coherence_floor);
+        if lexical <= 1.0e-8 { return None; }
+        let mut best: Option<PhaseWordAction> = None;
+        for affordance in g.affordances.iter().filter(|a|
+            a.word == *word && a.category == lex.category
+        ) {
+            if g.tile_signature(raw,affordance.tile).as_ref()
+                != Some(&g.categories[lex.category].signature) { continue; }
+            let physical = conductance(&self.cells,
+                &self.synapses[affordance.synapse],native.config.coherence_floor);
+            let score = physical.min(lexical);
+            if score > best.map_or(1.0e-8, |previous| previous.strength + 1.0e-6) {
+                best = Some(PhaseWordAction {
+                    action: affordance.action, synapse: affordance.synapse,
+                    tile: affordance.tile, strength: score
+                });
+            }
+        }
+        best
+    }
+
+    pub fn phase_native_word_intent_active(&self) -> bool {
+        self.phase_native.as_ref().and_then(|n| n.grounded_objects.as_ref())
+            .is_some_and(|g| g.intent_word.is_some())
     }
 
     pub fn is_phase_native_grounded_word_synapse(&self, index: usize) -> bool {
