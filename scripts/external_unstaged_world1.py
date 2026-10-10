@@ -71,9 +71,12 @@ def main():
     parser.add_argument("--output",type=Path,default=Path("unstaged-crossworld1.json"))
     parser.add_argument("--seed-offset",type=int,default=0)
     parser.add_argument("--embodied",action="store_true")
+    parser.add_argument("--general-policy",action="store_true")
     parser.add_argument("--budget",type=int,default=BUDGET)
     parser.add_argument("--include-empty",action="store_true")
     args=parser.parse_args()
+    if args.general_policy and args.embodied:
+        raise SystemExit("choose either general-policy or embodied baseline")
     if not 16<=args.budget<=256:
         raise SystemExit("budget must be 16..256")
     worlds=(("MiniGrid-Empty-5x5-v0",)+WORLDS
@@ -86,6 +89,10 @@ def main():
     try:
         reply=send(agent,{"cmd":"self_experiment","front_tile":FRONT})
         if not reply.get("accepted"): raise RuntimeError(f"embodiment refused: {reply}")
+        if args.general_policy:
+            decision=send(agent,{"cmd":"general_policy"})
+            if decision.get("type")!="general_policy_ack" or not decision.get("accepted"):
+                raise RuntimeError(f"replacement policy refused: {decision}")
         if args.embodied:
             motion=send(agent,{"cmd":"embodied_navigation"})
             if motion.get("type")!="embodied_navigation_ack" or not motion.get("accepted"):
@@ -117,6 +124,7 @@ def main():
         "seed_offset":args.seed_offset,
         "worlds":worlds,"budget":args.budget,
         "embodied_navigation":args.embodied,
+        "general_policy":args.general_policy,
         "teacher_motor_demonstrations":0,
         "teacher_words":0,
         "staged_objects":0,
@@ -131,6 +139,8 @@ def main():
         },
         "random_task_successes":random_tasks,
         "trained_effects":before_restart["self_affordances"],
+        "general_training_rewards":before_restart.get("general_rewards",0),
+        "general_training_updates":before_restart.get("general_updates",0),
         "heldout_effects":after_restart["self_affordances"],
         "eval_key_pickups":sum(e["actual_key_pickups"] for e in heldout),
         "eval_door_openings":sum(e["actual_door_openings"] for e in heldout),
@@ -155,6 +165,9 @@ def main():
           f"budget={args.budget} worlds={len(worlds)} "
           f"train={train_tasks}/{len(train)} heldout={eval_tasks}/{len(heldout)} "
           f"per_world={report['heldout_successes_by_world']}",flush=True)
+    print(f"GENERAL_POLICY_MODE enabled={args.general_policy} "
+          f"reward_events={report['general_training_rewards']} "
+          f"updates={report['general_training_updates']}",flush=True)
     print(f"UNSTAGED_MOTION_MODE embodied={args.embodied} native_inferred_motion="
           f"{report['native_inferred_motion_events']} physical_actions="
           f"{report['total_physical_actions']}",flush=True)
