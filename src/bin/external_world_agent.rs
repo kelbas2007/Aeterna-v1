@@ -169,6 +169,18 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "acquired":acquired,
                     "learned_affordances":rt.organism().phase_native_learned_affordances()}))?;
             }
+            "innate_scaffold" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                let accepted=rt.enable_innate_scaffold();
+                send(out,&json!({"type":"innate_scaffold_ack",
+                    "accepted":accepted}))?;
+            }
+            "developmental_memory" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                let accepted=rt.enable_developmental_memory();
+                send(out,&json!({"type":"developmental_memory_ack",
+                    "accepted":accepted}))?;
+            }
             "general_policy" => {
                 let rt=runtime.as_mut().ok_or("init required")?;
                 let accepted=rt.enable_general_policy();
@@ -232,6 +244,11 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "inferred_motion":rt.organism().phase_native_embodied_move_evidence(),
                     "general_rewards":rt.organism().phase_native_general_rewards(),
                     "general_updates":rt.organism().phase_native_general_updates(),
+                    "innate_bias_enabled":rt.organism().phase_native_innate_enabled(),
+                    "innate_experience_events":rt.organism().phase_native_innate_readout()
+                        .map_or(0,|r|r.observed_events),
+                    "developmental_memory":rt.organism().phase_native_developmental_memory_enabled(),
+                    "developmental_memory_events":rt.organism().phase_native_developmental_retained_events(),
                     "learned_affordances":rt.organism().phase_native_learned_affordances()
                 }))?;
             }
