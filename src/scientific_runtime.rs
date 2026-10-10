@@ -245,6 +245,12 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_self_object_experiment(front_tile)
     }
 
+    /// Optional real-world egocentric movement acquisition with no map or
+    /// motor-role labels. Keeps original local object skill controls intact.
+    pub fn enable_embodied_navigation(&mut self)->bool{
+        self.organism.enable_phase_native_embodied_navigation()
+    }
+
     /// A named-object intent supplies only an object word, never a motor ID.
     /// Native factor memory must have separately witnessed the relevant action.
     pub fn set_grounded_word_intent(&mut self, word: &str) -> bool {
@@ -799,6 +805,11 @@ impl ScientificRuntime {
             let _=self.organism.observe_phase_native_self_object_effect(
                 action,&factual_pre,&post
             );
+            if self.organism.phase_native_embodied_navigation_enabled(){
+                let _=self.organism.observe_phase_native_embodied_motion(
+                    action,&factual_pre,&post
+                );
+            }
         }
 
         // Commit sensory affordance only after one permitted and executed
