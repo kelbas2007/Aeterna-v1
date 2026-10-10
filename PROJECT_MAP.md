@@ -427,3 +427,51 @@ Current central barrier: persistent allocentric/landmark
 memory and credit-based multi-step subgoal planning across
 partially visible rooms; do not replace this requirement
 with more local skill-passing demonstrations.
+
+## Fundamental control replacement + honest reproducibility outcome — 2026-10-10
+
+The project's accumulated hand-authored object/motion/factor motor
+selectors are **bypassed**, not augmented, in opt-in
+\`PhaseNativeState.general_policy\`: a single 96D distributed
+binary sensor representation learns opaque motor preferences,
+action-conditioned predictive surprise and delayed actual
+reward credit via traces, with actual phase motor-synapse
+conductance, U1 and Human Protection still essential.
+The criterion is real outside complete task reward, not toy
+unit-test novelty or action-classification accuracy.
+[Implementation](src/phase_general_policy.rs) ·
+[Protocol](docs/GENERAL_POLICY1_PROTOCOL.md).
+
+**GENERAL-POLICY-1 OPEN DEVELOPMENT PASS, first source-frozen
+seed family**: 9/16 REAL independent Farama heldout full tasks
+(4 Empty, 3 DoorKey, 2 Unlock, 0 MultiRoom),
+8/16 SAME-source hand-authored embodied control, random 2/16.
+48 continuous training episodes across four worlds,
+20 actual successful training episodes, 6152 factual
+controller updates, no externally staged objects/motors.
+[Run 38053197738](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38053197738)
+· [Full result](docs/GENERAL_POLICY1_RESULT.md).
+Native learned credit/checkpoint/frozen and motor-synapse
+lesion tests passed 2/2, older object regression 3/3 in
+[run 38053197760](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38053197760).
+
+**GENERAL-POLICY-2 IMMUTABLE-SOURCE REPLICATION FAIL**.
+The next GitHub experiment explicitly checked out EXACT first
+source commit \`58d204089eff50a36793397bad3407f30b249e56\`
+and used NEVER-BEFORE-CONSUMED train/heldout seeds.
+Generic learned policy 2/16, hand-authored 4/16,
+random 2/16; two full MultiRoom completions, but
+zero DoorKey/Empty/Unlock. Original superiority
+**did not replicate**.
+[Run 38053677397](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38053677397)
+· [Detailed result](docs/GENERAL_POLICY2_RESULT.md).
+
+**New architectural decision, NOT yet implemented as a proven
+solution:** [predictive recurrent carrier pivot](docs/EVOPHASE_PREDICTIVE_CARRIER_PIVOT.md).
+Frame-reactive hashed sensory scores with backward reward traces
+lack a persistent causal belief that distinguishes different
+histories leading to the SAME current image. No new
+MiniGrid-specific routes or skill modules. Next discriminating
+test requires a history-dependent prediction/belief representation,
+memory lesion, different observations/action compositions, and
+repeated full external heldout success. Do not merge as AGI.
