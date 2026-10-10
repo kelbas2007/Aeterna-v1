@@ -62,10 +62,11 @@ fn init(len: usize, motors: usize) -> Result<ScientificRuntime, String> {
     if !rt.enable_factor_causality() || !rt.enable_factor_external_reward_goal() {
         return Err("carrier-owned external reward mode refused".into());
     }
-    // Public MiniGrid 7x7x3 categorical view: two stable appearance fields
-    // and an independent mutable state field. This is a sensor LAYOUT,
+    // Public MiniGrid 7x7x3 categorical view: the first field is
+    // a candidate appearance signature; other fields may vary with color
+    // and door state. This is a sensor LAYOUT,
     // not a mapping from simulator category indexes to word meanings.
-    if len == 588 && !rt.enable_object_grounding(7, 7, 3, 4, 2) {
+    if len == 588 && !rt.enable_object_grounding(7, 7, 3, 4, 1) {
         return Err("object grounding memory creation failed".into());
     }
     Ok(rt)
@@ -141,6 +142,12 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                         send(out, &json!({"type":"stopped","reason":e.to_string(),
                             "previous_action":selected}))?,
                 }
+            }
+            "restart" => {
+                let rt = runtime.as_mut().ok_or("init required")?;
+                rt.restart_cognition().map_err(|e| e.to_string())?;
+                send(out, &json!({"type":"restart_ack",
+                    "word_count":rt.organism().phase_native_grounded_words()}))?;
             }
             "teach_word" => {
                 let rt = runtime.as_mut().ok_or("init required")?;
