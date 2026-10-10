@@ -1,0 +1,30 @@
+{
+  "controller_source": "9e923f410b87214faa4f99ff237ef745248ac3b5",
+  "evaluator_source": "5df0405820b13185dd0d52c55d01eb5107021cd1",
+  "run_id": 38069741752,
+  "artifact_id": 11675894667,
+  "artifact_sha256": "86158ad106daf201ff24f2fa4606942c447180db1cab1fda06b936a45ebdedd3",
+  "verdict": "CUE_USE_NOT_DEMONSTRATED",
+  "arms": {
+    "reactive": {
+      "pairs": 32, "episodes": 64, "successes": 32,
+      "exposed_pairs": 10, "unexposed_pairs": 22,
+      "identical_input_pairs": 22, "same_actions_pairs": 32,
+      "exit_switch_pairs": 0, "both_correct": 0,
+      "training_episodes": 128, "training_successes": 53,
+      "training_cue_visible_at_reset": 40, "training_cue_exposed_episodes": 41,
+      "physical_heldout_actions": 356, "constant_exit_upper_bound": 32,
+      "chosen_exits": {"5,4": 64}
+    },
+    "episode_memory": {
+      "pairs": 32, "episodes": 64, "successes": 32,
+      "exposed_pairs": 10, "unexposed_pairs": 22,
+      "identical_input_pairs": 22, "same_actions_pairs": 32,
+      "exit_switch_pairs": 0, "both_correct": 0,
+      "training_episodes": 128, "training_successes": 73,
+      "training_cue_visible_at_reset": 40, "training_cue_exposed_episodes": 42,
+      "physical_heldout_actions": 356, "constant_exit_upper_bound": 32,
+      "chosen_exits": {"5,2": 64}
+    }
+  }
+}
