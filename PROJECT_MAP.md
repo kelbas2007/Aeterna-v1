@@ -334,3 +334,52 @@ MiniGrid performance remains at the previously measured
 0/12 heldout successes. Next: fully autonomous
 object/space persistence and key→door prerequisites without
 evaluator stages, paired against stripped-carrier controls.
+
+## Self-discovered object manipulation and unstaged external task boundary — 2026-10-10
+
+**SELF-OBJECT-1: OPEN DEVELOPMENT PASS** for cold motor acquisition
+without correct-motor or word tuition. EvoPhase ran 10 U1 +
+Human Protection-screened external motor experiments and
+acquired two physical object category→motor synapses (key
+motor 3, door motor 5), checkpointing and reusing these
+on independent Farama families in 24/24 local object
+interaction tests. The first grader counted visible cell
+changes only. [Original run 38046369141](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38046369141)
+· [original result](docs/SELF_OBJECT1_RESULT.md).
+
+**SELF-OBJECT-2: OPEN DEVELOPMENT PASS 24/24** on new
+seeds using an independent simulator-physics grader:
+the actual same key object entered real inventory, or
+the actual same door changed is_open from false to true.
+No correct motor demonstrations; 10 actual protected
+trials, two learned causal affordances, 0 complete
+task rewards. [Run 38046613579](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38046613579)
+· [strict result](docs/SELF_OBJECT2_RESULT.md).
+**These tasks still have examiner-staged object proximity and
+for the locked door an evaluator-preloaded matching key.**
+The public sensor encodes stable categorical object identities,
+not raw RGB recognition. The generic probing policy is Rust.
+
+**UNSTAGED-WORLD-1 VALID FAIL** 0/12 frozen full goals,
+random 1/12, 0 real agent moves, despite 191 repeated
+key pickups and three learned object motor relations.
+[Run 38046685780](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38046685780)
+· [result](docs/UNSTAGED_WORLD1_RESULT.md).
+
+A generic *transient episodic* repeated-motor cooldown was
+introduced after this first diagnostic, without adding any
+MiniGrid-specific action semantics. **UNSTAGED-WORLD-2
+VALID FAIL** on NEW heldout seeds: 0/12 full goals vs
+random 0/12, three heldout pickups, two actual door
+openings and one real agent movement. No paired causal
+improvement claim is made because the two runs used
+different seeds. [Run 38046953463](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38046953463)
+· [result](docs/UNSTAGED_WORLD2_RESULT.md).
+
+Next actual research barrier: object-relative persistent
+spatial/world-state memory through egocentric rotations and
+room transfers, selection of *long-horizon* exploratory
+subgoals, then full outside DoorKey success on unseen
+maps under an unchanged evaluator. Avoid further
+local pickup/toggle benchmarks as a substitute for
+goal achievement.
