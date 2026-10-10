@@ -169,6 +169,12 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "acquired":acquired,
                     "learned_affordances":rt.organism().phase_native_learned_affordances()}))?;
             }
+            "general_policy" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                let accepted=rt.enable_general_policy();
+                send(out,&json!({"type":"general_policy_ack",
+                    "accepted":accepted}))?;
+            }
             "embodied_navigation" => {
                 let rt=runtime.as_mut().ok_or("init required")?;
                 let accepted=rt.enable_embodied_navigation();
@@ -224,6 +230,8 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "self_experiments":rt.organism().phase_native_self_trial_count(),
                     "self_affordances":rt.organism().phase_native_self_affordance_count(),
                     "inferred_motion":rt.organism().phase_native_embodied_move_evidence(),
+                    "general_rewards":rt.organism().phase_native_general_rewards(),
+                    "general_updates":rt.organism().phase_native_general_updates(),
                     "learned_affordances":rt.organism().phase_native_learned_affordances()
                 }))?;
             }
