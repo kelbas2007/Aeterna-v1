@@ -46,6 +46,10 @@ cargo test --locked --release --test multistep_physical_path factual_terminal_tr
 # synapse lesion, protected 4-action goal and changed-law 6-action recovery.
 # Frozen first-attempt fresh seed remains in its separate one-use workflow.
 cargo test --locked --release --test goal_replan_physical goal_replan_composes_physical_routes_after_unannounced_causal_drift -- --exact
+# Retain a repeatable OPEN mechanism regression proving causal target-world
+# edges are acquired only from self-executed protected PRE/action/POST.
+# The first-attempt source-frozen Fresh1 twelve-world evidence is NOT rerun here.
+cargo test --locked --release --test cold_goal1_development cold_goal1_unguided_causal_model_to_goal_and_drift_development -- --exact
 python3 scripts/g21_statistical_crosscheck.py
 python3 scripts/check_docs.py
 cargo build --locked --release --bins --examples
