@@ -174,14 +174,14 @@ impl EvoPhase {
             Self::general_frame_features(post)
         ) else{return false;};
         let h=Self::general_hash(pre);
+        let learning=self.phase_native.as_ref()
+            .is_some_and(|n|n.config.learning_enabled);
         let Some(model)=self.phase_native.as_mut()
             .and_then(|n|n.general_policy.as_mut()) else{return false;};
         model.steps+=1;
         if model.recent.len()>=512{model.recent.remove(0);}
         model.recent.push((h,action));
-        if !self.phase_native.as_ref().is_some_and(|n|n.config.learning_enabled) {
-            return true;
-        }
+        if !learning {return true;}
         let model=self.phase_native.as_mut().expect("native")
             .general_policy.as_mut().expect("policy");
         let pred=&mut model.predictions[action];
