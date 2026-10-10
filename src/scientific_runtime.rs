@@ -220,6 +220,11 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_factor_causality()
     }
 
+    /// Learn the raw observed terminal goal only after external positive reward.
+    pub fn enable_factor_external_reward_goal(&mut self) -> bool {
+        self.organism.enable_phase_native_factor_external_reward_goal()
+    }
+
     pub fn set_temporal_multistep(&mut self,enabled:bool)->bool{
         self.organism.set_phase_native_temporal_multistep(enabled)
     }
@@ -714,6 +719,17 @@ impl ScientificRuntime {
         }
         if let Err(error) = self.prepare_factual_observation(&post) {
             return Ok(self.latch_fault(format!("unusable factual POST: {}", error)));
+        }
+
+        // Sparse external reward is factual only after the protected motor
+        // has produced its validated POST. It is neither a privileged goal
+        // image nor an environment-provided transition model.
+        if self.model_learning_enabled
+            && self.organism.phase_native_factor_causality_enabled()
+        {
+            let _ = self.organism.observe_phase_native_factor_positive_reward(
+                &post, task_outcome,
+            );
         }
 
         // Commit sensory affordance only after one permitted and executed
