@@ -66,9 +66,12 @@ def main():
     p.add_argument("--agent",type=Path,required=True)
     p.add_argument("--memory",action="store_true")
     p.add_argument("--episodic-recall",action="store_true")
+    p.add_argument("--sequence-replay",action="store_true")
     p.add_argument("--seed-offset",type=int,default=0)
     p.add_argument("--output",type=Path,required=True)
     args=p.parse_args()
+    if args.sequence_replay and not args.episodic_recall:
+        raise SystemExit("sequence replay requires episodic recall")
     if args.episodic_recall and not args.memory:
         raise SystemExit("episodic recall requires developmental memory")
     train_seeds=[i+args.seed_offset for i in TRAIN_SEEDS]
@@ -86,6 +89,10 @@ def main():
             result=send(native,{"cmd":"episodic_recall"})
             if result.get("type")!="episodic_recall_ack" or not result.get("accepted"):
                 raise RuntimeError(f"episodic recall refused: {result}")
+        if args.sequence_replay:
+            result=send(native,{"cmd":"sequence_replay"})
+            if result.get("type")!="sequence_replay_ack" or not result.get("accepted"):
+                raise RuntimeError(f"sequence replay refused: {result}")
         training=[run_episode(native,seed,True) for seed in train_seeds]
         learned=native.status()
         resumed=send(native,{"cmd":"restart"})
@@ -101,6 +108,7 @@ def main():
         "world":WORLD,"training_seeds":train_seeds,
         "heldout_seeds":test_seeds,"budget":BUDGET,
         "memory":args.memory,"episodic_recall":args.episodic_recall,
+        "sequence_replay":args.sequence_replay,
         "mission_sent":False,
         "hidden_state_sent":False,"correct_exit_sent":False,
         "motor_demonstrations":0,"episode_staging":False,
@@ -122,5 +130,6 @@ def main():
           f"frozen_steps={report['frozen_executions']} "
           f"learned_rewards={learned.get('general_rewards',0)} "
           f"learned_updates={learned.get('general_updates',0)} "
-          f"learned_events={learned.get('rewarded_episodic_memories',0)}",flush=True)
+          f"learned_events={learned.get('rewarded_episodic_memories',0)} "
+          f"failed_event_witnesses={learned.get('failed_episodic_experiences',0)}",flush=True)
 if __name__=="__main__":main()
