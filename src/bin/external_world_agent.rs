@@ -169,6 +169,14 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "acquired":acquired,
                     "learned_affordances":rt.organism().phase_native_learned_affordances()}))?;
             }
+            "self_experiment" => {
+                let rt = runtime.as_mut().ok_or("init required")?;
+                let tile = msg.get("front_tile").and_then(Value::as_u64)
+                    .ok_or("relative front tile required")? as usize;
+                let accepted = rt.enable_self_object_experiment(tile);
+                send(out,&json!({"type":"self_experiment_ack",
+                    "accepted":accepted}))?;
+            }
             "word_intent" => {
                 let rt = runtime.as_mut().ok_or("init required")?;
                 let word = msg.get("word").and_then(Value::as_str)
@@ -207,6 +215,8 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "word_count":rt.organism().phase_native_grounded_words(),
                     "learned_affordances":rt.organism().phase_native_learned_affordances(),
                     "visual_frames":rt.organism().phase_native_grounded_frames(),
+                    "self_experiments":rt.organism().phase_native_self_trial_count(),
+                    "self_affordances":rt.organism().phase_native_self_affordance_count(),
                     "learned_affordances":rt.organism().phase_native_learned_affordances()
                 }))?;
             }
