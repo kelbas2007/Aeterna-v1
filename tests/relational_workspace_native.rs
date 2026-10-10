@@ -79,3 +79,26 @@ fn physical_lesion_disables_relational_knowledge_not_motor_safety(){
         vec![0.0;96]);
     println!("RELATIONAL_PHYSICAL_PASS lesion=true restore=true no_fake_cue_after_restart=true");
 }
+
+#[test]
+fn ambiguity_is_retained_as_hypotheses_not_discarded_or_given_a_correct_label(){
+    let current=room(&[(16,5),(19,6)]);
+    let first_a=room(&[(8,5),(11,7)]);
+    let first_b=room(&[(8,6),(11,7)]);
+    let mut a=newborn();
+    let mut b=newborn();
+    assert!(a.phase_native_relational_initial(&first_a));
+    assert!(b.phase_native_relational_initial(&first_b));
+    assert!(a.phase_native_relational_held_subject());
+    assert!(b.phase_native_relational_held_subject());
+    for _ in 0..8{
+        assert!(a.phase_native_relational_factual_post(&room(&[])));
+        assert!(b.phase_native_relational_factual_post(&room(&[])));
+    }
+    let av=a.phase_native_relational_readout(&current).unwrap();
+    let bv=b.phase_native_relational_readout(&current).unwrap();
+    assert_ne!(av,bv,"two distinct past observations MUST create
+        distinct relational evidence at the SAME current input");
+    assert!(av[1]>0.0 && bv[1]>0.0);
+    println!("RELATIONAL_HYPOTHESES_PASS ambiguous_first_view=true distinct_cue_histories=true missing_frames=8 no_target_labels=true");
+}
