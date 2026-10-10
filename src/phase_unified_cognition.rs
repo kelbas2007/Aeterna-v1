@@ -441,6 +441,31 @@ impl EvoPhase {
                     }
                 }]).unwrap_or_default();
         }
+        // Autonomous local manipulation mode: a bodily relative target,
+        // not an externally named object or demonstrated motor. The proposal
+        // still goes through native U1 and Human Protection. If there is no
+        // visible supported object, generic factor exploration may proceed.
+        if self.phase_native_self_experiment_enabled() {
+            if let Some(witness)=self.choose_phase_native_self_object_action(&sensory) {
+                let strength=witness.strength.clamp(0.0,1.0);
+                return vec![PhaseUnifiedCognitiveProposal {
+                    persistent_candidate_id:None,
+                    applicability:1.0,
+                    proposal:PhaseCognitiveProposal {
+                        proposal_id:unified_hash(&[
+                            0xA5E1_u64,witness.action as u64,
+                            u64::from(witness.learned)
+                        ]),
+                        action:witness.action,
+                        fields:if witness.learned {
+                            [strength,0.0,0.0,strength,0.7]
+                        } else {
+                            [0.0,strength,strength,0.5,0.7]
+                        }
+                    }
+                }];
+            }
+        }
         // Opt-in factor mode recognizes a factual binary sensory vector
         // without requiring a previously visited whole-state class.
         // The single candidate still passes through U1 and Human Protection.
