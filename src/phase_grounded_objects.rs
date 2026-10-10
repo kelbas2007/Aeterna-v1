@@ -101,6 +101,15 @@ impl EvoPhase {
             .map_or(0, |g| g.categories.len())
     }
 
+    /// Index for counterfactual lesion of the actual learned word link.
+    pub fn phase_native_grounded_word_synapse(
+        &self, word: &str,
+    ) -> Option<usize> {
+        self.phase_native.as_ref()?.grounded_objects.as_ref()?
+            .words.iter().find(|w| w.word == word.trim().to_lowercase())
+            .map(|w| w.evidence_synapse)
+    }
+
     pub fn phase_native_grounded_words(&self) -> usize {
         self.phase_native.as_ref()
             .and_then(|n| n.grounded_objects.as_ref())
