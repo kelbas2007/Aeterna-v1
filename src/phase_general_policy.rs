@@ -41,6 +41,7 @@ struct PhaseGeneralPolicy {
     episode_trace:Vec<(Vec<f32>,usize)>,
     episode_reward_seen:bool,
     episode_ends:u64,
+    relational_workspace:Option<PhaseRelationalWorkspace>,
     // Temporary lifetime-episode history, never transferred as knowledge.
     recent:Vec<(u64,usize)>,
     eligibility:Vec<Vec<f32>>,
@@ -114,6 +115,7 @@ impl EvoPhase {
             episodic_recall:false,rewarded_event_memory:Vec::new(),
             sequence_replay:false,episode_trace:Vec::new(),
             episode_reward_seen:false,episode_ends:0,
+            relational_workspace:None,
             recent:Vec::new(),
             eligibility:vec![vec![0.0;GENERAL_ACTOR_DIM];n],
         });
@@ -213,14 +215,28 @@ impl EvoPhase {
         true
     }
     fn general_actor_features(
-        observation:&[f32],model:&PhaseGeneralPolicy
+        observation:&[f32],model:&PhaseGeneralPolicy,
+        relational:Option<&[f32]>
     )->Vec<f32>{
-        let mut features=Vec::with_capacity(GENERAL_ACTOR_DIM);
+        let mut features=Vec::with_capacity(if
+            model.relational_workspace.is_some(){RELATION_ACTOR_DIM}
+            else {GENERAL_ACTOR_DIM});
         features.extend_from_slice(observation);
         if model.developmental_memory{
             features.extend_from_slice(&model.working_trace);
         }else{
             features.extend(std::iter::repeat_n(0.0,GENERAL_DIM));
+        }
+        if model.relational_workspace.is_some(){
+            if let Some(features_extra)=relational{
+                if features_extra.len()==RELATION_FEATURE_DIM{
+                    features.extend_from_slice(features_extra);
+                }else {
+                    features.extend(vec![0.0;RELATION_FEATURE_DIM]);
+                }
+            }else{
+                features.extend(vec![0.0;RELATION_FEATURE_DIM]);
+            }
         }
         features
     }
@@ -274,7 +290,9 @@ impl EvoPhase {
         let native=self.phase_native.as_ref()?;
         let model=native.general_policy.as_ref()?;
         let present=Self::general_frame_features(raw)?;
-        let features=Self::general_actor_features(&present,model);
+        let relational=self.phase_native_relational_readout(raw);
+        let features=Self::general_actor_features(
+            &present,model,relational.as_deref());
         let h=Self::general_hash(raw);
         let seen=|a:usize|model.recent.iter().any(|&(state,action)|
             state==h && action==a);
@@ -374,6 +392,7 @@ impl EvoPhase {
             Self::general_frame_features(post)
         ) else{return false;};
         let h=Self::general_hash(pre);
+        let relational=self.phase_native_relational_readout(pre);
         let learning=self.phase_native.as_ref()
             .is_some_and(|n|n.config.learning_enabled);
         let Some(model)=self.phase_native.as_mut()
@@ -381,7 +400,8 @@ impl EvoPhase {
         model.steps+=1;
         if model.recent.len()>=512{model.recent.remove(0);}
         model.recent.push((h,action));
-        let actor_before=Self::general_actor_features(&before,model);
+        let actor_before=Self::general_actor_features(
+            &before,model,relational.as_deref());
         if model.sequence_replay && learning {
             if model.episode_trace.len()>=128{
                 model.episode_trace.remove(0);
