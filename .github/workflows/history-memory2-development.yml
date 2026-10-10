@@ -1,0 +1,80 @@
+name: History-memory 2 - competitive temporal credit external MemoryS7
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_general_policy.rs'
+      - 'tests/developmental_history_alias.rs'
+      - 'scripts/external_memory_history.py'
+      - 'docs/HISTORY_MEMORY2_PROTOCOL.md'
+      - '.github/workflows/history-memory2-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  full-memory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Independent Farama task physics
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Causal history alias and regression tests
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test developmental_history_alias -- --nocapture
+          cargo test --locked --release --test general_policy_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Memoryless controller on new independent MemoryS7 seeds
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --seed-offset 10000 \
+            --output history2-no-memory.json 2>&1 | tee history2-no-memory.log
+      - name: Same controller with self-experienced temporal memory
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_memory_history.py \
+            --agent target/release/external_world_agent \
+            --seed-offset 10000 --memory \
+            --output history2-memory.json 2>&1 | tee history2-memory.log
+      - name: External terminal reward score on clean second seed family
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open("history2-no-memory.json"))
+          m=json.load(open("history2-memory.json"))
+          assert a["training_seeds"]==m["training_seeds"]==list(range(90000,90128))
+          assert a["heldout_seeds"]==m["heldout_seeds"]==list(range(91000,91024))
+          assert a["budget"]==m["budget"]==200
+          assert not a["memory"] and m["memory"]
+          assert a["frozen_executions"]>0 and m["frozen_executions"]>0
+          assert a["random_successes"]==m["random_successes"]
+          passed=(m["heldout_successes"]>=12 and m["heldout_successes"]>a["heldout_successes"] and m["heldout_successes"]>m["random_successes"])
+          print("HISTORY_MEMORY2_RESULT "
+                f"memory={m['heldout_successes']}/24 "
+                f"no_memory={a['heldout_successes']}/24 "
+                f"random={m['random_successes']}/24 "
+                f"memory_train={m['train_successes']}/128 "
+                f"verdict={'DEVELOPMENT_PASS' if passed else 'DEVELOPMENT_FAIL'}")
+          PY
+      - name: Save complete positive and negative world evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-memory2-second-seed-evidence
+          path: |
+            history2-no-memory.json
+            history2-no-memory.log
+            history2-memory.json
+            history2-memory.log
+          if-no-files-found: ignore
