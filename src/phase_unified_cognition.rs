@@ -421,6 +421,26 @@ impl EvoPhase {
         }
         let Some(sensory)=self.current_real.as_ref().map(|r|r.sensory.clone())
             else{return Vec::new();};
+        // A learned word-action relation may control one native proposal.
+        // No motor ID, interaction script or external permit is embedded in
+        // the spoken word. Unknown/not-visible relation fails closed.
+        if self.phase_native_word_intent_active() {
+            return self.choose_phase_native_grounded_word_action(&sensory)
+                .map(|witness| vec![PhaseUnifiedCognitiveProposal {
+                    persistent_candidate_id: None,
+                    applicability: 1.0,
+                    proposal: PhaseCognitiveProposal {
+                        proposal_id: unified_hash(&[
+                            0xA660_u64, witness.action as u64
+                        ]),
+                        action: witness.action,
+                        fields: [
+                            witness.strength.clamp(0.0, 1.0), 0.0,
+                            0.0, witness.strength.clamp(0.0, 1.0), 0.8
+                        ],
+                    }
+                }]).unwrap_or_default();
+        }
         // Opt-in factor mode recognizes a factual binary sensory vector
         // without requiring a previously visited whole-state class.
         // The single candidate still passes through U1 and Human Protection.
