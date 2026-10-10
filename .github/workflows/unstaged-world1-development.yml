@@ -1,0 +1,50 @@
+name: Unstaged external world 1 - truly autonomous MiniGrid tasks
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'scripts/external_unstaged_world1.py'
+      - 'src/phase_grounded_objects.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'docs/UNSTAGED_WORLD1_PROTOCOL.md'
+      - '.github/workflows/unstaged-world1-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  unstaged:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Install independent world implementation
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Check protected native motor and build
+        run: |
+          cargo test --locked --release --test self_object_effect_native
+          cargo build --locked --release --bin external_world_agent
+      - name: Actual unstaged train and frozen heldout with random controls
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_unstaged_world1.py \
+            --agent target/release/external_world_agent \
+            --output unstaged-world1.json 2>&1 | tee unstaged-world1.log
+      - name: Keep actual cognitive verdict even when negative
+        run: grep -F 'UNSTAGED_WORLD1_SUMMARY verdict=' unstaged-world1.log
+      - name: Save actual outcomes and errors
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unstaged-world1-real-world-physics
+          path: |
+            unstaged-world1.json
+            unstaged-world1.log
+          if-no-files-found: ignore
