@@ -1,0 +1,52 @@
+name: Functional-grounding 1 - external witnessed motor meaning
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_grounded_objects.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'tests/functional_grounding_native.rs'
+      - 'scripts/external_functional_grounding.py'
+      - 'docs/FUNCTIONAL_GROUNDING1_PROTOCOL.md'
+      - '.github/workflows/functional-grounding-external.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  actual-external-effects:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Load independently maintained real MiniGrid task physics
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Compile and verify native physical lesion/U1
+        run: |
+          cargo test --locked --release --test functional_grounding_native -- --nocapture
+          cargo build --locked --release --bin external_world_agent
+      - name: Train on two real demonstrated object actions, test frozen motor selection
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_functional_grounding.py \
+            --agent target/release/external_world_agent \
+            --output functional-grounding1.json \
+            2>&1 | tee functional-grounding1.log
+      - name: Check that scientific scorer ran
+        run: grep -F 'FUNCTIONAL_EXTERNAL1_SUMMARY verdict=' functional-grounding1.log
+      - name: Keep FAIL/PASS logs without hiding results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-grounding1-real-external-evidence
+          path: |
+            functional-grounding1.json
+            functional-grounding1.log
+          if-no-files-found: ignore
