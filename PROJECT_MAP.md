@@ -520,12 +520,20 @@ baseline 0/4 Empty, 2/4 DoorKey, 3/4 MultiRoom,
 · [Protocol](docs/CHILD_ZERO_WORLD1_PROTOCOL.md)
 · [Detailed result](docs/CHILD_ZERO_WORLD1_RESULT.md).
 
-**Confound:** innate initial bias and history-dependent
-working memory were activated TOGETHER, so this success
-CANNOT establish which factor caused the gain. The
-[immutable-source single-factor ablation](.github/workflows/child-zero-factorial.yml)
-tests these separately on the SAME experimental seeds and
-is not a new independent replication. These are soft
+**Four-way matched component result (source-immutable):**
+[run 38064344812](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38064344812)
+reports base **6/16**, innate-priors ONLY **4/16**,
+episodic-memory ONLY **5/16**, and both **9/16**
+(on source `c6a09132b46c55f6d92c85efff0c4138c519265f`
+and identical four-world seeds). The parts are NOT
+individually better than baseline; the best combined score
+is a nonlinear interaction and it LOSES every MultiRoom
+heldout task, versus three successes in each single-factor
+arm. Do NOT claim individual biological priors are proven
+helpful, nor that this is robust or AGI. This was a
+component audit on the SAME already consumed seed set,
+not an independently heldout replication.
+[Full factorial result](docs/CHILD_ZERO_FACTORIAL_RESULT.md). These are soft
 engineered developmental analogies with category-coded
 vision only, not a newborn brain or AGI. Full goal-free,
 self-supervised formation of object identity, proprioception,
