@@ -85,6 +85,30 @@ FAIL 0/4. Further cost-sensitive evidence/goal arbitration required.
 
 First separate frozen fresh attempt [37932975901](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37932975901) **FAILED 1/4**; a generic physical terminal credit defect was repaired before preregistering fresh2. These are fixed, distinct experiments; neither has been erased or re-scored. **No structurally different stochastic family or open-world AGI qualification has passed.** The four arms are four separate organisms, each one continuous lifetime, with pretrained generic perception/U1 foundation.
 
+## More complex cold world: 14-state gated labyrinth
+
+**First-attempt frozen-source COMPLEX-WORLD-FRESH1 DEVELOPMENT PASS: 6/6**
+[Actions 38026527091](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38026527091).
+EvoPhase acquired 17 factual state→motor→state edges without target-world
+tuition, navigated two misleading trap/dead-end branches, assembled a
+nine-step key/power/gate goal route after checkpoint, and
+self-repaired after an actually experienced main-edge no-op.
+All six arms traversed the two detour edges and reached the same target,
+with zero protection blocks or unsupported actions.
+[Result and limitations](docs/COMPLEX_WORLD1_RESULT.md) ·
+[fixed-source Fresh-1 protocol](docs/COMPLEX_WORLD_FRESH1_PROTOCOL.md).
+
+The first open test [38025843171](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38025843171)
+is preserved as **FAIL 0/4** on the strict changed-law criterion because
+the competing paths were equally short. The explicitly
+[recorded corrected open experiment](docs/COMPLEX_WORLD1_AMENDMENT.md)
+passed 4/4 [Actions 38026192943](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38026192943),
+then source was frozen for unseen assignments. This establishes
+generality across *role permutations of one topology*, not a
+factorized multi-object, stochastic or novel-topology open-world gate.
+BFS/frontier over the learned physical synapses remains implemented in
+Rust; this is not evidence EvoPhase invented the algorithm.
+
 ## Self-acquired cold causal goal planning — 2026-10-10
 
 **First-attempt source-frozen COLD-GOAL-FRESH1 DEVELOPMENT PASS: 12/12**
