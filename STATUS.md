@@ -2,6 +2,35 @@
 
 **Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
+## Cold self-acquired causal goal replanning — 2026-10-10
+
+**First-attempt COLD-GOAL-FRESH1 DEVELOPMENT PASS — 12/12** new opaque
+motor/visual-state assignments on the source frozen to
+`1405d2f2af9b5ba3a1eb76481488f0f9d96c5173:src`.
+[First GitHub Actions run 38025296916](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38025296916)
+compiled, checked the exact preregistered source/test/seed and demonstrated
+12/12 successful self-acquisition, frozen goal achievement, physical-lesion
+dependence and recovery from an unannounced changed causal transition.
+
+**No target-world transition examples were preloaded or demonstrated**:
+each organism tested its own opaque motors, learned all six factual
+state→motor→state links during up to 192 training episodes, formed a 4-action
+goal plan after checkpoint and selected detour actions after the world
+changed. No blocked or unsupported actions in the first-attempt run.
+[Full report](docs/COLD_GOAL_FRESH1_RESULT.md) ·
+[preregistered first-attempt protocol](docs/COLD_GOAL_FRESH1_PROTOCOL.md) ·
+[initial 4/4 open development](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38025025890).
+
+**Scope strictly bounded:** all new worlds randomize roles within the same
+six-state deterministic causal topology, using transferred generic visual
+abstraction and U1 foundation. The graph traversal and novelty frontier are
+bounded Rust algorithms evaluated over physically acquired EvoPhase
+synapses, not demonstrably self-invented neural algorithms. Open-world,
+different-topology, noisy-action, multi-goal and completely untrained
+organism qualifications remain absent. The previously guided-edge
+GOAL-REPLAN-1 result and the separate negative stochastic tests remain intact.
+This work is research-only and has NOT been promoted to current `main`.
+
 ## Goal-conditioned causal replanning — 2026-10-09
 
 **New bounded GOAL-REPLAN-1 DEVELOPMENT PASS** on `research/beyond-intel4`:
