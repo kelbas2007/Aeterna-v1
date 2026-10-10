@@ -63,14 +63,37 @@ main edge really returned the same physical state, and the ensuing route
 used both actual detour transitions. This is a bounded research
 demonstration, not open-world AGI.
 
-## Next held-out challenge
+## First-attempt source-frozen Fresh-1 — six new assignments
 
-[COMPLEX-WORLD-FRESH1 protocol](COMPLEX_WORLD_FRESH1_PROTOCOL.md)
-predeclared a new seed and six unseen opaque role assignments, fixed
-source tree at commit `d8c8114e5480fafd03dd22bddac0bb405bf88752`,
-with identical 14-state corrected causal structure and
-strict first-attempt complete criteria. This source-frozen test must be
-reported separately, whether FAIL or PASS.
+[Predeclared protocol](COMPLEX_WORLD_FRESH1_PROTOCOL.md) fixed a different
+unused seed `0xB17E_2026_FE51_1001`, six fresh role assignments, the
+source tree `d8c8114e5480fafd03dd22bddac0bb405bf88752:src`,
+all criteria and the exact test blob BEFORE first execution.
+[Fresh-1 run 38026527091](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38026527091)
+verified source/test/seed and reported
+`COMPLEX_WORLD_FRESH1_SUMMARY passed=6/6 verdict=DEVELOPMENT_PASS`.
+This is the completed first attempt, not repeated evaluation of the
+consumed open development seed.
+
+| Fresh arm | Factual links learned | Training goals /256 | Frozen goal actions | Actual blocked main edge | Detour state transitions observed | Goal recovery actions | Verdict |
+|---|---:|---:|---:|---:|---|---:|---|
+| 0 | 17 | 233 | 9 | 1 | 2/2 | 13 | PASS |
+| 1 | 17 | 235 | 9 | 1 | 2/2 | 14 | PASS |
+| 2 | 17 | 235 | 9 | 1 | 2/2 | 16 | PASS |
+| 3 | 17 | 236 | 9 | 1 | 2/2 | 11 | PASS |
+| 4 | 17 | 236 | 9 | 1 | 2/2 | 16 | PASS |
+| 5 | 17 | 236 | 9 | 1 | 2/2 | 14 | PASS |
+
+All six: at least 116 actual training trap entries, physical first
+synapse lesion/restore passed, checkpoint and frozen U1 weights passed,
+and zero blocked/unsupported external actions. The factual failed main
+edge was actually executed first, then both detour edges were traversed,
+and the original goal reached within the predeclared 20-act limit.
+No motor/transition roles or change flags were passed to EvoPhase.
+
+This supports **bounded transfer within this 14-state topology**, not a
+newly generated unseen graph topology or independent factorized key/power
+world.
 
 ## Remaining fundamental limits
 
