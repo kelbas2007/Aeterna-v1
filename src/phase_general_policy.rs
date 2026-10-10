@@ -19,6 +19,7 @@ struct PhaseGeneralRememberedEvent {
     context: Vec<f32>,
     action: usize,
     rewarded_experiences: u32,
+    unsuccessful_experiences: u32,
 }
 #[derive(Debug,Clone)]
 struct PhaseGeneralPolicy {
@@ -36,6 +37,10 @@ struct PhaseGeneralPolicy {
     retained_events:u64,
     episodic_recall:bool,
     rewarded_event_memory:Vec<PhaseGeneralRememberedEvent>,
+    sequence_replay:bool,
+    episode_trace:Vec<(Vec<f32>,usize)>,
+    episode_reward_seen:bool,
+    episode_ends:u64,
     // Temporary lifetime-episode history, never transferred as knowledge.
     recent:Vec<(u64,usize)>,
     eligibility:Vec<Vec<f32>>,
@@ -107,6 +112,8 @@ impl EvoPhase {
             developmental_memory:false,
             working_trace:vec![0.0;GENERAL_DIM],retained_events:0,
             episodic_recall:false,rewarded_event_memory:Vec::new(),
+            sequence_replay:false,episode_trace:Vec::new(),
+            episode_reward_seen:false,episode_ends:0,
             recent:Vec::new(),
             eligibility:vec![vec![0.0;GENERAL_ACTOR_DIM];n],
         });
@@ -137,7 +144,45 @@ impl EvoPhase {
     }
     pub fn phase_native_episodic_count(&self)->usize{
         self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
-            .map_or(0,|m|m.rewarded_event_memory.len())
+            .map_or(0,|m|m.rewarded_event_memory.iter()
+                .filter(|e|e.rewarded_experiences>0).count())
+    }
+    pub fn phase_native_episodic_failures(&self)->u64{
+        self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
+            .map_or(0,|m|m.rewarded_event_memory.iter()
+                .map(|e|u64::from(e.unsuccessful_experiences)).sum())
+    }
+    pub fn enable_phase_native_experience_replay(&mut self)->bool{
+        let Some(model)=self.phase_native.as_mut()
+            .and_then(|n|n.general_policy.as_mut()) else{return false;};
+        if !model.episodic_recall||model.sequence_replay{return false;}
+        model.sequence_replay=true;
+        true
+    }
+    fn general_store_event(model:&mut PhaseGeneralPolicy,
+        context:&[f32],action:usize,rewarded:bool){
+        if let Some(entry)=model.rewarded_event_memory.iter_mut()
+            .find(|e|e.action==action &&
+                Self::general_cosine(&e.context,context)>0.995) {
+            if rewarded {
+                entry.rewarded_experiences=
+                    entry.rewarded_experiences.saturating_add(1);
+            }else {
+                entry.unsuccessful_experiences=
+                    entry.unsuccessful_experiences.saturating_add(1);
+            }
+        }else{
+            if model.rewarded_event_memory.len()>=384{
+                model.rewarded_event_memory.remove(0);
+            }
+            model.rewarded_event_memory.push(
+                PhaseGeneralRememberedEvent{
+                    context:context.to_vec(),action,
+                    rewarded_experiences:u32::from(rewarded),
+                    unsuccessful_experiences:u32::from(!rewarded),
+                }
+            );
+        }
     }
     fn general_cosine(a:&[f32],b:&[f32])->f32{
         if a.len()!=b.len(){return 0.0;}
