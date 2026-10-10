@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-// COMPLEX-WORLD-1: OPEN development of cold causal goal reasoning with a
+// COMPLEX-WORLD-1.1: OPEN development (benchmark correction recorded separately) of cold causal goal reasoning with a
 // structurally new 14-state, 9-step gated labyrinth, distractions and drift.
 // Evaluator has the hidden transition table; EvoPhase is provided only
 // its recognizable raw goal, opaque actions and factual protected POSTs.
@@ -30,7 +30,7 @@ impl Labyrinth{
             (8,a) if a==m[2]=>9,
             // Alternative power access once KEY has already been acquired.
             (3,a) if a==m[5]=>10,
-            (10,a) if a==m[4]=>5,
+            (10,a) if a==m[4]=>4,
             // Misleading premature power-before-key branch and trap.
             (1,a) if a==m[3]=>11,
             (11,a) if a==m[1]=>12,
@@ -94,7 +94,7 @@ fn act_until_goal(
                     |p|p.action==proposal.action
                 ) { surprises+=1; }
                 if log {
-                    println!("COMPLEX_STEP ep={} drift={} step={} pre={} action={} post={} planned={:?} frontier={:?}",
+                    println!("COMPLEX11_STEP ep={} drift={} step={} pre={} action={} post={} planned={:?} frontier={:?}",
                         episode,broken,step,before,proposal.action,state,plan,explore);
                 }
             }
@@ -181,7 +181,7 @@ fn complex_world1_cold_gated_labyrinth_and_drift_development(){
             &&held.blocked==0&&held.unsupported==0
             &&drift.blocked==0&&drift.unsupported==0;
         passed+=usize::from(pass);
-        println!("COMPLEX_WORLD1_ARM arm={} motors={:?} edges={} train_goals={}/{} train_actions={} changed={} traps={} frontier={} first_plan={:?} frozen_goal={} frozen_len={} physical_lesion={} meta_frozen={} drift_goal={} drift_len={} surprise={} detour={} blocked={} unavailable={} pass={}",
+        println!("COMPLEX_WORLD11_ARM arm={} motors={:?} edges={} train_goals={}/{} train_actions={} changed={} traps={} frontier={} first_plan={:?} frozen_goal={} frozen_len={} physical_lesion={} meta_frozen={} drift_goal={} drift_len={} surprise={} detour={} blocked={} unavailable={} pass={}",
             arm,w.motor,edge_count,learning.success,TRAIN,
             learning.actions,learning.changes,learning.hit_traps,
             learning.exploratory,first,intact,path.len(),physical_test,
@@ -190,7 +190,7 @@ fn complex_world1_cold_gated_labyrinth_and_drift_development(){
             learning.unsupported+held.unsupported+drift.unsupported,
             pass);
     }
-    println!("COMPLEX_WORLD1_SUMMARY passed={}/{} verdict={}",
+    println!("COMPLEX_WORLD11_SUMMARY passed={}/{} verdict={}",
         passed,ARMS,if passed==ARMS{"DEVELOPMENT_PASS"}else{"DEVELOPMENT_FAIL"});
     // An open negative diagnostic is still valid science; never relabel
     // compilation SUCCESS as cognitive PASS.
