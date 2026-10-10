@@ -39,6 +39,10 @@ def episode(agent, object_name, world_id, seed, learning):
         previous_category = int(np.asarray(original["image"])[3,5,0])
         if previous_category == 0:
             raise RuntimeError("no observable object in front")
+        # Evaluator-only physical witness. Never transmitted to the agent.
+        target = env.unwrapped.grid.get(*env.unwrapped.front_pos)
+        was_open = getattr(target, "is_open", False)
+        prior_carrying = env.unwrapped.carrying
         observed, reward, done, truncated, response = agent.act_in(env)
         action = response.get("action") if observed is not None else None
         changed = observed is not None and bool(np.any(
@@ -47,11 +51,18 @@ def episode(agent, object_name, world_id, seed, learning):
         ))
         # A changed tile is an actual simulator measurement. The agent does
         # not learn any action semantics from evaluator scoring.
+        truly_picked_up = (object_name == "key"
+            and prior_carrying is None and target is not None
+            and env.unwrapped.carrying is target)
+        truly_opened = (object_name == "door" and target is not None
+            and not was_open and getattr(target, "is_open", False))
+        physical_effect = bool(truly_picked_up or truly_opened)
         status=agent.status()
         return {
             "seed":seed, "world":world_id, "staged":True,
             "correct_label_hidden_from_agent":True,
             "action":action, "changed":changed,
+            "physical_effect":physical_effect,
             "reward":float(reward), "native_effects":status["self_affordances"],
             "native_trials":status["self_experiments"], "preloaded_key":preloaded,
             "stopped":response.get("reason"),
@@ -63,7 +74,11 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--agent",type=Path,required=True)
     parser.add_argument("--output",type=Path,default=Path("external-self-affordance1.json"))
+    parser.add_argument("--seed-offset",type=int,default=0)
+    parser.add_argument("--strict-physical",action="store_true")
     args=parser.parse_args()
+    train_seeds=[seed+args.seed_offset for seed in TRAIN_SEEDS]
+    test_seeds=[seed+args.seed_offset for seed in TEST_SEEDS]
     agent=Agent(args.agent)
     try:
         setup=send(agent,{"cmd":"self_experiment","front_tile":FRONT})
@@ -72,10 +87,10 @@ def main():
         training={}
         for object_name,env_id in TRAIN:
             attempts=[]
-            for seed in TRAIN_SEEDS:
+            for seed in train_seeds:
                 result=episode(agent,object_name,env_id,seed,learning=True)
                 attempts.append(result)
-                if result["changed"] and result["native_effects"] >= len(training)+1:
+                if result["physical_effect"] and result["native_effects"] >= len(training)+1:
                     break
             training[object_name]=attempts
         snapshot=agent.status()
@@ -86,11 +101,12 @@ def main():
         for object_name,env_id in TEST:
             heldout[object_name]=[
                 episode(agent,object_name,env_id,seed,learning=False)
-                for seed in TEST_SEEDS
+                for seed in test_seeds
             ]
         frozen=agent.status()
-        successes=sum(int(entry["changed"]) for batch in heldout.values()
-                      for entry in batch)
+        successes=sum(int(entry["physical_effect"] if args.strict_physical
+                             else entry["changed"])
+                      for batch in heldout.values() for entry in batch)
         blocked=sum(entry["stopped"] is not None
                     for batch in heldout.values() for entry in batch)
         report={
@@ -99,11 +115,13 @@ def main():
             "training_object_staging":True,
             "heldout_object_staging":True,
             "heldout_door_key_preloaded_by_examiner":True,
-            "training_seeds":TRAIN_SEEDS,
-            "heldout_seeds":TEST_SEEDS,
+            "training_seeds":train_seeds,
+            "heldout_seeds":test_seeds,
+            "strict_physical":args.strict_physical,
             "training":training,"heldout":heldout,
             "before_restart":snapshot,"after_restart":checkpoint,"frozen":frozen,
             "heldout_interaction_successes":successes,
+            "physical_heldout_successes":sum(int(e["physical_effect"]) for v in heldout.values() for e in v),
             "heldout_interaction_total":24,
             "blocked_or_unsupported":blocked,
             "terminal_goal_rewards":sum(entry["reward"]>0
