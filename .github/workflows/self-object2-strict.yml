@@ -1,0 +1,58 @@
+name: Self object 2 - strict outside simulator physical facts
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'scripts/external_self_affordances.py'
+      - 'docs/SELF_OBJECT2_PROTOCOL.md'
+      - '.github/workflows/self-object2-strict.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  strict-external:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Independently maintained physical simulator
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Cold motor lesion/checkpoint + agent compilation
+        run: |
+          cargo test --locked --release --test self_object_effect_native
+          cargo build --locked --release --bin external_world_agent
+      - name: New seed strict hidden physical effects
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_self_affordances.py \
+            --agent target/release/external_world_agent \
+            --output external-self-object2.json \
+            --strict-physical --seed-offset 2000 \
+            2>&1 | tee external-self-object2.log
+      - name: Verify strict actual physics scorer, never force PASS
+        run: |
+          python - <<'PY'
+          import json
+          result=json.load(open('external-self-object2.json'))
+          assert result['strict_physical']
+          assert result['training_seeds']==list(range(44000,44010))
+          assert result['heldout_seeds']==list(range(45000,45012))
+          assert result['heldout_interaction_successes']==result['physical_heldout_successes']
+          PY
+          grep -F 'SELF_AFFORDANCE1_SUMMARY verdict=' external-self-object2.log
+      - name: Retain independent effect evidence and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-object2-strict-factual-evidence
+          path: |
+            external-self-object2.json
+            external-self-object2.log
+          if-no-files-found: ignore
