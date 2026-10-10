@@ -270,6 +270,9 @@ impl EvoPhase {
             let mut persistent=policy.clone();
             persistent.steps=0; // observed attempts are not acquired policy
             persistent.recent.clear();
+            persistent.episode_trace.clear();
+            persistent.episode_reward_seen=false;
+            persistent.episode_ends=0;
             persistent.working_trace.fill(0.0);
             persistent.retained_events=0;
             for trace in &mut persistent.eligibility {trace.fill(0.0);}
@@ -328,6 +331,9 @@ impl EvoPhase {
             policy.working_trace.fill(0.0);
             policy.retained_events=0;
             policy.recent.clear();
+            policy.episode_trace.clear();
+            policy.episode_reward_seen=false;
+            policy.episode_ends=0;
             for trace in &mut policy.eligibility{trace.fill(0.0);}
         }
         if let Some(innate)=state.innate_scaffold.as_mut(){
