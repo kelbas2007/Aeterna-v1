@@ -62,23 +62,30 @@ fn self_object_episode_does_not_repeat_same_motor_at_identical_observation() {
     let initial=scene(5,2,0);
     rt.observe_external(&initial).unwrap();
     rt.set_goal(&vec![0.0;DIM]).unwrap();
-    let first=rt.organism().choose_phase_native_self_object_action(&initial)
-        .unwrap().action;
-    assert_eq!(first,0);
-    let chosen=rt.step_unified(|_|Some(safe()),|motor|{
-        assert_eq!(motor,first);
-        Ok((initial.clone(),0.0))
-    }).unwrap();
-    assert!(matches!(chosen,StepOutcome::Executed{..}));
-    let next=rt.organism().choose_phase_native_self_object_action(&initial)
-        .unwrap().action;
-    assert_ne!(next,first, "identical local motor retry must not monopolize U1");
-    // A real external reset begins another episode and forgets only the
-    // transient motor try, not physical learned knowledge.
+    let mut tried=Vec::new();
+    // Exactly the SAME external sensory state and unchanged factual POST
+    // after every action: an episodic action budget must not retry a motor.
+    for _ in 0..7 {
+        let proposed=rt.organism()
+            .choose_phase_native_self_object_action(&initial)
+            .expect("seven untried opaque actions exist");
+        assert!(!tried.contains(&proposed.action));
+        let outcome=rt.step_unified(|_|Some(safe()),|motor|{
+            assert_eq!(motor,proposed.action);
+            Ok((initial.clone(),0.0))
+        }).unwrap();
+        assert!(matches!(outcome,StepOutcome::Executed{..}));
+        tried.push(proposed.action);
+    }
+    assert_eq!(tried,vec![0,1,2,3,4,5,6]);
+    assert!(rt.organism().choose_phase_native_self_object_action(&initial).is_none());
+    assert_eq!(rt.organism().phase_native_self_trial_count(),7);
+    // Reset clears the EPISODIC cooldown but MUST preserve factual
+    // lifetime trial counts. The selected motor after reset is therefore
+    // deliberately not constrained to equal the first action.
     rt.observe_external(&initial).unwrap();
-    let restarted=rt.organism().choose_phase_native_self_object_action(&initial)
-        .unwrap().action;
-    assert_eq!(restarted,first);
-    println!("SELF_OBJECT_EPISODIC_COOLDOWN_PASS first={} next={} reset={}",
-        first,next,restarted);
+    assert!(rt.organism().choose_phase_native_self_object_action(&initial)
+        .is_some());
+    assert_eq!(rt.organism().phase_native_self_trial_count(),7);
+    println!("SELF_OBJECT_EPISODIC_COOLDOWN_PASS attempts=7 unique=7 exhausted=true reset=true");
 }
