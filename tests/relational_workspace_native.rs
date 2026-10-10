@@ -81,6 +81,54 @@ fn physical_lesion_disables_relational_knowledge_not_motor_safety(){
 }
 
 #[test]
+fn value_learning_can_acquire_an_object_first_seen_after_episode_start(){
+    let current=room(&[(11,5),(16,6)]);
+    let mut a=newborn();
+    let mut b=newborn();
+    assert!(a.enable_phase_native_context_value_learning());
+    assert!(b.enable_phase_native_context_value_learning());
+    for subject in [&mut a,&mut b] {
+        assert!(subject.phase_native_relational_initial(&room(&[])));
+        assert!(!subject.phase_native_relational_held_subject());
+    }
+    a.phase_native_relational_factual_post(&room(&[(8,5)]));
+    b.phase_native_relational_factual_post(&room(&[(8,6)]));
+    for _ in 0..20 {
+        a.phase_native_relational_factual_post(&room(&[]));
+        b.phase_native_relational_factual_post(&room(&[]));
+    }
+    assert!(a.phase_native_relational_held_subject());
+    assert!(b.phase_native_relational_held_subject());
+    assert_ne!(a.phase_native_relational_readout(&current),b.phase_native_relational_readout(&current));
+    // The historical first-view-only behavior remains available unchanged.
+    let mut legacy=newborn();
+    legacy.phase_native_relational_initial(&room(&[]));
+    legacy.phase_native_relational_factual_post(&room(&[(8,5)]));
+    assert!(!legacy.phase_native_relational_held_subject());
+}
+
+#[test]
+fn value_context_preserves_observed_multiplicity_and_obeys_relation_lesion(){
+    let mut a=newborn();
+    let mut b=newborn();
+    assert!(a.enable_phase_native_context_value_learning());
+    assert!(b.enable_phase_native_context_value_learning());
+    let first_a=room(&[(8,5),(11,5),(16,6)]);
+    let first_b=room(&[(8,5),(11,6),(16,6)]);
+    a.phase_native_relational_initial(&first_a);
+    b.phase_native_relational_initial(&first_b);
+    let present=room(&[(11,5),(16,6)]);
+    // The prior SET representation erases the different occurrence counts.
+    assert_eq!(a.phase_native_relational_readout(&present),b.phase_native_relational_readout(&present));
+    assert_ne!(a.phase_native_value_context_key(&present),b.phase_native_value_context_key(&present));
+    for subject in [&mut a,&mut b] {
+        let link=subject.phase_native_relational_link().unwrap();
+        subject.perturb_phase_native_synapse_for_control(link,0.0,0.0).unwrap();
+    }
+    assert_eq!(a.phase_native_value_context_key(&present),b.phase_native_value_context_key(&present));
+}
+
+#[test]
 fn ambiguity_is_retained_as_hypotheses_not_discarded_or_given_a_correct_label(){
     let current=room(&[(16,5),(19,6)]);
     let first_a=room(&[(8,5),(11,7)]);

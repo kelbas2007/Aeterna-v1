@@ -253,6 +253,10 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_general_policy()
     }
 
+    pub fn enable_context_value_learning(&mut self)->bool{
+        self.organism.enable_phase_native_context_value_learning()
+    }
+
     pub fn enable_innate_scaffold(&mut self)->bool{
         self.organism.enable_phase_native_innate_scaffold()
     }
@@ -834,6 +838,7 @@ impl ScientificRuntime {
         // image nor an environment-provided transition model.
         if self.model_learning_enabled
             && self.organism.phase_native_factor_causality_enabled()
+            && !self.organism.phase_native_context_value_enabled()
         {
             let _ = self.organism.observe_phase_native_factor_positive_reward(
                 &post, task_outcome,
@@ -888,7 +893,13 @@ impl ScientificRuntime {
             self.organism.phase_native_compositional_enabled()
                 || self.organism.phase_native_perceptual_enabled()
                 || self.organism.phase_native_context_enabled();
-        let suppressed = if self.organism.phase_native_factor_causality_enabled() {
+        let suppressed = if self.organism.phase_native_context_value_enabled() {
+            // This replacement policy has its own factual transition learner.
+            // Do not fit the unused factor solver alongside it; still commit
+            // the validated external POST through the normal REAL boundary.
+            self.organism.observe_initial_real(&post, false);
+            0
+        } else if self.organism.phase_native_factor_causality_enabled() {
             if self.model_learning_enabled {
                 let _ = self.organism.observe_phase_native_factor_transition(
                     action, &factual_pre, &post);

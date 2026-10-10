@@ -42,6 +42,8 @@ struct PhaseGeneralPolicy {
     episode_reward_seen:bool,
     episode_ends:u64,
     relational_workspace:Option<PhaseRelationalWorkspace>,
+    // Opt-in context-specific temporal-difference credit from factual actions.
+    value_learning:Option<PhaseGeneralValueLearning>,
     // Temporary lifetime-episode history, never transferred as knowledge.
     recent:Vec<(u64,usize)>,
     eligibility:Vec<Vec<f32>>,
@@ -116,6 +118,7 @@ impl EvoPhase {
             sequence_replay:false,episode_trace:Vec::new(),
             episode_reward_seen:false,episode_ends:0,
             relational_workspace:None,
+            value_learning:None,
             recent:Vec::new(),
             eligibility:vec![vec![0.0;GENERAL_ACTOR_DIM];n],
         });
@@ -212,6 +215,9 @@ impl EvoPhase {
         if !state.developmental_memory{return true;}
         state.working_trace=features;
         state.retained_events=1;
+        if let Some(value)=state.value_learning.as_mut(){
+            value.initial=Self::general_hash(raw);
+        }
         true
     }
     fn general_actor_features(
@@ -257,13 +263,18 @@ impl EvoPhase {
     }
     pub fn is_phase_native_general_synapse(&self,index:usize)->bool{
         self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
-            .is_some_and(|s|s.physical_links.contains(&index))
+            .is_some_and(|s|s.physical_links.contains(&index)
+                || s.value_learning.as_ref().is_some_and(|v|v.memory_link==Some(index)))
     }
     pub fn begin_phase_native_general_episode(&mut self){
         let learning=self.phase_native.as_ref()
             .is_some_and(|n|n.config.learning_enabled);
         if let Some(s)=self.phase_native.as_mut()
             .and_then(|n|n.general_policy.as_mut()){
+            if let Some(value)=s.value_learning.as_mut(){
+                if learning {value.finish(false);}
+                value.clear_episode();
+            }
             // An episode with NO factual positive reward ended without
             // accomplishing its objective. We only know what the organism
             // actually did; there is NO "correct alternative" oracle.
@@ -289,6 +300,9 @@ impl EvoPhase {
     )->Option<PhaseGeneralDecision>{
         let native=self.phase_native.as_ref()?;
         let model=native.general_policy.as_ref()?;
+        if model.value_learning.is_some(){
+            return self.choose_phase_native_value_action(raw);
+        }
         let present=Self::general_frame_features(raw)?;
         let relational=self.phase_native_relational_readout(raw);
         let features=Self::general_actor_features(
@@ -391,6 +405,10 @@ impl EvoPhase {
             Self::general_frame_features(pre),
             Self::general_frame_features(post)
         ) else{return false;};
+        if self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
+            .is_some_and(|m|m.value_learning.is_some()){
+            return self.observe_phase_native_value_transition(action,pre,post,reward);
+        }
         let h=Self::general_hash(pre);
         let relational=self.phase_native_relational_readout(pre);
         let learning=self.phase_native.as_ref()

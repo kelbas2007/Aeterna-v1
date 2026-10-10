@@ -26,6 +26,9 @@ struct PhaseRelationalWorkspace {
     seen_frames:u64,
     observed_matches:u64,
     observed_contrasts:u64,
+    online_acquisition:bool,
+    first_appearances:Vec<Vec<u8>>,
+    subject_scene:u64,
 }
 impl PhaseRelationalWorkspace{
     fn raw_dim(&self)->usize {
@@ -74,12 +77,17 @@ impl PhaseRelationalWorkspace{
         self.seen_frames=1;
         self.observed_matches=0;
         self.observed_contrasts=0;
+        self.first_appearances=if self.online_acquisition {
+            candidates.iter().take(12).map(|(_,sig)|sig.clone()).collect()
+        } else {Vec::new()};
+        self.subject_scene=0;
         let mut unique=Vec::<Vec<u8>>::new();
         for (_,sig) in &candidates {
             if !unique.contains(sig){unique.push(sig.clone());}
         }
         if unique.len()==1 {
             self.subject=unique.first().cloned();
+            if self.online_acquisition {self.subject_scene=EvoPhase::general_hash(raw);}
         }
         // No arbitrary single guess when multiple plausible foreground
         // objects exist; retain a bounded uncertainty SET. A later
@@ -91,6 +99,26 @@ impl PhaseRelationalWorkspace{
     fn next(&mut self,raw:&[f32])->bool{
         let Some(candidates)=self.candidates(raw) else{return false;};
         self.seen_frames+=1;
+        if self.online_acquisition {
+            // A useful observation can arrive after the first frame. Retain
+            // distinct actually observed appearances in encounter order;
+            // neither a reward nor a hidden target identifies the subject.
+            for (_,signature) in &candidates {
+                if self.hypotheses.len()<12 && !self.hypotheses.contains(signature){
+                    self.hypotheses.push(signature.clone());
+                }
+            }
+            let mut unique=Vec::new();
+            for (_,signature) in &candidates {
+                if !unique.contains(signature){unique.push(signature.clone());}
+            }
+            if self.subject.is_none() && unique.len()==1 {
+                // Record the actual encounter context as well as appearance:
+                // a singleton seen at a branch is not automatically a goal cue.
+                self.subject=unique.first().cloned();
+                self.subject_scene=EvoPhase::general_hash(raw);
+            }
+        }
         if !self.hypotheses.is_empty(){
             self.observed_matches+=candidates.iter()
                 .filter(|(_,s)|self.hypotheses.contains(s)).count() as u64;
@@ -174,6 +202,8 @@ impl EvoPhase {
             subject:None,hypotheses:Vec::new(),
             first_view_had_subject:false,
             seen_frames:0,observed_matches:0,observed_contrasts:0,
+            online_acquisition:false,
+            first_appearances:Vec::new(),subject_scene:0,
         });
         true
     }

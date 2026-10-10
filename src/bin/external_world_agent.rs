@@ -230,6 +230,12 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                 send(out,&json!({"type":"general_policy_ack",
                     "accepted":accepted}))?;
             }
+            "context_value_learning" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                let accepted=rt.enable_context_value_learning();
+                send(out,&json!({"type":"context_value_learning_ack",
+                    "accepted":accepted}))?;
+            }
             "embodied_navigation" => {
                 let rt=runtime.as_mut().ok_or("init required")?;
                 let accepted=rt.enable_embodied_navigation();
@@ -287,6 +293,7 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "inferred_motion":rt.organism().phase_native_embodied_move_evidence(),
                     "general_rewards":rt.organism().phase_native_general_rewards(),
                     "general_updates":rt.organism().phase_native_general_updates(),
+                    "value_states":rt.organism().phase_native_value_state_count(),
                     "innate_bias_enabled":rt.organism().phase_native_innate_enabled(),
                     "innate_experience_events":rt.organism().phase_native_innate_readout()
                         .map_or(0,|r|r.observed_events),
@@ -316,6 +323,35 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn contextual_value_learning_receives_only_the_executed_factual_post() {
+        let mut observation=vec![0;588];
+        observation[7]=1;
+        let messages=[
+            json!({"cmd":"init","dimension":588,"motors":7}),
+            json!({"cmd":"general_policy"}),
+            json!({"cmd":"developmental_memory"}),
+            json!({"cmd":"relational_workspace"}),
+            json!({"cmd":"context_value_learning"}),
+            json!({"cmd":"reset","observation":observation,"learning":true}),
+            json!({"cmd":"advance"}),
+            json!({"cmd":"post","observation":observation,"reward":1.0}),
+            json!({"cmd":"status"}),
+            json!({"cmd":"quit"}),
+        ];
+        let bytes=messages.iter().map(|m|format!("{m}\n")).collect::<String>();
+        let mut output=Vec::new();
+        main_loop(&mut io::Cursor::new(bytes),&mut output).unwrap();
+        let frames=String::from_utf8(output).unwrap().lines()
+            .map(|line|serde_json::from_str::<Value>(line).unwrap()).collect::<Vec<_>>();
+        assert_eq!(frames.iter().filter(|f|f["type"]=="action").count(),1);
+        let status=frames.iter().find(|f|f["type"]=="status").unwrap();
+        assert_eq!(status["general_updates"],1);
+        assert_eq!(status["general_rewards"],1);
+        assert!(status["value_states"].as_u64().unwrap()>0);
+        assert_eq!(status["rewarded_examples"],0,"the unused factor solver must not absorb this reward");
+    }
+
     #[test]
     fn oversized_jsonl_frame_terminates_without_interpreting_its_tail() {
         let mut bytes = vec![b' '; MAX_JSONL_FRAME_BYTES + 1024];
