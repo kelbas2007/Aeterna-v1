@@ -51,6 +51,7 @@ struct PhaseGeneralValueLearning {
     initial: u64,
     initial_frame: Vec<u64>,
     abstraction: Option<PhaseValueAbstraction>,
+    transient_stalls:Vec<(u64,usize)>,
     memory_link: Option<usize>,
     motors: usize,
 }
@@ -60,6 +61,7 @@ impl PhaseGeneralValueLearning {
         self.episode.clear();
         self.initial = 0;
         self.initial_frame.clear();
+        self.transient_stalls.clear();
     }
 
     fn state(&self, key: u64) -> Option<&PhaseGeneralValueState> {
@@ -252,6 +254,7 @@ impl EvoPhase {
             initial: 0,
             initial_frame: Vec::new(),
             abstraction: None,
+            transient_stalls:Vec::new(),
             memory_link,
             motors: self.config.motor_cells,
         });
@@ -434,6 +437,11 @@ impl EvoPhase {
         }
         policy.recent.push((before, action));
         if !learning {
+            let value=policy.value_learning.as_mut().unwrap();
+            if reward==0.0 && pre==post && value.abstraction.as_ref().is_some_and(|a|a.effect_transfer) {
+                if value.transient_stalls.len()>=512 {value.transient_stalls.remove(0);}
+                value.transient_stalls.push((before,action));
+            }
             return true;
         }
         let value = policy.value_learning.as_mut().unwrap();

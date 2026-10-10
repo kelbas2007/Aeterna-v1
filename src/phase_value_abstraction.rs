@@ -30,6 +30,8 @@ struct PhaseValueAbstraction {
     reward_priors:Vec<f32>,
     activity:Vec<f32>,
     effect_transfer:bool,
+    context_unit_bits:usize,
+    effect_support:Vec<Vec<u64>>,
 }
 
 #[derive(Clone)]
@@ -144,6 +146,14 @@ impl PhaseValueAbstraction {
     }
 
     fn fit_effects(&mut self,states:&[PhaseGeneralValueState],motors:usize) {
+        self.effect_support=vec![Vec::new();self.raw_dimension.div_ceil(self.context_unit_bits)];
+        for state in states.iter().filter(|s|!s.features.is_empty()) {
+            for (group,support) in self.effect_support.iter_mut().enumerate() {
+                let start=group*self.context_unit_bits;
+                let word=Self::unit(&state.features,start,self.context_unit_bits.min(self.raw_dimension-start));
+                if support.len()<64 && !support.contains(&word) {support.push(word);}
+            }
+        }
         let mut rewards=vec![0.0;motors];let mut changed_total=0.0;let mut trials_total=0.0;
         self.effects=vec![Vec::new();motors];
         for action in 0..motors {
@@ -171,11 +181,19 @@ impl PhaseValueAbstraction {
         self.reward_priors=if total>0.0 {rewards.iter().map(|r|r/total).collect()} else {vec![0.0;motors]};
     }
 
-    fn effect_scores(&self,words:&[u64])->Option<Vec<f32>> {
+    fn effect_scores(&self,words:&[u64],stalled:&[usize])->Option<Vec<f32>> {
         if !self.effect_transfer {return None;}
         let total=self.activity.iter().sum::<f32>().max(1.0);
         Some(self.effects.iter().enumerate().map(|(action,nodes)| {
-            let changed=Self::tree_probabilities(nodes,words).map_or(0.5,|p|p[1]);
+            let unsupported=nodes.iter().filter_map(|n|n.predicate).any(|bit| {
+                let group=bit/self.context_unit_bits;let start=group*self.context_unit_bits;
+                let word=Self::unit(words,start,self.context_unit_bits.min(self.raw_dimension-start));
+                !self.effect_support.get(group).is_some_and(|known|known.contains(&word))
+            });
+            // A correlation with a familiar component of a *new* sensory
+            // tuple is not evidence that the old action law still applies.
+            let changed=if unsupported && stalled.contains(&action) {0.0}
+                else if unsupported {0.5} else {Self::tree_probabilities(nodes,words).map_or(0.5,|p|p[1])};
             let goal=self.reward_priors[action];
             // Preferences come from real completion motors and changed views
             // on successful episodes. No turn/forward names or obstacle IDs.
@@ -226,9 +244,9 @@ impl PhaseValueAbstraction {
         index
     }
 
-    fn predict(&self, words: &[u64]) -> Option<Vec<f32>> {
+    fn predict(&self, words: &[u64],stalled:&[usize]) -> Option<Vec<f32>> {
         if words.len() != self.dimension.div_ceil(64) { return None; }
-        if let Some(scores)=self.effect_scores(words) {return Some(scores);}
+        if let Some(scores)=self.effect_scores(words,stalled) {return Some(scores);}
         if self.case_width>0 {
             return Self::case_vote(&self.cases,words,self.case_width,self.dimension,self.nodes.first()?.probabilities.len());
         }
@@ -263,6 +281,9 @@ impl EvoPhase {
         let identity = policy.relational_workspace.as_ref().map_or(0, |w|w.identity_channels);
         let dimension = self.config.sensory_cells * 3 + 12 * identity * 8 + 8;
         let raw_dimension=self.config.sensory_cells;
+        // Public tuple structure, not category meanings or motor semantics.
+        let context_unit_bits=policy.relational_workspace.as_ref()
+            .map_or(1,|w|(w.channels*w.bits).clamp(1,32));
         let motors=self.config.motor_cells;
         let Some(cell) = self.dormant_range().find(|&c|!self.cells[c].recruited) else {return false;};
         self.cells[cell].recruited = true;
@@ -274,7 +295,7 @@ impl EvoPhase {
             .value_learning.as_mut().unwrap().abstraction = Some(PhaseValueAbstraction {
                 dimension,raw_dimension, link, nodes:Vec::new(), completed:0, fits:0, trained_states:0,
                 case_width:0,cases:Vec::new(),validation:(0,0),effects:Vec::new(),reward_priors:Vec::new(),
-                activity:vec![0.0;motors],effect_transfer:false });
+                activity:vec![0.0;motors],effect_transfer:false,context_unit_bits,effect_support:Vec::new() });
         true
     }
 
@@ -340,8 +361,11 @@ impl EvoPhase {
 
     fn value_abstraction_prediction(&self, raw: &[f32]) -> Option<Vec<f32>> {
         let native=self.phase_native.as_ref()?;
-        let abstraction=native.general_policy.as_ref()?.value_learning.as_ref()?.abstraction.as_ref()?;
+        let value=native.general_policy.as_ref()?.value_learning.as_ref()?;
+        let abstraction=value.abstraction.as_ref()?;
         if conductance(&self.cells,&self.synapses[abstraction.link],native.config.coherence_floor)<=1e-7 {return None;}
-        abstraction.predict(&self.value_abstraction_features(raw,false)?)
+        let key=self.general_value_key(raw,false)?;
+        let stalled=value.transient_stalls.iter().filter(|&&(k,_)|k==key).map(|&(_,a)|a).collect::<Vec<_>>();
+        abstraction.predict(&self.value_abstraction_features(raw,false)?,&stalled)
     }
 }

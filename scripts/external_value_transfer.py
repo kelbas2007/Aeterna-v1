@@ -66,8 +66,9 @@ def save(path,report):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--agent',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--protocol',choices=['1','2'],default='2');args=parser.parse_args()
-    train_start,s7_start,s9_start,nav_start=(194000,195000,196000,207000) if args.protocol=='1' else (211000,212000,213000,214000)
+    parser.add_argument('--protocol',choices=['1','2','3'],default='3');args=parser.parse_args()
+    train_start,s7_start,s9_start,nav_start={'1':(194000,195000,196000,207000),
+        '2':(211000,212000,213000,214000),'3':(211000,221000,222000,223000)}[args.protocol]
     if subprocess.check_output(['git','status','--porcelain','--','src','Cargo.toml','Cargo.lock'],text=True):
         raise SystemExit('Commit cognitive source before fresh evaluation')
     report={'protocol':'VALUE-RULE-TRANSFER-'+args.protocol,'status':'open development',

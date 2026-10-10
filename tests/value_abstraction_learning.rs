@@ -227,3 +227,51 @@ fn factual_effect_models_reuse_a_skill_at_new_frames_with_opaque_permuted_motors
         assert_eq!(e.phase_native_learned_fingerprint(),fingerprint);
     }
 }
+
+#[test]
+fn unsupported_sensor_tuple_is_uncertain_and_a_factual_failed_probe_revises_only_episode_belief() {
+    let mut e=EvoPhase::new(EvoConfig {sensory_cells:32,motor_cells:3,dormant_cells:16,
+        hdc_dim:32,..EvoConfig::default()});
+    e.enable_phase_native_planning(PhaseNativeConfig::default());
+    e.enable_phase_native_general_policy();e.enable_phase_native_developmental_memory();
+    assert!(e.enable_phase_native_relational_workspace(8,1,2,2,1));
+    e.enable_phase_native_context_value_learning();e.enable_phase_native_value_abstraction();
+    let observed=|available:bool,nuisance:usize| {
+        let mut raw=frame(0,0,nuisance,false);
+        if available {raw[0]=1.0;} else {raw[1]=1.0;raw[2]=1.0;}
+        raw
+    };
+    for episode in 0..512 {
+        let mut raw=observed(episode%2==0,(episode/2)%32);
+        e.begin_phase_native_general_episode();e.observe_phase_native_general_initial(&raw);
+        e.phase_native_relational_initial(&raw);
+        for _ in 0..24 {
+            let action=e.choose_phase_native_general_action(&raw).unwrap().action;
+            let mut post=raw.clone();let mut reward=0.0;
+            if action==2 && raw[0]==1.0 {post[8]=1.0;reward=1.0;}
+            else if action==0 {
+                let next=observed(raw[0]==0.0,(episode/2)%32);
+                post[0]=next[0];post[1]=next[1];post[2]=next[2];
+            }
+            e.observe_phase_native_general_transition(action,&raw,&post,reward);
+            e.phase_native_relational_factual_post(&post);raw=post;
+            if reward>0.0 {break;}
+        }
+    }
+    e.set_planning_learning_enabled(false);
+    assert!(e.phase_native_value_effect_status().0);
+    // The novel tuple has the old component correlated with failure, but
+    // the complete appearance has never been observed. No novel label or
+    // expected result is given to cognition. It must test rather than assume.
+    let mut novel=frame(0,0,35,true);novel[2]=1.0;
+    e.begin_phase_native_general_episode();e.observe_phase_native_general_initial(&novel);
+    e.phase_native_relational_initial(&novel);
+    let fingerprint=e.phase_native_learned_fingerprint();
+    assert_eq!(e.choose_phase_native_general_action(&novel).unwrap().action,2);
+    // This actual intervention fails to change the sensed frame. Only the
+    // episode belief is revised; frozen knowledge is not silently trained.
+    assert!(e.observe_phase_native_general_transition(2,&novel,&novel,0.0));
+    e.phase_native_relational_factual_post(&novel);
+    assert_eq!(e.choose_phase_native_general_action(&novel).unwrap().action,0);
+    assert_eq!(e.phase_native_learned_fingerprint(),fingerprint);
+}

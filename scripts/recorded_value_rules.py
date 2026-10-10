@@ -141,12 +141,13 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument("--agent",type=Path,required=True)
     parser.add_argument("--corpus",choices=["digits","gunpoint"],required=True)
     parser.add_argument("--output",type=Path,required=True);parser.add_argument("--train-only",action="store_true")
+    parser.add_argument("--protocol",choices=["2","3"],default="3")
     args=parser.parse_args()
     if not args.train_only and subprocess.check_output(["git","status","--porcelain","--","src","Cargo.toml","Cargo.lock"],cwd=ROOT,text=True):
         raise SystemExit("Freeze cognitive source before recorded evaluation")
     report={"source":subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip(),
-            "protocol":"VALUE-RULE-TRANSFER-2",
-            "evaluation_scope":"iterative public validation; test records already scored by protocol 1",
+            "protocol":"VALUE-RULE-TRANSFER-"+args.protocol,
+            "evaluation_scope":"iterative public validation; test records already scored by previous protocols",
             "binary_sha256":hashlib.sha256(args.agent.read_bytes()).hexdigest(),
             "fixture_sha256":{name:hashlib.sha256((ROOT/"tests/data"/name).read_bytes()).hexdigest()
                 for name in (["digits.csv"] if args.corpus=="digits" else ["GunPoint_TRAIN.ts","GunPoint_TEST.ts"])},
