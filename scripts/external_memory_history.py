@@ -65,9 +65,12 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--agent",type=Path,required=True)
     p.add_argument("--memory",action="store_true")
+    p.add_argument("--episodic-recall",action="store_true")
     p.add_argument("--seed-offset",type=int,default=0)
     p.add_argument("--output",type=Path,required=True)
     args=p.parse_args()
+    if args.episodic_recall and not args.memory:
+        raise SystemExit("episodic recall requires developmental memory")
     train_seeds=[i+args.seed_offset for i in TRAIN_SEEDS]
     test_seeds=[i+args.seed_offset for i in HELDOUT_SEEDS]
     native=Agent(args.agent)
@@ -79,6 +82,10 @@ def main():
             result=send(native,{"cmd":"developmental_memory"})
             if result.get("type")!="developmental_memory_ack" or not result.get("accepted"):
                 raise RuntimeError(f"memory refused: {result}")
+        if args.episodic_recall:
+            result=send(native,{"cmd":"episodic_recall"})
+            if result.get("type")!="episodic_recall_ack" or not result.get("accepted"):
+                raise RuntimeError(f"episodic recall refused: {result}")
         training=[run_episode(native,seed,True) for seed in train_seeds]
         learned=native.status()
         resumed=send(native,{"cmd":"restart"})
@@ -93,7 +100,8 @@ def main():
         "library":"Farama MiniGrid 3.1.0",
         "world":WORLD,"training_seeds":train_seeds,
         "heldout_seeds":test_seeds,"budget":BUDGET,
-        "memory":args.memory,"mission_sent":False,
+        "memory":args.memory,"episodic_recall":args.episodic_recall,
+        "mission_sent":False,
         "hidden_state_sent":False,"correct_exit_sent":False,
         "motor_demonstrations":0,"episode_staging":False,
         "train":training,"heldout":heldout,
@@ -113,5 +121,6 @@ def main():
           f"random={report['random_successes']}/{len(heldout)} "
           f"frozen_steps={report['frozen_executions']} "
           f"learned_rewards={learned.get('general_rewards',0)} "
-          f"learned_updates={learned.get('general_updates',0)}",flush=True)
+          f"learned_updates={learned.get('general_updates',0)} "
+          f"learned_events={learned.get('rewarded_episodic_memories',0)}",flush=True)
 if __name__=="__main__":main()
