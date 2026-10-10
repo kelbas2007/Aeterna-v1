@@ -149,6 +149,33 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                 send(out, &json!({"type":"restart_ack",
                     "word_count":rt.organism().phase_native_grounded_words()}))?;
             }
+            "demonstrate" => {
+                let rt = runtime.as_mut().ok_or("init required")?;
+                let word = msg.get("word").and_then(Value::as_str)
+                    .ok_or("demonstration word required")?;
+                let tile = msg.get("tile").and_then(Value::as_u64)
+                    .ok_or("demonstration tile required")? as usize;
+                let action = msg.get("action").and_then(Value::as_u64)
+                    .ok_or("demonstration executed action required")? as usize;
+                let before = valid_bits(&msg, "before", dim)?;
+                let after = valid_bits(&msg, "after", dim)?;
+                let acquired = rt.observe_demonstrated_object_action(
+                    word, tile, action, &before, &after);
+                // A demonstrator's outside action is not counted as a U1-
+                // selected motor. It is explicit, supervised motor tuition.
+                // The resulting POST is still a REAL external observation.
+                rt.observe_external(&after).map_err(|e| e.to_string())?;
+                send(out, &json!({"type":"demonstration_ack",
+                    "acquired":acquired,
+                    "learned_affordances":rt.organism().phase_native_learned_affordances()}))?;
+            }
+            "word_intent" => {
+                let rt = runtime.as_mut().ok_or("init required")?;
+                let word = msg.get("word").and_then(Value::as_str)
+                    .ok_or("word required")?;
+                let known = rt.set_grounded_word_intent(word);
+                send(out, &json!({"type":"word_intent_ack", "accepted":known}))?;
+            }
             "teach_word" => {
                 let rt = runtime.as_mut().ok_or("init required")?;
                 let word = msg.get("word").and_then(Value::as_str)
@@ -178,7 +205,9 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "safety_latched":rt.emergency_latched(),
                     "visual_categories":rt.organism().phase_native_grounded_categories(),
                     "word_count":rt.organism().phase_native_grounded_words(),
-                    "visual_frames":rt.organism().phase_native_grounded_frames()
+                    "learned_affordances":rt.organism().phase_native_learned_affordances(),
+                    "visual_frames":rt.organism().phase_native_grounded_frames(),
+                    "learned_affordances":rt.organism().phase_native_learned_affordances()
                 }))?;
             }
             "quit" => return Ok(()),
