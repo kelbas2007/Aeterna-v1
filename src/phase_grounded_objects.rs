@@ -61,6 +61,22 @@ pub struct PhaseSelfAction {
     pub strength: f32,
 }
 #[derive(Debug, Clone)]
+struct PhaseEmbodiedMotor {
+    action: usize,
+    trials: u32,
+    changed: u32,
+    translated: u32,
+    noops: u32,
+}
+#[derive(Debug, Clone)]
+struct PhaseEmbodiedNavigator {
+    motors: Vec<PhaseEmbodiedMotor>,
+    // Factual per-episode view/action attempts; reset across episodes.
+    recent: Vec<(u64,usize)>,
+    actual_view_changes: u64,
+    inferred_forward_events: u64,
+}
+#[derive(Debug, Clone)]
 struct PhaseGroundedObjects {
     width: usize,
     height: usize,
@@ -79,6 +95,7 @@ struct PhaseGroundedObjects {
     // They prevent repeating an already attempted motor at an identical
     // factual visible state. Cleared on real reset and on checkpoint.
     self_recent_choices: Vec<(Vec<u8>,usize)>,
+    embodied: Option<PhaseEmbodiedNavigator>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -143,6 +160,7 @@ impl EvoPhase {
             self_experiment_front: None, self_trials: Vec::new(),
             self_affordances: Vec::new(),
             self_recent_choices: Vec::new(),
+            embodied: None,
         });
         true
     }
@@ -164,7 +182,181 @@ impl EvoPhase {
         if let Some(g)=self.phase_native.as_mut()
             .and_then(|n| n.grounded_objects.as_mut()) {
             g.self_recent_choices.clear();
+            if let Some(nav)=g.embodied.as_mut() {nav.recent.clear();}
         }
+    }
+
+    /// Opt in to grounded exploration of bodily movement effects.
+    /// The sensor geometry is supplied, but NO motor identity, map, world
+    /// coordinates, agent compass, goal label or learned route is imported.
+    pub fn enable_phase_native_embodied_navigation(&mut self)->bool {
+        let Some(g)=self.phase_native.as_mut()
+            .and_then(|n|n.grounded_objects.as_mut()) else{return false;};
+        if g.self_experiment_front.is_none() || g.embodied.is_some() {
+            return false;
+        }
+        g.embodied=Some(PhaseEmbodiedNavigator {
+            motors:Vec::new(),recent:Vec::new(),
+            actual_view_changes:0,inferred_forward_events:0
+        });
+        true
+    }
+
+    pub fn phase_native_embodied_navigation_enabled(&self)->bool{
+        self.phase_native.as_ref().and_then(|n|n.grounded_objects.as_ref())
+            .is_some_and(|g|g.embodied.is_some())
+    }
+
+    pub fn phase_native_embodied_move_evidence(&self)->u64{
+        self.phase_native.as_ref().and_then(|n|n.grounded_objects.as_ref())
+            .and_then(|g|g.embodied.as_ref())
+            .map_or(0,|n|n.inferred_forward_events)
+    }
+
+    /// Position-free sensory overlap under an egocentric one-cell camera
+    /// translation. Tests action consequences, never action ID semantics.
+    fn phase_embodied_translation_match(
+        g:&PhaseGroundedObjects,pre:&[f32],post:&[f32],
+    )->bool{
+        let stride=g.channels*g.bits_per_channel;
+        let mut matched=0usize;
+        let mut sampled=0usize;
+        let mut identity_matches=0usize;
+        for x in 0..g.width {
+            for y in 0..g.height.saturating_sub(1) {
+                let previous=(x*g.height+y)*stride;
+                let shifted=(x*g.height+y+1)*stride;
+                let old=&pre[previous..previous+stride];
+                if old.iter().all(|&v|v==0.0) {continue;}
+                sampled+=1;
+                if old==&post[shifted..shifted+stride] {matched+=1;}
+                if old==&post[previous..previous+stride] {identity_matches+=1;}
+            }
+        }
+        sampled>=6 && matched*100>=sampled*68
+            && matched>identity_matches+1
+    }
+
+    fn phase_embodied_view_hash(bits:&[u8])->u64 {
+        let mut h=0xcbf29ce484222325u64;
+        for &v in bits{
+            h^=u64::from(v);
+            h=h.wrapping_mul(0x100000001b3);
+        }
+        h
+    }
+
+    /// Generic policy: a rare visible front object deserves a bounded local
+    /// causal experiment; otherwise investigate movements. Known visual
+    /// translation motors are reused when their factual outcomes support it.
+    /// Both learned effects and novelty share ONE U1/HP action boundary.
+    pub fn choose_phase_native_embodied_action(
+        &self,raw:&[f32],
+    )->Option<PhaseSelfAction>{
+        let native=self.phase_native.as_ref()?;
+        let g=native.grounded_objects.as_ref()?;
+        let nav=g.embodied.as_ref()?;
+        let front=g.self_experiment_front?;
+        let signature=g.tile_signature(raw,front)?;
+        let present=(0..g.width*g.height)
+            .filter(|&tile|g.tile_signature(raw,tile)
+                .as_ref()==Some(&signature)).count();
+        if present<=2 && signature.iter().any(|&x|x!=0) {
+            if let Some(probe)=self.choose_phase_native_self_object_action(raw){
+                // The locally learned object rule is used once per factual
+                // current view. Unknown rare objects can be investigated.
+                return Some(probe);
+            }
+        }
+        let bits=factor_bits(raw)?;
+        let hash=Self::phase_embodied_view_hash(&bits);
+        let has_attempted=|a:usize|nav.recent.iter().any(|(h,m)|
+            *h==hash&&*m==a);
+        let untried_exists=(0..self.config.motor_cells)
+            .any(|a|!has_attempted(a));
+        let mut winner=None::<(usize,f32)>;
+        for action in 0..self.config.motor_cells{
+            if untried_exists&&has_attempted(action){continue;}
+            let stats=nav.motors.iter().find(|m|m.action==action);
+            let trials=stats.map_or(0,|m|m.trials);
+            let translated=stats.map_or(0,|m|m.translated);
+            let changed=stats.map_or(0,|m|m.changed);
+            let noop=stats.map_or(0,|m|m.noops);
+            let motion=if translated>0{
+                2.6+2.5*(translated as f32)/(1.0+trials as f32)
+            }else{0.0};
+            let turn=if changed>0 && translated==0 {
+                0.65*(changed as f32)/(1.0+trials as f32)
+            }else{0.0};
+            let coverage=1.4/(1.0+trials as f32).sqrt();
+            let failed=if trials>0 {
+                0.35*(noop as f32)/(trials as f32)
+            }else{0.0};
+            // Tie variation is deterministic and carrier-derived: no seed
+            // actions, action names or correct motor IDs enter the policy.
+            let mut h=hash ^ (action as u64)
+                .wrapping_mul(0x9E3779B97F4A7C15)
+                ^ self.tick;
+            h^=h>>12;h^=h<<25;h^=h>>27;
+            let jitter=(h.wrapping_mul(0x2545F4914F6CDD1D)>>40) as f32
+                /(1u32<<24) as f32;
+            let score=motion+turn+coverage+0.08*jitter-failed;
+            if winner.is_none_or(|(_,value)|score>value+1.0e-6) {
+                winner=Some((action,score));
+            }
+        }
+        let (action,score)=winner?;
+        Some(PhaseSelfAction{
+            action,synapse:None,learned:false,
+            strength:(score/5.0).clamp(0.0,1.0)
+        })
+    }
+
+    /// Update ONLY on real protected PRE/action/POST. Frame alignment
+    /// is measured from visible tile fields; no simulator position/dir access.
+    pub fn observe_phase_native_embodied_motion(
+        &mut self,action:usize,pre:&[f32],post:&[f32],
+    )->bool{
+        if action>=self.config.motor_cells
+            || pre.len()!=self.config.sensory_cells
+            || post.len()!=pre.len(){return false;}
+        let Some(mut native)=self.phase_native.take() else{return false;};
+        let Some(mut g)=native.grounded_objects.take() else{
+            self.phase_native=Some(native);return false;
+        };
+        let moved=Self::phase_embodied_translation_match(&g,pre,post);
+        let Some(bits)=factor_bits(pre) else{
+            native.grounded_objects=Some(g);self.phase_native=Some(native);
+            return false;
+        };
+        let Some(nav)=g.embodied.as_mut() else{
+            native.grounded_objects=Some(g);self.phase_native=Some(native);
+            return false;
+        };
+        let hash=Self::phase_embodied_view_hash(&bits);
+        if nav.recent.len()>=1024 {nav.recent.remove(0);}
+        nav.recent.push((hash,action));
+        if pre!=post {
+            nav.actual_view_changes+=1;
+        }
+        if moved {nav.inferred_forward_events+=1;}
+        if native.config.learning_enabled{
+            let pos=nav.motors.iter().position(|m|m.action==action);
+            let index=if let Some(index)=pos {index}else{
+                nav.motors.push(PhaseEmbodiedMotor{
+                    action,trials:0,changed:0,translated:0,noops:0
+                });
+                nav.motors.len()-1
+            };
+            let m=&mut nav.motors[index];
+            m.trials=m.trials.saturating_add(1);
+            m.changed=m.changed.saturating_add(u32::from(pre!=post));
+            m.translated=m.translated.saturating_add(u32::from(moved));
+            m.noops=m.noops.saturating_add(u32::from(pre==post));
+        }
+        native.grounded_objects=Some(g);
+        self.phase_native=Some(native);
+        moved
     }
 
     pub fn phase_native_self_affordance_count(&self) -> usize {
