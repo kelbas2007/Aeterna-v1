@@ -253,6 +253,9 @@ impl EvoPhase {
         if let Some(objects) = state.grounded_objects.as_ref() {
             let mut persistent = objects.clone();
             persistent.self_recent_choices.clear();
+            if let Some(nav)=persistent.embodied.as_mut(){
+                nav.recent.clear();
+            }
             text.push_str(&format!("|{:?}", persistent));
         }
         if let Some(online) = state.online.as_ref() {
@@ -293,6 +296,9 @@ impl EvoPhase {
         if let Some(partial) = state.partial.as_mut() { partial.episode = None; }
         if let Some(objects) = state.grounded_objects.as_mut() {
             objects.self_recent_choices.clear();
+            if let Some(nav)=objects.embodied.as_mut(){
+                nav.recent.clear();
+            }
         }
         if let Some(vector) = state.vector.as_mut() { vector.episode = None; }
         if let Some(context) = state.contextual.as_mut() {
