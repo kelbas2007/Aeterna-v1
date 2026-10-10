@@ -53,6 +53,9 @@ struct Measurements{
     changes:usize,
     exploratory:usize,
     hit_traps:usize,
+    detour_entry:usize,
+    detour_exit:usize,
+    drift_noop:usize,
 }
 fn act_until_goal(
     rt:&mut ScientificRuntime,l1:&[[usize;2];8],w:&Labyrinth,
@@ -87,6 +90,16 @@ fn act_until_goal(
                 s.actions+=1;
                 s.changes+=usize::from(before!=state);
                 s.hit_traps+=usize::from([11,12,13].contains(&state));
+                s.detour_entry+=usize::from(
+                    before==3&&state==10&&proposal.action==w.motor[5]
+                );
+                s.detour_exit+=usize::from(
+                    before==10&&state==4&&proposal.action==w.motor[4]
+                );
+                s.drift_noop+=usize::from(
+                    broken&&before==3&&state==3
+                        &&proposal.action==w.motor[3]
+                );
                 s.exploratory+=usize::from(explore.is_some_and(
                     |p|p.0==proposal.action
                 ));
@@ -171,8 +184,8 @@ fn complex_world1_cold_gated_labyrinth_and_drift_development(){
         let (recovered,alternate,surprises)=act_until_goal(
             &mut rt,&l1,&w,2000+arm,20,true,&mut drift,true
         );
-        let both_detour=alternate.contains(&w.motor[5])
-            &&alternate.contains(&w.motor[4]);
+        let both_detour=drift.detour_entry>=1 && drift.detour_exit>=1
+            &&drift.drift_noop>=1;
         let pass=edge_count>=11 && learning.hit_traps>0
             &&first.is_some_and(|p|p.steps==9)
             &&physical_test &&stable &&intact && path.len()==9
@@ -181,11 +194,12 @@ fn complex_world1_cold_gated_labyrinth_and_drift_development(){
             &&held.blocked==0&&held.unsupported==0
             &&drift.blocked==0&&drift.unsupported==0;
         passed+=usize::from(pass);
-        println!("COMPLEX_WORLD11_ARM arm={} motors={:?} edges={} train_goals={}/{} train_actions={} changed={} traps={} frontier={} first_plan={:?} frozen_goal={} frozen_len={} physical_lesion={} meta_frozen={} drift_goal={} drift_len={} surprise={} detour={} blocked={} unavailable={} pass={}",
+        println!("COMPLEX_WORLD11_ARM arm={} motors={:?} edges={} train_goals={}/{} train_actions={} changed={} traps={} frontier={} first_plan={:?} frozen_goal={} frozen_len={} physical_lesion={} meta_frozen={} drift_goal={} drift_len={} surprise={} actual_blocked_edge={} detour_entry={} detour_exit={} detour={} blocked={} unavailable={} pass={}",
             arm,w.motor,edge_count,learning.success,TRAIN,
             learning.actions,learning.changes,learning.hit_traps,
             learning.exploratory,first,intact,path.len(),physical_test,
-            stable,recovered,alternate.len(),surprises,both_detour,
+            stable,recovered,alternate.len(),surprises,drift.drift_noop,
+            drift.detour_entry,drift.detour_exit,both_detour,
             learning.blocked+held.blocked+drift.blocked,
             learning.unsupported+held.unsupported+drift.unsupported,
             pass);
