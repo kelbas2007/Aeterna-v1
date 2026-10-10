@@ -451,6 +451,7 @@ impl ScientificRuntime {
         }
         self.prepare_factual_observation(raster)?;
         self.organism.clear_phase_native_context_history();
+        self.organism.begin_phase_native_self_object_episode();
         // A new external real observation begins a fresh evidence episode,
         // while preserving acquired cue and motor synapses across the lifetime.
         if self.organism.phase_native_temporal_evidence_enabled() {
@@ -792,9 +793,9 @@ impl ScientificRuntime {
             );
         }
 
-        if self.model_learning_enabled
-            && self.organism.phase_native_self_experiment_enabled()
-        {
+        // Episodic attempts remain factual even when the acquired model
+        // is frozen. Only the underlying synapses obey the learning gate.
+        if self.organism.phase_native_self_experiment_enabled() {
             let _=self.organism.observe_phase_native_self_object_effect(
                 action,&factual_pre,&post
             );
