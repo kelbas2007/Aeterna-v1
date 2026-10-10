@@ -72,6 +72,7 @@ pub(super) struct PhaseNativeState {
     compositional: Option<PhaseCompositionState>,
     meta_control: Option<PhaseMetaControlState>,
     temporal_evidence: Option<PhaseTemporalEvidenceState>,
+    factor_causality: Option<PhaseFactorState>,
     online: Option<PhaseOnlineConfig>,
     rules: Option<PhaseRuleState>,
     partial: Option<PhasePartialState>,
@@ -127,6 +128,7 @@ impl EvoPhase {
             compositional: None,
             meta_control: None,
             temporal_evidence: None,
+            factor_causality: None,
             online: None,
             rules: None,
             partial: None,
@@ -162,6 +164,7 @@ impl EvoPhase {
         let meta_synapse = self.is_native_meta_synapse(index);
         let hypothesis_synapse = self.is_native_hypothesis_synapse(index);
         let temporal_synapse = self.is_native_temporal_evidence_synapse(index);
+        let factor_synapse = self.is_native_factor_synapse(index);
         if !state.circuits.iter().any(|c| c.indices().contains(&index))
             && !drive_synapse
             && !concept_synapse
@@ -172,6 +175,7 @@ impl EvoPhase {
             && !meta_synapse
             && !hypothesis_synapse
             && !temporal_synapse
+            && !factor_synapse
             && !self.is_phase_rule_synapse(index)
             && !self.is_native_decoder_synapse(index)
             && !self.is_phase_induction_synapse(index)
@@ -234,6 +238,9 @@ impl EvoPhase {
         }
         if let Some(evidence) = state.temporal_evidence.as_ref() {
             text.push_str(&format!("|{:?}", evidence));
+        }
+        if let Some(factor) = state.factor_causality.as_ref() {
+            text.push_str(&format!("|{:?}", factor));
         }
         if let Some(online) = state.online.as_ref() {
             text.push_str(&format!("|{:?}", online));
@@ -758,3 +765,4 @@ include!("phase_meta_control.rs");
 include!("phase_hypothesis_ecology.rs");
 include!("phase_unified_cognition.rs");
 include!("phase_temporal_evidence.rs");
+include!("phase_factor_causality.rs");
