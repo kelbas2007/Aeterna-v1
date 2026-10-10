@@ -1,0 +1,48 @@
+name: Fresh1 six cold complex 14-state causal labyrinths
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'tests/complex_world_fresh1.rs'
+      - '.github/workflows/complex-world-fresh1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  first-attempt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Enforce source tree freeze and preregistered challenge
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD:src)" = "$(git rev-parse d8c8114e5480fafd03dd22bddac0bb405bf88752:src)"
+          test "$(git rev-parse HEAD:tests/complex_world_fresh1.rs)" = "dca102cb9ee40349560e65d6e587fd9d4b77267b"
+          grep -Fq '0xB17E_2026_FE51_1001' docs/COMPLEX_WORLD_FRESH1_PROTOCOL.md
+          grep -Fq 'const SEED:u64=0xB17E_2026_FE51_1001' tests/complex_world_fresh1.rs
+      - name: First-attempt six fresh cold complex worlds
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --test complex_world_fresh1 complex_world_fresh1_six_opaque_causal_labyrinths -- --exact --nocapture 2>&1 | tee complex-world-fresh1.log
+      - name: Enforce first attempt six-of-six verdict
+        run: grep -F 'COMPLEX_WORLD_FRESH1_SUMMARY passed=6/6 verdict=DEVELOPMENT_PASS' complex-world-fresh1.log
+      - name: Retain first-attempt positive or negative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: complex-world-fresh1-first-attempt-evidence
+          path: complex-world-fresh1.log
+          if-no-files-found: ignore
