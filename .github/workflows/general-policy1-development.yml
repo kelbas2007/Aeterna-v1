@@ -1,0 +1,92 @@
+name: General policy 1 - replace task-authored cognition on independent worlds
+on:
+  push:
+    branches: ['research/beyond-intel4']
+    paths:
+      - 'src/phase_general_policy.rs'
+      - 'src/phase_unified_cognition.rs'
+      - 'src/phase_native.rs'
+      - 'src/scientific_runtime.rs'
+      - 'src/bin/external_world_agent.rs'
+      - 'scripts/external_unstaged_world1.py'
+      - 'docs/GENERAL_POLICY1_PROTOCOL.md'
+      - '.github/workflows/general-policy1-development.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  replacement-vs-old-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env: {CARGO_BUILD_JOBS: 2, SDL_VIDEODRIVER: dummy}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: dtolnay/rust-toolchain@stable
+        with: {toolchain: '1.99.0'}
+      - uses: Swatinem/rust-cache@v2
+      - name: Independently maintained Farama world physics
+        run: python -m pip install 'minigrid==3.1.0'
+      - name: Compile and test replacement learning and physical action gates
+        run: |
+          cargo check --locked --all-targets
+          cargo test --locked --release --test general_policy_native -- --nocapture
+          cargo build --locked --release --bin external_world_agent
+      - name: Paired existing best hand-authored embodied policy on SAME worlds
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_unstaged_world1.py \
+            --agent target/release/external_world_agent \
+            --embodied --budget 256 --include-empty --seed-offset 12000 \
+            --output general1-authored-baseline.json \
+            2>&1 | tee general1-authored-baseline.log
+      - name: SINGLE learned policy replaces object and navigation controllers
+        shell: bash
+        run: |
+          set -o pipefail
+          python scripts/external_unstaged_world1.py \
+            --agent target/release/external_world_agent \
+            --general-policy --budget 256 --include-empty --seed-offset 12000 \
+            --output general1-learned.json \
+            2>&1 | tee general1-learned.log
+      - name: Score terminal world rewards not green CI
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          b=json.load(open("general1-authored-baseline.json"))
+          x=json.load(open("general1-learned.json"))
+          assert b["train_seeds"]==x["train_seeds"]==list(range(62000,62012))
+          assert b["heldout_seeds"]==x["heldout_seeds"]==list(range(63000,63004))
+          assert b["worlds"]==x["worlds"] and len(x["worlds"])==4
+          assert b["budget"]==x["budget"]==256
+          assert b["embodied_navigation"] and not b["general_policy"]
+          assert x["general_policy"] and not x["embodied_navigation"]
+          assert b["total_physical_actions"]>0 and x["total_physical_actions"]>0
+          assert b["random_task_successes"]==x["random_task_successes"]
+          complex_wins=x["heldout_successes_by_world"]["MiniGrid-DoorKey-5x5-v0"]+x["heldout_successes_by_world"]["MiniGrid-MultiRoom-N2-S4-v0"]
+          passed=x["eval_task_successes"]>=6 and x["eval_task_successes"]>b["eval_task_successes"] and x["eval_task_successes"]>x["random_task_successes"] and complex_wins>0
+          print("GENERAL_POLICY1_RESULT "
+                f"learned={x['eval_task_successes']}/16 "
+                f"authored={b['eval_task_successes']}/16 "
+                f"random={x['random_task_successes']}/16 "
+                f"learned_training={x['train_task_successes']}/48 "
+                f"per_world={x['heldout_successes_by_world']} "
+                f"reward_updates={x['general_training_updates']} "
+                f"real_reward_events={x['general_training_rewards']} "
+                f"real_moves={x['eval_executed_moves']} "
+                f"verdict={'DEVELOPMENT_PASS' if passed else 'DEVELOPMENT_FAIL'}")
+          PY
+      - name: Preserve negative or positive full source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: general-policy1-replacement-paired-evidence
+          path: |
+            general1-authored-baseline.json
+            general1-authored-baseline.log
+            general1-learned.json
+            general1-learned.log
+          if-no-files-found: ignore
