@@ -3,7 +3,7 @@
 //! The Python host receives an action ONLY after U1 selection and the protection
 //! screen; it sends back the genuinely executed environment observation/reward.
 //! No map, object IDs, action semantics, reward lookup or mission text enters it.
-use aeterna_v1::carrier::{EvoConfig, EvoPhase, PhaseMetaControlConfig, PhaseNativeConfig};
+use aeterna_v1::carrier::{EvoConfig, EvoPhase, PhaseMetaControlConfig, PhaseNativeConfig, PhaseHypothesisEcologyConfig};
 use aeterna_v1::human_protection::HumanProtectionEvidence;
 use aeterna_v1::scientific_runtime::{ScientificRuntime, StepOutcome};
 use serde_json::{json, Value};
@@ -53,6 +53,11 @@ fn init(len: usize, motors: usize) -> Result<ScientificRuntime, String> {
     if !evo.enable_phase_native_meta_control(PhaseMetaControlConfig {
         learning_enabled: false, ..PhaseMetaControlConfig::default()
     }) { return Err("native U1 creation failed".into()); }
+    // The shared U1 action coalescer requires an attached U2 ecology;
+    // without it all proposals are rejected as NoSupportedAction.
+    if !evo.enable_phase_native_hypothesis_ecology(
+        PhaseHypothesisEcologyConfig::default()
+    ) { return Err("U2 ecology required by native U1 selector".into()); }
     let mut rt = ScientificRuntime::new(evo).map_err(|e| e.to_string())?;
     if !rt.enable_factor_causality() || !rt.enable_factor_external_reward_goal() {
         return Err("carrier-owned external reward mode refused".into());
@@ -152,5 +157,31 @@ fn main() {
     if let Err(err) = main_loop(&mut stdin.lock(), &mut stdout.lock()) {
         eprintln!("external-world protocol error: {err}");
         std::process::exit(1);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn live_external_bridge_emits_a_native_action_before_any_reward() {
+        let mut rt = init(588, 7).unwrap();
+        let mut observed = vec![0.0_f32; 588];
+        observed[7] = 1.0;
+        rt.observe_external(&observed).unwrap();
+        rt.set_goal(&vec![0.0; 588]).unwrap();
+        let proposed = rt.propose_unified().unwrap()
+            .expect("carrier must propose a motor before first reward");
+        assert!(proposed.action < 7);
+        let mut executed = 0usize;
+        let outcome = rt.step_unified(
+            |_| Some(safe()),
+            |action| {
+                executed = action + 1;
+                Ok((observed.clone(), 0.0))
+            },
+        ).unwrap();
+        assert!(matches!(outcome, StepOutcome::Executed { .. }));
+        assert!(executed > 0, "a protected external callback must run");
     }
 }
