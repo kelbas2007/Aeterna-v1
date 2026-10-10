@@ -8,6 +8,7 @@
 // Learning/selection mathematics is of course programmed Rust; this
 // does not establish that the SNN invented its own learning algorithm.
 const GENERAL_DIM:usize=96;
+const GENERAL_ACTOR_DIM:usize=GENERAL_DIM*2;
 const GENERAL_TRACE_DECAY:f32=0.91;
 const GENERAL_LEARNING_RATE:f32=0.10;
 
@@ -20,6 +21,11 @@ struct PhaseGeneralPolicy {
     steps:u64,
     updates:u64,
     positive_rewards:u32,
+    // One continuing causal subject, not independent visible frames. Opt-in.
+    // The second half of its ACTOR features represents prior observations.
+    developmental_memory:bool,
+    working_trace:Vec<f32>,
+    retained_events:u64,
     // Temporary lifetime-episode history, never transferred as knowledge.
     recent:Vec<(u64,usize)>,
     eligibility:Vec<Vec<f32>>,
@@ -83,15 +89,62 @@ impl EvoPhase {
         }
         let Some(state)=self.phase_native.as_mut() else{return false;};
         state.general_policy=Some(PhaseGeneralPolicy{
-            weights:vec![vec![0.0;GENERAL_DIM];n],
+            weights:vec![vec![0.0;GENERAL_ACTOR_DIM];n],
             predictions:vec![vec![0.0;GENERAL_DIM];n],
             prediction_visits:vec![0;n],
             physical_links:links,
             steps:0,updates:0,positive_rewards:0,
+            developmental_memory:false,
+            working_trace:vec![0.0;GENERAL_DIM],retained_events:0,
             recent:Vec::new(),
-            eligibility:vec![vec![0.0;GENERAL_DIM];n],
+            eligibility:vec![vec![0.0;GENERAL_ACTOR_DIM];n],
         });
         true
+    }
+    /// Fundamental experiment: the policy now conditions decisions on a
+    /// bounded history of its own actual experience, not just current pixels.
+    /// This is a hand-designed, leaky *working memory prototype*, not a human
+    /// child brain or unsupervised symbolic world understanding.
+    pub fn enable_phase_native_developmental_memory(&mut self)->bool{
+        let Some(state)=self.phase_native.as_mut()
+            .and_then(|n|n.general_policy.as_mut()) else {return false;};
+        if state.developmental_memory{return false;}
+        state.developmental_memory=true;
+        state.working_trace.fill(0.0);
+        state.retained_events=0;
+        true
+    }
+    pub fn phase_native_developmental_memory_enabled(&self)->bool{
+        self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
+            .is_some_and(|m|m.developmental_memory)
+    }
+    pub fn phase_native_developmental_retained_events(&self)->u64{
+        self.phase_native.as_ref().and_then(|n|n.general_policy.as_ref())
+            .map_or(0,|m|m.retained_events)
+    }
+    /// First factual observation starts an episode; a later blank/similar
+    /// observation does not erase the preceding cue. Never receives a
+    /// hidden state label or a correct motor.
+    pub fn observe_phase_native_general_initial(&mut self,raw:&[f32])->bool{
+        let Some(features)=Self::general_frame_features(raw) else{return false;};
+        let Some(state)=self.phase_native.as_mut()
+            .and_then(|n|n.general_policy.as_mut()) else{return false;};
+        if !state.developmental_memory{return true;}
+        state.working_trace=features;
+        state.retained_events=1;
+        true
+    }
+    fn general_actor_features(
+        observation:&[f32],model:&PhaseGeneralPolicy
+    )->Vec<f32>{
+        let mut features=Vec::with_capacity(GENERAL_ACTOR_DIM);
+        features.extend_from_slice(observation);
+        if model.developmental_memory{
+            features.extend_from_slice(&model.working_trace);
+        }else{
+            features.extend(std::iter::repeat_n(0.0,GENERAL_DIM));
+        }
+        features
     }
     pub fn phase_native_general_enabled(&self)->bool{
         self.phase_native.as_ref().is_some_and(|n|n.general_policy.is_some())
@@ -116,6 +169,8 @@ impl EvoPhase {
         if let Some(s)=self.phase_native.as_mut()
             .and_then(|n|n.general_policy.as_mut()){
             s.recent.clear();
+            s.working_trace.fill(0.0);
+            s.retained_events=0;
             for row in &mut s.eligibility{row.fill(0.0);}
         }
     }
@@ -124,7 +179,8 @@ impl EvoPhase {
     )->Option<PhaseGeneralDecision>{
         let native=self.phase_native.as_ref()?;
         let model=native.general_policy.as_ref()?;
-        let features=Self::general_frame_features(raw)?;
+        let present=Self::general_frame_features(raw)?;
+        let features=Self::general_actor_features(&present,model);
         let h=Self::general_hash(raw);
         let seen=|a:usize|model.recent.iter().any(|&(state,action)|
             state==h && action==a);
@@ -181,6 +237,16 @@ impl EvoPhase {
         model.steps+=1;
         if model.recent.len()>=512{model.recent.remove(0);}
         model.recent.push((h,action));
+        let actor_before=Self::general_actor_features(&before,model);
+        if model.developmental_memory {
+            // Continuous subjective trace: prior factual events influence
+            // future actions even when the next visible frame is identical.
+            // No reward or oracle controls the write gate.
+            for (memory,next) in model.working_trace.iter_mut().zip(&after){
+                *memory=(0.94*(*memory)+0.06*(*next)).clamp(-1.0,1.0);
+            }
+            model.retained_events=model.retained_events.saturating_add(1);
+        }
         if !learning {return true;}
         let model=self.phase_native.as_mut().expect("native")
             .general_policy.as_mut().expect("policy");
@@ -197,7 +263,7 @@ impl EvoPhase {
         for trace in &mut model.eligibility{
             for v in trace.iter_mut(){*v*=GENERAL_TRACE_DECAY;}
         }
-        for (trace,feature) in model.eligibility[action].iter_mut().zip(&before){
+        for (trace,feature) in model.eligibility[action].iter_mut().zip(&actor_before){
             *trace=(*trace+*feature).clamp(-8.0,8.0);
         }
         // Positive factual terminal reward beats weak novelty by design.
