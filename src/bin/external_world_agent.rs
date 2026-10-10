@@ -169,6 +169,12 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "acquired":acquired,
                     "learned_affordances":rt.organism().phase_native_learned_affordances()}))?;
             }
+            "embodied_navigation" => {
+                let rt=runtime.as_mut().ok_or("init required")?;
+                let accepted=rt.enable_embodied_navigation();
+                send(out,&json!({"type":"embodied_navigation_ack",
+                    "accepted":accepted}))?;
+            }
             "self_experiment" => {
                 let rt = runtime.as_mut().ok_or("init required")?;
                 let tile = msg.get("front_tile").and_then(Value::as_u64)
@@ -217,6 +223,7 @@ fn main_loop<R: BufRead, W: Write>(input: &mut R, out: &mut W) -> Result<(), Str
                     "visual_frames":rt.organism().phase_native_grounded_frames(),
                     "self_experiments":rt.organism().phase_native_self_trial_count(),
                     "self_affordances":rt.organism().phase_native_self_affordance_count(),
+                    "inferred_motion":rt.organism().phase_native_embodied_move_evidence(),
                     "learned_affordances":rt.organism().phase_native_learned_affordances()
                 }))?;
             }
