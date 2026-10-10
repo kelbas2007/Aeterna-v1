@@ -539,3 +539,57 @@ vision only, not a newborn brain or AGI. Full goal-free,
 self-supervised formation of object identity, proprioception,
 multimodal speech/social perception and human-like
 homeostasis remain open research.
+
+## Infant-like episodic memory: factual history discrimination ≠ autonomous use (2026-10-10)
+
+The previous CHILD-ZERO scaffold and leaky sensory-history trace
+were not proven to yield actual causally useful memory.
+A deliberately independent outside task,
+\`MiniGrid-MemoryS7-v0\` by Farama, requires recalling an
+initially observed object after it leaves the visible camera
+view to choose the correct hallway exit.
+
+**HISTORY-MEMORY-1 NATIVE FAIL**:
+two different previous cues and the SAME current frame
+produced the SAME learned motor (2).
+[Run 38066838257](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38066838257)
+· [original result](docs/HISTORY_MEMORY1_RESULT.md).
+
+**HISTORY-MEMORY-2 NATIVE FAIL** even after generic signed
+competitive temporal eligibility, still selecting the
+same motor (2) under two reward-trained cue histories.
+Independent external MemoryS7 never executed in those
+two first cases because the native prerequisite failed.
+[Run 38067087802](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38067087802)
+· [result](docs/HISTORY_MEMORY2_RESULT.md).
+
+**HISTORY-MEMORY-3 NATIVE PASS, REAL EXTERNAL FAIL**:
+opt-in autobiographical successful episode-context/action
+retrieval allowed genuinely different learned frozen actions
+(0 vs 1) for identical present sensor input after distinct
+experienced histories, against reactive motor 2 for both.
+Native control PASS 2/2.
+However actual independent Farama MemoryS7 test on 24 new
+heldout environments reported episodic memory **10/24**,
+no memory **10/24**, random **8/24**. Critically BOTH
+organisms terminated at \`[5,2]\` in **all 24 episodes**,
+regardless of the correct goal branch. Thus the actual
+task successes represent a fixed-side policy, not
+autonomous use of remembered cue. The training arms each
+had 64/128 successes; episodic memory stored 9
+distinct actually rewarded event associations but
+did not influence the relevant fork choice.
+[Run 38067414320](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38067414320)
+· [protocol](docs/HISTORY_MEMORY3_PROTOCOL.md)
+· [raw-artifact audited result](docs/HISTORY_MEMORY3_RESULT.md).
+
+**Architectural conclusion:** recording successful final
+actuations and a decaying experience trace is insufficient.
+The next research boundary is a recurrent, selective,
+causal *sequence* memory of factual PRE/action/POST
+and retrospective credit from both terminal reward and
+failure to earlier decisions. It must solve a true
+history-aliasing task with no motor labels/teacher and
+show a necessary memory ablation on full external
+task rewards. Do not bolt on correct-branch code or
+repeat fixed-seed repair until CI becomes green.
