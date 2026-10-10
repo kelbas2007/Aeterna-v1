@@ -219,9 +219,22 @@ impl EvoPhase {
         }
         let local_changed = tile < memory.width * memory.height
             && before[start..end] != after[start..end];
-        let rest_stable = before.iter().zip(after).enumerate()
-            .all(|(i, (a, b))| (i >= start && i < end) || a == b);
-        let witness = correct && local_changed && rest_stable;
+        let changed_tiles = (0..memory.width * memory.height)
+            .filter(|&i| {
+                let start = i * stride;
+                before[start..start + stride] != after[start..start + stride]
+            }).collect::<Vec<_>>();
+        // Either local object changed in-place (door toggle), or it left
+        // the pointed tile and reappeared at ONE other tile (picked up).
+        // The second case is inferred from the image, not from a simulator
+        // carrying flag. Reject camera rotation / global scene movement.
+        let transfer = changed_tiles.len() == 2
+            && changed_tiles.contains(&tile)
+            && changed_tiles.iter().copied().find(|&i| i != tile)
+                .and_then(|i| memory.tile_signature(after, i))
+                .as_ref() == target.as_ref();
+        let witness = correct && local_changed
+            && (changed_tiles == vec![tile] || transfer);
         if witness && memory.affordances.len() < 64 {
             if let Some(record) = memory.affordances.iter_mut().find(|a|
                 a.category == lex.category && a.tile == tile && a.action == action
