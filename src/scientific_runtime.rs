@@ -269,6 +269,10 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_experience_replay()
     }
 
+    pub fn enable_relational_workspace(&mut self)->bool{
+        self.organism.enable_phase_native_relational_workspace(7,7,3,4,2)
+    }
+
     pub fn enable_embodied_navigation(&mut self)->bool{
         self.organism.enable_phase_native_embodied_navigation()
     }
@@ -483,6 +487,7 @@ impl ScientificRuntime {
         self.organism.begin_phase_native_general_episode();
         let _=self.organism.begin_phase_native_innate_episode(raster);
         let _=self.organism.observe_phase_native_general_initial(raster);
+        let _=self.organism.phase_native_relational_initial(raster);
         // A new external real observation begins a fresh evidence episode,
         // while preserving acquired cue and motor synapses across the lifetime.
         if self.organism.phase_native_temporal_evidence_enabled() {
@@ -822,6 +827,7 @@ impl ScientificRuntime {
         if self.organism.phase_native_general_enabled(){
             let _=self.organism.observe_phase_native_general_transition(
                 action,&factual_pre,&post,task_outcome);
+            let _=self.organism.phase_native_relational_factual_post(&post);
         }
         // Sparse external reward is factual only after the protected motor
         // has produced its validated POST. It is neither a privileged goal
