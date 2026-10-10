@@ -276,3 +276,22 @@ objects from RGB, unsupervised language understanding, learned
 affordances or functional goal solving. One-shot external
 cross-world generalization is being tested separately as
 [CROSSWORLD-OBJECT-2](docs/CROSSWORLD_OBJECT2_PROTOCOL.md).
+
+### One-shot grounding control — new external seeds
+
+**CROSSWORLD-OBJECT-2: OPEN DEVELOPMENT PASS** for precisely one
+teacher pointing per word. After one \`key\` and one \`door\` lesson
+in DoorKey, the same checkpointed/restarted EvoPhase organism
+returned 773/773 correct visible referents on unseen DoorKey,
+MultiRoom and Empty observations, including 110/110 visible
+MultiRoom doors, with no false positives over 2,112 protected
+actions. **Zero successful task rewards**.
+[Run 38037399748](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38037399748)
+· [Full evidence](docs/CROSSWORLD_OBJECT2_RESULT.md)
+· [Protocol](docs/CROSSWORLD_OBJECT2_PROTOCOL.md).
+
+This confirms one-shot association of a label with MiniGrid's
+already coded object type across different worlds with a shared
+categorical visual code. It does not confirm self-discovered
+object ontologies, unsupervised language, RGB recognition or
+causal affordance/action transfer. Those remain open.
