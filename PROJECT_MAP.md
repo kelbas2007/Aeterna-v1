@@ -383,3 +383,47 @@ subgoals, then full outside DoorKey success on unseen
 maps under an unchanged evaluator. Avoid further
 local pickup/toggle benchmarks as a substitute for
 goal achievement.
+
+## Actual independent external full-task solution — 2026-10-10
+
+**EMBODIED-WORLD-1** on EXACT matched 3-Farama-world seeds,
+128 real protected actions/episode:
+- Native embodied optic-flow exploration, zero staged objects,
+  zero motor/word tuition and zero hidden simulator coordinates:
+  **7/36 successful training tasks** and **1/12 frozen heldout full
+  game task success** (in real MiniGrid-Unlock), against
+  0/12 paired ablated carrier and 1/12 matched random agent.
+- Physical heldout movements 143 vs 1 in identical source
+  ablation. The single success does NOT surpass random;
+  strict predeclared full-task verdict was **DEVELOPMENT FAIL**.
+[Exact run 38048828798](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38048828798)
+· [Detailed first evidence](docs/EMBODIED_WORLD1_RESULT.md).
+
+**EMBODIED-WORLD-2** uses a DIFFERENT predeclared seed family,
+one continuing lifetime across FOUR independent Farama task
+families including Empty, 256 action budget, ZERO tutoring
+or environment staging and exact matched ablation/random:
+- **15/48 completed training tasks** (Empty 7, Unlock 8),
+  **7/16 independently successful heldout game tasks**:
+  **4/4 Empty navigation and 3/4 Unlock**, with
+  **0/4 DoorKey and 0/4 MultiRoom**.
+- Matched old cognition **0/16**, random **1/16**,
+  real heldout agent position changes **211**,
+  14 actual key pickups and six actual door openings.
+- Predeclared demanding **DEVELOPMENT FAIL** because no
+  complete heldout DoorKey or MultiRoom was solved, even
+  though the score exceeds both matched controls.
+[Exact run 38049301325](https://github.com/kelbas2007/Aeterna-v1/actions/runs/38049301325)
+· [Predeclared contract](docs/EMBODIED_WORLD2_PROTOCOL.md).
+
+This establishes some real autonomous **whole-task** success
+in TWO externally maintained worlds under a narrow
+pre-categorized egocentric sensor and explicitly written
+generic Rust optic-flow action exploration. It does not
+prove broad across-world planning, neural invention of
+navigation, open-world AGI, raw RGB object grounding,
+or reliable success on multiroom/key→door→exit chains.
+Current central barrier: persistent allocentric/landmark
+memory and credit-based multi-step subgoal planning across
+partially visible rooms; do not replace this requirement
+with more local skill-passing demonstrations.
