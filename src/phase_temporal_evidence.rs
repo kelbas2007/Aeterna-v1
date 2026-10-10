@@ -1249,6 +1249,13 @@ impl EvoPhase {
     pub fn phase_native_temporal_action_evidence_admissible(
         &self,action:usize
     )->bool{
+        // During explicitly opted-in cold acquisition the physically
+        // reachable, least-tested causal hypothesis receives an executable
+        // investigation opportunity. No evaluator action identity enters it.
+        // After the model is frozen the ordinary acquired goal plan wins.
+        if let Some((probe,_,_))=self.choose_phase_native_temporal_goal_frontier(){
+            return action==probe;
+        }
         if !self.phase_native_temporal_autonomous_probe(){return true;}
         let Some(belief)=self.phase_native_temporal_evidence()
             else{return true;};
