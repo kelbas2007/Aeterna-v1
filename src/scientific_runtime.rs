@@ -220,6 +220,33 @@ impl ScientificRuntime {
         self.organism.enable_phase_native_factor_causality()
     }
 
+    /// Opt-in stable candidate visual identity and deictic word binding.
+    /// This is the pixel-array layout, not a category or object label.
+    pub fn enable_object_grounding(
+        &mut self, width: usize, height: usize, channels: usize,
+        bits: usize, identity_channels: usize
+    ) -> bool {
+        self.organism.enable_phase_native_grounded_objects(
+            width, height, channels, bits, identity_channels)
+    }
+
+    /// External pointing plus utterance is explicitly supervised language,
+    /// accepted only against a real current observation while learning.
+    pub fn teach_pointed_word(&mut self, word: &str, tile: usize) -> bool {
+        if !self.model_learning_enabled || self.fresh_observation_required {
+            return false;
+        }
+        self.organism.teach_phase_native_pointed_word(word, tile)
+    }
+
+    pub fn locate_grounded_word(
+        &self, word: &str
+    ) -> Vec<crate::carrier::PhaseGroundedReferent> {
+        let Some(real) = self.organism.current_real() else { return Vec::new() };
+        if self.fresh_observation_required { return Vec::new(); }
+        self.organism.locate_phase_native_grounded_word(word, &real.sensory)
+    }
+
     /// Learn the raw observed terminal goal only after external positive reward.
     pub fn enable_factor_external_reward_goal(&mut self) -> bool {
         self.organism.enable_phase_native_factor_external_reward_goal()
@@ -400,6 +427,8 @@ impl ScientificRuntime {
             let _=self.organism.observe_phase_native_temporal_signal(raster);
         }
         self.organism.observe_initial_real(raster, false);
+        // Grounded categories accumulate across resets and external worlds.
+        let _ = self.organism.observe_phase_native_object_view(raster);
         self.fresh_observation_required = false;
         self.record(LifetimeEventKind::ExternalObservation);
         Ok(())
@@ -802,6 +831,10 @@ impl ScientificRuntime {
             0
         };
 
+        // Real externally returned visual evidence, never a model prediction.
+        if self.model_learning_enabled {
+            let _ = self.organism.observe_phase_native_object_view(&post);
+        }
         let after_knowledge = self.organism.phase_native_unified_knowledge_snapshot();
         let info_gain = after_knowledge.gained_since(before_knowledge);
 
