@@ -82,6 +82,11 @@ Online v9 disk persistence does not yet serialize it. Navigation is simulated
 categorical input, while recorded pixels/signals come from real measurements.
 Open-world intelligence and live robot adaptation are not established.
 
+The raw diagnostic exports the acquired policy tree and operator/model counters,
+not the case table, effect-tree parameters or joint support table. Their
+reproduction requires repeating the frozen factual training. Raw action
+provenance is therefore not a complete serialized learned-model artifact.
+
 Prior navigation failures are retained: [iteration 1](VALUE_RULE_TRANSFER1_RESULT.md),
 [iteration 2](VALUE_RULE_TRANSFER2_RESULT.md). The amendment was developed from
 consumed earlier trajectories, then frozen before new held navigation scoring.
