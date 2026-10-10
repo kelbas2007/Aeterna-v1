@@ -244,8 +244,24 @@ impl EvoPhase {
             .is_some_and(|s|s.physical_links.contains(&index))
     }
     pub fn begin_phase_native_general_episode(&mut self){
+        let learning=self.phase_native.as_ref()
+            .is_some_and(|n|n.config.learning_enabled);
         if let Some(s)=self.phase_native.as_mut()
             .and_then(|n|n.general_policy.as_mut()){
+            // An episode with NO factual positive reward ended without
+            // accomplishing its objective. We only know what the organism
+            // actually did; there is NO "correct alternative" oracle.
+            if s.sequence_replay && learning
+                && !s.episode_reward_seen && !s.episode_trace.is_empty(){
+                let failed=s.episode_trace.iter().rev().take(20)
+                    .cloned().collect::<Vec<_>>();
+                for (ctx,a) in failed {
+                    Self::general_store_event(s,&ctx,a,false);
+                }
+            }
+            if !s.episode_trace.is_empty(){s.episode_ends+=1;}
+            s.episode_trace.clear();
+            s.episode_reward_seen=false;
             s.recent.clear();
             s.working_trace.fill(0.0);
             s.retained_events=0;
@@ -267,6 +283,7 @@ impl EvoPhase {
         // after different histories. Real physical synapses are required.
         if model.episodic_recall {
             let mut matches=model.rewarded_event_memory.iter()
+                .filter(|event|event.rewarded_experiences>0)
                 .filter_map(|event|{
                     let link=*model.physical_links.get(event.action)?;
                     let physical=conductance(&self.cells,&self.synapses[link],
@@ -274,7 +291,10 @@ impl EvoPhase {
                     if physical<=1e-7{return None;}
                     let similarity=Self::general_cosine(
                         &features,&event.context);
-                    Some((event.action,similarity,link))
+                    let credibility=event.rewarded_experiences as f32
+                        /(event.rewarded_experiences+event.unsuccessful_experiences+1)
+                            as f32;
+                    Some((event.action,similarity*credibility,link))
                 }).collect::<Vec<_>>();
             matches.sort_by(|a,b|b.1.total_cmp(&a.1));
             if let Some(&(action,score,synapse))=matches.first(){
@@ -282,7 +302,11 @@ impl EvoPhase {
                     .filter(|entry|entry.0!=action)
                     .map(|entry|entry.1)
                     .fold(f32::NEG_INFINITY,f32::max);
-                if score>=0.975 && score>runner+0.01 {
+                // Previous positive-only recall kept the first matching
+                // last-motor memory; in sequence replay the success rate
+                // is lower on contradictory histories and lowers confidence.
+                if score>=if model.sequence_replay{0.48}else{0.65}
+                    && score>runner+0.015 {
                     return Some(PhaseGeneralDecision{
                         action,score:score*3.0,synapse
                     });
@@ -313,7 +337,19 @@ impl EvoPhase {
             let inherited=if learning {
                 self.phase_native_innate_action_bias(action)
             }else{0.0};
-            let score=acquired+inherited
+            let replay_penalty=if model.sequence_replay {
+                model.rewarded_event_memory.iter()
+                    .filter(|event|event.action==action
+                        && event.unsuccessful_experiences>0)
+                    .map(|event|{
+                        let fit=Self::general_cosine(&features,&event.context);
+                        if fit<0.95{return 0.0;}
+                        let fail=event.unsuccessful_experiences as f32;
+                        let success=event.rewarded_experiences as f32;
+                        1.0*fit*(fail/(1.0+fail+success))
+                    }).fold(0.0,f32::max)
+            }else{0.0};
+            let score=acquired+inherited-replay_penalty
                 +if learning {0.20*surprise+0.10*coverage+0.15*jitter}
                     else {0.07*surprise+0.025*jitter};
             let candidate=PhaseGeneralDecision{
@@ -346,6 +382,12 @@ impl EvoPhase {
         if model.recent.len()>=512{model.recent.remove(0);}
         model.recent.push((h,action));
         let actor_before=Self::general_actor_features(&before,model);
+        if model.sequence_replay && learning {
+            if model.episode_trace.len()>=128{
+                model.episode_trace.remove(0);
+            }
+            model.episode_trace.push((actor_before.clone(),action));
+        }
         if model.developmental_memory {
             // Continuous subjective trace: prior factual events influence
             // future actions even when the next visible frame is identical.
@@ -390,22 +432,19 @@ impl EvoPhase {
         let feedback=if reward>0.0{
             model.positive_rewards=model.positive_rewards.saturating_add(1);
             if model.episodic_recall {
-                let previous=model.rewarded_event_memory.iter_mut()
-                    .find(|e|e.action==action &&
-                        Self::general_cosine(&e.context,&actor_before)>=0.998);
-                if let Some(event)=previous {
-                    event.rewarded_experiences=
-                        event.rewarded_experiences.saturating_add(1);
-                } else {
-                    if model.rewarded_event_memory.len()>=128 {
-                        model.rewarded_event_memory.remove(0);
+                if model.sequence_replay {
+                    model.episode_reward_seen=true;
+                    // Reconsider each actually experienced PRE/action
+                    // leading up to this factual terminal reward. The
+                    // trajectory is retrieved in native recurrent context.
+                    let witnessed=model.episode_trace.iter().rev()
+                        .take(20).cloned().collect::<Vec<_>>();
+                    for (ctx,a) in witnessed{
+                        Self::general_store_event(model,&ctx,a,true);
                     }
-                    model.rewarded_event_memory.push(
-                        PhaseGeneralRememberedEvent {
-                            context:actor_before.clone(),action,
-                            rewarded_experiences:1,
-                        }
-                    );
+                }else{
+                    Self::general_store_event(
+                        model,&actor_before,action,true);
                 }
             }
             4.0*reward
