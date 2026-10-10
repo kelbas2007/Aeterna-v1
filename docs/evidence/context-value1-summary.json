@@ -1,0 +1,131 @@
+{
+  "source": "c812b17074ebc4a75551ff15ac816bd08975c90e",
+  "binary_sha256": "af0eaaebe1ca7fe898c049c98542082525d9855db351eb9ad2ae581beb29ac57",
+  "raw_sha256": "9cab299ee9256ca7bb703db35c58279d500988c7ee15a56199410f891f0133ec",
+  "verdict": "CAUSAL_MEMORY_DEVELOPMENT_PASS",
+  "arms": {
+    "value_memory": {
+      "training_successes": 394,
+      "training_actions": 30114,
+      "states": 1593,
+      "evaluations": {
+        "MiniGrid-MemoryS7-v0": {
+          "all_pairs_correct": true,
+          "beats_constant_exit": true,
+          "both_correct": 32,
+          "constant_exit_upper_bound": 32,
+          "cue_use_supported": true,
+          "episodes": 64,
+          "exit_switch_pairs": 32,
+          "exposed_both_correct": 32,
+          "exposed_pairs": 32,
+          "identical_input_pairs": 0,
+          "no_cue_both_correct": 0,
+          "pairs": 32,
+          "same_actions_pairs": 0,
+          "successes": 64,
+          "unexposed_pairs": 0
+        },
+        "MiniGrid-MemoryS9-v0": {
+          "all_pairs_correct": false,
+          "beats_constant_exit": false,
+          "both_correct": 1,
+          "constant_exit_upper_bound": 16,
+          "cue_use_supported": false,
+          "episodes": 32,
+          "exit_switch_pairs": 9,
+          "exposed_both_correct": 1,
+          "exposed_pairs": 16,
+          "identical_input_pairs": 0,
+          "no_cue_both_correct": 0,
+          "pairs": 16,
+          "same_actions_pairs": 0,
+          "successes": 10,
+          "unexposed_pairs": 0
+        }
+      }
+    },
+    "value_no_memory": {
+      "training_successes": 81,
+      "training_actions": 80399,
+      "states": 98,
+      "evaluations": {
+        "MiniGrid-MemoryS7-v0": {
+          "all_pairs_correct": false,
+          "beats_constant_exit": false,
+          "both_correct": 0,
+          "constant_exit_upper_bound": 32,
+          "cue_use_supported": false,
+          "episodes": 64,
+          "exit_switch_pairs": 21,
+          "exposed_both_correct": 0,
+          "exposed_pairs": 32,
+          "identical_input_pairs": 0,
+          "no_cue_both_correct": 0,
+          "pairs": 32,
+          "same_actions_pairs": 0,
+          "successes": 3,
+          "unexposed_pairs": 0
+        },
+        "MiniGrid-MemoryS9-v0": {
+          "all_pairs_correct": false,
+          "beats_constant_exit": false,
+          "both_correct": 2,
+          "constant_exit_upper_bound": 16,
+          "cue_use_supported": false,
+          "episodes": 32,
+          "exit_switch_pairs": 10,
+          "exposed_both_correct": 2,
+          "exposed_pairs": 15,
+          "identical_input_pairs": 1,
+          "no_cue_both_correct": 0,
+          "pairs": 16,
+          "same_actions_pairs": 1,
+          "successes": 13,
+          "unexposed_pairs": 1
+        }
+      }
+    },
+    "legacy_memory": {
+      "training_successes": 6,
+      "training_actions": 100698,
+      "states": 0,
+      "evaluations": {
+        "MiniGrid-MemoryS7-v0": {
+          "all_pairs_correct": false,
+          "beats_constant_exit": false,
+          "both_correct": 0,
+          "constant_exit_upper_bound": 32,
+          "cue_use_supported": false,
+          "episodes": 64,
+          "exit_switch_pairs": 0,
+          "exposed_both_correct": 0,
+          "exposed_pairs": 8,
+          "identical_input_pairs": 24,
+          "no_cue_both_correct": 0,
+          "pairs": 32,
+          "same_actions_pairs": 32,
+          "successes": 0,
+          "unexposed_pairs": 24
+        },
+        "MiniGrid-MemoryS9-v0": {
+          "all_pairs_correct": false,
+          "beats_constant_exit": false,
+          "both_correct": 0,
+          "constant_exit_upper_bound": 16,
+          "cue_use_supported": false,
+          "episodes": 32,
+          "exit_switch_pairs": 0,
+          "exposed_both_correct": 0,
+          "exposed_pairs": 0,
+          "identical_input_pairs": 16,
+          "no_cue_both_correct": 0,
+          "pairs": 16,
+          "same_actions_pairs": 16,
+          "successes": 0,
+          "unexposed_pairs": 16
+        }
+      }
+    }
+  }
+}

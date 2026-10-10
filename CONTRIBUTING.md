@@ -72,3 +72,10 @@ exercise the native components and Python causal-scorer contracts through
 MiniGrid runs need Python 3.10+ and `minigrid==3.1.0`. The external agent accepts
 JSONL frames up to 64 KiB and terminates on oversize input. See the
 [latest integration review](docs/GITHUB_REVIEW_20261010.md).
+
+The opt-in context-value head is documented in
+[its guide](docs/CONTEXT_VALUE_LEARNING.md). Native regression controls are
+part of `scripts/check.sh`; the fixed-source external result is in
+[CONTEXT-VALUE-1](docs/CONTEXT_VALUE1_RESULT.md). Its heldout samples are used
+and are not automatic regressions. Preserve both the MemoryS7 PASS and
+the MemoryS9 transfer FAIL; generic learning math remains authored software.

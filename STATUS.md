@@ -2,7 +2,19 @@
 
 **Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
-## Reviewed integration — 2026-10-10
+## Contextual memory development — 2026-10-10
+
+[CONTEXT-VALUE-1](docs/CONTEXT_VALUE1_RESULT.md) passed its new predeclared
+MemoryS7 cue-use criterion on fixed source `c812b17`: **64/64** rewarded
+heldout tasks, **32/32** both-correct cue-swapped pairs, versus **3/64**
+without cue context and **0/64** for the newly trained legacy control.
+In 48/64 episodes the cue arrived only after self-selected actions.
+The same source without retraining scored **10/32** on MemoryS9: transfer
+remains FAIL. Authored TD/replay, categorical perception and exact state
+addressing remain software; full ownership, individual object identity and
+general intelligence remain open. [Usage and storage limits](docs/CONTEXT_VALUE_LEARNING.md).
+
+## Earlier integration review — 2026-10-10
 
 The latest research source at `7b84027` brings 283 commits since the last
 common main/research state. It is integrated as development, with historical
@@ -10,8 +22,8 @@ INTEL-4 source and verdicts preserved. See the [code and GitHub review](docs/GIT
 
 New code includes learned argument bindings, a generic native actor, factual
 episode memory, and relational appearance hypotheses. Physical/native controls
-and limited synthetic causal routes pass. Independent external MemoryS7
-cue-use remains unproven: the corrected 14/24 first report and 7/24 replication
+and limited synthetic causal routes pass. Earlier external MemoryS7
+cue-use attempts failed: the corrected 14/24 first report and 7/24 replication
 are FAIL; the first relational test also failed. Raw observations are
 pre-categorized MiniGrid tiles, not learned RGB vision. Full EvoPhase ownership
 and general intelligence remain open.

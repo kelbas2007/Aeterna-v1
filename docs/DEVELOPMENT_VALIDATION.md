@@ -1,7 +1,24 @@
-# Development integration validation — 2026-10-09
+# Development integration validation — 2026-10-10
 
 The latest section covers the 2026-10-10 reviewed integration into main. Earlier acquired-operation, induction, perception and combined-uncertainty records remain below.
 These are open development checks, not sealed intelligence qualifications.
+
+## Context-value development validation — 2026-10-10
+
+Fixed cognitive source `c812b17074ebc4a75551ff15ac816bd08975c90e` passed
+all-target compilation, **208 Rust tests (zero failures)**, six Python causal
+scorer checks, fixture checksums, statistical crosscheck and all nine
+learn/restore examples plus perception in separate processes. Native tests
+cover actual self-selected learning, physical memory/motor lesions, context
+multiplicity, late perception, frozen cycle recovery and capacity eviction
+without losing the active PRE address.
+
+[The new external evaluation](CONTEXT_VALUE1_RESULT.md) passed the declared
+MemoryS7 development criterion at 64/64, 32/32 both-correct pairs against
+the source-identical controls. Frozen MemoryS9 transfer remains FAIL 10/32.
+The incoming research commit `4b12236` adds only the OBJECT-RELATION-0 design;
+it was merged preserving both histories, without changing the tested cognition.
+Consumed historical scientific seeds were not replayed.
 
 ## Reviewed 2026-10-10 integration
 

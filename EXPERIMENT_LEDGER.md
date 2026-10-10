@@ -656,3 +656,28 @@ it never supplies a fallback in the new engine. Ordinary pipeline CI tests
 check integrity and frozen factual execution, not metric qualification.
 
 Concurrent upstream research `565f5a0` was preserved by merge `3a695b9`; final ordinary integration: 170 passed, zero failures. Compilation, correctness Clippy and separate-process demos PASS; recorded-data scores unchanged. Frozen fresh/fresh2 witness source/tests/workflows were preserved and not rerun.
+
+
+## 2026-10-10 — CONTEXT-VALUE-1: causal memory and failed transfer
+
+Source frozen before fresh evaluation: `c812b17074ebc4a75551ff15ac816bd08975c90e`.
+[Protocol](docs/CONTEXT_VALUE1_PROTOCOL.md), [result](docs/CONTEXT_VALUE1_RESULT.md),
+[raw evidence](docs/evidence/context-value1.json.gz).
+
+Three cold lives used the same 512 training seeds and 200-action episode cap.
+On 32 fresh original/swapped MemoryS7 pairs, contextual value + memory achieved
+64/64 rewards and 32/32 both-correct pairs; the same value learner without cue
+context achieved 3/64 and 0/32; the legacy controller achieved 0/64 and 0/32.
+In 48/64 new-agent episodes the cue was initially hidden and entered sensors
+after its own actions. Evaluation learning was frozen. The preregistered
+causal-memory development criterion passed. Actual training actions differed
+(30,114 / 80,399 / 100,698) because completed episodes ended early.
+
+Frozen MemoryS9 transfer failed: 10/32 rewards and 1/16 both-correct pairs,
+versus 13/32 and 2/16 without cue context. No retraining or reevaluation was
+used to revise that result. Inputs remain categorical simulated tiles, not
+RGB. TD/replay and addressing are authored Rust; primitive invention, full
+EvoPhase cognitive ownership, individual object identity and disk persistence
+of the new value head are not established. Historical qualification verdicts
+remain unchanged. Full regression validation: 208 Rust and six Python tests
+passed, together with release examples and perception learn/restore demos.

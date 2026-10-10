@@ -4,6 +4,8 @@ Updated 2026-10-10. Four maintained GitHub branches have distinct roles. This is
 
 ## Start here
 
+- **[Contextual cue-use result](docs/CONTEXT_VALUE1_RESULT.md)** — new fixed-source MemoryS7 64/64 and both-correct 32/32; MemoryS9 transfer FAIL 10/32. Authored learning math, categorical input and exact-state memory remain bounded.
+
 - **[Latest code and GitHub review](docs/GITHUB_REVIEW_20261010.md)** — 283-commit integration, external-task limitations, bounded JSONL input and consolidated ordinary checks.
 
 - **[Verified INTEL-4 evidence](docs/INTEL4_RESULT_PASS.md)** — first complete independently seeded frozen five-world deterministic system PASS, [Actions 37821849040](https://github.com/kelbas2007/Aeterna-v1/actions/runs/37821849040). Does **not** establish general AGI.

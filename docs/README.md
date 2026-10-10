@@ -6,6 +6,11 @@ Start with [the README](../README.md), [project map](../PROJECT_MAP.md) and
 
 ## Current development modes
 
+The [context-value guide](CONTEXT_VALUE_LEARNING.md) and
+[new result](CONTEXT_VALUE1_RESULT.md) add measured causal cue use:
+MemoryS7 64/64, with MemoryS9 transfer FAIL 10/32. They do not qualify general
+intelligence or individual object identity. Earlier memory failures remain intact.
+
 The [2026-10-10 review](GITHUB_REVIEW_20261010.md) covers integrated external
 MiniGrid interaction, argument transfer, episodic and relational memory,
 their failed external cue-use evaluations, and the consolidated CI.
