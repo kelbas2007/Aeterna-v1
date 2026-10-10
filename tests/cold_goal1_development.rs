@@ -4,7 +4,71 @@
 // organism-selected factual action consequences in the SAME persistent carrier.
 // An experimenter knows world transition truth but never passes role IDs,
 // graph edges or a teaching schedule into EvoPhase.
-include!("goal_replan_physical.rs");
+include!("intel2_unified_worlds.rs");
+#[derive(Clone)]
+struct CausalWorld {
+    states:[usize;6],
+    motors:[usize;6],
+}
+impl CausalWorld {
+    fn factual(&self,l1:&[[usize;2];8],state:usize,layout:usize)->Vec<f32>{
+        foundation::scene(l1,self.states[state],layout)
+    }
+    fn transition(&self,from:usize,motor:usize,drift:bool)->usize{
+        let m=self.motors;
+        match (from,motor) {
+            (0,a) if a==m[0]=>1,
+            (1,a) if a==m[1]&&!drift=>2,
+            (2,a) if a==m[2]=>3,
+            (3,a) if a==m[3]=>5,
+            (1,a) if a==m[4]=>4,
+            (4,a) if a==m[5]=>2,
+            _=>from
+        }
+    }
+}
+
+fn episode(
+    rt:&mut ScientificRuntime,l1:&[[usize;2];8],w:&CausalWorld,
+    drift:bool,max_steps:usize
+)->(bool,Vec<usize>,usize) {
+    let mut current=0usize;
+    rt.observe_external(&w.factual(l1,0,0)).unwrap();
+    rt.set_goal(&w.factual(l1,5,2)).unwrap();
+    let mut actions=Vec::new();
+    let mut surprises=0usize;
+    for step in 0..max_steps{
+        if current==5 {break;}
+        let planned=rt.organism().choose_phase_native_temporal_goal_plan(
+            &w.factual(l1,5,2)
+        );
+        let prior=current;
+        let mut taken=None;
+        let outcome=rt.step_unified(
+            |_|Some(safe()),
+            |motor|{
+                taken=Some(motor);
+                current=w.transition(current,motor,drift);
+                Ok((w.factual(l1,current,(step+1)%6),
+                    if current==5{1.0}else{0.0}))
+            }
+        ).unwrap();
+        match outcome {
+            StepOutcome::Executed{..}=>{
+                let motor=taken.expect("protected actuator");
+                actions.push(motor);
+                if let Some(plan)=planned {
+                    if plan.action==motor && prior==current {surprises+=1;}
+                }
+                println!("GOAL_REPLAN_STEP drift={} step={} prior={} motor={} next={} native={:?}",
+                    drift,step,prior,motor,current,planned);
+            }
+            other=>panic!("supported physical goal path must execute, got {:?}",other)
+        }
+    }
+    (current==5,actions,surprises)
+}
+
 
 #[derive(Default)]
 struct ColdGoalStats{
