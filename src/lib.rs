@@ -13,6 +13,7 @@ pub mod planning;
 pub mod raster;
 pub mod scientific_runtime;
 pub mod trace;
+pub mod construction;
 
 pub use authority::Authority;
 pub use belief::{BeliefConfig, EvoBeliefState};
