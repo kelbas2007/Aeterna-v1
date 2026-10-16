@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "tested_commit": "f0acf845e16310391855e4f4f262cfcdd4272bfd",
+  "base_commit": "9014f2328a12b9f50ed6cfdffa7a5d79b3e76a9e",
+  "branch": "research/beyond-intel4",
+  "workflow_run_id": 38977012018,
+  "workflow_job_id": 117228787464,
+  "workflow_conclusion": "success",
+  "artifact_id": 12079426563,
+  "artifact_sha256": "bdc4347d9869df7b7e3166f16b83f8d6a15387dfc84520c9d81bb0dc4075e442",
+  "artifact_digest_verified": true,
+  "all_targets_compile": true,
+  "construction_unit_tests": {"passed":28,"failed":0},
+  "transfer_integration_tests": {"passed":3,"failed":0},
+  "selected_legacy_tests": {"passed":13,"failed":0},
+  "full_development_regression_conclusion": "not_claimed_in_progress_at_report_time",
+  "files_sha256": {
+    "construction-tests.log":"d0a4eb3b04e64f51d5f2a8da022f01d3549a610d21d33856675a9bce85f9d9b3",
+    "transfer-tests.log":"b8b48a474d4e9efc1154975854fb0b20010c4057a769465eb93f72bc02143985",
+    "legacy-controls.log":"514f1922d6f21b69acd13e22bfc8899293fd688134ad80ad102dde18010fd73e",
+    "construction-demo.json":"a75760c90807736490ce73318268d408571801b098046d27ecda885c5a1e4643"
+  },
+  "demonstration": {
+    "action_negation_confound_errors":12,
+    "after_exploration": {
+      "active_program":16039072429581476205,
+      "construction_work":30282,
+      "constructors":0,
+      "events":64,
+      "last_error":null,
+      "library_nodes":0,
+      "poisoned":false,
+      "program_nodes":7,
+      "promotions":2,
+      "shadow_pending":false,
+      "state_cells":2
+    },
+    "autonomous_acquisition_steps":64,
+    "checkpoint_bytes":18119,
+    "cold_identity_errors":13,
+    "frozen_probe_errors":0,
+    "frozen_probe_steps":24,
+    "frozen_program": {
+      "cells":[
+        {"initial":1,"update":{"Lit":{"Int":0}}},
+        {"initial":0,"update":"Action"}
+      ],
+      "outputs":[{"Bin":["Add",{"State":1},{"Lit":{"Int":0}}]}]
+    },
+    "goal_actions":2,
+    "goal_reached":true,
+    "independent_qualification":false,
+    "kind":"directed-construction-development",
+    "promotions":[
+      {"accepted":true,"candidate":10904321762210901243,"candidate_nll":0.14654149897478544,"first_id":6,"incumbent_nll":7.815582947632826,"last_id":9,"parent":1046555993695259146,"retention_ok":true},
+      {"accepted":true,"candidate":16039072429581476205,"candidate_nll":0.14654149897478544,"first_id":22,"incumbent_nll":12.146541498974784,"last_id":25,"parent":10904321762210901243,"retention_ok":true}
+    ]
+  }
+}
