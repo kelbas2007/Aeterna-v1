@@ -1,6 +1,5 @@
-//! Persistent, opt-in construction runtime using EvoPhase's existing sealed
-//! action-permission boundary. Synthesis is authored Rust software, not claimed
-//! as physical SNN-owned computation. Legacy native action selection is unchanged.
+//! Persistent, opt-in construction runtime using EvoPhase's sealed permission
+//! boundary. Authored software synthesis is NOT physical SNN-owned computation.
 use super::constructors::*;
 use super::synthesis::*;
 use super::vm::*;
@@ -30,8 +29,7 @@ impl Config {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Forecast { pub center: Vec<i64>, pub scale: Vec<f64> }
 impl Forecast {
-    /// Proper discrete Laplace likelihood over integer observations. Scale is
-    /// fitted on PAST residuals; it is frozen throughout a prospective trial.
+    /// Discrete Laplace likelihood; past-fitted scale stays frozen in a trial.
     pub fn nll(&self,post: &[i64]) -> Result<f64> {
         if post.len() != self.center.len() || self.scale.len() != post.len() { return Err(Error::InvalidData); }
         let mut nll = 0.0;
@@ -68,7 +66,7 @@ pub struct Learner {
     current: Vec<i64>,next_id: u64,pending: bool,poisoned: bool,restart_next: bool,
     last_trace: Option<SearchTrace>,construction_work: u64,last_error: Option<String>,
 }
-/// Non-cloneable, non-serializable commitment made BEFORE a permitted callback.
+/// Non-cloneable and non-serializable PRE-action commitment.
 struct Commitment {
     id: u64,pre: Vec<i64>,action: usize,model: u64,prediction: Forecast,next_state: Vec<i64>,
     candidate: Option<u64>,candidate_prediction: Option<Forecast>,candidate_state: Option<Vec<i64>>,
@@ -88,6 +86,14 @@ fn calibrate(program: &Program,data: &[Transition],lib: &Library,meter: &mut Met
     }
     let scale = errors.into_iter().map(|e| (e/(data.len().max(1) as f64)).clamp(0.25,1e9)).collect();
     Ok((state,scale))
+}
+/// Deterministic model-independent exploration reserve. Only factual event count
+/// enters this mixer, never an environment seed, task identity or hidden state.
+fn exploration_word(event: u64) -> u64 {
+    let mut z = event.wrapping_add(0x9e3779b97f4a7c15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+    z ^ (z >> 31)
 }
 impl Learner {
     pub fn new(config: Config,initial: Vec<i64>) -> Result<Self> {
@@ -158,7 +164,7 @@ impl Learner {
         }
         Ok(())
     }
-    /// Explicit synchronous learning step; it never executes an external action.
+    /// Synchronous learning; no external action or synthetic factual record.
     pub fn construct(&mut self) -> Result<()> {
         if self.pending || self.shadow.is_some() { return Err(Error::Busy); }
         if self.poisoned || self.records.len() < self.config.minimum_training { return Err(Error::NoEvidence); }
@@ -190,7 +196,6 @@ impl Learner {
         let mut meter = Meter::new(2000000);
         let (old,_) = replay(&self.active.program,training,&self.library,&mut meter)?;
         let (new,_) = replay(&shadow.model.program,training,&self.library,&mut meter)?;
-        // Per-record preservation, not merely a better average hiding regressions.
         let retention_ok = old.iter().zip(new.iter()).zip(training).all(|((a,b),t)| {
             let cost = |p: &[i64]| p.iter().zip(&t.post).map(|(&x,&y)| (x as i128-y as i128).abs()).sum::<i128>(); cost(b) <= cost(a)
         });
@@ -203,7 +208,6 @@ impl Learner {
             self.previous = Some(self.active.program.clone()); self.active = shadow.model;
             shadow.trace.prospectively_accepted = true;
             self.last_trace = Some(shadow.trace.clone());
-            // The library is append-only; prior call identifiers remain valid.
             if let Some(patch) = &shadow.trace.winner {
                 if let Err(e) = acquire_function(&patch.replacement,&mut self.library,self.config.width) { self.last_error = Some(format!("library: {e}")); }
             }
@@ -214,15 +218,14 @@ impl Learner {
     }
     /// Roll back computation, NOT history, costs, environment or permissions.
     pub fn rollback(&mut self) -> Result<()> {
-        if self.pending { return Err(Error::Busy); }
+        if self.pending || self.poisoned { return Err(Error::Busy); }
         let program = self.previous.clone().ok_or(Error::NoEvidence)?;
         let mut meter = Meter::new(2000000);
         let (state,scale) = calibrate(&program,&self.data(),&self.library,&mut meter)?;
         self.previous = Some(self.active.program.clone()); self.active = Model { program,state,scale }; self.shadow = None;
         self.construction_work += meter.spent; Ok(())
     }
-    /// A real host-recorded reset only. It preserves acquired computation and
-    /// the single lifetime journal. It does not call/reset an environment.
+    /// Records a real host-observed reset, retaining one lifetime journal.
     pub fn record_external_restart(&mut self,observation: Vec<i64>) -> Result<()> {
         if self.pending || self.poisoned { return Err(Error::Busy); }
         if observation.len() != self.config.width { return Err(Error::InvalidData); }
@@ -230,10 +233,15 @@ impl Learner {
         if let Some(s) = &mut self.shadow { s.model.state = s.model.program.initial_state(); }
         Ok(())
     }
-    /// Simulations are ephemeral. No simulated POST is inserted in records.
+    /// Ephemeral imagination plus a model-independent exploration reserve.
+    /// No simulated POST is inserted into the factual journal.
     pub fn choose_action(&self,goal: Option<&[i64]>) -> Result<usize> {
         if self.pending || self.poisoned { return Err(Error::Busy); }
         if goal.is_some_and(|g| g.len() != self.config.width) { return Err(Error::InvalidData); }
+        let word = exploration_word(self.next_id);
+        if goal.is_none() && word & 3 == 0 {
+            return Ok(((word >> 2) % self.config.actions as u64) as usize);
+        }
         let mut models = vec![&self.active]; if let Some(s) = &self.shadow { models.push(&s.model); }
         let mut meter = Meter::new(self.config.planning_work);
         let mut usage = vec![0usize;self.config.actions];
@@ -311,10 +319,9 @@ impl Learner {
         Ok(state)
     }
 }
-
 #[derive(Debug)]
 pub struct ExternalPost { pub observation: Vec<i64>,pub cost: u64 }
-/// No Clone, no mutable carrier handle, no serialization of action authority.
+/// Does not clone or serialize the live action authority.
 #[derive(Debug)]
 pub struct ProtectedConstructionRuntime { organism: EvoPhase,learner: Learner }
 impl ProtectedConstructionRuntime {
@@ -325,19 +332,21 @@ impl ProtectedConstructionRuntime {
     pub fn learner(&self) -> &Learner { &self.learner }
     pub fn organism(&self) -> &EvoPhase { &self.organism }
     pub fn checkpoint(&self) -> Result<Vec<u8>> { self.learner.checkpoint() }
-    /// Only cognition is replaced. The live EvoPhase permission sequence and
-    /// emergency latch survive. Host must ensure world continuity independently.
+    /// Live round-trip requires the identical cognitive generation, including
+    /// history, costs, consumed trials and fault state. Equal observations alone
+    /// are insufficient. Use rollback_cognition to revert only computation.
     pub fn restore_cognition(&mut self,bytes: &[u8]) -> Result<()> {
         if self.learner.pending { return Err(Error::Busy); }
         let restored = Learner::from_checkpoint(bytes)?;
-        if restored.config.width != self.learner.config.width || restored.config.actions != self.learner.config.actions || restored.current != self.learner.current { return Err(Error::InvalidData); }
+        if restored.checkpoint()? != self.learner.checkpoint()? { return Err(Error::Stale); }
         self.learner = restored; Ok(())
     }
+    pub fn rollback_cognition(&mut self) -> Result<()> { self.learner.rollback() }
     pub fn step<H,F>(&mut self,goal: Option<&[i64]>,hazard: H,execute: F) -> Result<usize>
     where H: FnOnce(usize)->HumanProtectionEvidence,F: FnOnce(usize)->Result<ExternalPost> {
         let action = self.learner.choose_action(goal)?; self.step_action(action,hazard,execute)
     }
-    /// Also supports explicit human-requested demonstrations/interventions.
+    /// Explicitly supervised interventions, still protected and fact-recorded.
     pub fn step_action<H,F>(&mut self,action: usize,hazard: H,execute: F) -> Result<usize>
     where H: FnOnce(usize)->HumanProtectionEvidence,F: FnOnce(usize)->Result<ExternalPost> {
         let token = self.learner.prepare(action)?;
@@ -356,7 +365,6 @@ impl ProtectedConstructionRuntime {
         }
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -381,6 +389,25 @@ mod tests {
         for p in r.learner.promotions() { assert!(p.last_id >= p.first_id+3); }
         for pair in r.learner.records().windows(2) { assert!(pair[0].permit_sequence < pair[1].permit_sequence); }
     }
+    #[test] fn autonomous_acquisition_survives_frozen_non_alternating_probe() {
+        let mut r = runtime(); let mut hidden = 0;
+        for _ in 0..64 {
+            r.step(None,safe,|a| { let post = hidden; hidden = a as i64; Ok(ExternalPost { observation: vec![post],cost: 1 }) }).unwrap();
+        }
+        let p = r.learner.program().clone(); let lib = r.learner.library().clone();
+        let mut meter = Meter::new(100000);
+        let mut state = replay(&p,&r.learner.data(),&lib,&mut meter).unwrap().1;
+        let mut input = r.learner.current().to_vec(); let mut wrong = 0; let mut confound_wrong = 0;
+        for a in [0,0,0,1,0,1,1,1].into_iter().cycle().take(24) {
+            let (prediction,next) = p.step(&input,a,&state,&lib,&mut meter).unwrap();
+            let actual = hidden; hidden = a as i64;
+            wrong += usize::from(prediction != [actual]);
+            confound_wrong += usize::from(i64::from(a == 0) != actual);
+            state = next; input = vec![actual];
+        }
+        assert_eq!(wrong,0,"frozen model: {p:?}; {:?}",r.learner.report());
+        assert!(confound_wrong > 0); assert_eq!(r.learner.records().len(),64);
+    }
     #[test] fn simulation_does_not_manufacture_factual_experience() {
         let mut r = runtime(); train(&mut r,24); let n = r.learner.records().len();
         for _ in 0..5 { r.learner.choose_action(Some(&[1])).unwrap(); }
@@ -399,9 +426,21 @@ mod tests {
         assert!(r.learner.report().poisoned); let mut called = false;
         assert!(r.step_action(1,safe,|_| { called = true; Ok(ExternalPost { observation: vec![0],cost: 1 }) }).is_err()); assert!(!called);
     }
+    #[test] fn older_snapshot_cannot_erase_a_same_observation_event() {
+        let mut r = runtime(); let bytes = r.checkpoint().unwrap();
+        r.step_action(0,safe,|_| Ok(ExternalPost { observation: vec![0],cost: 7 })).unwrap();
+        assert_eq!(r.restore_cognition(&bytes),Err(Error::Stale));
+        assert_eq!(r.learner.records().len(),1); assert_eq!(r.learner.records()[0].external_cost,7);
+    }
+    #[test] fn snapshot_cannot_clear_unknown_external_state() {
+        let mut r = runtime(); let bytes = r.checkpoint().unwrap();
+        let _ = r.step_action(1,safe,|_| Err(Error::Execution("unknown result".into())));
+        assert_eq!(r.restore_cognition(&bytes),Err(Error::Stale)); assert!(r.learner.report().poisoned);
+    }
     #[test] fn checkpoint_round_trip_and_corruption() {
         let mut r = runtime(); train(&mut r,32); let bytes = r.checkpoint().unwrap(); let restored = Learner::from_checkpoint(&bytes).unwrap();
         assert_eq!(restored.program(),r.learner.program()); assert_eq!(restored.current(),r.learner.current()); assert_eq!(restored.records().len(),32);
+        r.restore_cognition(&bytes).unwrap();
         let mut corrupt = bytes; corrupt[3] ^= 1; assert!(Learner::from_checkpoint(&corrupt).is_err());
     }
     #[test] fn capacity_is_checked_before_external_execution() {
@@ -415,6 +454,6 @@ mod tests {
     }
     #[test] fn rollback_does_not_delete_experience() {
         let mut r = runtime(); train(&mut r,32); let n = r.learner.records().len();
-        r.learner.rollback().unwrap(); assert_eq!(r.learner.records().len(),n); assert_eq!(r.learner.next_id,n as u64);
+        r.rollback_cognition().unwrap(); assert_eq!(r.learner.records().len(),n); assert_eq!(r.learner.next_id,n as u64);
     }
 }

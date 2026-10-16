@@ -3,12 +3,12 @@
 use super::vm::*;
 use serde::{Deserialize, Serialize};
 use std::cmp::Reverse;
-use std::collections::{BTreeMap, BTreeSet, BinaryHeap};
+use std::collections::{BTreeMap, BinaryHeap};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Transition {
     pub id: u64,
-    /// True only for an externally recorded start/reset, never a simulated reset.
+    /// Externally recorded start/reset, never a simulated reset.
     pub restart: bool,
     pub pre: Vec<i64>, pub action: usize, pub post: Vec<i64>,
 }
@@ -29,7 +29,7 @@ pub struct Job {
     pub deterministic_contract: bool,
     pub stateless_impossible: bool,
     pub exposed_sources: Vec<usize>,
-    /// Observable problem features only. No task name, seed or correct program.
+    /// Observable features only; no task name, seed or correct program.
     pub features: Vec<i64>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,7 +50,6 @@ impl SearchConfig {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Patch {
     pub parent: u64, pub target: usize, pub replacement: Expr,
-    /// A complete candidate cell array; outputs not addressed by target survive.
     pub cells: Vec<StateCell>,
 }
 impl Patch {
@@ -67,7 +66,6 @@ pub struct SearchTrace {
     pub exhausted: bool, pub frontier_limited: bool,
     pub winner: Option<Patch>, pub training_loss: f64,
     pub constructor_id: Option<u64>,
-    /// Set by prospective validation, not the training search.
     pub prospectively_accepted: bool,
 }
 #[derive(Debug, Clone)]
@@ -187,8 +185,7 @@ fn state_contexts(cells: &[StateCell],data: &[Transition],lib: &Library,meter: &
 fn column(e: &Expr,data: &[Transition],states: &[Vec<i64>],lib: &Library,meter: &mut Meter) -> Result<Vec<i64>> {
     data.iter().zip(states).map(|(t,s)| e.eval(Context { input: &t.pre,action: t.action,state: s,args: &[] },lib,meter)?.int()).collect()
 }
-/// Exact backward requirement x OP hole = y. Conflicting inferred constants
-/// are not unified; ordinary forward enumeration remains available.
+/// Exact backward requirement x OP hole = y. Ordinary enumeration remains.
 fn inverse_candidates(data: &[Transition],states: &[Vec<i64>],target: usize,width: usize,nstate: usize,lib: &Library,meter: &mut Meter) -> Result<Vec<Expr>> {
     let leaves: Vec<_> = (0..width).map(Expr::Input).chain((0..nstate).map(Expr::State)).chain([Expr::Action]).collect();
     let mut answers = Vec::new();
@@ -203,14 +200,10 @@ fn inverse_candidates(data: &[Transition],states: &[Vec<i64>],target: usize,widt
     }
     Ok(answers)
 }
-
 struct Best { patch: Option<Patch>,loss: f64,nodes: usize,candidates: u64,updates: u64,limited: bool,constructor: Option<u64> }
 fn search_output(parent: &Program,data: &[Transition],job: &Job,cells: Vec<StateCell>,root: Expr,constructor: Option<u64>,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<bool> {
     best.updates += 1;
     let states = match state_contexts(&cells,data,lib,meter) { Ok(x) => x,Err(Error::Budget) => return Err(Error::Budget),Err(_) => return Ok(false) };
-    // With observed contradictory outputs, any deterministic candidate whose
-    // complete available context is identical is excluded, without enumerating
-    // its expressions. This is scoped to this dataset and current cell updates.
     if job.deterministic_contract {
         let mut seen = BTreeMap::new();
         for (t,s) in data.iter().zip(&states) {
@@ -221,7 +214,11 @@ fn search_output(parent: &Program,data: &[Transition],job: &Job,cells: Vec<State
     }
     let grammar = Grammar { width: parent.outputs.len(),states: cells.len(),max_nodes: cfg.max_expr_nodes,max_frontier: cfg.max_frontier };
     let mut enumeration = Enumerator::new(grammar,root);
-    let mut preferred: std::collections::VecDeque<_> = inverse_candidates(data,&states,job.target,parent.outputs.len(),cells.len(),lib,meter)?.into();
+    // Generic inverse solving belongs to the BASELINE, not an acquired schema.
+    // A constructor must actually instantiate its own root to receive credit.
+    let mut preferred: std::collections::VecDeque<_> = if constructor.is_none() {
+        inverse_candidates(data,&states,job.target,parent.outputs.len(),cells.len(),lib,meter)?.into()
+    } else { std::collections::VecDeque::new() };
     loop {
         let expression = if let Some(e) = preferred.pop_front() { Some(e) } else { enumeration.next(lib,meter)? };
         let Some(expression) = expression else { best.limited |= enumeration.limited; return Ok(false); };
@@ -241,8 +238,6 @@ fn search_output(parent: &Program,data: &[Transition],job: &Job,cells: Vec<State
 }
 fn baseline(parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<()> {
     let root = || Expr::Hole { id: 0,ty: Ty::Int };
-    // Each family gets a bounded share: a futile static family must not consume
-    // the entire job before any state allocation is attempted.
     if !job.stateless_impossible || !parent.cells.is_empty() {
         let cap = (meter.remaining()/4).max(1);
         let mut local = Meter::new(cap);
@@ -269,9 +264,8 @@ fn baseline(parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,li
     best.limited |= updates.limited;
     Ok(())
 }
-
-/// Hints change search order, not the acceptance rule or available authority.
-/// A separate metered broad lane always receives at least a 1/4 budget offer.
+/// Hints change search order, never acceptance or authority. A separate broad
+/// lane is always offered at least one quarter of the available search budget.
 pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &SearchConfig,hints: &[Hint]) -> Result<SearchTrace> {
     cfg.validate()?; lib.validate(parent.outputs.len())?; parent.validate(parent.outputs.len(),lib)?;
     let actions = data.iter().map(|t| t.action).max().unwrap_or(0).checked_add(1).ok_or(Error::Capacity)?;
@@ -301,7 +295,6 @@ pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &Searc
         baseline_work,constructor_work,exhausted: meter.remaining() == 0,frontier_limited: best.limited,
         winner: best.patch,training_loss: best.loss,constructor_id: best.constructor,prospectively_accepted: false })
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -332,6 +325,14 @@ mod tests {
         let trace = synthesize(&p,&data,&lib,&SearchConfig::default(),&[]).unwrap();
         assert_eq!(trace.training_loss,0.0); assert_eq!(trace.job.exposed_sources,vec![0,1]);
         assert!(trace.winner.unwrap().replacement.nodes() <= 3);
+    }
+    #[test] fn constructor_does_not_receive_credit_for_unrelated_inverse_solver() {
+        let data: Vec<_> = (0..8).map(|i| Transition { id: i as u64,restart: true,pre: vec![i],action: 0,post: vec![i+17] }).collect();
+        let p = Program::identity(1); let lib = Library::default(); let mut meter = Meter::new(10000);
+        let job = discover_job(&p,&data,&lib,true,&mut meter).unwrap().unwrap();
+        let mut best = Best { patch: None,loss: 136.0,nodes: p.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
+        let solved = search_output(&p,&data,&job,vec![],Expr::integer(0),Some(9),&SearchConfig::default(),&lib,&mut meter,&mut best).unwrap();
+        assert!(!solved); assert!(best.patch.is_none()); assert!(best.constructor.is_none());
     }
     #[test] fn stale_patch_cannot_replace_new_parent() {
         let p = Program::identity(1); let patch = Patch { parent: 0,target: 0,replacement: Expr::integer(1),cells: vec![] };

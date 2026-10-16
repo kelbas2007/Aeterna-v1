@@ -34,8 +34,9 @@ jobs:
         run: |
           set -euo pipefail
           cargo test --locked --lib construction:: -- --nocapture 2>&1 | tee construction-tests.log
+          cargo test --locked --test directed_construction_transfer -- --nocapture 2>&1 | tee transfer-tests.log
           cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee legacy-controls.log
-      - name: Protected continuous-lifetime demonstration
+      - name: Protected lifetime and frozen transfer controls
         run: cargo run --locked --example directed_construction > construction-demo.json
       - name: Preserve small development evidence
         if: always()
@@ -44,6 +45,7 @@ jobs:
           name: directed-construction-${{ github.sha }}
           path: |
             construction-tests.log
+            transfer-tests.log
             legacy-controls.log
             construction-demo.json
           retention-days: 7
