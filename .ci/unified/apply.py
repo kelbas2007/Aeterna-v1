@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 def edit(path,replacements):
  p=Path(path);s=p.read_text()
@@ -30,4 +31,9 @@ p.write_text(s+'\ninclude!("unified_runtime.rs");\n')
 edit('src/phase_meta_control.rs',[
  ('#[derive(Debug, Clone)]\npub struct PhaseMetaControlConfig','#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]\npub struct PhaseMetaControlConfig')])
 p=Path('src/phase_native.rs');p.write_text(p.read_text()+'\ninclude!("phase_constructing_control.rs");\n')
+edit('src/phase_constructing_control.rs',[
+ ('cells:Vec<PhaseCell>,synapses:Vec<PhaseSynapse>','cells:Vec<super::PhaseCell>,synapses:Vec<super::PhaseSynapse>')])
+edit('src/construction/unified_port.rs',[
+ ('PhaseVector::bundle(&roles.iter().collect::<Vec<_>>())','PhaseVector::bundle(&roles)')])
+subprocess.run(['git','add','src/phase_constructing_control.rs','src/construction/unified_port.rs'],check=True)
 print('Unified ownership and exact-source ports installed')
