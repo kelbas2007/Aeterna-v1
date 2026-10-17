@@ -1,0 +1,64 @@
+name: Education development
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['src/education*', 'src/unified_runtime.rs', 'src/bin/aeterna-school.rs', 'tests/education*', 'scripts/education*', '.github/workflows/education-development.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: education-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact source and bounded offline development kit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p school-evidence kit
+          git rev-parse HEAD > school-evidence/revision.txt
+          git archive --format=tar.gz --output=kit/source.tar.gz HEAD
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > school-evidence/toolchain.txt
+          cargo vendor --locked kit/vendor > kit/vendor-config.toml
+          root=$(rustc --print sysroot)
+          tar -czf kit/rust-toolchain.tar.gz -C "$root" bin lib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: education-kit-${{ github.sha }}
+          path: kit/
+          retention-days: 1
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile and verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee school-evidence/check.log
+          cargo test --locked --test unified_runtime 2>&1 | tee school-evidence/unified.log
+          if test -f tests/education_runtime.rs; then
+            cargo test --locked --test education_runtime 2>&1 | tee school-evidence/education.log
+          fi
+      - name: Curriculum and examination
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f scripts/education_experiment.py; then
+            cargo build --locked --bin aeterna-school
+            python scripts/education_experiment.py --binary target/debug/aeterna-school --output school-evidence/curriculum
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: education-results-${{ github.sha }}
+          path: school-evidence/
+          retention-days: 7
