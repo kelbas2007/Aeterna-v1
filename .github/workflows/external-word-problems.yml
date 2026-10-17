@@ -1,237 +1,72 @@
-name: External word problems frozen examination
+name: External word problem integration regressions
 on:
   push:
     branches: [research/beyond-intel4]
-    paths: ['.ci/ewp/**', '.github/workflows/external-word-problems.yml']
+    paths: ['src/word_problems.rs', 'src/education*', 'src/bin/aeterna-unified.rs', 'tests/word_problem*', 'scripts/word_problem*', '.github/workflows/external-word-problems.yml']
   workflow_dispatch:
 permissions:
-  contents: write
-  actions: read
+  contents: read
 concurrency:
-  group: external-word-problems-${{ github.ref }}
+  group: ewp-regression-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  integrate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     env:
       CARGO_BUILD_JOBS: 2
       CARGO_TERM_COLOR: never
-      OMP_NUM_THREADS: 2
-      OPENBLAS_NUM_THREADS: 2
-    outputs:
-      tested_sha: ${{ steps.publish.outputs.sha }}
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Apply exact locally verified implementation
+      - name: Pinned toolchain
         shell: bash
         run: |
           set -euo pipefail
-          if test -d .ci/ewp; then
-            python - <<'PY'
-          from pathlib import Path
-          import gzip,hashlib,subprocess
-          raw=b''.join((Path('.ci/ewp')/f'part{i}.bin').read_bytes() for i in range(5))
-          assert hashlib.sha256(raw).hexdigest()=='75e8ebf6243a14b159a4ca4a90ee88b3dcb9212edd15d0a188979ece85666605'
-          patch=gzip.decompress(raw)
-          assert hashlib.sha256(patch).hexdigest()=='01042451978853506b528a064ebebe1eb9e2a23a9e94c203c19fe0095758a26a'
-          subprocess.run(['git','apply','--check','-'],input=patch,check=True)
-          subprocess.run(['git','apply','--index','-'],input=patch,check=True)
-          PY
-            git rm -r .ci/ewp
-            git diff --cached --check
-            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Integrate answer-supervised external word problem grounding and exact rational execution'
-            echo 'EWP_APPLIED=1' >> "$GITHUB_ENV"
-          fi
-          mkdir -p ewp-evidence/data
-          git rev-parse HEAD > ewp-evidence/revision.txt
-          git archive --format=tar.gz --output=ewp-evidence/source.tar.gz HEAD
-          sha256sum src/word_problems.rs src/education.rs src/education_runtime.rs src/bin/aeterna-unified.rs tests/word_problems.rs scripts/word_problem*.py Cargo.toml Cargo.lock > ewp-evidence/source-sha256.txt
-      - name: Pinned Rust and Cargo
-        shell: bash
-        run: |
-          set -euo pipefail
+          mkdir -p ewp-regression
           rustup toolchain install 1.99.0 --profile minimal
           rustup override set 1.99.0
-          { rustc --version --verbose; cargo --version; } > ewp-evidence/toolchain.txt
+          { rustc --version --verbose; cargo --version; } > ewp-regression/toolchain.txt
+          git rev-parse HEAD > ewp-regression/revision.txt
       - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install training-only numerical dependencies
-        run: |
-          python -m pip install numpy==2.3.5 scipy==1.17.0 scikit-learn==1.8.0 > ewp-evidence/python-install.log 2>&1
-          python -m pip freeze > ewp-evidence/python-versions.txt
-      - name: Retrieve actual previously acquired SG1 state
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: 39060243840
-          name: semantic-results-594e4a494c32c9f92acf5c37de5ad5e9e55e5104
-          path: prior
-      - name: Retrieve training only, not the reserved external examination
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import urllib.request,hashlib,json,shutil
-          base='https://raw.githubusercontent.com/arkilpatel/SVAMP/78e727689e1c1bebfc4be39c446898e8e10b0518/'
-          root=Path('ewp-evidence/data');manifest={}
-          for name,path in [('train.csv','data/mawps-asdiv-a_svamp/train.csv'),('LICENSE','LICENSE'),('README.md','README.md')]:
-              with urllib.request.urlopen(base+path,timeout=60) as response:data=response.read()
-              (root/name).write_bytes(data);manifest[name]={'url':base+path,'sha256':hashlib.sha256(data).hexdigest()}
-          assert manifest['train.csv']['sha256']=='c761cdc6390a67a285c6c346a2931f61bc8f47430eceaeb123cc3d0263efa821'
-          assert hashlib.sha256(Path('prior/curriculum/learned-semantic.json').read_bytes()).hexdigest()=='7665578b6b843a807f6b960ab6bbfd0112c8264cec76515d21246adf9ad8003f'
-          (root/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-          shutil.copyfile('prior/DATA_NOTICE.txt','ewp-evidence/PRIOR_DATA_NOTICE.txt')
-          PY
-      - name: Compile every target and test the integrated learning path
+      - name: Compile and test exact arithmetic and integration
         shell: bash
         run: |
           set -euo pipefail
-          cargo check --locked --all-targets 2>&1 | tee ewp-evidence/check.log
-          cargo test --locked --lib construction:: 2>&1 | tee ewp-evidence/construction-unit.log
-          cargo test --locked --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection --test u1_meta_control 2>&1 | tee ewp-evidence/integration-tests.log
+          cargo check --locked --all-targets 2>&1 | tee ewp-regression/check.log
+          cargo test --locked --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee ewp-regression/tests.log
+      - name: Existing construction and U1 compatibility
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: 2>&1 | tee ewp-regression/construction-unit.log
+          cargo test --locked --test u1_meta_control 2>&1 | tee ewp-regression/u1.log
           for source in tests/directed_construction*.rs; do
             name=$(basename "$source" .rs)
-            cargo test --locked --test "$name" 2>&1 | tee "ewp-evidence/$name.log"
+            cargo test --locked --test "$name" 2>&1 | tee "ewp-regression/$name.log"
           done
-          python scripts/word_problem_test.py 2>&1 | tee ewp-evidence/python-tests.log
-          cargo build --locked --release --bin aeterna-unified 2>&1 | tee ewp-evidence/build.log
-      - name: Learn from question-answer pairs and prepare the frozen native state
+      - name: Test training and input transport helpers
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/word_problem_train.py --train ewp-evidence/data/train.csv --output ewp-evidence/learned --development 2>&1 | tee ewp-evidence/training.log
-          python scripts/word_problem_external.py --binary target/release/aeterna-unified --learned ewp-evidence/learned --prior prior/curriculum/learned-semantic.json --output ewp-evidence/external --prepare-only 2>&1 | tee ewp-evidence/prepare.log
-      - name: Record freeze before the first external test download
-        uses: actions/upload-artifact@v4
-        with:
-          name: ewp-pretest-freeze-${{ github.sha }}
-          path: |
-            ewp-evidence/external/freeze.json
-            ewp-evidence/learned/training-report.json
-            ewp-evidence/source-sha256.txt
-            ewp-evidence/revision.txt
-          retention-days: 7
-      - name: Examine all 1000 external tasks without adapting the frozen solver
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp ewp-evidence/external/freeze.json ewp-evidence/pretest-freeze.json
-          python scripts/word_problem_external.py --binary target/release/aeterna-unified --learned ewp-evidence/learned --prior prior/curriculum/learned-semantic.json --output ewp-evidence/external 2>&1 | tee ewp-evidence/examination.log
-          cmp ewp-evidence/pretest-freeze.json ewp-evidence/external/freeze.json
-          python scripts/word_problem_verify.py ewp-evidence/external 2>&1 | tee ewp-evidence/recount.log
-      - name: Publish tested source without force or main changes
-        id: publish
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF_NAME" = 'research/beyond-intel4'
-          git diff --exit-code
-          if test "${EWP_APPLIED:-0}" = 1; then
-            header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
-            echo "::add-mask::$header"
-            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/research/beyond-intel4
-          fi
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          git rev-parse HEAD > ewp-evidence/published-revision.txt
-      - name: Preserve completed measurements and negative outcomes
+          python -m pip install numpy==2.3.5 scipy==1.17.0 scikit-learn==1.8.0 > ewp-regression/python-install.log 2>&1
+          python scripts/word_problem_test.py 2>&1 | tee ewp-regression/python-tests.log
+      - name: Preserve bounded verification output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ewp-Linux-evidence-${{ github.sha }}
-          path: ewp-evidence/
-          retention-days: 7
-          if-no-files-found: warn
-  windows:
-    needs: integrate
-    runs-on: windows-latest
-    timeout-minutes: 25
-    permissions:
-      contents: read
-    env:
-      CARGO_BUILD_JOBS: 2
-      CARGO_TERM_COLOR: never
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.integrate.outputs.tested_sha }}
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Pinned Rust and Cargo
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ewp-windows
-          rustup toolchain install 1.99.0 --profile minimal
-          rustup override set 1.99.0
-          { rustc --version --verbose; cargo --version; } > ewp-windows/toolchain.txt
-          git rev-parse HEAD > ewp-windows/revision.txt
-      - uses: Swatinem/rust-cache@v2
-      - uses: actions/download-artifact@v4
-        with:
-          name: ewp-Linux-evidence-${{ github.sha }}
-          path: linux-evidence
-      - name: Compile and test the same source on Windows
-        shell: bash
-        run: |
-          set -euo pipefail
-          cargo check --locked --all-targets 2>&1 | tee ewp-windows/check.log
-          cargo test --locked --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee ewp-windows/tests.log
-          cargo build --locked --release --bin aeterna-unified 2>&1 | tee ewp-windows/build.log
-      - name: Replay the frozen examination with the separately restored Windows executable
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import sys,json,hashlib
-          from pathlib import Path
-          sys.path.insert(0,'scripts')
-          from word_problem_external import collect
-          root=Path('linux-evidence/external');o=Path('ewp-windows')
-          rows=json.loads((root/'SVAMP-original.json').read_text(encoding='utf-8'))
-          report=collect(Path('target/release/aeterna-unified.exe').resolve(),root/'role-checkpoint.json',rows,o/'replay-predictions.jsonl',o/'native-process.log')
-          old=[json.loads(s) for s in (root/'full-predictions.jsonl').read_text(encoding='utf-8').splitlines()]
-          new=[json.loads(s) for s in (o/'replay-predictions.jsonl').read_text(encoding='utf-8').splitlines()]
-          for a,b in zip(old,new):
-              assert a['question']==b['question']
-              assert a['prediction']['answer']==b['prediction']['answer']
-              assert [p['program'] for p in a['prediction']['interpretations']]==[p['program'] for p in b['prediction']['interpretations']]
-          assert len(new)==1000
-          report['identical_answers_and_ranked_programs']=1000
-          report['new_independent_test']=False
-          (o/'replay-summary.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
-          PY
-      - name: Package executable and actual retained acquired knowledge
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import shutil,hashlib
-          p=Path('ewp-package');p.mkdir()
-          for src,name in [('target/release/aeterna-unified.exe','aeterna-unified.exe'),('linux-evidence/external/role-checkpoint.json','learned-external.json'),('docs/EXTERNAL_WORD_PROBLEMS_PROTOCOL.md','PROTOCOL.md'),('linux-evidence/data/LICENSE','DATA_LICENSE.txt'),('linux-evidence/PRIOR_DATA_NOTICE.txt','PRIOR_DATA_NOTICE.txt'),('linux-evidence/external/external-summary.json','EXTERNAL_RESULTS.json')]:shutil.copyfile(src,p/name)
-          for cmd,mode in [('START-SOLVE.cmd','--word-problems'),('START-SCHOOL.cmd','--school')]:
-              (p/cmd).write_bytes(('@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-unified.exe '+mode+' learned-external.json\r\npause\r\n').encode())
-          (p/'README_RU.txt').write_text('AETERNA EWP-1. Откройте START-SOLVE.cmd для английских текстовых арифметических задач. START-SCHOOL.cmd сохраняет прежние русские составные вычисления; /solve запускает новый английский путь. /exit — выход.\nПрограмма выводит предполагаемое вычисление. Высокий margin не гарантирует понимания или правильности. Это не свободный чат, не интеллект уровня ребёнка и не решение ARC-AGI-3. Все 1000 результатов внешнего SVAMP, включая ошибки и отказы, приведены в EXTERNAL_RESULTS.json.\nВо время работы интернет, Rust, Python и LLM не нужны. Обучение выполнено из внешних вопрос-ответ примеров MAWPS+ASDiv-A. Формулы проверочного набора не передавались решателю. Источник: https://github.com/arkilpatel/SVAMP, ревизия 78e727689e1c1bebfc4be39c446898e8e10b0518. Лицензия и прежняя атрибуция приложены.\n',encoding='utf-8')
-          (p/'SHA256SUMS.txt').write_text('\n'.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name for f in sorted(p.iterdir()))+'\n',encoding='utf-8')
-          PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: aeterna-EWP-Windows-${{ needs.integrate.outputs.tested_sha }}
-          path: ewp-package/
-          retention-days: 7
-      - name: Preserve Windows checks
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ewp-Windows-evidence-${{ github.sha }}
-          path: ewp-windows/
-          retention-days: 7
+          name: ewp-regression-${{ runner.os }}-${{ github.sha }}
+          path: ewp-regression/
+          retention-days: 3
           if-no-files-found: warn
