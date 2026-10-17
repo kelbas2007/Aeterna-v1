@@ -1,243 +1,73 @@
-name: REL1 frozen external examination
+name: Quantity relation integration regressions
 on:
   push:
     branches: [research/beyond-intel4]
-    paths: ['.ci/rel1/**', '.github/workflows/quantity-relations.yml']
+    paths: ['src/quantity_relations.rs', 'src/word_problems.rs', 'src/education*', 'src/bin/aeterna-unified.rs', 'tests/quantity_relations.rs', 'scripts/relational*.py', '.github/workflows/quantity-relations.yml']
   workflow_dispatch:
 permissions:
-  contents: write
-  actions: read
+  contents: read
 concurrency:
-  group: rel1-${{ github.ref }}
+  group: quantity-relations-regression-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  integrate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     env:
       CARGO_BUILD_JOBS: 2
       CARGO_TERM_COLOR: never
       PYTHONUTF8: '1'
-      OMP_NUM_THREADS: 2
-      OPENBLAS_NUM_THREADS: 2
-    outputs:
-      tested_sha: ${{ steps.publish.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Apply exact locally tested source
-        shell: bash
-        run: |
-          set -euo pipefail
-          if test -d .ci/rel1; then
-            python - <<'PY'
-          from pathlib import Path
-          import gzip,hashlib,subprocess
-          raw=b''.join((Path('.ci/rel1')/f'part{i}.bin').read_bytes() for i in range(12))
-          assert hashlib.sha256(raw).hexdigest()=='073107123405e1f4f764528f48046ef2cef819924bc19380095ae364368d5733'
-          patch=gzip.decompress(raw)
-          assert hashlib.sha256(patch).hexdigest()=='874377bcabd91559cda7d14b4be83d703eddf2d81f4ddd2f66ee289e56b1da66'
-          subprocess.run(['git','apply','--check','-'],input=patch,check=True)
-          subprocess.run(['git','apply','--index','-'],input=patch,check=True)
-          PY
-            git rm -r .ci/rel1
-            git diff --cached --check
-            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Integrate learned quantity relations and structured composition into the existing answer path'
-            echo 'REL_APPLIED=1' >> "$GITHUB_ENV"
-          fi
-          mkdir -p rel-evidence
-          git rev-parse HEAD > rel-evidence/revision.txt
-          git archive --format=tar.gz --output=rel-evidence/source.tar.gz HEAD
-          sha256sum src/quantity_relations.rs src/word_problems.rs src/education.rs src/education_runtime.rs src/bin/aeterna-unified.rs scripts/relational*.py tests/quantity_relations.rs Cargo.toml Cargo.lock > rel-evidence/source-sha256.txt
-      - name: Pinned compiler
-        shell: bash
-        run: |
-          set -euo pipefail
-          rustup toolchain install 1.99.0 --profile minimal
-          rustup override set 1.99.0
-          { rustc --version --verbose; cargo --version; } > rel-evidence/toolchain.txt
-      - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Numerical training dependencies
-        run: |
-          python -m pip install numpy==2.3.5 scipy==1.17.0 scikit-learn==1.8.0 > rel-evidence/python-install.log 2>&1
-          python -m pip freeze > rel-evidence/python-versions.txt
-      - name: Original acquired state and training-only resources
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: 39065136978
-          name: ewp-Linux-evidence-b6c548f06787d8287bfb1ba9ea76e0ce9af3c1b2
-          path: prior
-      - name: Verify prior and training provenance
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import hashlib
-          assert hashlib.sha256(Path('prior/data/train.csv').read_bytes()).hexdigest()=='c761cdc6390a67a285c6c346a2931f61bc8f47430eceaeb123cc3d0263efa821'
-          assert hashlib.sha256(Path('prior/external/role-checkpoint.json').read_bytes()).hexdigest()=='2810b567df1c6c1f06e8ab2724c44b64f52d3a4d1ae8098c0f6d2683995a1064'
-          # Remove the previous exam from the training workspace. It remains
-          # archived in its original run; the new learner never reads it.
-          import shutil
-          shutil.copyfile('prior/external/role-checkpoint.json','prior/acquired.json')
-          shutil.rmtree('prior/external')
-          PY
-      - name: All targets and integration regressions
+      - name: Pinned toolchain and exact revision
         shell: bash
         run: |
           set -euo pipefail
-          cargo check --locked --all-targets 2>&1 | tee rel-evidence/check.log
-          cargo test --locked --lib construction:: 2>&1 | tee rel-evidence/construction.log
-          cargo test --locked --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection --test u1_meta_control 2>&1 | tee rel-evidence/integration.log
+          mkdir -p relational-regression
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > relational-regression/toolchain.txt
+          git rev-parse HEAD > relational-regression/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile all targets and test native integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee relational-regression/check.log
+          cargo test --locked --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee relational-regression/integration.log
+      - name: Existing construction and controller regressions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: 2>&1 | tee relational-regression/construction.log
+          cargo test --locked --test u1_meta_control 2>&1 | tee relational-regression/u1.log
           for source in tests/directed_construction*.rs; do
             name=$(basename "$source" .rs)
-            cargo test --locked --test "$name" 2>&1 | tee "rel-evidence/$name.log"
+            cargo test --locked --test "$name" 2>&1 | tee "relational-regression/$name.log"
           done
-          python scripts/relational_tests.py 2>&1 | tee rel-evidence/python-tests.log
-          python scripts/word_problem_test.py 2>&1 | tee rel-evidence/previous-python-tests.log
-          cargo build --locked --release --bin aeterna-unified 2>&1 | tee rel-evidence/build.log
-      - name: Train on teacher derivations and freeze native state
+      - name: Training and input helper tests without external fitting
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/relational_train.py --train prior/data/train.csv --output rel-evidence/learned 2>&1 | tee rel-evidence/training.log
-          python scripts/relational_prepare.py --binary target/release/aeterna-unified --learned rel-evidence/learned --prior prior/acquired.json --output rel-evidence/frozen 2>&1 | tee rel-evidence/prepare.log
-      - name: Preserve freeze before external evaluation
-        uses: actions/upload-artifact@v4
-        with:
-          name: REL1-pretest-${{ github.sha }}
-          path: |
-            rel-evidence/frozen/freeze.json
-            rel-evidence/learned/training-report.json
-            rel-evidence/source-sha256.txt
-            rel-evidence/revision.txt
-          retention-days: 7
-      - name: Full exposed SVAMP regression and fresh nonoverlapping ASDiv complement
-        shell: bash
-        run: |
-          set -euo pipefail
-          python scripts/relational_external.py --binary target/release/aeterna-unified --learned rel-evidence/learned --frozen rel-evidence/frozen --output rel-evidence/external 2>&1 | tee rel-evidence/external.log
-          python scripts/relational_verify.py rel-evidence/external 2>&1 | tee rel-evidence/recount.log
-      - name: Publish tested implementation without force or main changes
-        id: publish
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF_NAME" = 'research/beyond-intel4'
-          git diff --exit-code
-          if test "${REL_APPLIED:-0}" = 1; then
-            header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
-            echo "::add-mask::$header"
-            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/research/beyond-intel4
-          fi
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          git rev-parse HEAD > rel-evidence/published-revision.txt
-          cp prior/data/LICENSE rel-evidence/DATA_LICENSE.txt
-          cp prior/PRIOR_DATA_NOTICE.txt rel-evidence/PRIOR_DATA_NOTICE.txt
-      - name: Preserve all measured results, including failures
+          python -m pip install numpy==2.3.5 scipy==1.17.0 scikit-learn==1.8.0 > relational-regression/python-install.log 2>&1
+          python scripts/relational_tests.py 2>&1 | tee relational-regression/python-tests.log
+          python scripts/word_problem_test.py 2>&1 | tee relational-regression/previous-python-tests.log
+      - name: Preserve bounded verification results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: REL1-Linux-${{ github.sha }}
-          path: rel-evidence/
-          retention-days: 7
-          if-no-files-found: warn
-  windows:
-    needs: integrate
-    runs-on: windows-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    env:
-      CARGO_BUILD_JOBS: 2
-      CARGO_TERM_COLOR: never
-      PYTHONUTF8: '1'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.integrate.outputs.tested_sha }}
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Pinned Rust and Cargo
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p rel-windows
-          rustup toolchain install 1.99.0 --profile minimal
-          rustup override set 1.99.0
-          { rustc --version --verbose; cargo --version; } > rel-windows/toolchain.txt
-          git rev-parse HEAD > rel-windows/revision.txt
-      - uses: Swatinem/rust-cache@v2
-      - uses: actions/download-artifact@v4
-        with:
-          name: REL1-Linux-${{ github.sha }}
-          path: linux-evidence
-      - name: Build and test the same source
-        shell: bash
-        run: |
-          set -euo pipefail
-          cargo check --locked --all-targets 2>&1 | tee rel-windows/check.log
-          cargo test --locked --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee rel-windows/tests.log
-          cargo build --locked --release --bin aeterna-unified 2>&1 | tee rel-windows/build.log
-      - name: Replay frozen questions through the existing public answer path
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY' 2>&1 | tee rel-windows/replay.log
-          import sys,json
-          from pathlib import Path
-          sys.path.insert(0,'scripts')
-          from relational_external import collect
-          from word_problem_external import Client
-          root=Path('linux-evidence');out=Path('rel-windows');binary=Path('target/release/aeterna-unified.exe').resolve()
-          counts={}
-          for dataset,name in [('SVAMP-regression','SVAMP-original.json'),('ASDiv-complement','ASDiv-complement.json')]:
-              rows=json.loads((root/'external'/name).read_text(encoding='utf-8'))
-              old=[json.loads(line) for line in (root/'external'/dataset/'relations.jsonl').read_text(encoding='utf-8').splitlines()]
-              new,trace=collect(binary,root/'frozen/learned-relations.json',rows,out/(dataset+'.jsonl'),'default')
-              assert len(new)==len(old)
-              for a,b in zip(old,new):
-                  assert a['question']==b['question']
-                  assert a['prediction']['answer']==b['prediction']['answer']
-                  assert [x['program'] for x in a['prediction']['interpretations']]==[x['program'] for x in b['prediction']['interpretations']]
-              counts[dataset]={'answers_and_ranked_programs_matched':len(new),'new_independent_test':False,**trace}
-          c=Client(binary,out/'retained-school.log');c.request({'op':'load','checkpoint':(root/'frozen/learned-relations.json').read_text(encoding='utf-8')})
-          result=c.request({'op':'ask','question':'Вычти из суммы 17 и 23 произведение 3 и 4.','mode':'ComputeOnly'})['result'];assert result['answer']=='28';c.close()
-          counts['retained_russian_answer']='28'
-          (out/'summary.json').write_text(json.dumps(counts,indent=2)+'\n',encoding='utf-8')
-          print(json.dumps(counts,indent=2))
-          PY
-      - name: Package executable and actual retained acquired state
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import shutil,hashlib
-          p=Path('rel-package');p.mkdir()
-          for src,name in [('target/release/aeterna-unified.exe','aeterna-unified.exe'),('linux-evidence/frozen/learned-relations.json','learned-relations.json'),('docs/RELATIONAL_CONTROL_PROTOCOL.md','PROTOCOL.md'),('linux-evidence/external/summary.json','EXTERNAL_RESULTS.json'),('linux-evidence/DATA_LICENSE.txt','DATA_LICENSE.txt'),('linux-evidence/PRIOR_DATA_NOTICE.txt','PRIOR_DATA_NOTICE.txt')]:shutil.copyfile(src,p/name)
-          for cmd,mode in [('START-SOLVE.cmd','--relations'),('START-SCHOOL.cmd','--school')]:
-              (p/cmd).write_bytes(('@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-unified.exe '+mode+' learned-relations.json\r\npause\r\n').encode())
-          (p/'README_RU.txt').write_text('AETERNA REL-1. START-SOLVE.cmd: английские арифметические текстовые задачи; /exit — выход; /school <вопрос> — прежние русские вычисления.\nНовый механизм обучен отношениям между величинами по учебным выводам. Он встроен в прежний путь ответа и не требует интернета, Python, Rust или LLM при работе.\nEXTERNAL_RESULTS.json содержит все внешние показатели, включая ошибки. SVAMP уже известен разработке; ASDiv — остаток после исключения пересечений с обучением, не официальный закрытый экзамен. Ответ остаётся гипотезой; маржа не является вероятностью правильности. Интеллект уровня человека и решение ARC-AGI-3 не заявляются.\n',encoding='utf-8')
-          (p/'SHA256SUMS.txt').write_text('\n'.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name for f in sorted(p.iterdir()))+'\n',encoding='utf-8')
-          PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: AETERNA-REL1-Windows-${{ needs.integrate.outputs.tested_sha }}
-          path: rel-package/
-          retention-days: 7
-      - name: Preserve Windows verification
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: REL1-Windows-evidence-${{ github.sha }}
-          path: rel-windows/
-          retention-days: 7
+          name: relational-regression-${{ runner.os }}-${{ github.sha }}
+          path: relational-regression/
+          retention-days: 3
           if-no-files-found: warn
