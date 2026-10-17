@@ -1,0 +1,90 @@
+name: DC-2 R1 witness-directed completion
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['research/dc2-r1/**', '.github/workflows/dc2-r1.yml']
+permissions:
+  contents: write
+concurrency:
+  group: dc2-r1-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  evidence:
+    if: github.ref == 'refs/heads/research/beyond-intel4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install explicit revision
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 research/dc2-r1/apply.py
+          tar -czf dc2r1-source.tar.gz src/construction examples/directed_construction*.rs tests/directed_construction*.rs Cargo.toml Cargo.lock
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile all targets and run integrity regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee dc2r1-check.log
+          cargo test --locked --lib construction:: -- --nocapture 2>&1 | tee dc2r1-unit.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" -- --nocapture 2>&1 | tee "dc2r1-$name.log"
+          done
+          cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee dc2r1-protection.log
+      - name: Retain previous demonstrations
+        run: |
+          cargo run --locked --example directed_construction > dc2r1-legacy-autonomous.json
+          cargo run --locked --example directed_construction_recursive > dc2r1-legacy-recursive.json
+      - name: Execute unchanged development protocol
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --release --locked --example directed_construction_autonomy -- 917 4 160 > dc2r1-development.json 2> dc2r1-development.log
+      - name: Record scientific outcome separately from compilation
+        run: |
+          python3 - <<'PY'
+          import json,os,hashlib
+          from pathlib import Path
+          d=json.loads(Path('dc2r1-development.json').read_text()); rows=d['rows']; cs=[]
+          for seed in sorted({r['seed'] for r in rows}):
+              g={r['mode']:r for r in rows if r['seed']==seed}
+              cs.append({'seed':seed,**{k:{'exact_laws':r['learned_laws'],'work':r['before_probe']['construction_work'],'constructors':r['before_probe']['constructors'],'generation':r['before_probe']['constructor_generation'],'recursive_improvements':r['before_probe']['recursive_improvements']} for k,r in g.items()}})
+          positive=len(cs)==4 and all(c['Progress']['exact_laws']>=2 and c['Progress']['exact_laws']>c['LargestResidual']['exact_laws'] for c in cs)
+          s={'status':'DEVELOPMENT_POSITIVE' if positive else 'DEVELOPMENT_NEGATIVE','independent_qualification':False,'source_revision':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'comparisons':cs,'source_sha256':json.loads(Path('dc2r1-source-manifest.json').read_text()),'raw_result_sha256':hashlib.sha256(Path('dc2r1-development.json').read_bytes()).hexdigest()}
+          Path('dc2r1-summary.json').write_text(json.dumps(s,indent=2)+'\n'); print(json.dumps(s,indent=2))
+          PY
+      - name: Publish exact tested code without rewriting initial negative evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/research/beyond-intel4
+          test "$(git ls-remote origin refs/heads/research/beyond-intel4 | cut -f1)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          for p,h in json.loads(Path('dc2r1-source-manifest.json').read_text()).items(): assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h,p
+          PY
+          cp dc2r1-development.json docs/evidence/dc2r1_development.json
+          cp dc2r1-summary.json docs/evidence/dc2r1_summary.json
+          git config user.name 'AETERNA verified research'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/construction/synthesis.rs src/construction/mod.rs src/construction/exact_completion.rs tests/directed_construction_completion.rs docs/evidence/dc2r1_development.json docs/evidence/dc2r1_summary.json
+          git commit -m 'Implement witness-directed root completion; retain DC-2 R1 measured verdict'
+          git push origin HEAD:refs/heads/research/beyond-intel4
+          git rev-parse HEAD > dc2r1-published-commit.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dc2r1-${{ github.sha }}
+          path: |
+            dc2r1-*.log
+            dc2r1-*.json
+            dc2r1-source.tar.gz
+            dc2r1-published-commit.txt
+          retention-days: 7
