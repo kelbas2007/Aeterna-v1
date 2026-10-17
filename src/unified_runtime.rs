@@ -26,7 +26,7 @@ pub struct UnifiedReport {
 }
 #[derive(USerialize,UDeserialize)]
 #[serde(deny_unknown_fields)]
-struct UnifiedStored {version:u32,carrier:Vec<u8>,cognition:UnifiedConstruction,sequence:u64,emergency:bool,hash:u64}
+struct UnifiedStored {version:u32,carrier:Vec<u8>,cognition:UnifiedConstruction,sequence:u64,emergency:bool,protection_sequence:u64,hash:u64}
 #[derive(Clone)]
 struct UnifiedOption {p:PhaseCognitiveProposal,kind:u8,source:&'static str,output:Option<Vec<i64>>}
 fn uword(mut n:u64)->u64 {n=n.wrapping_add(0x9e3779b97f4a7c15);n=(n^(n>>30)).wrapping_mul(0xbf58476d1ce4e5b9);n=(n^(n>>27)).wrapping_mul(0x94d049bb133111eb);n^(n>>31)}
@@ -172,15 +172,15 @@ impl ScientificRuntime {
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;
         let carrier=self.organism.constructing_carrier_checkpoint().ok_or(UError::InvalidData)?;
-        let hash=uhash(&serde_json::to_vec(&(1u32,&carrier,u,self.sequence,self.emergency_latched())).map_err(|_|UError::InvalidData)?);
-        let value=serde_json::json!({"version":1,"carrier":carrier,"cognition":u,"sequence":self.sequence,"emergency":self.emergency_latched(),"hash":hash});
+        let hash=uhash(&serde_json::to_vec(&(1u32,&carrier,u,self.sequence,self.emergency_latched(),self.protection.audit_position().0)).map_err(|_|UError::InvalidData)?);
+        let value=serde_json::json!({"version":1,"carrier":carrier,"cognition":u,"sequence":self.sequence,"emergency":self.emergency_latched(),"protection_sequence":self.protection.audit_position().0,"hash":hash});
         serde_json::to_vec(&value).map_err(|_|UError::InvalidData)
     }
     // Cognition only; every action still needs fresh trusted hazard evidence.
     pub fn from_constructing_checkpoint(bytes:&[u8])->UResult<Self> {
         if bytes.len()>32*1024*1024{return Err(UError::Capacity);}
         let s:UnifiedStored=serde_json::from_slice(bytes).map_err(|_|UError::InvalidData)?;
-        let hash=uhash(&serde_json::to_vec(&(s.version,&s.carrier,&s.cognition,s.sequence,s.emergency)).map_err(|_|UError::InvalidData)?);
+        let hash=uhash(&serde_json::to_vec(&(s.version,&s.carrier,&s.cognition,s.sequence,s.emergency,s.protection_sequence)).map_err(|_|UError::InvalidData)?);
         if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
         let evo=EvoPhase::from_constructing_carrier_checkpoint(&s.carrier).ok_or(UError::InvalidData)?;
         let mut names=std::collections::BTreeSet::new();let mut costs=0u64;
@@ -195,13 +195,14 @@ impl ScientificRuntime {
         if costs>s.cognition.total_external_cost || s.cognition.max_external_cost==0
             || evo.current_real().map(|r|r.sensory.clone())!=Some(usensory(s.cognition.current.learner.current())) {return Err(UError::InvalidData);}
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;rt.sequence=s.sequence;rt.constructing=Some(s.cognition);rt.fresh_observation_required=false;
-        if s.emergency{let mut e=Self::absent_evidence();e.emergency_stop=true;rt.protection.screen(0,e);}Ok(rt)
+        rt.protection=HumanProtection::from_audit_position(s.protection_sequence,s.emergency);Ok(rt)
     }
     pub fn restore_constructing(&mut self,bytes:&[u8])->UResult<()> {
         let mut candidate=Self::from_constructing_checkpoint(bytes)?;
         let old=self.constructing.as_ref().ok_or(UError::NoEvidence)?;let new=candidate.constructing.as_ref().ok_or(UError::NoEvidence)?;
         if new.current.name!=old.current.name || new.current.learner.checkpoint()?!=old.current.learner.checkpoint()?
             || new.nonce<old.nonce || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
+        if candidate.emergency_latched(){let mut e=Self::absent_evidence();e.emergency_stop=true;self.protection.screen(0,e);}
         self.organism=candidate.organism;self.constructing=candidate.constructing.take();Ok(())
     }
 }

@@ -65,6 +65,7 @@ pub enum RuntimeError {
     InvalidCheckpoint,
     PartialModeRequired,
     VectorModeRequired,
+    ConstructionModeRequired,
 }
 
 impl fmt::Display for RuntimeError {
@@ -133,6 +134,7 @@ pub struct ScientificRuntime {
     model_learning_enabled: bool,
     online_unified_learning_enabled: bool,
     unified_trace_enabled: bool,
+    constructing: Option<UnifiedConstruction>,
 }
 
 impl ScientificRuntime {
@@ -154,6 +156,7 @@ impl ScientificRuntime {
             model_learning_enabled,
             online_unified_learning_enabled: false,
             unified_trace_enabled: false,
+            constructing: None,
         })
     }
 
@@ -405,6 +408,7 @@ impl ScientificRuntime {
     }
 
     pub fn propose_unified(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.constructing.is_some(){return Err(RuntimeError::ConstructionModeRequired);}
         if self.organism.phase_vector_enabled() { return self.propose_vector(); }
         if self.organism.phase_partial_enabled() { return self.propose_partial(); }
         Ok(self.select_unified_internal()?.map(|(proposal,_,_)|proposal))
@@ -484,6 +488,7 @@ impl ScientificRuntime {
     /// must come from outside cognition. Online mode may acquire a sensory
     /// receptor, but no action consequence is invented at this boundary.
     pub fn observe_external(&mut self, raster: &[f32]) -> Result<(), RuntimeError> {
+        if self.constructing.is_some(){return Err(RuntimeError::ConstructionModeRequired);}
         if self.organism.phase_partial_enabled() || self.organism.phase_vector_enabled() {
             let observation = raster.iter().copied().map(Some).collect::<Vec<_>>();
             return self.observe_external_partial(&observation);
@@ -556,6 +561,7 @@ impl ScientificRuntime {
     }
 
     pub fn propose_vector(&mut self) -> Result<Option<ActionProposal>,RuntimeError> {
+        if self.constructing.is_some(){return Err(RuntimeError::ConstructionModeRequired);}
         if !self.organism.phase_vector_enabled() { return Err(RuntimeError::VectorModeRequired); }
         if self.goal_reached()? { return Ok(None); }
         let decision=self.organism.phase_vector_decision().ok_or(RuntimeError::NoSupportedAction)?;
@@ -606,6 +612,7 @@ impl ScientificRuntime {
     /// Fixed orchestration of existing native mechanisms. Task-level scoring
     /// remains in EvoPhase; this function does not construct or search a model.
     pub fn propose(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.constructing.is_some(){return Err(RuntimeError::ConstructionModeRequired);}
         if self.organism.phase_vector_enabled() { return self.propose_vector(); }
         if self.organism.phase_native_online_enabled() {
             return self.propose_unified();
@@ -1064,6 +1071,7 @@ impl ScientificRuntime {
     /// A fresh sparse observation resets episodic beliefs. None carries no
     /// factual value and is never materialized as a synthetic zero channel.
     pub fn observe_external_partial(&mut self, values: &[Option<f32>]) -> Result<(), RuntimeError> {
+        if self.constructing.is_some(){return Err(RuntimeError::ConstructionModeRequired);}
         self.validate_partial_values(values)?;
         let accepted=if self.organism.phase_vector_enabled() { self.organism.observe_phase_vector_initial(values) } else { self.organism.observe_phase_partial_initial(values) };
         if !accepted {
@@ -1090,6 +1098,7 @@ impl ScientificRuntime {
     }
 
     pub fn propose_partial(&mut self) -> Result<Option<ActionProposal>, RuntimeError> {
+        if self.constructing.is_some(){return Err(RuntimeError::ConstructionModeRequired);}
         if self.organism.phase_vector_enabled() { return self.propose_vector(); }
         if !self.organism.phase_partial_enabled() {
             return Err(RuntimeError::PartialModeRequired);
@@ -1263,3 +1272,5 @@ impl ScientificRuntime {
         self.protection.last_record().map(|record| record.reason)
     }
 }
+
+include!("unified_runtime.rs");

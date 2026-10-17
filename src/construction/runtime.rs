@@ -81,9 +81,11 @@ pub struct Learner {
     autonomy: Option<AutonomyPolicy>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     frozen_at: Option<u64>,
+    #[serde(default,skip_serializing_if="carrier_unmanaged")]
+    carrier_managed: bool,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
-struct Commitment {
+pub(crate) struct Commitment {
     id: u64,pre: Vec<i64>,action: usize,model: u64,prediction: Forecast,next_state: Vec<i64>,
     candidate: Option<u64>,candidate_prediction: Option<Forecast>,candidate_state: Option<Vec<i64>>,
 }
@@ -120,7 +122,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -235,7 +237,7 @@ impl Learner {
         if self.shadow.as_ref().is_some_and(|s| s.evidence.as_ref().map_or(s.samples >= self.config.shadow_steps,|e| e.ready())) {
             if let Err(e) = self.finish_shadow() { self.last_error = Some(format!("validation: {e}")); self.cancel_shadow(); }
         }
-        if self.frozen_at.is_none() && self.shadow.is_none() && self.records.len() >= self.config.minimum_training && self.records.len() % self.config.search_every == 0 {
+        if !self.carrier_managed && self.frozen_at.is_none() && self.shadow.is_none() && self.records.len() >= self.config.minimum_training && self.records.len() % self.config.search_every == 0 {
             if let Err(e) = self.construct() {
                 if e != Error::NoEvidence { self.last_error = Some(format!("construction: {e}")); }
             }
@@ -821,3 +823,6 @@ mod tests {
     }
 
 }
+
+fn carrier_unmanaged(v:&bool)->bool{!*v}
+include!("unified_port.rs");

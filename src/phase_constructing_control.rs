@@ -61,6 +61,6 @@ impl EvoPhase {
 #[derive(serde::Serialize,serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ConstructingCarrierSnapshot {
-    version:u32,config:super::EvoConfig,native:PhaseNativeConfig,cells:Vec<PhaseCell>,synapses:Vec<PhaseSynapse>,
+    version:u32,config:super::EvoConfig,native:PhaseNativeConfig,cells:Vec<super::PhaseCell>,synapses:Vec<super::PhaseSynapse>,
     meta:PhaseMetaControlConfig,observations:u64,monotone:bool,tick:u64,current:Option<(Vec<f32>,bool,u64)>,
 }

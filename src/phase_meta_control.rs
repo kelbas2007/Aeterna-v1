@@ -6,7 +6,7 @@
 
 pub const META_FIELD_COUNT: usize = 5;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PhaseMetaControlConfig {
     pub learning_rate: f32,
     pub learning_enabled: bool,
