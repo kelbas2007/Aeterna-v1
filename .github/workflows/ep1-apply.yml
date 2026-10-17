@@ -1,0 +1,85 @@
+name: Apply and verify EP1 runtime
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.ci/ep1/**', '.github/workflows/ep1-apply.yml']
+permissions:
+  contents: write
+concurrency:
+  group: ep1-apply-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Rust and Cargo
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal --component rustfmt
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Apply exact-source checked integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python .ci/ep1/apply.py
+          rustfmt --edition 2021 src/construction/epistemic.rs tests/directed_construction_epistemic.rs examples/directed_construction_epistemic.rs
+          git rm -r .ci/ep1 .github/workflows/ep1-apply.yml
+          git add src/construction/mod.rs src/construction/runtime.rs src/construction/recursive.rs src/construction/epistemic.rs tests/directed_construction_epistemic.rs examples/directed_construction_epistemic.rs
+          git diff --cached --check
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Integrate persistent prospective EP1 evidence into protected construction runtime'
+          mkdir -p ep1-evidence
+          git rev-parse HEAD > ep1-evidence/tested-revision.txt
+          { rustc --version --verbose; cargo --version; } > ep1-evidence/toolchain.txt
+          git archive --format=tar.gz --output=ep1-tested-source.tar.gz HEAD
+          sha256sum src/construction/*.rs tests/directed_construction*.rs examples/directed_construction*.rs Cargo.toml Cargo.lock > ep1-evidence/source-sha256.txt
+      - name: Compile all targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee ep1-evidence/check.log
+      - name: Run construction and protection regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: -- --nocapture 2>&1 | tee ep1-evidence/unit.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" -- --nocapture 2>&1 | tee "ep1-evidence/$name.log"
+          done
+          cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee ep1-evidence/protection.log
+      - name: Run real runtime demonstrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked --example directed_construction > ep1-evidence/lifetime.json
+          cargo run --locked --example directed_construction_recursive > ep1-evidence/recursive.json
+          cargo run --locked --example directed_construction_epistemic > ep1-evidence/epistemic.json
+      - name: Publish tested commit without force or main changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/beyond-intel4'
+          git diff --exit-code
+          header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$header"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/research/beyond-intel4
+          git rev-parse HEAD > ep1-evidence/published-revision.txt
+      - name: Keep exact source and small results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ep1-integration-${{ github.sha }}
+          path: |
+            ep1-tested-source.tar.gz
+            ep1-evidence/
+          retention-days: 7
+          if-no-files-found: warn
