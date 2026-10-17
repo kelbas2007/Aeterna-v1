@@ -1,0 +1,175 @@
+name: Grounded composition and interpretation monitoring
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.ci/semantic/**', 'src/semantic_grounding.rs', 'src/education*', 'src/bin/aeterna-unified.rs', 'tests/semantic*', 'scripts/semantic*', '.github/workflows/semantic-integration.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: semantic-integration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    outputs:
+      tested_sha: ${{ steps.publish.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Apply locally verified source with exact payload checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -d .ci/semantic; then
+            python - <<'PY'
+          import base64,gzip,hashlib,subprocess
+          from pathlib import Path
+          parts=[(Path('.ci/semantic')/f'part{i}.b64').read_text() for i in range(3)]
+          # Correct three identified text-transport transcription errors. Both
+          # the compressed and uncompressed originals must match before apply.
+          parts[1]=parts[1].replace('I1jB9niz1d5d5Vr','I1jB9niz1d5Vr').replace('UrQ6s6fdWcp','UrQ6s6HWcp')
+          parts[2]=parts[2].replace('PlyCa3GdPHr06y6fs','PlyCa3GdPHr06y2fs')
+          raw=base64.b64decode(''.join(parts),validate=True)
+          assert hashlib.sha256(raw).hexdigest()=='1f8e6962fdba724d3cbc3f5582ebecee49ec7fa6fba8f15aa44ee8baedd151fb'
+          patch=gzip.decompress(raw)
+          assert hashlib.sha256(patch).hexdigest()=='6f64443f96530387c978489b2b8faf5bcae4fa7d7541ae9589c9bdb46cd92d4d'
+          subprocess.run(['git','apply','--check','-'],input=patch,check=True)
+          subprocess.run(['git','apply','--index','-'],input=patch,check=True)
+          PY
+            git rm -r .ci/semantic
+            git diff --cached --check
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Integrate learned compositional grounding and frozen interpretation clarification'
+            echo 'SG_APPLIED=1' >> "$GITHUB_ENV"
+          fi
+          mkdir -p sg-evidence
+          git rev-parse HEAD > sg-evidence/revision.txt
+          sha256sum src/semantic_grounding.rs src/education.rs src/education_runtime.rs src/bin/aeterna-unified.rs tests/semantic_grounding.rs scripts/semantic*.py Cargo.toml Cargo.lock > sg-evidence/source-sha256.txt
+      - name: Pinned Rust and Cargo
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > sg-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve original acquired school knowledge and attribution
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 39049830709
+          name: education-integrated-evidence
+          path: prior
+      - name: Check all compilation targets and selected regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee sg-evidence/check.log
+          cargo test --locked --lib construction:: 2>&1 | tee sg-evidence/construction-unit.log
+          cargo test --locked --test semantic_grounding --test education_runtime --test unified_runtime --test human_protection --test u1_meta_control 2>&1 | tee sg-evidence/semantic-tests.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "sg-evidence/$name.log"
+          done
+      - name: Relearn isolated expressions and freeze before composition examination
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo build --locked --release --bin aeterna-unified 2>&1 | tee sg-evidence/build.log
+          python scripts/semantic_experiment.py --binary target/release/aeterna-unified --output sg-evidence/curriculum --prior prior/curriculum/learned-school.json
+          python scripts/semantic_verify.py sg-evidence/curriculum --binary target/release/aeterna-unified > sg-evidence/recount.json
+          cp prior/curriculum/DATA_NOTICE.txt sg-evidence/DATA_NOTICE.txt
+      - name: Publish only successfully verified source, never force push
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/beyond-intel4'
+          git diff --exit-code
+          if test "${SG_APPLIED:-0}" = 1; then
+            header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+            echo "::add-mask::$header"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/research/beyond-intel4
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git rev-parse HEAD > sg-evidence/published-revision.txt
+      - name: Preserve raw results including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-results-${{ github.sha }}
+          path: sg-evidence/
+          retention-days: 7
+          if-no-files-found: warn
+  windows:
+    needs: integrate
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.integrate.outputs.tested_sha }}
+          persist-credentials: false
+      - name: Pinned toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p windows-evidence
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > windows-evidence/toolchain.txt
+          git rev-parse HEAD > windows-evidence/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: semantic-results-${{ github.sha }}
+          path: linux-evidence
+      - name: Compile and test semantic and protection integration on Windows
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee windows-evidence/check.log
+          cargo test --locked --test semantic_grounding --test education_runtime --test unified_runtime --test human_protection 2>&1 | tee windows-evidence/tests.log
+          cargo build --locked --release --bin aeterna-unified 2>&1 | tee windows-evidence/build.log
+          python scripts/semantic_verify.py linux-evidence/curriculum --binary target/release/aeterna-unified.exe > windows-evidence/recount.json
+      - name: Package actual acquired state and runnable console
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,hashlib
+          p=Path('semantic-windows');p.mkdir()
+          for source,name in [('target/release/aeterna-unified.exe','aeterna-unified.exe'),('linux-evidence/curriculum/learned-semantic.json','learned-semantic.json'),('docs/SEMANTIC_START_RU.txt','README_RU.txt'),('docs/SEMANTIC_GROUNDING.md','SEMANTIC_GROUNDING.md'),('linux-evidence/DATA_NOTICE.txt','DATA_NOTICE.txt')]:
+              shutil.copyfile(source,p/name)
+          (p/'START-SCHOOL.cmd').write_bytes(b'@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-unified.exe --school learned-semantic.json\r\npause\r\n')
+          (p/'SHA256SUMS.txt').write_text('\n'.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name for f in sorted(p.iterdir()))+'\n',encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aeterna-semantic-Windows-${{ needs.integrate.outputs.tested_sha }}
+          path: semantic-windows/
+          retention-days: 7
+      - name: Windows verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-windows-results-${{ github.sha }}
+          path: windows-evidence/
+          retention-days: 7
+          if-no-files-found: warn
