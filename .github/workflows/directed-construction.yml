@@ -2,9 +2,9 @@ name: Directed construction regressions
 on:
   push:
     branches: [main, research/beyond-intel4]
-    paths: ['src/**', 'examples/directed_construction.rs', 'tests/directed_construction*', 'Cargo.toml', 'Cargo.lock', '.github/workflows/directed-construction.yml']
+    paths: ['src/**', 'examples/directed_construction*.rs', 'tests/directed_construction*', 'Cargo.toml', 'Cargo.lock', '.github/workflows/directed-construction.yml']
   pull_request:
-    paths: ['src/**', 'examples/directed_construction.rs', 'tests/directed_construction*', 'Cargo.toml', 'Cargo.lock', '.github/workflows/directed-construction.yml']
+    paths: ['src/**', 'examples/directed_construction*.rs', 'tests/directed_construction*', 'Cargo.toml', 'Cargo.lock', '.github/workflows/directed-construction.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,6 +21,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Preserve exact bounded source for review
+        run: |
+          git rev-parse HEAD > construction-source-revision.txt
+          tar -czf construction-source.tar.gz src/construction Cargo.toml Cargo.lock examples/directed_construction*.rs tests/directed_construction*.rs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: construction-source-${{ github.sha }}
+          path: |
+            construction-source.tar.gz
+            construction-source-revision.txt
+          retention-days: 1
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.99.0'
@@ -34,7 +45,10 @@ jobs:
         run: |
           set -euo pipefail
           cargo test --locked --lib construction:: -- --nocapture 2>&1 | tee construction-tests.log
-          cargo test --locked --test directed_construction_transfer -- --nocapture 2>&1 | tee transfer-tests.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" -- --nocapture 2>&1 | tee "$name.log"
+          done
           cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee legacy-controls.log
       - name: Protected lifetime and frozen transfer controls
         run: cargo run --locked --example directed_construction > construction-demo.json
@@ -45,7 +59,7 @@ jobs:
           name: directed-construction-${{ github.sha }}
           path: |
             construction-tests.log
-            transfer-tests.log
+            directed_construction*.log
             legacy-controls.log
             construction-demo.json
           retention-days: 7
