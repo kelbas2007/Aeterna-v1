@@ -1,0 +1,17 @@
+{
+  "status": "IMPLEMENTED_TRAINED_EXAMINED_LIMITED_SYSTEM",
+  "human_12_year_old_level_established": false,
+  "independent_human_age_qualification": false,
+  "code_revision": "a0c7db1dbe3f8e6ba5655deeb22793e00cb94c34",
+  "branch": "research/beyond-intel4",
+  "linux": {"run":39049830709,"job":117445973744,"all_targets_check":"PASS","selected_rust_tests_passed":169,"failed_tests":0,"training_completed":true,"external_exam_completed":true,"recount":"PASS","workflow_conclusion":"failure","workflow_failure_step":"publication only: GITHUB_TOKEN missing workflows permission","tested_code_published_by_connector":true},
+  "windows": {"run":39050341339,"job":117447463193,"workflow_conclusion":"success","all_targets_check":"PASS","selected_rust_tests_passed":37,"failed_tests":0,"subset_repeated_from_linux":true,"separate_process_restore":true,"checkpoint_byte_equivalent":true,"example_answer":"391"},
+  "training": {"numeric_examples":3328,"external_train_qa":3370,"total_qa_records":6698,"authored_topics":26,"wordings_per_topic":2,"examples_per_wording":64,"fit_per_wording":48,"validation_per_wording":16,"accepted_bindings":52,"library_functions":22,"work_counter":3261130,"authored_lesson_sequence":true,"llm_calls_by_learner":0},
+  "authored_frozen_exam": {"new_numbers":{"n":3328,"full_correct":3328,"recall_only_correct":0,"cold_correct":0},"unseen_wording":{"n":208,"full_correct":16,"recall_only_correct":0,"cold_correct":0},"seen_retrieval":{"n":100,"correct":100,"generalization":false}},
+  "external": {"dataset":"allenai/ai2_arc","revision":"210d026faf9955653af8916fad021475a3f00453","official_multiple_choice_score":false,"protocol":"Question-only free answer; evaluator maps to options not shown to learner; some questions incomplete without choices","test_fetched_after_freeze":true,"train_only_knowledge":true,"test_feedback_to_learner":false,"ARC-Easy":{"all_n":2376,"all_correct":12,"exact_question_overlap":7,"clean_n":2369,"clean_nonnull_answers":20,"clean_option_matches":9,"clean_correct":8},"ARC-Challenge":{"all_n":1172,"all_correct":1,"exact_question_overlap":9,"clean_n":1163,"clean_nonnull_answers":2,"clean_option_matches":0,"clean_correct":0},"clean_total":{"n":3532,"correct":8,"nonnull_answers":22,"abstentions":3510,"method_of_all_correct":"lexical_retrieval"},"near_duplicate_questions_excluded":false},
+  "state": {"sha256":"8ea373bb96d588041f9f31c0d63e4aeb3c6caf38d0023aa0bfe064c365439914","bytes":2674191,"unchanged_after_exam":true,"linux_to_windows_byte_equivalent":true},
+  "artifacts": {"linux_evidence":{"id":12106749328,"sha256":"f3797cb022f662f7766fc8a15cc9873602ce3322469149cd1abd800c2299e4ca"},"windows_evidence":{"id":12107481283,"sha256":"46fe0af2f0482b212a2e93b831c33c04aadcd0d33375d6ad600c3f0e8dabc8e2"},"windows_program":{"id":12107855191,"sha256":"fe5e3312611f8446f164366076cc19161d29bbc1bde047de5152eed1c59255da","zip_bytes":1270442}},
+  "not_established": ["general language comprehension","human age equivalence","causal school knowledge models","recursive improvement of thinking","new ARC-AGI-3 success","new causal benefit of U1 on school questions"],
+  "main_unchanged": "9014f2328a12b9f50ed6cfdffa7a5d79b3e76a9e",
+  "frozen_intel4_unchanged": "8f70de4bf391b605be99c4476512de538a4644e2"
+}
