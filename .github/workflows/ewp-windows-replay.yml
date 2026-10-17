@@ -1,0 +1,108 @@
+name: EWP1 Windows UTF8 frozen replay
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.github/workflows/ewp-windows-replay.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 177f787d4898b8ea65c9a35bea735ed531f8f160
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pinned toolchain, same source and explicit UTF8 transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p windows-evidence
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > windows-evidence/toolchain.txt
+          git rev-parse HEAD > windows-evidence/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 39065136978
+          name: ewp-Linux-evidence-b6c548f06787d8287bfb1ba9ea76e0ce9af3c1b2
+          path: linux-evidence
+      - name: Build and verify unchanged executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee windows-evidence/check.log
+          cargo test --locked --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee windows-evidence/tests.log
+          cargo build --locked --release --bin aeterna-unified 2>&1 | tee windows-evidence/build.log
+      - name: Repeat all frozen questions; no download, training, or new qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' 2>&1 | tee windows-evidence/replay.log
+          import sys,json,hashlib
+          from pathlib import Path
+          sys.path.insert(0,'scripts')
+          from word_problem_external import collect,Client
+          assert sys.flags.utf8_mode==1
+          root=Path('linux-evidence/external');out=Path('windows-evidence')
+          binary=Path('target/release/aeterna-unified.exe').resolve()
+          rows=json.loads((root/'SVAMP-original.json').read_text(encoding='utf-8'))
+          report=collect(binary,root/'role-checkpoint.json',rows,out/'replay-predictions.jsonl',out/'native.log')
+          old=[json.loads(s) for s in (root/'full-predictions.jsonl').read_text(encoding='utf-8').splitlines()]
+          new=[json.loads(s) for s in (out/'replay-predictions.jsonl').read_text(encoding='utf-8').splitlines()]
+          assert len(old)==len(new)==1000
+          for a,b in zip(old,new):
+              assert a['question']==b['question']
+              assert a['prediction']['answer']==b['prediction']['answer']
+              assert [p['program'] for p in a['prediction']['interpretations']]==[p['program'] for p in b['prediction']['interpretations']]
+          # The old Russian composition path must remain accessible in this same state.
+          c=Client(binary,out/'russian-process.log')
+          c.request({'op':'load','checkpoint':(root/'role-checkpoint.json').read_text(encoding='utf-8')})
+          question='Вычти из суммы 17 и 23 произведение 3 и 4.'
+          answer=c.request({'op':'ask','question':question,'mode':'ComputeOnly'})
+          assert answer['result']['answer']=='28',answer
+          c.close()
+          (out/'retained-russian.json').write_text(json.dumps({'question':question,'result':answer},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          report.update({'same_answers_and_ranked_programs':1000,'new_independent_test':False,'retained_russian_answer':'28','binary_sha256':hashlib.sha256(binary.read_bytes()).hexdigest(),'checkpoint_sha256':hashlib.sha256((root/'role-checkpoint.json').read_bytes()).hexdigest()})
+          (out/'replay-summary.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Package executable and actual acquired state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,hashlib
+          p=Path('ewp-package');p.mkdir()
+          for src,name in [('target/release/aeterna-unified.exe','aeterna-unified.exe'),('linux-evidence/external/role-checkpoint.json','learned-external.json'),('docs/EXTERNAL_WORD_PROBLEMS_PROTOCOL.md','PROTOCOL.md'),('linux-evidence/data/LICENSE','DATA_LICENSE.txt'),('linux-evidence/PRIOR_DATA_NOTICE.txt','PRIOR_DATA_NOTICE.txt'),('linux-evidence/external/external-summary.json','EXTERNAL_RESULTS.json')]:shutil.copyfile(src,p/name)
+          for cmd,mode in [('START-SOLVE.cmd','--word-problems'),('START-SCHOOL.cmd','--school')]:
+              (p/cmd).write_bytes(('@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-unified.exe '+mode+' learned-external.json\r\npause\r\n').encode())
+          (p/'README_RU.txt').write_text('AETERNA EWP-1, код 177f787d. START-SOLVE.cmd: английские текстовые арифметические задачи. START-SCHOOL.cmd: прежние русские составные вычисления; /solve включает новый английский путь. /exit — выход.\nВнешний результат SVAMP: 161/1000 правильных числовых ответов, 839 ошибок. Высокий margin не гарантирует правильности. Новая модель выдаёт гипотезу, а не подтверждённое понимание. Использовать как надёжный школьный помощник нельзя. Это не общий интеллект и не новый успех ARC-AGI-3.\nГотовому приложению не нужны интернет, Python, Rust или LLM. Предыдущие знания включены в тот же checkpoint. На Windows повторены все 1000 ответов и порядок предлагаемых программ исходного Linux-экзамена.\nИсточник учебных данных и теста: https://github.com/arkilpatel/SVAMP, ревизия 78e727689e1c1bebfc4be39c446898e8e10b0518. Лицензия, прежняя атрибуция и все итоговые счётчики приложены.\n',encoding='utf-8')
+          (p/'SHA256SUMS.txt').write_text('\n'.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name for f in sorted(p.iterdir()))+'\n',encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aeterna-EWP-Windows-177f787d
+          path: ewp-package/
+          retention-days: 7
+      - name: Preserve measurements and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ewp-Windows-UTF8-evidence
+          path: windows-evidence/
+          retention-days: 7
+          if-no-files-found: warn
