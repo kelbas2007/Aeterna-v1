@@ -150,18 +150,18 @@ impl SearchTrial {
     }
 }
 
-fn run_arm(parent: &Program,data: &[Transition],lib: &Library,cfg: &SearchConfig,registry: Option<&Registry>) -> Result<FrozenArm> {
+fn run_arm(parent: &Program,data: &[Transition],lib: &Library,cfg: &SearchConfig,registry: Option<&Registry>,requested: Option<usize>) -> Result<FrozenArm> {
     let mut meter = Meter::new(cfg.work/8);
     let hints = if let Some(registry) = registry {
         let result = (|| {
-            let job = discover_job(parent,data,lib,cfg.deterministic,&mut meter)?.ok_or(Error::NoEvidence)?;
+            let job = discover_requested_job(parent,data,lib,cfg.deterministic,requested,&mut meter)?.ok_or(Error::NoEvidence)?;
             registry.suggestions(&job,parent.outputs.len(),cfg,lib,&mut meter)
         })();
         match result { Ok(h) => h,Err(Error::Budget) => vec![],Err(e) => return Err(e) }
     } else { vec![] };
     let mut adjusted = cfg.clone(); adjusted.work = cfg.work.checked_sub(meter.spent).ok_or(Error::Budget)?;
     if adjusted.work < 100 { return Err(Error::Budget); }
-    let trace = synthesize(parent,data,lib,&adjusted,&hints)?;
+    let trace = synthesize_requested(parent,data,lib,&adjusted,&hints,requested)?;
     let program = trace.winner.as_ref().map(|p| p.apply(parent,lib)).transpose()?.unwrap_or_else(|| parent.clone());
     let work = trace.work+meter.spent;
     Ok(FrozenArm { trace,program,work })
@@ -208,20 +208,29 @@ impl Registry {
     /// Freeze every search arm BEFORE the environment supplies a validation
     /// transition. Same observations, parent, library, grammar and budget.
     pub fn begin_trial(&mut self,parent: &Program,acquisition: &[Transition],lib: &Library,cfg: &SearchConfig) -> Result<SearchTrial> {
+        self.begin_requested_trial(parent,acquisition,lib,cfg,None)
+    }
+    /// A target is a current prediction residual, not an authored task label.
+    /// All counterfactual arms receive the identical frozen selection.
+    pub fn begin_requested_trial(&mut self,parent: &Program,acquisition: &[Transition],lib: &Library,cfg: &SearchConfig,requested: Option<usize>) -> Result<SearchTrial> {
         if self.meta.pending.is_some() { return Err(Error::Busy); }
         if self.meta.consumed.len() >= 256 || self.meta.reports.len() >= 128 { return Err(Error::Capacity); }
         self.validate(lib)?; cfg.validate()?; parent.validate(parent.outputs.len(),lib)?;
         validate_data(acquisition,parent.outputs.len(),32)?;
         let mut preflight = Meter::new(cfg.work/8);
-        let discovery = discover_job(parent,acquisition,lib,cfg.deterministic,&mut preflight);
+        let discovery = discover_requested_job(parent,acquisition,lib,cfg.deterministic,requested,&mut preflight);
         self.meta.search_work = self.meta.search_work.saturating_add(preflight.spent);
         if discovery?.is_none() { return Err(Error::NoEvidence); }
-        let ticket = semantic_data_id(parent,acquisition,lib)?;
+        let base_ticket = semantic_data_id(parent,acquisition,lib)?;
+        let ticket = match requested {
+            Some(j) => fingerprint(&serde_json::to_vec(&(base_ticket,j)).map_err(|_| Error::InvalidData)?),
+            None => base_ticket,
+        };
         if !self.meta.consumed.insert(ticket) { return Err(Error::Stale); }
         let result: Result<SearchTrial> = (|| {
-            let baseline = run_arm(parent,acquisition,lib,cfg,None)?;
+            let baseline = run_arm(parent,acquisition,lib,cfg,None,requested)?;
             self.meta.search_work = self.meta.search_work.saturating_add(baseline.work);
-            let candidate = run_arm(parent,acquisition,lib,cfg,Some(self))?;
+            let candidate = run_arm(parent,acquisition,lib,cfg,Some(self),requested)?;
             self.meta.search_work = self.meta.search_work.saturating_add(candidate.work);
             let selected = candidate.trace.constructor_id.and_then(|id| self.constructors.iter().find(|c| c.id == id));
             let generation = selected.map(|c| c.generation).unwrap_or(0);
@@ -230,7 +239,7 @@ impl Registry {
                 if parent_constructor.is_some() {
                     let mut without = self.clone();
                     without.constructors.retain(|c| !self.descendant_of(c.id,cid));
-                    let arm = run_arm(parent,acquisition,lib,cfg,Some(&without))?;
+                    let arm = run_arm(parent,acquisition,lib,cfg,Some(&without),requested)?;
                     self.meta.search_work = self.meta.search_work.saturating_add(arm.work);
                     Some(arm)
                 } else { None }

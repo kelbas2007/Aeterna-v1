@@ -91,13 +91,20 @@ pub fn absolute_loss(predictions: &[Vec<i64>],data: &[Transition]) -> Result<f64
     Ok(sum)
 }
 pub fn discover_job(program: &Program,data: &[Transition],lib: &Library,deterministic: bool,meter: &mut Meter) -> Result<Option<Job>> {
+    discover_requested_job(program,data,lib,deterministic,None,meter)
+}
+pub fn discover_requested_job(program: &Program,data: &[Transition],lib: &Library,deterministic: bool,requested: Option<usize>,meter: &mut Meter) -> Result<Option<Job>> {
     let width = program.outputs.len();
     let (predicted,_) = replay(program,data,lib,meter)?;
     let mut errors = vec![0.0; width];
     for (p,t) in predicted.iter().zip(data) {
         for j in 0..width { errors[j] += ((p[j] as i128-t.post[j] as i128).abs()) as f64; }
     }
-    let target = (0..width).max_by(|&a,&b| errors[a].total_cmp(&errors[b]).then_with(|| b.cmp(&a))).ok_or(Error::InvalidData)?;
+    let target = match requested {
+        Some(j) if j < width => j,
+        Some(_) => return Err(Error::Index),
+        None => (0..width).max_by(|&a,&b| errors[a].total_cmp(&errors[b]).then_with(|| b.cmp(&a))).ok_or(Error::InvalidData)?,
+    };
     if errors[target] == 0.0 { return Ok(None); }
     let mut seen: BTreeMap<(Vec<i64>,usize),(i64,u64)> = BTreeMap::new();
     let mut witnesses = Vec::new();
@@ -201,7 +208,11 @@ fn inverse_candidates(data: &[Transition],states: &[Vec<i64>],target: usize,widt
     Ok(answers)
 }
 struct Best { patch: Option<Patch>,loss: f64,nodes: usize,candidates: u64,updates: u64,limited: bool,constructor: Option<u64> }
+#[cfg(test)]
 fn search_output(parent: &Program,data: &[Transition],job: &Job,cells: Vec<StateCell>,root: Expr,constructor: Option<u64>,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<bool> {
+    search_output_focused(false,parent,data,job,cells,root,constructor,cfg,lib,meter,best)
+}
+fn search_output_focused(focused: bool,parent: &Program,data: &[Transition],job: &Job,cells: Vec<StateCell>,root: Expr,constructor: Option<u64>,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<bool> {
     best.updates += 1;
     let states = match state_contexts(&cells,data,lib,meter) { Ok(x) => x,Err(Error::Budget) => return Err(Error::Budget),Err(_) => return Ok(false) };
     if job.deterministic_contract {
@@ -212,6 +223,17 @@ fn search_output(parent: &Program,data: &[Transition],job: &Job,cells: Vec<State
             if seen.insert(key,t.post[job.target]).is_some_and(|y| y != t.post[job.target]) { return Ok(false); }
         }
     }
+    // Existing registers must retain their meanings. A learned schema from a
+    // separate lifetime cannot overwrite live memory just because indices fit.
+    if focused && !cells.starts_with(&parent.cells) { return Ok(false); }
+    let other_loss = if focused {
+        let mut unchanged = parent.clone(); unchanged.cells = cells.clone();
+        unchanged.validate(parent.outputs.len(),lib)?;
+        let rows = replay(&unchanged,data,lib,meter)?.0;
+        rows.iter().zip(data).map(|(p,t)| p.iter().zip(&t.post).enumerate()
+            .filter(|(j,_)| *j != job.target)
+            .map(|(_,(&x,&y))| ((x as i128-y as i128).abs()) as f64).sum::<f64>()).sum()
+    } else { 0.0 };
     let grammar = Grammar { width: parent.outputs.len(),states: cells.len(),max_nodes: cfg.max_expr_nodes,max_frontier: cfg.max_frontier };
     let mut enumeration = Enumerator::new(grammar,root);
     // Generic inverse solving belongs to the BASELINE, not an acquired schema.
@@ -227,34 +249,46 @@ fn search_output(parent: &Program,data: &[Transition],job: &Job,cells: Vec<State
         let patch = Patch { parent: job.parent,target: job.target,replacement: expression,cells: cells.clone() };
         let model = match patch.apply(parent,lib) { Ok(p) => p,Err(_) => continue };
         best.candidates += 1;
-        let predictions = match replay(&model,data,lib,meter) { Ok((p,_)) => p,Err(Error::Budget) => return Err(Error::Budget),Err(_) => continue };
-        let loss = absolute_loss(&predictions,data)?;
+        let loss_result = if focused {
+            column(&patch.replacement,data,&states,lib,meter).map(|values| {
+                let target_loss: i128 = values.iter().zip(data).map(|(&x,t)| (x as i128-t.post[job.target] as i128).abs()).sum();
+                (other_loss+target_loss as f64,target_loss==0)
+            })
+        } else {
+            replay(&model,data,lib,meter).and_then(|(p,_)| absolute_loss(&p,data)).map(|v| (v,v==0.0))
+        };
+        let (loss,target_exact) = match loss_result { Ok(v) => v,Err(Error::Budget) => return Err(Error::Budget),Err(_) => continue };
         if loss < best.loss || (loss == best.loss && model.nodes() < best.nodes) {
             best.loss = loss; best.nodes = model.nodes(); best.patch = Some(patch); best.constructor = constructor;
         }
         best.limited |= enumeration.limited;
-        if loss == 0.0 { return Ok(true); }
+        if target_exact && (!focused || best.patch.is_some()) { return Ok(true); }
     }
 }
-fn baseline(parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<()> {
+fn baseline(focused: bool,parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<()> {
     let root = || Expr::Hole { id: 0,ty: Ty::Int };
     if !job.stateless_impossible || !parent.cells.is_empty() {
         let cap = (meter.remaining()/4).max(1);
         let mut local = Meter::new(cap);
-        let found = search_output(parent,data,job,parent.cells.clone(),root(),None,cfg,lib,&mut local,best);
+        let found = search_output_focused(focused,parent,data,job,parent.cells.clone(),root(),None,cfg,lib,&mut local,best);
         meter.charge(local.spent)?;
         if matches!(found,Ok(true)) { return Ok(()); }
         if let Err(e) = found { if e != Error::Budget { return Err(e); } }
     }
     if parent.cells.len() >= cfg.max_state { return Ok(()); }
     let mut updates = Enumerator::new(Grammar { width: parent.outputs.len(),states: parent.cells.len()+1,max_nodes: cfg.max_expr_nodes.min(5),max_frontier: cfg.max_frontier },root());
-    for _ in 0..cfg.max_updates {
+    for update_index in 0..cfg.max_updates {
         let Some(update) = updates.next(lib,meter)? else { break; };
-        for initial in [0,1,-1] {
+        for (initial_index,initial) in [0,1,-1].into_iter().enumerate() {
             let mut cells = parent.cells.clone(); cells.push(StateCell { initial,update: update.clone() });
-            let cap = (meter.remaining()/4).max(1);
+            // In focused mode every remaining memory-update hypothesis gets
+            // an equal reservation. Geometric allocation silently starves late
+            // grammar leaves when noisy inputs prevent collision pruning.
+            let alternatives = (cfg.max_updates-update_index)*3-initial_index;
+            let cap = if focused { (meter.remaining()/alternatives as u64).max(1) }
+                else { (meter.remaining()/4).max(1) };
             let mut local = Meter::new(cap);
-            let found = search_output(parent,data,job,cells,root(),None,cfg,lib,&mut local,&mut *best);
+            let found = search_output_focused(focused,parent,data,job,cells,root(),None,cfg,lib,&mut local,&mut *best);
             meter.charge(local.spent)?;
             if matches!(found,Ok(true)) { return Ok(()); }
             if let Err(e) = found { if e != Error::Budget { return Err(e); } }
@@ -268,11 +302,14 @@ fn baseline(parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,li
 /// lane retains at least one quarter of the budget if learned search fails.
 /// Finding a zero-training-loss candidate stops search, not prospective checking.
 pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &SearchConfig,hints: &[Hint]) -> Result<SearchTrace> {
+    synthesize_requested(parent,data,lib,cfg,hints,None)
+}
+pub fn synthesize_requested(parent: &Program,data: &[Transition],lib: &Library,cfg: &SearchConfig,hints: &[Hint],requested: Option<usize>) -> Result<SearchTrace> {
     cfg.validate()?; lib.validate(parent.outputs.len())?; parent.validate(parent.outputs.len(),lib)?;
     let actions = data.iter().map(|t| t.action).max().unwrap_or(0).checked_add(1).ok_or(Error::Capacity)?;
     validate_data(data,parent.outputs.len(),actions)?;
     let mut meter = Meter::new(cfg.work);
-    let job = discover_job(parent,data,lib,cfg.deterministic,&mut meter)?.ok_or(Error::NoEvidence)?;
+    let job = discover_requested_job(parent,data,lib,cfg.deterministic,requested,&mut meter)?.ok_or(Error::NoEvidence)?;
     let (old,_) = replay(parent,data,lib,&mut meter)?;
     let old_loss = absolute_loss(&old,data)?;
     let mut best = Best { patch: None,loss: old_loss,nodes: parent.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
@@ -284,6 +321,7 @@ pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &Searc
     let reserve = if hints.is_empty() { meter.remaining() } else { meter.remaining()/4 };
     let mut constructor_work = 0;
     let usable = hints.len().min(32);
+    let mut solved_target = false;
     'rounds: for extension in 0..=cfg.max_expr_nodes {
         for hint in hints.iter().take(usable) {
             let nodes = hint.output.nodes().saturating_add(extension);
@@ -293,17 +331,17 @@ pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &Searc
             if cap == 0 { break 'rounds; }
             let mut local = Meter::new(cap);
             let mut bounded = cfg.clone(); bounded.max_expr_nodes = nodes;
-            let result = search_output(parent,data,&job,hint.cells.clone(),hint.output.clone(),Some(hint.constructor_id),&bounded,lib,&mut local,&mut best);
+            let result = search_output_focused(requested.is_some(),parent,data,&job,hint.cells.clone(),hint.output.clone(),Some(hint.constructor_id),&bounded,lib,&mut local,&mut best);
             constructor_work += local.spent;
             meter.charge(local.spent)?;
-            if matches!(result,Ok(true)) { break 'rounds; }
+            if matches!(result,Ok(true)) { solved_target = true; break 'rounds; }
             if let Err(e) = result { if e != Error::Budget { return Err(e); } }
         }
     }
     let mut baseline_work = 0;
-    if best.loss != 0.0 {
+    if best.loss != 0.0 && !solved_target {
         let mut broad = Meter::new(meter.remaining());
-        let result = baseline(parent,data,&job,cfg,lib,&mut broad,&mut best);
+        let result = baseline(requested.is_some(),parent,data,&job,cfg,lib,&mut broad,&mut best);
         baseline_work = broad.spent;
         meter.charge(broad.spent)?;
         if let Err(e) = result { if e != Error::Budget { return Err(e); } }

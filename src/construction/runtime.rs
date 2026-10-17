@@ -4,6 +4,7 @@ use super::constructors::*;
 use super::synthesis::*;
 use super::vm::*;
 use super::recursive::SearchTrial;
+use super::curriculum::{Curriculum, SelectionMode};
 use crate::{EvoPhase, HumanProtectionDecision, HumanProtectionEvidence};
 use serde::{Deserialize, Serialize};
 
@@ -68,6 +69,8 @@ pub struct Learner {
     library: Library,registry: Registry,records: Vec<Record>,promotions: Vec<Promotion>,
     current: Vec<i64>,next_id: u64,pending: bool,poisoned: bool,restart_next: bool,
     last_trace: Option<SearchTrace>,construction_work: u64,last_error: Option<String>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    curriculum: Option<Curriculum>,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 struct Commitment {
@@ -107,8 +110,14 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None })
     }
+    /// Opt-in, no prefilled task list or preferred sensor indices.
+    pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
+        if self.pending || self.shadow.is_some() || self.curriculum.is_some() { return Err(Error::Busy); }
+        self.curriculum = Some(Curriculum::new(self.config.width,mode)?); Ok(())
+    }
+    pub fn curriculum(&self) -> Option<&Curriculum> { self.curriculum.as_ref() }
     pub fn program(&self) -> &Program { &self.active.program }
     pub fn library(&self) -> &Library { &self.library }
     pub fn registry(&self) -> &Registry { &self.registry }
@@ -175,11 +184,32 @@ impl Learner {
     }
     /// Synchronous learning; no external action or synthetic factual record.
     pub fn construct(&mut self) -> Result<()> {
+        let result = self.construct_inner();
+        if self.shadow.is_none() {
+            if let Some(c) = &mut self.curriculum { c.finish(false,0.0,self.construction_work)?; }
+        }
+        result
+    }
+    fn construct_inner(&mut self) -> Result<()> {
         if self.pending || self.shadow.is_some() { return Err(Error::Busy); }
         if self.poisoned || self.records.len() < self.config.minimum_training { return Err(Error::NoEvidence); }
         let data = self.data();
+        let requested = if let Some(c) = &mut self.curriculum {
+            let mut meter = Meter::new(2_000_000);
+            let discovery = (|| -> Result<_> {
+                let (predictions,_) = replay(&self.active.program,&data,&self.library,&mut meter)?;
+                let mut errors = vec![0.0; self.config.width];
+                for (p,t) in predictions.iter().zip(&data) {
+                    for j in 0..errors.len() { meter.charge(1)?; errors[j] += ((p[j] as i128-t.post[j] as i128).abs()) as f64; }
+                }
+                Ok(errors)
+            })();
+            self.construction_work = self.construction_work.saturating_add(meter.spent);
+            c.select(&discovery?,self.next_id,self.construction_work)?
+        } else { None };
+        if self.curriculum.is_some() && requested.is_none() { return Err(Error::NoEvidence); }
         let before = self.registry.meta_ledger().search_work;
-        let controls_result = self.registry.begin_trial(&self.active.program,&data,&self.library,&self.config.search);
+        let controls_result = self.registry.begin_requested_trial(&self.active.program,&data,&self.library,&self.config.search,requested);
         self.construction_work += self.registry.meta_ledger().search_work.saturating_sub(before);
         let controls = controls_result?;
         let trace = controls.trace().clone();
@@ -245,6 +275,18 @@ impl Learner {
         }
         // Publish one FINAL decision only after every applicable gate. Rejected
         // trials cannot become successful promotions or accepted search traces.
+        if let Some(c) = &mut self.curriculum {
+            let target = shadow.trace.job.target;
+            let mut before = 0.0; let mut after = 0.0;
+            for r in &self.records[shadow.training_len..] {
+                let y = r.transition.post[target];
+                before += ((r.prediction.center[target] as i128-y as i128).abs()) as f64;
+                if let Some(p) = &r.candidate_prediction { after += ((p.center[target] as i128-y as i128).abs()) as f64; }
+                else { after = f64::INFINITY; }
+            }
+            let gain = if accepted { ((before-after)/(1.0+before)).clamp(0.0,1.0) } else { 0.0 };
+            c.finish(accepted,gain,self.construction_work.saturating_add(meter.spent))?;
+        }
         shadow.trace.prospectively_accepted = accepted;
         self.last_trace = Some(shadow.trace.clone());
         self.promotions.push(Promotion { first_id: shadow.start_id,last_id: self.next_id-1,parent: self.active.program.fingerprint(),candidate: shadow.model.program.fingerprint(),accepted,retention_ok,incumbent_nll: shadow.incumbent_nll,candidate_nll: shadow.candidate_nll });
@@ -258,6 +300,7 @@ impl Learner {
         Ok(())
     }
     fn cancel_shadow(&mut self) {
+        if let Some(c) = &mut self.curriculum { let _ = c.finish(false,0.0,self.construction_work); }
         if let Some(mut shadow) = self.shadow.take() {
             if let Some(controls) = shadow.controls.take() { let _ = self.registry.cancel_trial(controls); }
         }
@@ -282,6 +325,12 @@ impl Learner {
     /// Ephemeral imagination plus a model-independent exploration reserve.
     /// No simulated POST is inserted into the factual journal.
     pub fn choose_action(&self,goal: Option<&[i64]>) -> Result<usize> {
+        let owned = goal.map(|g| g.iter().copied().map(Some).collect::<Vec<_>>());
+        self.choose_masked(owned.as_deref())
+    }
+    /// Explicit setpoints on a subset of observable coordinates. Unspecified
+    /// nuisance channels are not silently assigned a goal or a semantic label.
+    pub fn choose_masked(&self,goal: Option<&[Option<i64>]>) -> Result<usize> {
         if self.pending || self.poisoned { return Err(Error::Busy); }
         if goal.is_some_and(|g| g.len() != self.config.width) { return Err(Error::InvalidData); }
         let word = exploration_word(self.next_id);
@@ -316,7 +365,8 @@ impl Learner {
                     if !valid { continue; }
                     let information = if predictions.len() > 1 && predictions[0] != predictions[1] { 1.0 } else { 0.0 };
                     let utility = goal.map(|g| predictions.iter().map(|p| {
-                        if p == g { 5.0 } else { -p.iter().zip(g).map(|(&a,&b)| ((a as i128-b as i128).abs()) as f64).sum::<f64>() }
+                        if p.iter().zip(g).all(|(&a,b)| b.is_none_or(|v| a == v)) { 5.0 }
+                        else { -p.iter().zip(g).filter_map(|(&a,b)| b.map(|v| ((a as i128-v as i128).abs()) as f64)).sum::<f64>() }
                     }).sum::<f64>()/predictions.len() as f64).unwrap_or(0.0);
                     let score = utility+information+0.1/(1.0+usage[path[0]] as f64)-0.01*depth as f64;
                     if score > best.0 { best = (score,path[0]); }
@@ -337,6 +387,10 @@ impl Learner {
         if bytes.len() > 4*1024*1024 { return Err(Error::Capacity); }
         let (version,hash,mut state): (u32,u64,Self) = serde_json::from_slice(bytes).map_err(|_| Error::InvalidData)?;
         if version != 1 || hash != fingerprint(&serde_json::to_vec(&state).map_err(|_| Error::InvalidData)?) || state.pending { return Err(Error::InvalidData); }
+        if let Some(c) = &state.curriculum {
+            c.validate(state.config.width)?;
+            if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
+        }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
         if state.records.len() > state.config.journal_capacity || state.promotions.len() > 128 || state.current.len() != state.config.width || state.next_id != state.records.len() as u64 { return Err(Error::InvalidData); }
         state.active.program.validate(state.config.width,&state.library)?;
@@ -381,6 +435,7 @@ impl ProtectedConstructionRuntime {
         if organism.config().motor_cells != config.actions || organism.config().sensory_cells != config.width { return Err(Error::InvalidData); }
         Ok(Self { organism,learner: Learner::new(config,initial)? })
     }
+    pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> { self.learner.enable_curriculum(mode) }
     pub fn learner(&self) -> &Learner { &self.learner }
     pub fn organism(&self) -> &EvoPhase { &self.organism }
     pub fn checkpoint(&self) -> Result<Vec<u8>> { self.learner.checkpoint() }
@@ -397,6 +452,10 @@ impl ProtectedConstructionRuntime {
     pub fn step<H,F>(&mut self,goal: Option<&[i64]>,hazard: H,execute: F) -> Result<usize>
     where H: FnOnce(usize)->HumanProtectionEvidence,F: FnOnce(usize)->Result<ExternalPost> {
         let action = self.learner.choose_action(goal)?; self.step_action(action,hazard,execute)
+    }
+    pub fn step_masked<H,F>(&mut self,goal: &[Option<i64>],hazard: H,execute: F) -> Result<usize>
+    where H: FnOnce(usize)->HumanProtectionEvidence,F: FnOnce(usize)->Result<ExternalPost> {
+        let action = self.learner.choose_masked(Some(goal))?; self.step_action(action,hazard,execute)
     }
     /// Explicitly supervised interventions, still protected and fact-recorded.
     pub fn step_action<H,F>(&mut self,action: usize,hazard: H,execute: F) -> Result<usize>
