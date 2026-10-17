@@ -41,6 +41,8 @@ pub(crate) struct Proposal {pub answer:SchoolAnswer,pub fields:[f32;5]}
 pub struct School {
     library:Library,skills:Vec<Skill>,facts:Vec<Fact>,lessons:Vec<LessonReport>,frozen:bool,
     fact_index:BTreeMap<String,Vec<usize>>,terms:BTreeMap<String,Vec<usize>>,word_counts:Vec<usize>,
+    #[serde(default,skip_serializing_if="composition_disabled")]
+    composition:bool,
 }
 fn clean(s:&str)->String {
     s.to_lowercase().chars().map(|c|if c.is_alphanumeric() || "+-*/%=<>".contains(c){c}else{' '})
@@ -305,3 +307,5 @@ impl School {
         Ok(())
     }
 }
+
+include!("semantic_grounding.rs");

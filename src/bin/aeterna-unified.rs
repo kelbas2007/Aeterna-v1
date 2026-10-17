@@ -48,6 +48,22 @@ fn main()->Result<()>{
                     let question=request["question"].as_str().ok_or("missing question")?;
                     Ok(json!({"type":"answer","result":runtime.as_ref().ok_or("not loaded")?.answer_school(question,mode)?}))
                 },
+                "enable_composition"=>{runtime.as_mut().ok_or("not loaded")?.enable_school_composition()?;Ok(json!({"type":"composition_enabled"}))},
+                "understand"=>{
+                    let question=request["question"].as_str().ok_or("missing question")?;
+                    let limits=serde_json::from_value(request.get("limits").cloned().unwrap_or(serde_json::to_value(aeterna_v1::education::GroundingLimits::default())?))?;
+                    Ok(json!({"type":"understanding","result":runtime.as_ref().ok_or("not loaded")?.understand_school(question,limits)?}))
+                },
+                "ask_surface"=>{
+                    let mode=serde_json::from_value(request.get("mode").cloned().unwrap_or(json!("All")))?;
+                    let question=request["question"].as_str().ok_or("missing question")?;
+                    Ok(json!({"type":"answer","result":runtime.as_ref().ok_or("not loaded")?.answer_school_surface(question,mode)?}))
+                },
+                "clarify"=>{
+                    let question=request["question"].as_str().ok_or("missing question")?;
+                    let reply=request["reply"].as_i64().ok_or("reply must answer the generated distinguishing question")?;
+                    Ok(json!({"type":"answer","result":runtime.as_ref().ok_or("not loaded")?.clarify_school(question,reply)?}))
+                },
                 "school_report"=>Ok(json!({"type":"school_report","report":runtime.as_ref().ok_or("not loaded")?.school_report(),"lessons":runtime.as_ref().unwrap().school_lessons()})),
                 "freeze"=>{runtime.as_mut().ok_or("not loaded")?.freeze_constructing()?;Ok(json!({"type":"frozen"}))},
                 "load"=>{
@@ -103,8 +119,20 @@ fn school_console()->Result<()> {
     let stdin=io::stdin();
     loop {
         print!("> ");io::stdout().flush()?;let mut line=String::new();if stdin.read_line(&mut line)?==0 || line.trim()=="/exit" {break;}
+        if let Some(q)=line.trim().strip_prefix("/why ") {
+            println!("{}",serde_json::to_string_pretty(&runtime.understand_school(q,aeterna_v1::education::GroundingLimits::default())?)?);continue;
+        }
         match runtime.answer_school(line.trim(),aeterna_v1::education::AnswerMode::All) {
-            Ok(result)=>{println!("{}",result.answer.as_deref().unwrap_or("Не знаю: нет приобретённого правила для этого вопроса."));println!("[{}; {}]",result.method,result.reason);},
+            Ok(result)=>{
+                println!("{}",result.answer.as_deref().unwrap_or("Не могу однозначно связать вопрос с приобретёнными знаниями."));println!("[{}; {}]",result.method,result.reason);
+                if result.reason=="ambiguous_program_meaning" {
+                    if let Some(probe)=runtime.understand_school(line.trim(),aeterna_v1::education::GroundingLimits::default())?.distinguishing_probe {
+                        println!("Уточни смысл на примере: {}. Какой ответ ты ожидаешь? (Enter — пропустить)",probe.question);
+                        let mut reply=String::new();stdin.read_line(&mut reply)?;
+                        if let Ok(n)=reply.trim().parse::<i64>() {let clarified=runtime.clarify_school(line.trim(),n)?;println!("{} [{}]",clarified.answer.as_deref().unwrap_or("Уточнение не выбрало единственный смысл."),clarified.reason);}
+                    }
+                }
+            },
             Err(e)=>println!("Error: {e}"),
         }
     }Ok(())
