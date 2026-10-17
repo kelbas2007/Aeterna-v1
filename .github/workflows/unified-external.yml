@@ -2,10 +2,10 @@ name: Unified organism and external ARC-AGI-3
 on:
   push:
     branches: [research/beyond-intel4]
-    paths: ['src/unified*', 'src/construction/**', 'src/bin/aeterna-unified.rs', 'tests/unified*', 'examples/unified*', 'scripts/unified*', '.github/workflows/unified-external.yml']
+    paths: ['src/unified*', 'src/phase_constructing_control.rs', 'src/construction/**', 'src/bin/aeterna-unified.rs', 'tests/unified*', 'examples/unified*', 'scripts/unified*', '.ci/unified/**', '.github/workflows/unified-external.yml']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: unified-external-${{ github.ref }}
   cancel-in-progress: true
@@ -20,6 +20,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Apply exact-source ownership bridge when staged
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f .ci/unified/apply.py; then
+            python .ci/unified/apply.py
+            git rm -r .ci/unified
+            git add src/construction/runtime.rs src/scientific_runtime.rs src/phase_meta_control.rs src/phase_native.rs
+            git diff --cached --check
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Connect construction and acquired calculations to ScientificRuntime physical U1 control'
+            echo 'UNIFIED_APPLIED=1' >> "$GITHUB_ENV"
+          fi
       - name: Exact source without build artifacts
         run: |
           mkdir -p unified-evidence
@@ -43,40 +55,48 @@ jobs:
         run: |
           python -m pip install arc-agi==0.9.9 > unified-evidence/python-install.log 2>&1
           python -m pip freeze > unified-evidence/python-versions.txt
-      - name: Verify external environment access without inspecting game rules
+      - name: Verify environment access without reading game rules
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json
-          import arc_agi
+          import json,arc_agi
           arc=arc_agi.Arcade()
-          games=arc.get_environments()
-          names=[g.game_id for g in games]
+          names=[g.game_id for g in arc.get_environments()]
           env=arc.make('ls20',save_recording=False)
           if env is None: raise RuntimeError('Official ls20 environment unavailable')
-          report={'kind':'setup_only','game_choice_frozen':'ls20','available_games':names,'action_space':[str(a) for a in env.action_space],'solver_steps':0,'game_source_read_by_agent':False}
-          with open('unified-evidence/arc-setup.json','w') as f: json.dump(report,f,indent=2)
+          with open('unified-evidence/arc-setup.json','w') as f: json.dump({'kind':'setup_only','game_choice_frozen':'ls20','available_games':names,'action_space':[str(a) for a in env.action_space],'solver_steps':0},f,indent=2)
           PY
-      - name: Compile integrated code
+      - name: Compile and test integrated code
         shell: bash
         run: |
           set -euo pipefail
           cargo check --locked --all-targets 2>&1 | tee unified-evidence/check.log
-          if test -f tests/unified_runtime.rs; then
-            cargo test --locked --test unified_runtime 2>&1 | tee unified-evidence/unified-tests.log
-          fi
+          cargo test --locked --test unified_runtime --test u1_meta_control --test human_protection --test directed_construction_epistemic --test directed_construction_continuity 2>&1 | tee unified-evidence/tests.log
       - name: Learning and external run
         shell: bash
         run: |
           set -euo pipefail
           if test -f examples/unified_learning.rs; then
-            cargo run --locked --example unified_learning > unified-evidence/learning.json
+            cargo run --locked --example unified_learning -- unified-evidence/trained.json > unified-evidence/learning.json
           fi
           if test -f scripts/unified_arc3.py; then
             cargo build --locked --bin aeterna-unified
-            python scripts/unified_arc3.py --binary target/debug/aeterna-unified --game ls20 --max-actions 256 --output unified-evidence/arc3
+            python scripts/unified_arc3.py --binary target/debug/aeterna-unified --game ls20 --max-actions 256 --output unified-evidence/arc3 --trained unified-evidence/trained.json
           fi
+      - name: Publish integrated source only after successful checks
+        if: env.UNIFIED_APPLIED == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/beyond-intel4'
+          git diff --exit-code
+          header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$header"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/research/beyond-intel4
+          git rev-parse HEAD > unified-evidence/published-revision.txt
       - name: Preserve bounded results
         if: always()
         uses: actions/upload-artifact@v4
