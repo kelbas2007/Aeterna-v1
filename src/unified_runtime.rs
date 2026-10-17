@@ -10,6 +10,8 @@ struct UnifiedDomain {name:String,learner:ULearner,last_construction:usize,pendi
 struct UnifiedConstruction {
     current:UnifiedDomain,archived:Vec<UnifiedDomain>,nonce:u64,operations:[u64;4],
     computation_work:u64,total_external_cost:u64,max_external_cost:u64,freeze_controller:bool,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    education:Option<crate::education::School>,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedPost {pub observation:Vec<i64>,pub cost:u64,pub reward:f32}
@@ -50,7 +52,7 @@ impl ScientificRuntime {
         evo.set_phase_native_meta_monotone_evidence(true);evo.observe_initial_real(&usensory(&initial),false);
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;
         rt.constructing=Some(UnifiedConstruction{current:UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None},
-            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false});
+            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None});
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
@@ -76,7 +78,7 @@ impl ScientificRuntime {
     }
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
-        u.current.learner.freeze_learning()?;u.freeze_controller=true;self.organism.set_phase_native_meta_learning_enabled(false);Ok(())
+        u.current.learner.freeze_learning()?;if let Some(s)=&mut u.education{s.freeze();}u.freeze_controller=true;self.organism.set_phase_native_meta_learning_enabled(false);Ok(())
     }
     // Matched ablation: same experience, programs and budgets; only U1 zeroed.
     pub fn ablate_constructing_controller(&mut self)->UResult<()> {
@@ -182,6 +184,7 @@ impl ScientificRuntime {
         let s:UnifiedStored=serde_json::from_slice(bytes).map_err(|_|UError::InvalidData)?;
         let hash=uhash(&serde_json::to_vec(&(s.version,&s.carrier,&s.cognition,s.sequence,s.emergency,s.protection_sequence)).map_err(|_|UError::InvalidData)?);
         if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
+        if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
         let evo=EvoPhase::from_constructing_carrier_checkpoint(&s.carrier).ok_or(UError::InvalidData)?;
         let mut names=std::collections::BTreeSet::new();let mut costs=0u64;
         for d in s.cognition.archived.iter().chain(std::iter::once(&s.cognition.current)) {
@@ -201,8 +204,11 @@ impl ScientificRuntime {
         let mut candidate=Self::from_constructing_checkpoint(bytes)?;
         let old=self.constructing.as_ref().ok_or(UError::NoEvidence)?;let new=candidate.constructing.as_ref().ok_or(UError::NoEvidence)?;
         if new.current.name!=old.current.name || new.current.learner.checkpoint()?!=old.current.learner.checkpoint()?
+            || serde_json::to_vec(&old.education).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.education).map_err(|_|UError::InvalidData)?
             || new.nonce<old.nonce || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
         if candidate.emergency_latched(){let mut e=Self::absent_evidence();e.emergency_stop=true;self.protection.screen(0,e);}
         self.organism=candidate.organism;self.constructing=candidate.constructing.take();Ok(())
     }
 }
+
+include!("education_runtime.rs");

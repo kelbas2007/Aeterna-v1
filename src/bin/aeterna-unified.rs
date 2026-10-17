@@ -23,12 +23,33 @@ fn configuration()->(Config,AutonomyPolicy){
     (cfg,policy)
 }
 fn main()->Result<()>{
+    if std::env::args().nth(1).as_deref()==Some("--school"){return school_console();}
     let stdin=io::stdin();let stdout=io::stdout();let mut input=stdin.lock();let mut out=stdout.lock();
     let mut runtime:Option<ScientificRuntime>=None;
     loop {
         let request=read(&mut input)?;
         let response:Result<Value>=(||{
             match request["op"].as_str().ok_or("missing op")? {
+                "init"=>{
+                    if runtime.is_some(){return Err("already initialized".into());}
+                    let (cfg,policy)=configuration();runtime=Some(ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"interactive-v1")?);
+                    Ok(json!({"type":"initialized"}))
+                },
+                "teach"=>{
+                    let examples=serde_json::from_value(request["examples"].clone())?;
+                    Ok(json!({"type":"lesson","result":runtime.as_mut().ok_or("not loaded")?.teach_school(examples)?}))
+                },
+                "facts"=>{
+                    let facts=serde_json::from_value(request["facts"].clone())?;
+                    Ok(json!({"type":"facts","inserted":runtime.as_mut().ok_or("not loaded")?.teach_school_facts(facts)?}))
+                },
+                "ask"=>{
+                    let mode=serde_json::from_value(request.get("mode").cloned().unwrap_or(json!("All")))?;
+                    let question=request["question"].as_str().ok_or("missing question")?;
+                    Ok(json!({"type":"answer","result":runtime.as_ref().ok_or("not loaded")?.answer_school(question,mode)?}))
+                },
+                "school_report"=>Ok(json!({"type":"school_report","report":runtime.as_ref().ok_or("not loaded")?.school_report(),"lessons":runtime.as_ref().unwrap().school_lessons()})),
+                "freeze"=>{runtime.as_mut().ok_or("not loaded")?.freeze_constructing()?;Ok(json!({"type":"frozen"}))},
                 "load"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
                     let bytes=request["checkpoint"].as_str().ok_or("checkpoint must be a string")?.as_bytes();
@@ -72,4 +93,19 @@ fn main()->Result<()>{
         }
     }
     Ok(())
+}
+
+fn school_console()->Result<()> {
+    let path=std::env::args().nth(2).ok_or("usage: aeterna-unified --school learned-school.json")?;
+    let bytes=std::fs::read(path)?;let runtime=ScientificRuntime::from_constructing_checkpoint(&bytes)?;
+    println!("AETERNA: acquired lessons and teacher memory. Type a question; /exit to stop.");
+    println!("{:?}",runtime.school_report());
+    let stdin=io::stdin();
+    loop {
+        print!("> ");io::stdout().flush()?;let mut line=String::new();if stdin.read_line(&mut line)?==0 || line.trim()=="/exit" {break;}
+        match runtime.answer_school(line.trim(),aeterna_v1::education::AnswerMode::All) {
+            Ok(result)=>{println!("{}",result.answer.as_deref().unwrap_or("Не знаю: нет приобретённого правила для этого вопроса."));println!("[{}; {}]",result.method,result.reason);},
+            Err(e)=>println!("Error: {e}"),
+        }
+    }Ok(())
 }

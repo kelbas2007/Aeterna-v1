@@ -37,3 +37,4 @@ pub use raster::{EvoRasterField, OutcomeStat, PhaseFieldUnit, RasterFieldConfig}
 pub use trace::{CarrierTrace, ShapeTrace};
 
 pub use planning::{EvoImaginationPlanner, ImaginedNode, LearnedTransition, PlanDecision, PlanningConfig};
+pub mod education;

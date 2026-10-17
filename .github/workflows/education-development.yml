@@ -2,7 +2,7 @@ name: Education development
 on:
   push:
     branches: [research/beyond-intel4]
-    paths: ['src/education*', 'src/unified_runtime.rs', 'src/bin/aeterna-school.rs', 'tests/education*', 'scripts/education*', '.github/workflows/education-development.yml']
+    paths: ['src/education*', 'src/unified_runtime.rs', 'src/construction/induction.rs', 'src/construction/vm.rs', 'src/bin/aeterna-unified.rs', 'tests/education*', 'scripts/education*', '.github/workflows/education-development.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,42 +20,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Exact source and bounded offline development kit
-        shell: bash
+      - name: Toolchain and source identity
         run: |
-          set -euo pipefail
-          mkdir -p school-evidence kit
-          git rev-parse HEAD > school-evidence/revision.txt
-          git archive --format=tar.gz --output=kit/source.tar.gz HEAD
+          mkdir -p school-evidence
           rustup toolchain install 1.99.0 --profile minimal
           rustup override set 1.99.0
+          git rev-parse HEAD > school-evidence/revision.txt
           { rustc --version --verbose; cargo --version; } > school-evidence/toolchain.txt
-          cargo vendor --locked kit/vendor > kit/vendor-config.toml
-          root=$(rustc --print sysroot)
-          tar -czf kit/rust-toolchain.tar.gz -C "$root" bin lib
-      - uses: actions/upload-artifact@v4
-        with:
-          name: education-kit-${{ github.sha }}
-          path: kit/
-          retention-days: 1
       - uses: Swatinem/rust-cache@v2
-      - name: Compile and verify
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pyarrow==19.0.1
+      - name: Compile and regression checks
         shell: bash
         run: |
           set -euo pipefail
           cargo check --locked --all-targets 2>&1 | tee school-evidence/check.log
-          cargo test --locked --test unified_runtime 2>&1 | tee school-evidence/unified.log
-          if test -f tests/education_runtime.rs; then
-            cargo test --locked --test education_runtime 2>&1 | tee school-evidence/education.log
-          fi
-      - name: Curriculum and examination
+          cargo test --locked --lib construction:: 2>&1 | tee school-evidence/construction-unit.log
+          cargo test --locked --test education_runtime --test unified_runtime --test human_protection --test u1_meta_control 2>&1 | tee school-evidence/school-tests.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "school-evidence/$name.log"
+          done
+      - name: Teach, freeze, restart and examine
         shell: bash
         run: |
           set -euo pipefail
-          if test -f scripts/education_experiment.py; then
-            cargo build --locked --bin aeterna-school
-            python scripts/education_experiment.py --binary target/debug/aeterna-school --output school-evidence/curriculum
-          fi
+          cargo build --locked --release --bin aeterna-unified
+          python scripts/education_experiment.py --binary target/release/aeterna-unified --output school-evidence/curriculum --external > school-evidence/summary.log
+          python scripts/education_verify.py school-evidence/curriculum > school-evidence/recount.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

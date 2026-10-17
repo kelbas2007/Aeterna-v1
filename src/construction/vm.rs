@@ -35,7 +35,7 @@ impl Value {
     pub fn boolean(self) -> Result<bool> { if let Self::Bool(x) = self { Ok(x) } else { Err(Error::Type) } }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum Op { Add, Sub, Mul, Xor, Rem, Eq, Lt, And, Or }
+pub enum Op { Add, Sub, Mul, Xor, Rem, Eq, Lt, And, Or, DivExact }
 impl Op {
     pub fn input(self) -> Ty { if matches!(self, Self::And | Self::Or) { Ty::Bool } else { Ty::Int } }
     pub fn output(self) -> Ty { if matches!(self, Self::Eq | Self::Lt | Self::And | Self::Or) { Ty::Bool } else { Ty::Int } }
@@ -49,6 +49,11 @@ impl Op {
             Self::Add => Int(a.int()?.checked_add(b.int()?).ok_or(Error::Overflow)?),
             Self::Sub => Int(a.int()?.checked_sub(b.int()?).ok_or(Error::Overflow)?),
             Self::Mul => Int(a.int()?.checked_mul(b.int()?).ok_or(Error::Overflow)?),
+            Self::DivExact => {
+                let (x,y)=(a.int()?,b.int()?);
+                if y==0 || x.checked_rem(y)!=Some(0) {return Err(Error::InvalidData);}
+                Int(x.checked_div(y).ok_or(Error::Overflow)?)
+            },
             Self::Xor => Int(a.int()? ^ b.int()?),
             Self::Rem => Int(a.int()?.checked_rem(b.int()?).ok_or(Error::Overflow)?),
         })
