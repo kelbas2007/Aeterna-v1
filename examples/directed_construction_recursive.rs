@@ -41,6 +41,9 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
         reports.push(report);
     }
     registry.validate(&library)?;
+    let guard_outcomes: usize = registry.constructors().iter().map(|c| registry.guard_evidence(c.id).len()).sum();
+    let executed_constructors = reports.iter().filter(|r| r.constructor.is_some()).count();
+    if guard_outcomes != executed_constructors { return Err("prospective constructor outcomes did not reach applicability learning".into()); }
     let saved = serde_json::to_vec(&registry)?;
     let restored: Registry = serde_json::from_slice(&saved)?;
     restored.validate(&library)?;
@@ -56,6 +59,8 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
         "kind":"recursive-construction-development","independent_qualification":false,
         "hand_injected_solutions":0,"hand_injected_constructors":0,
         "same_library_in_all_arms":true,"max_generation":generation,
+        "prospective_guard_outcomes":guard_outcomes,
+        "nontrivial_applicability_guards":registry.constructors().iter().filter(|c| c.guard != aeterna_v1::construction::vm::Expr::Lit(aeterna_v1::construction::vm::Value::Bool(true))).count(),
         "recursive_improvement_observed":improved,"reports":reports,
         "constructors":registry.constructors(),"ledger":registry.meta_ledger(),
         "checkpoint_bytes":saved.len(),"checkpoint_round_trip":true

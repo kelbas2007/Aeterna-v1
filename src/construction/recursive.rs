@@ -287,6 +287,7 @@ impl Registry {
         let (candidate,same_library,without_winner_subtree,model_accepted,quality_retained) = checked?;
         let cid = trial.candidate.trace.constructor_id;
         let mut verdict = RecursiveVerdict { ticket: trial.ticket,constructor: cid,generation: trial.generation,parent_constructor: trial.parent_constructor,candidate,same_library,without_winner_subtree,model_accepted,quality_retained,additional_search_value: false,recursive_search_value: false,constructors_acquired: 0,full_construction_work: self.meta.construction_work,check_work: meter.spent,independent_qualification: false };
+        let applicability_features = trial.candidate.trace.job.features.clone();
         if model_accepted {
             trial.candidate.trace.prospectively_accepted = true;
             let mut learning = Meter::new(trial.learning_budget.max(100));
@@ -297,6 +298,16 @@ impl Registry {
                 Err(Error::Budget) | Err(Error::Capacity) => (),
                 Err(e) => return Err(e),
             }
+        }
+        if let Some(id) = cid.filter(|_| allow_model) {
+            // Only a completed factual trial labels the executed constructor.
+            // Retain the parent-containing comparison for descendant schemas.
+            let control_work = if trial.parent_constructor.is_some() { verdict.without_winner_subtree.work } else { verdict.same_library.work };
+            let useful = model_accepted && quality_retained && verdict.candidate.work < control_work;
+            let mut fitting = Meter::new(trial.learning_budget.clamp(100,100_000));
+            let result = self.observe_constructor_result(id,trial.ticket,applicability_features,useful,&trial.library,&mut fitting);
+            self.meta.construction_work = self.meta.construction_work.saturating_add(fitting.spent);
+            match result { Ok(()) | Err(Error::Budget) | Err(Error::Capacity) => (),Err(e) => return Err(e) }
         }
         verdict.full_construction_work = self.meta.construction_work;
         if let Some(id) = cid {

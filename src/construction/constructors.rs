@@ -5,7 +5,7 @@ use super::synthesis::*;
 use super::vm::*;
 use super::recursive::{MetaLedger, Refinement, match_schema, instantiate};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ConstructorStatus { Proposed, UsefulOnDevelopmentBatch, RejectedOnDevelopmentBatch }
@@ -19,11 +19,17 @@ pub struct Constructor {
     pub guard: Expr, pub training_trace_ids: Vec<u64>,
     pub construction_work: u64, pub status: ConstructorStatus,
 }
+/// A consumed prospective outcome, scoped to the constructor actually executed.
+/// These labels are never available to the search that produced that outcome.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GuardOutcome { pub ticket: u64, pub features: Vec<i64>, pub useful: bool }
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Registry {
     pub(super) constructors: Vec<Constructor>, traces: Vec<SearchTrace>,
     consumed_batches: BTreeSet<u64>,
     guard_observations: Vec<(Vec<i64>,bool)>,
+    #[serde(default, skip_serializing_if="BTreeMap::is_empty")]
+    guard_evidence: BTreeMap<u64,Vec<GuardOutcome>>,
     #[serde(default, skip_serializing_if="MetaLedger::is_empty")]
     pub(super) meta: MetaLedger,
 }
@@ -52,12 +58,23 @@ fn trace_id(trace: &SearchTrace) -> u64 {
 impl Registry {
     pub fn constructors(&self) -> &[Constructor] { &self.constructors }
     pub fn traces(&self) -> &[SearchTrace] { &self.traces }
+    pub fn guard_evidence(&self,id: u64) -> &[GuardOutcome] {
+        self.guard_evidence.get(&id).map(Vec::as_slice).unwrap_or(&[])
+    }
     pub fn nodes(&self) -> usize { self.constructors.iter().map(|c| c.code.nodes()+c.guard.nodes()).sum() }
     pub fn validate(&self,lib: &Library) -> Result<()> {
         if self.constructors.len() > 32 || self.traces.len() > 128 || self.consumed_batches.len() > 256 || self.guard_observations.len() > 128 { return Err(Error::Capacity); }
         let mut ids = BTreeSet::new();
         for c in &self.constructors {
             if c.code.ty(lib)? != Ty::Int || c.guard.ty(lib)? != Ty::Bool || c.cell_count > 8 || c.code.nodes() > 1024 || c.guard.nodes() > 64 || c.training_trace_ids.len() > 128 || !ids.insert(c.id) { return Err(Error::InvalidProgram); }
+        }
+        if self.guard_evidence.len() > 32 || self.guard_evidence.values().map(Vec::len).sum::<usize>() > 128 { return Err(Error::Capacity); }
+        let mut tickets = BTreeSet::new();
+        for (id,rows) in &self.guard_evidence {
+            if !ids.contains(id) { return Err(Error::InvalidData); }
+            for row in rows {
+                if row.features.len() != 4 || !tickets.insert(row.ticket) { return Err(Error::InvalidData); }
+            }
         }
         self.meta.validate()?;
         for c in &self.constructors {
@@ -123,8 +140,9 @@ impl Registry {
             } else { None };
             // A generalization whose lineage is not causal remains generation 1.
             let generation = refinement.as_ref().map(|r| self.constructors.iter().find(|c| c.id == r.parent).unwrap().generation+1).unwrap_or(1);
-            // No negative guard evidence yet: do not invent a task classifier.
-            let guard = fit_guard(&self.guard_observations,lib,meter)?.unwrap_or(Expr::Lit(Value::Bool(true)));
+            // An ancestor's or another constructor's outcome does not qualify
+            // this new schema. It starts with an uninformative applicability prior.
+            let guard = Expr::Lit(Value::Bool(true));
             self.constructors.push(Constructor { id: cid,generation,refinement,code,cell_count: patch.cells.len(),guard,
                 training_trace_ids: vec![trace_id(old),id],construction_work: meter.spent-start,status: ConstructorStatus::Proposed });
         }
@@ -157,12 +175,18 @@ impl Registry {
             // A new generation is not automatically cheaper. Independent holes
             // multiply the number of smallest completions; try fewer bindings
             // first, and use generation only to break that structural tie.
-            ordered.push(((holes.len(),std::cmp::Reverse(c.generation),c.id),c));
+            let discouraged = match c.guard.eval(Context { input: &job.features,action: 0,state: &[],args: &[] },lib,meter) {
+                Ok(Value::Bool(false)) => true,
+                Err(Error::Budget) => return Err(Error::Budget),
+                _ => false,
+            };
+            // Applicability is an acquired scheduling prior, not a hard ban.
+            // A false or imperfect guard must not remove a schema from search.
+            ordered.push(((discouraged,holes.len(),std::cmp::Reverse(c.generation),c.id),c));
         }
         ordered.sort_by_key(|(key,_)| *key);
         for (_,c) in ordered {
             if c.status == ConstructorStatus::RejectedOnDevelopmentBatch { continue; }
-            if c.guard.eval(Context { input: &job.features,action: 0,state: &[],args: &[] },lib,meter) != Ok(Value::Bool(true)) { continue; }
             let generated = self.materialize_constructor(c.id,meter)?;
             // If only the output contains holes, leave them open: the acquired
             // computation becomes an executable SEARCH schema, not a saved answer.
@@ -185,13 +209,41 @@ impl Registry {
         }
         Ok(hints)
     }
-    /// Consumed holdout labels may train the NEXT guard. This never changes the
-    /// result of the already completed batch and that batch cannot be reused.
-    pub fn record_guard_observation(&mut self,features: Vec<i64>,useful: bool,lib: &Library,meter: &mut Meter) -> Result<()> {
+    /// Retained only for checkpoint/API compatibility. Unscoped examples cannot
+    /// establish which constructor helped and never rewrite individual guards.
+    pub fn record_guard_observation(&mut self,features: Vec<i64>,useful: bool,_lib: &Library,meter: &mut Meter) -> Result<()> {
+        if self.meta.pending.is_some() { return Err(Error::Busy); }
         if features.len() != 4 || self.guard_observations.len() >= 128 { return Err(Error::Capacity); }
+        meter.charge(1)?;
         self.guard_observations.push((features,useful));
-        if let Some(guard) = fit_guard(&self.guard_observations,lib,meter)? {
-            for c in &mut self.constructors { c.guard = guard.clone(); }
+        Ok(())
+    }
+    /// Called only after the prospective trial has consumed its future records.
+    /// Even failed fitting retains the factual label, clears a stale restrictive
+    /// prior, and charges work. No other constructor's guard is changed.
+    pub(super) fn observe_constructor_result(&mut self,id: u64,ticket: u64,features: Vec<i64>,useful: bool,lib: &Library,meter: &mut Meter) -> Result<()> {
+        if self.meta.pending.is_some() { return Err(Error::Busy); }
+        if features.len() != 4 { return Err(Error::InvalidData); }
+        let index = self.constructors.iter().position(|c| c.id == id).ok_or(Error::InvalidProgram)?;
+        if self.guard_evidence.values().flatten().any(|r| r.ticket == ticket) { return Err(Error::Stale); }
+        if self.guard_evidence.values().map(Vec::len).sum::<usize>() >= 128 { return Err(Error::Capacity); }
+        self.guard_evidence.entry(id).or_default().push(GuardOutcome { ticket,features,useful });
+        self.constructors[index].guard = Expr::Lit(Value::Bool(true));
+        let rows = &self.guard_evidence[&id];
+        let mut observed = BTreeMap::new();
+        let mut positive = false; let mut negative = false;
+        for row in rows {
+            meter.charge(1+row.features.len() as u64)?;
+            positive |= row.useful; negative |= !row.useful;
+            if observed.insert(row.features.clone(),row.useful).is_some_and(|old| old != row.useful) {
+                // Identical observable features with conflicting outcomes do not
+                // justify a deterministic classifier or a remembered task label.
+                return Ok(());
+            }
+        }
+        if positive && negative {
+            let examples: Vec<_> = observed.into_iter().collect();
+            if let Some(guard) = fit_guard(&examples,lib,meter)? { self.constructors[index].guard = guard; }
         }
         Ok(())
     }
@@ -238,7 +290,7 @@ fn assess(parent: &Program,case: &TransferCase,lib: &Library,cfg: &SearchConfig,
     validate_data(&all,parent.outputs.len(),actions)?;
     let mut evaluation = Meter::new(10_000_000);
     let (predictions,_) = replay(&program,&all,lib,&mut evaluation)?;
-    let future_loss = absolute_loss(&predictions[case.acquisition.len()..],&case.future)?;
+    let future_loss = absolute_loss(&predictions[case.acquisition.len()..],&all[case.acquisition.len()..])?;
     Ok(ArmResult { work: trace.work+overhead+evaluation.spent,future_loss,training_loss: trace.training_loss,
         program_nodes: program.nodes(),library_nodes: lib.nodes() })
 }
@@ -334,5 +386,77 @@ mod tests {
         // A generic existing schema may already cover this edit; deduplication
         // is correct and must not invent a new generation to inflate progress.
         assert!(!r.constructors().is_empty()); assert_eq!(r.traces().len(),3);
+    }
+}
+
+#[cfg(test)]
+mod applicability_tests {
+    use super::*;
+    // Synthetic syntax fixtures for isolation/scheduling tests only. They are
+    // not counted as acquired constructors in the development demonstration.
+    fn fixture() -> Registry {
+        let mut r = Registry::default();
+        for (id,op) in [(11,Op::Mul),(22,Op::Add)] {
+            let h = Expr::Hole { id: 0,ty: Ty::Int };
+            r.constructors.push(Constructor { id,generation: 1,refinement: None,
+                code: pack(&Patch { parent: 1,target: 0,replacement: Expr::bin(op,h.clone(),h),cells: vec![] }),
+                cell_count: 0,guard: Expr::Lit(Value::Bool(true)),training_trace_ids: vec![],construction_work: 0,status: ConstructorStatus::Proposed });
+        }
+        r
+    }
+    fn job(x: i64) -> Job { Job { parent: 1,target: 0,witness_ids: vec![],deterministic_contract: false,
+        stateless_impossible: false,exposed_sources: vec![0,1],features: vec![x,8,0,0] } }
+    fn classify(r: &Registry,id: u64,x: i64) -> Value {
+        r.constructors.iter().find(|c| c.id == id).unwrap().guard.eval(
+            Context { input: &job(x).features,action: 0,state: &[],args: &[] },&Library::default(),&mut Meter::new(1000)).unwrap()
+    }
+    #[test]
+    fn prospective_labels_are_scoped_and_false_guard_only_deprioritizes() {
+        let mut r = fixture(); let lib = Library::default(); let mut m = Meter::new(100000);
+        r.observe_constructor_result(11,100,job(0).features,false,&lib,&mut m).unwrap();
+        r.observe_constructor_result(11,101,job(1).features,true,&lib,&mut m).unwrap();
+        assert_eq!(classify(&r,11,0),Value::Bool(false));
+        assert_eq!(classify(&r,11,1),Value::Bool(true));
+        assert_eq!(classify(&r,22,0),Value::Bool(true));
+        assert!(r.guard_evidence(22).is_empty());
+        let hints = r.suggestions(&job(0),2,&SearchConfig::default(),&lib,&mut m).unwrap();
+        assert_eq!(hints.iter().map(|h| h.constructor_id).collect::<Vec<_>>(),vec![22,11]);
+        let bytes = serde_json::to_vec(&r).unwrap();
+        let restored: Registry = serde_json::from_slice(&bytes).unwrap();
+        restored.validate(&lib).unwrap();
+        assert_eq!(serde_json::to_vec(&restored).unwrap(),bytes);
+    }
+    #[test]
+    fn contradictory_features_clear_stale_guard_instead_of_inventing_a_rule() {
+        let mut r = fixture(); let lib = Library::default(); let mut m = Meter::new(100000);
+        for (ticket,x,useful) in [(1,0,false),(2,1,true),(3,0,true)] {
+            r.observe_constructor_result(11,ticket,job(x).features,useful,&lib,&mut m).unwrap();
+        }
+        assert_eq!(r.guard_evidence(11).len(),3);
+        assert_eq!(classify(&r,11,0),Value::Bool(true));
+        assert_eq!(classify(&r,11,1),Value::Bool(true));
+        assert_eq!(r.observe_constructor_result(22,3,job(0).features,false,&lib,&mut m),Err(Error::Stale));
+    }
+    #[test]
+    fn exhausted_fitting_retains_evidence_without_preserving_a_stale_ban() {
+        let mut r = fixture(); let lib = Library::default(); let mut m = Meter::new(100000);
+        r.observe_constructor_result(11,1,job(0).features,false,&lib,&mut m).unwrap();
+        r.observe_constructor_result(11,2,job(1).features,true,&lib,&mut m).unwrap();
+        let mut empty = Meter::new(0);
+        assert_eq!(r.observe_constructor_result(11,3,job(2).features,true,&lib,&mut empty),Err(Error::Budget));
+        assert_eq!(r.guard_evidence(11).len(),3);
+        assert_eq!(classify(&r,11,0),Value::Bool(true));
+    }
+    #[test]
+    fn open_trial_and_unscoped_labels_cannot_rewrite_constructor_guards() {
+        let mut r = fixture(); let lib = Library::default(); let mut m = Meter::new(1000);
+        r.record_guard_observation(job(0).features,false,&lib,&mut m).unwrap();
+        assert_eq!(classify(&r,11,0),Value::Bool(true));
+        assert_eq!(classify(&r,22,0),Value::Bool(true));
+        r.meta.pending = Some(7);
+        let before = serde_json::to_vec(&r).unwrap();
+        assert_eq!(r.observe_constructor_result(11,8,job(1).features,true,&lib,&mut m),Err(Error::Busy));
+        assert_eq!(r.record_guard_observation(job(1).features,true,&lib,&mut m),Err(Error::Busy));
+        assert_eq!(serde_json::to_vec(&r).unwrap(),before);
     }
 }
