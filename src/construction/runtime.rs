@@ -5,6 +5,7 @@ use super::synthesis::*;
 use super::vm::*;
 use super::recursive::SearchTrial;
 use super::curriculum::{Curriculum, SelectionMode};
+use super::epistemic::{EvidencePolicy, EvidenceReport, EvidenceTrial, RiskLedger};
 use crate::{EvoPhase, HumanProtectionDecision, HumanProtectionEvidence};
 use serde::{Deserialize, Serialize};
 
@@ -51,6 +52,8 @@ struct Shadow {
     samples: usize, incumbent_nll: f64,candidate_nll: f64,
     #[serde(default, skip_serializing_if="Option::is_none")]
     controls: Option<SearchTrial>,
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    evidence: Option<EvidenceTrial>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Record {
@@ -71,6 +74,8 @@ pub struct Learner {
     last_trace: Option<SearchTrace>,construction_work: u64,last_error: Option<String>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     curriculum: Option<Curriculum>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    epistemic: Option<RiskLedger>,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 struct Commitment {
@@ -110,7 +115,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -118,6 +123,18 @@ impl Learner {
         self.curriculum = Some(Curriculum::new(self.config.width,mode)?); Ok(())
     }
     pub fn curriculum(&self) -> Option<&Curriculum> { self.curriculum.as_ref() }
+    /// Explicit lifetime policy, fixed before any observations. Cannot relax a
+    /// deterministic contract or reset previously allocated statistical risk.
+    pub fn enable_epistemic(&mut self,policy: EvidencePolicy) -> Result<()> {
+        if self.pending || self.shadow.is_some() || self.epistemic.is_some() || !self.records.is_empty() || self.poisoned {
+            return Err(Error::Busy);
+        }
+        if self.config.search.deterministic { return Err(Error::InvalidData); }
+        self.epistemic = Some(RiskLedger::new(policy,self.config.width)?); Ok(())
+    }
+    pub fn epistemic_report(&self) -> Option<EvidenceReport> {
+        self.epistemic.as_ref().map(|risk| risk.report(self.shadow.as_ref().and_then(|s| s.evidence.as_ref())))
+    }
     pub fn program(&self) -> &Program { &self.active.program }
     pub fn library(&self) -> &Library { &self.library }
     pub fn registry(&self) -> &Registry { &self.registry }
@@ -137,6 +154,11 @@ impl Learner {
         if self.pending { return Err(Error::Busy); }
         if action >= self.config.actions { return Err(Error::Index); }
         if self.records.len() >= self.config.journal_capacity || self.next_id == u64::MAX { return Err(Error::Capacity); }
+        if let (Some(risk),Some(shadow)) = (&self.epistemic,&self.shadow) {
+            let bound = shadow.evidence.as_ref().ok_or(Error::Stale).and_then(|e|
+                e.binding(risk,&self.active.program,&shadow.model.program,&self.library,shadow.trace.job.target,shadow.start_id));
+            if let Err(e) = bound { self.last_error=Some(format!("epistemic binding: {e}")); self.cancel_shadow(); }
+        }
         let mut meter = Meter::new(100000);
         let (center,next_state) = self.active.program.step(&self.current,action,&self.active.state,&self.library,&mut meter)?;
         let mut candidate = None; let mut candidate_prediction = None; let mut candidate_state = None;
@@ -164,15 +186,24 @@ impl Learner {
         }
         let incumbent_nll = token.prediction.nll(&post)?;
         let candidate_nll = token.candidate_prediction.as_ref().map(|p| p.nll(&post)).transpose()?;
+        let mut evidence_error = None;
         self.active.state = token.next_state;
         if let (Some(shadow),Some(nll),Some(state)) = (&mut self.shadow,candidate_nll,token.candidate_state) {
             if token.candidate != Some(shadow.model.program.fingerprint()) || token.id < shadow.start_id { return Err(Error::Stale); }
+            if let Some(e) = &mut shadow.evidence {
+                let update = token.candidate_prediction.as_ref().ok_or(Error::Stale)
+                    .and_then(|p| e.observe(token.id,&token.prediction.center,&p.center,&post));
+                if let Err(error) = update { evidence_error = Some(error); }
+            }
             shadow.model.state = state; shadow.samples += 1; shadow.incumbent_nll += incumbent_nll; shadow.candidate_nll += nll;
         }
         let transition = Transition { id: token.id,restart: self.restart_next,pre: token.pre,action: token.action,post: post.clone() };
         self.records.push(Record { transition,model: token.model,prediction: token.prediction,candidate: token.candidate,candidate_prediction: token.candidate_prediction,permit_sequence,external_cost });
         self.current = post; self.next_id += 1; self.restart_next = false; self.pending = false;
-        if self.shadow.as_ref().is_some_and(|s| s.samples >= self.config.shadow_steps) {
+        if let Some(error) = evidence_error {
+            self.last_error=Some(format!("epistemic observation: {error}")); self.cancel_shadow();
+        }
+        if self.shadow.as_ref().is_some_and(|s| s.evidence.as_ref().map_or(s.samples >= self.config.shadow_steps,|e| e.ready())) {
             if let Err(e) = self.finish_shadow() { self.last_error = Some(format!("validation: {e}")); self.cancel_shadow(); }
         }
         if self.shadow.is_none() && self.records.len() >= self.config.minimum_training && self.records.len() % self.config.search_every == 0 {
@@ -229,8 +260,15 @@ impl Learner {
             Err(e) => { self.construction_work += meter.spent; self.registry.cancel_trial(controls)?; return Err(e); }
         };
         self.construction_work += meter.spent;
+        let evidence = if let Some(risk) = &mut self.epistemic {
+            match risk.allocate(&self.active.program,&program,&self.library,trace.job.target,self.next_id,
+                                self.config.journal_capacity-self.records.len()) {
+                Ok(e) => Some(e),
+                Err(e) => { self.registry.cancel_trial(controls)?; return Err(e); }
+            }
+        } else { None };
         self.active.scale = incumbent_scale;
-        self.shadow = Some(Shadow { model: Model { program,state,scale },trace,training_len: data.len(),start_id: self.next_id,samples: 0,incumbent_nll: 0.0,candidate_nll: 0.0,controls: Some(controls) });
+        self.shadow = Some(Shadow { model: Model { program,state,scale },trace,training_len: data.len(),start_id: self.next_id,samples: 0,incumbent_nll: 0.0,candidate_nll: 0.0,controls: Some(controls),evidence });
         Ok(())
     }
     fn finish_shadow(&mut self) -> Result<()> {
@@ -239,18 +277,31 @@ impl Learner {
         let mut meter = Meter::new(2000000);
         let (old,_) = replay(&self.active.program,training,&self.library,&mut meter)?;
         let (new,_) = replay(&shadow.model.program,training,&self.library,&mut meter)?;
-        let retention_ok = old.iter().zip(new.iter()).zip(training).all(|((a,b),t)| {
+        let pointwise_ok = old.iter().zip(new.iter()).zip(training).all(|((a,b),t)| {
             let cost = |p: &[i64]| p.iter().zip(&t.post).map(|(&x,&y)| (x as i128-y as i128).abs()).sum::<i128>(); cost(b) <= cost(a)
         });
         let complexity = 0.01 * (shadow.model.program.nodes() as f64-self.active.program.nodes() as f64);
-        let local_acceptance = retention_ok && shadow.candidate_nll+complexity < shadow.incumbent_nll;
+        let (retention_ok,local_acceptance) = if let Some(evidence) = &shadow.evidence {
+            let risk = self.epistemic.as_ref().ok_or(Error::Stale)?;
+            evidence.binding(risk,&self.active.program,&shadow.model.program,&self.library,shadow.trace.job.target,shadow.start_id)?;
+            let retained = risk.footprint(&self.active.program,&shadow.model.program,shadow.trace.job.target);
+            (retained,retained && evidence.accepted())
+        } else {
+            if self.epistemic.is_some() { return Err(Error::Stale); }
+            (pointwise_ok,pointwise_ok && shadow.candidate_nll+complexity < shadow.incumbent_nll)
+        };
         if self.promotions.len() >= 128 { return Err(Error::Capacity); }
         let mut shadow = self.shadow.take().ok_or(Error::NoEvidence)?;
         let mut accepted = false;
         if let Some(controls) = shadow.controls.take() {
             let ledger = self.registry.meta_ledger();
             let before = ledger.check_work.saturating_add(ledger.construction_work);
-            let result = self.registry.complete_trial(controls,&data[shadow.training_len..],local_acceptance);
+            let result = if let Some(evidence) = &shadow.evidence {
+                match self.epistemic.as_ref() {
+                    Some(risk) => self.registry.complete_trial_epistemic(controls,&data[shadow.training_len..],local_acceptance,evidence,risk),
+                    None => { let _=self.registry.cancel_trial(controls); Err(Error::Stale) }
+                }
+            } else { self.registry.complete_trial(controls,&data[shadow.training_len..],local_acceptance) };
             let ledger = self.registry.meta_ledger();
             self.construction_work += ledger.check_work.saturating_add(ledger.construction_work).saturating_sub(before);
             // Local likelihood is a proposal, never authority to bypass the
@@ -287,6 +338,10 @@ impl Learner {
             let gain = if accepted { ((before-after)/(1.0+before)).clamp(0.0,1.0) } else { 0.0 };
             c.finish(accepted,gain,self.construction_work.saturating_add(meter.spent))?;
         }
+        if let Some(e) = &shadow.evidence {
+            if let Some(risk) = &mut self.epistemic { risk.record(e,accepted)?; }
+            else { return Err(Error::Stale); }
+        }
         shadow.trace.prospectively_accepted = accepted;
         self.last_trace = Some(shadow.trace.clone());
         self.promotions.push(Promotion { first_id: shadow.start_id,last_id: self.next_id-1,parent: self.active.program.fingerprint(),candidate: shadow.model.program.fingerprint(),accepted,retention_ok,incumbent_nll: shadow.incumbent_nll,candidate_nll: shadow.candidate_nll });
@@ -302,6 +357,7 @@ impl Learner {
     fn cancel_shadow(&mut self) {
         if let Some(c) = &mut self.curriculum { let _ = c.finish(false,0.0,self.construction_work); }
         if let Some(mut shadow) = self.shadow.take() {
+            if let (Some(risk),Some(e)) = (&mut self.epistemic,&shadow.evidence) { let _=risk.record(e,false); }
             if let Some(controls) = shadow.controls.take() { let _ = self.registry.cancel_trial(controls); }
         }
     }
@@ -392,6 +448,10 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
+        if let Some(risk) = &state.epistemic {
+            risk.validate(state.config.width)?;
+            if state.config.search.deterministic { return Err(Error::InvalidData); }
+        }
         if state.records.len() > state.config.journal_capacity || state.promotions.len() > 128 || state.current.len() != state.config.width || state.next_id != state.records.len() as u64 { return Err(Error::InvalidData); }
         state.active.program.validate(state.config.width,&state.library)?;
         if let Some(p) = &state.previous { p.validate(state.config.width,&state.library)?; }
@@ -416,7 +476,22 @@ impl Learner {
                     || state.registry.meta.pending != Some(trial.fingerprint()) { return Err(Error::InvalidData); }
             } else if state.registry.meta.pending.is_some() { return Err(Error::InvalidData); }
             s.model.program.validate(state.config.width,&state.library)?;
-            if s.training_len > data.len() || s.start_id != s.training_len as u64 || s.samples != data.len()-s.training_len || s.samples >= state.config.shadow_steps || !s.incumbent_nll.is_finite() || !s.candidate_nll.is_finite() { return Err(Error::InvalidData); }
+            if s.training_len > data.len() || s.start_id != s.training_len as u64 || s.samples != data.len()-s.training_len || (s.evidence.is_none() && s.samples >= state.config.shadow_steps) || !s.incumbent_nll.is_finite() || !s.candidate_nll.is_finite() { return Err(Error::InvalidData); }
+            if let Some(e) = &s.evidence {
+                let risk=state.epistemic.as_ref().ok_or(Error::InvalidData)?;
+                e.binding(risk,&state.active.program,&s.model.program,&state.library,s.trace.job.target,s.start_id)?;
+                if e.samples()!=s.samples || e.ready() { return Err(Error::InvalidData); }
+                let future=&state.records[s.training_len..];
+                if future.iter().any(|r| r.model!=state.active.program.fingerprint() || r.candidate!=Some(s.model.program.fingerprint())) { return Err(Error::Stale); }
+                let old:Vec<_>=future.iter().map(|r|r.prediction.center.clone()).collect();
+                let new:Vec<_>=future.iter().map(|r|r.candidate_prediction.as_ref().map(|p|p.center.clone()).ok_or(Error::Stale)).collect::<Result<_>>()?;
+                e.verify_replay(&old,&new,&data[s.training_len..])?;
+                // Check stored forecasts against the frozen executable models,
+                // not only against another editable presentation of evidence.
+                let old_vm=replay(&state.active.program,&data,&state.library,&mut meter)?.0;
+                let new_vm=replay(&s.model.program,&data,&state.library,&mut meter)?.0;
+                if old_vm[s.training_len..]!=old || new_vm[s.training_len..]!=new {return Err(Error::InvalidData);}
+            } else if state.epistemic.is_some() { return Err(Error::InvalidData); }
             s.model.state = replay(&s.model.program,&data,&state.library,&mut meter)?.1;
             if state.restart_next { s.model.state = s.model.program.initial_state(); }
             Forecast { center: state.current.clone(),scale: s.model.scale.clone() }.nll(&state.current)?;
@@ -436,6 +511,7 @@ impl ProtectedConstructionRuntime {
         Ok(Self { organism,learner: Learner::new(config,initial)? })
     }
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> { self.learner.enable_curriculum(mode) }
+    pub fn enable_epistemic(&mut self,policy: EvidencePolicy) -> Result<()> { self.learner.enable_epistemic(policy) }
     pub fn learner(&self) -> &Learner { &self.learner }
     pub fn organism(&self) -> &EvoPhase { &self.organism }
     pub fn checkpoint(&self) -> Result<Vec<u8>> { self.learner.checkpoint() }
@@ -600,7 +676,7 @@ mod tests {
             training_len: acquisition.len(),start_id: 6,samples: 6,
             incumbent_nll: if local_vote { 1_000_000.0 } else { 0.0 },
             candidate_nll: if local_vote { 0.0 } else { 1_000_000.0 },
-            controls: Some(controls),
+            controls: Some(controls),evidence: None,
         });
         (learner,candidate)
     }

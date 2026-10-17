@@ -8,6 +8,7 @@
 //! not arbitrary native-code self-modification or a claim of general intelligence.
 use super::constructors::{ConstructorStatus, Registry};
 use super::synthesis::*;
+use super::epistemic::{EvidenceTrial,RiskLedger};
 use super::vm::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -268,11 +269,22 @@ impl Registry {
     pub fn complete_trial(&mut self,trial: SearchTrial,future: &[Transition],allow_model: bool) -> Result<RecursiveVerdict> {
         if self.meta.pending != Some(trial.ticket) { return Err(Error::Stale); }
         self.meta.pending = None; // consumed even if malformed validation fails
-        let result = self.complete_inner(trial,future,allow_model);
+        let result = self.complete_inner(trial,future,allow_model,None);
         if result.is_err() { self.meta.abandoned = self.meta.abandoned.saturating_add(1); }
         result
     }
-    fn complete_inner(&mut self,mut trial: SearchTrial,future: &[Transition],allow_model: bool) -> Result<RecursiveVerdict> {
+    /// Internal EP1 route: evidence is independently replayed against frozen
+    /// programs. The caller cannot replace it with a permissive boolean.
+    pub(super) fn complete_trial_epistemic(&mut self,trial: SearchTrial,future: &[Transition],allow_model: bool,
+                                         evidence: &EvidenceTrial,risk: &RiskLedger) -> Result<RecursiveVerdict> {
+        if self.meta.pending != Some(trial.ticket) { return Err(Error::Stale); }
+        self.meta.pending=None;
+        let result=self.complete_inner(trial,future,allow_model,Some((evidence,risk)));
+        if result.is_err() {self.meta.abandoned=self.meta.abandoned.saturating_add(1);}
+        result
+    }
+    fn complete_inner(&mut self,mut trial: SearchTrial,future: &[Transition],allow_model: bool,
+                      evidence: Option<(&EvidenceTrial,&RiskLedger)>) -> Result<RecursiveVerdict> {
         if registry_stamp(self)? != trial.registry_stamp { return Err(Error::Stale); }
         trial.validate()?;
         if future.len() < 2 { return Err(Error::NoEvidence); }
@@ -285,10 +297,18 @@ impl Registry {
             let (same_library,bp) = measure(&trial.baseline,&all,split,&trial.library,&mut meter)?;
             let (without_winner_subtree,ap) = measure(trial.ancestor.as_ref().unwrap_or(&trial.baseline),&all,split,&trial.library,&mut meter)?;
             let old = replay(&trial.parent,&all,&trial.library,&mut meter)?.0;
-            let model_accepted = allow_model && trial.candidate.trace.winner.is_some()
-                && no_worse(&cp[..split],&old[..split],&all[..split])
-                && candidate.training_loss < absolute_loss(&old[..split],&all[..split])?
-                && candidate.future_loss < absolute_loss(&old[split..],future)?;
+            let model_accepted = if let Some((e,risk)) = evidence {
+                if trial.candidate.trace.job.deterministic_contract { return Err(Error::InvalidData); }
+                e.binding(risk,&trial.parent,&trial.candidate.program,&trial.library,
+                          trial.candidate.trace.job.target,future[0].id)?;
+                e.verify_replay(&old[split..],&cp[split..],future)?;
+                allow_model && trial.candidate.trace.winner.is_some() && e.accepted()
+            } else {
+                allow_model && trial.candidate.trace.winner.is_some()
+                    && no_worse(&cp[..split],&old[..split],&all[..split])
+                    && candidate.training_loss < absolute_loss(&old[..split],&all[..split])?
+                    && candidate.future_loss < absolute_loss(&old[split..],future)?
+            };
             let quality_retained = no_worse(&cp,&bp,&all) && no_worse(&cp,&ap,&all);
             Ok((candidate,same_library,without_winner_subtree,model_accepted,quality_retained))
         })();
