@@ -22,7 +22,11 @@ def encode(raster) -> list[int]:
     return result
 
 def dump(value):
-    if hasattr(value,'model_dump'):return dump(value.model_dump(mode='python'))
+    if hasattr(value,'model_dump'):
+        result=dump(value.model_dump(mode='python'))
+        # The official FrameDataRaw excludes pixels from model_dump by default.
+        if hasattr(value,'frame'):result['frame']=dump(value.frame)
+        return result
     if hasattr(value,'tolist'):return dump(value.tolist())
     if isinstance(value,Enum):return value.name
     if isinstance(value,dict):return {str(k):dump(v) for k,v in value.items()}
