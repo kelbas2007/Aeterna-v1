@@ -9,3 +9,4 @@ pub mod recursive;
 pub mod curriculum;
 pub use runtime::{Config, ExternalPost, Forecast, Learner, ProtectedConstructionRuntime, SnapshotReport};
 pub use vm::{Error, Result};
+mod exact_completion;

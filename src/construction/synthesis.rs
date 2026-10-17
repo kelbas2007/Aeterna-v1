@@ -235,12 +235,22 @@ fn search_output_focused(focused: bool,parent: &Program,data: &[Transition],job:
             .map(|(_,(&x,&y))| ((x as i128-y as i128).abs()) as f64).sum::<f64>()).sum()
     } else { 0.0 };
     let grammar = Grammar { width: parent.outputs.len(),states: cells.len(),max_nodes: cfg.max_expr_nodes,max_frontier: cfg.max_frontier };
-    let mut enumeration = Enumerator::new(grammar,root);
+    let mut enumeration = Enumerator::new(grammar,root.clone());
     // Generic inverse solving belongs to the BASELINE, not an acquired schema.
     // A constructor must actually instantiate its own root to receive credit.
     let mut preferred: std::collections::VecDeque<_> = if constructor.is_none() {
         inverse_candidates(data,&states,job.target,parent.outputs.len(),cells.len(),lib,meter)?.into()
     } else { std::collections::VecDeque::new() };
+    if focused {
+        let mut fast = Meter::new(meter.remaining()/2);
+        let result = super::exact_completion::complete(&root,data,&states,job.target,parent.outputs.len(),cfg.max_expr_nodes,lib,&mut fast);
+        meter.charge(fast.spent)?;
+        match result {
+            Ok(Some(e)) => preferred.push_front(e),
+            Ok(None) | Err(Error::Budget) => {},
+            Err(e) => return Err(e),
+        }
+    }
     loop {
         let expression = if let Some(e) = preferred.pop_front() { Some(e) } else { enumeration.next(lib,meter)? };
         let Some(expression) = expression else { best.limited |= enumeration.limited; return Ok(false); };

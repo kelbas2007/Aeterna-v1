@@ -1,0 +1,126 @@
+{
+  "status": "DEVELOPMENT_POSITIVE",
+  "independent_qualification": false,
+  "source_revision": "a8bd8a9b89b52cdc0349509254adfb44f7b2c978",
+  "run_id": "39017217055",
+  "comparisons": [
+    {
+      "seed": 917,
+      "Progress": {
+        "exact_laws": 3,
+        "work": 44268135,
+        "constructors": 1,
+        "generation": 1,
+        "recursive_improvements": 0
+      },
+      "Fair": {
+        "exact_laws": 3,
+        "work": 44268135,
+        "constructors": 1,
+        "generation": 1,
+        "recursive_improvements": 0
+      },
+      "LargestResidual": {
+        "exact_laws": 0,
+        "work": 52118516,
+        "constructors": 0,
+        "generation": 0,
+        "recursive_improvements": 0
+      }
+    },
+    {
+      "seed": 1926,
+      "Progress": {
+        "exact_laws": 3,
+        "work": 44268137,
+        "constructors": 1,
+        "generation": 1,
+        "recursive_improvements": 0
+      },
+      "Fair": {
+        "exact_laws": 3,
+        "work": 44268137,
+        "constructors": 1,
+        "generation": 1,
+        "recursive_improvements": 0
+      },
+      "LargestResidual": {
+        "exact_laws": 0,
+        "work": 52118440,
+        "constructors": 0,
+        "generation": 0,
+        "recursive_improvements": 0
+      }
+    },
+    {
+      "seed": 2935,
+      "Progress": {
+        "exact_laws": 3,
+        "work": 44263475,
+        "constructors": 1,
+        "generation": 1,
+        "recursive_improvements": 0
+      },
+      "Fair": {
+        "exact_laws": 3,
+        "work": 44263475,
+        "constructors": 1,
+        "generation": 1,
+        "recursive_improvements": 0
+      },
+      "LargestResidual": {
+        "exact_laws": 0,
+        "work": 52118304,
+        "constructors": 0,
+        "generation": 0,
+        "recursive_improvements": 0
+      }
+    },
+    {
+      "seed": 3944,
+      "Progress": {
+        "exact_laws": 4,
+        "work": 44331999,
+        "constructors": 2,
+        "generation": 2,
+        "recursive_improvements": 0
+      },
+      "Fair": {
+        "exact_laws": 4,
+        "work": 44331999,
+        "constructors": 2,
+        "generation": 2,
+        "recursive_improvements": 0
+      },
+      "LargestResidual": {
+        "exact_laws": 0,
+        "work": 52118304,
+        "constructors": 0,
+        "generation": 0,
+        "recursive_improvements": 0
+      }
+    }
+  ],
+  "source_sha256": {
+    "Cargo.lock": "23c1c175fdeb2353d30f082d3ef3a65bbb784634f729233716bf91bbee98bc62",
+    "Cargo.toml": "4a1a1a7fccddf10c80d72a1155d1d5c0a12745fb3f0150a8d0ff7d8d0514dda5",
+    "examples/directed_construction.rs": "ae457e7ab39380c7a8d6426b93f03eb10b2ca61e611569e5adaa1344d04ab6f2",
+    "examples/directed_construction_autonomy.rs": "c1f11603bb2fe973115ce0ea137f12075b4fd48b685d61e2820132916ec4c58d",
+    "examples/directed_construction_recursive.rs": "fea31365d0c62e2f9130371bdb6e0491f845404a48080d74fdd5183763e4eaad",
+    "src/construction/constructors.rs": "16a31548d9d67402ef7066bcf07296ab2a5365cf9697c9b55ebad11cb6af41e6",
+    "src/construction/curriculum.rs": "827f15adc84da7e7361af412d3fd8f4ac59914012ba6f9902b6228b039e7f6f2",
+    "src/construction/exact_completion.rs": "13c9054243712b4a95252fa18665d98c84710ebcd4c0a2778d6dd7506c38b7fe",
+    "src/construction/mod.rs": "ba54896b1853e4ae1689da6c525b703104c792dcf2fe1d3e043846178ae04b69",
+    "src/construction/recursive.rs": "98fdbf7a175455975c558afc4d86f0d3328560bd62de229031d0836b693cd627",
+    "src/construction/runtime.rs": "6788e553c03a91b7b909a950a26d493196e0c48d368dcec9637da763a95b51fc",
+    "src/construction/synthesis.rs": "5c408a91d2d665756e1c97a630df7c8ef07bca283e0fe442ab87c31ed090ce19",
+    "src/construction/vm.rs": "9c2bc52cd96ff3e70142917f75f9623c55bfa733ada1552e47b1f0fc5248d979",
+    "tests/directed_construction_autonomy.rs": "c28c13dd2ea107f0a142d3e1bcff1ada903b9dfac4537dd14eb2a69ee413c09f",
+    "tests/directed_construction_completion.rs": "77709187442c1162da037fd6407b5b15684aa63a691ce7549421e4d0106344b9",
+    "tests/directed_construction_continuity.rs": "964c8756a82863e94db75e1a5051a863ac4bf22b28deafad362f64b1365aa23f",
+    "tests/directed_construction_recursive.rs": "150c43e41decb958f942c0527a22bd0e651aa69c4da765f62e86741593cdb0e9",
+    "tests/directed_construction_scheduling.rs": "aa407af7dc1b9c6c8bcd46845d25816c109069068d627c59cdebf32d4894ad4e",
+    "tests/directed_construction_transfer.rs": "647456dfde2d49051c3cc42b5817877f03e7e6d798f73b5c20576a860d8a0be7"
+  },
+  "raw_result_sha256": "3e3d563546e116360eeea8e9a5390c042ebb091030691adfd1daa4b8055adcc2"
+}
