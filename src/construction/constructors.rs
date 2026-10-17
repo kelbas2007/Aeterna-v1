@@ -130,6 +130,23 @@ impl Registry {
         }
         self.traces.push(trace); Ok(self.constructors.len()-before)
     }
+    /// Execute the acquired constructor-to-constructor edits. Stored `code`
+    /// is checked as a cache, not treated as proof that a rewrite took place.
+    pub fn materialize_constructor(&self,id: u64,meter: &mut Meter) -> Result<Expr> {
+        fn run(registry: &Registry,id: u64,meter: &mut Meter,depth: usize) -> Result<Expr> {
+            if depth > 32 { return Err(Error::Capacity); }
+            let c = registry.constructors.iter().find(|c| c.id == id).ok_or(Error::InvalidProgram)?;
+            meter.charge(c.code.nodes() as u64)?;
+            if let Some(edit) = &c.refinement {
+                let parent = run(registry,edit.parent,meter,depth+1)?;
+                meter.charge(edit.bindings.values().map(|e| e.nodes() as u64).sum())?;
+                let generated = instantiate(&parent,&edit.bindings);
+                if generated != c.code { return Err(Error::InvalidProgram); }
+                Ok(generated)
+            } else { Ok(c.code.clone()) }
+        }
+        run(self,id,meter,0)
+    }
     pub fn suggestions(&self,job: &Job,width: usize,cfg: &SearchConfig,lib: &Library,meter: &mut Meter) -> Result<Vec<Hint>> {
         let mut hints = Vec::new();
         let mut ordered: Vec<_> = self.constructors.iter().collect();
@@ -139,9 +156,10 @@ impl Registry {
         for c in ordered {
             if c.status == ConstructorStatus::RejectedOnDevelopmentBatch { continue; }
             if c.guard.eval(Context { input: &job.features,action: 0,state: &[],args: &[] },lib,meter) != Ok(Value::Bool(true)) { continue; }
+            let generated = self.materialize_constructor(c.id,meter)?;
             // If only the output contains holes, leave them open: the acquired
             // computation becomes an executable SEARCH schema, not a saved answer.
-            if let Ok((output,cells)) = unpack(&c.code,c.cell_count) {
+            if let Ok((output,cells)) = unpack(&generated,c.cell_count) {
                 if cells.iter().all(|cell| cell.update.first_hole().is_none()) {
                     meter.charge(c.code.nodes() as u64)?;
                     hints.push(Hint { constructor_id: c.id,output,cells });
@@ -149,7 +167,7 @@ impl Registry {
                     continue;
                 }
             }
-            let mut e = Enumerator::new(Grammar { width,states: c.cell_count,max_nodes: c.code.nodes()+12,max_frontier: cfg.max_frontier },c.code.clone());
+            let mut e = Enumerator::new(Grammar { width,states: c.cell_count,max_nodes: c.code.nodes()+12,max_frontier: cfg.max_frontier },generated);
             for _ in 0..16 {
                 let Some(code) = e.next(lib,meter)? else { break; };
                 if let Ok((output,cells)) = unpack(&code,c.cell_count) {
@@ -161,7 +179,7 @@ impl Registry {
         Ok(hints)
     }
     /// Consumed holdout labels may train the NEXT guard. This never changes the
-    /// generator that produced the proposals currently being evaluated.
+    /// result of the already completed batch and that batch cannot be reused.
     pub fn record_guard_observation(&mut self,features: Vec<i64>,useful: bool,lib: &Library,meter: &mut Meter) -> Result<()> {
         if features.len() != 4 || self.guard_observations.len() >= 128 { return Err(Error::Capacity); }
         self.guard_observations.push((features,useful));

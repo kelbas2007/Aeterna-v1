@@ -311,13 +311,29 @@ impl Registry {
             verdict.additional_search_value = count >= 2 && good && saving > debt;
             verdict.recursive_search_value = verdict.additional_search_value && trial.parent_constructor.is_some() && parent_saving > debt;
             if let Some(c) = self.constructors.iter_mut().find(|c| c.id == id) {
-                if !quality_retained { c.status = ConstructorStatus::RejectedOnDevelopmentBatch; }
-                else if verdict.additional_search_value && (c.refinement.is_none() || verdict.recursive_search_value) {
-                    c.status = ConstructorStatus::UsefulOnDevelopmentBatch;
-                }
+                c.status = development_status(quality_retained,verdict.additional_search_value,
+                    verdict.recursive_search_value,c.refinement.is_some());
             }
         }
         self.meta.reports.push(verdict.clone());
         Ok(verdict)
+    }
+}
+
+/// Evidence status is reversible: an earlier speedup is not a permanent title.
+fn development_status(quality: bool,additional: bool,recursive: bool,has_parent: bool) -> ConstructorStatus {
+    if !quality { ConstructorStatus::RejectedOnDevelopmentBatch }
+    else if additional && (!has_parent || recursive) { ConstructorStatus::UsefulOnDevelopmentBatch }
+    else { ConstructorStatus::Proposed }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn economic_regression_revokes_previous_usefulness() {
+        assert_eq!(development_status(true,true,true,true),ConstructorStatus::UsefulOnDevelopmentBatch);
+        assert_eq!(development_status(true,true,false,true),ConstructorStatus::Proposed);
+        assert_eq!(development_status(true,false,false,false),ConstructorStatus::Proposed);
+        assert_eq!(development_status(false,true,true,true),ConstructorStatus::RejectedOnDevelopmentBatch);
     }
 }

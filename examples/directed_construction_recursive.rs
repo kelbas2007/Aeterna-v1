@@ -29,7 +29,8 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
     let library = Library::default(); // same exact library in all three arms
     let config = SearchConfig { work: 8_000_000,max_expr_nodes: 9,max_frontier: 32768,max_updates: 16,max_state: 2,deterministic: true };
     let mut reports = Vec::new();
-    let tasks: &[&[usize]] = &[&[1],&[2],&[1,2],&[3,4],&[1,3],&[2,4],&[1,4],&[2,3]];
+    let tasks: &[&[usize]] = &[&[1],&[2],&[1,2],&[3,4],&[1,3],&[2,4],&[1,4],&[2,3],
+        &[1,2,3],&[1,2,4],&[1,3,4],&[2,3,4],&[1,2,3],&[1,2,4],&[1,3,4],&[2,3,4]];
     for (index,sources) in tasks.iter().enumerate() {
         let acquisition = observations(0,31+index as u64*101,sources,4);
         let trial = registry.begin_trial(&Program::identity(5),&acquisition,&library,&config)?;
@@ -45,7 +46,12 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
     restored.validate(&library)?;
     if serde_json::to_vec(&restored)? != saved { return Err("registry checkpoint did not preserve exact state".into()); }
     let generation = registry.constructors().iter().map(|c| c.generation).max().unwrap_or(0);
-    let improved = reports.iter().any(|r| r.recursive_search_value);
+    let mut latest = std::collections::BTreeMap::new();
+    for report in &reports { if let Some(id) = report.constructor { latest.insert(id,report); } }
+    let improved = reports.last().is_some_and(|r| r.recursive_search_value)
+        && latest.values().any(|r| r.generation >= 2 && r.recursive_search_value)
+        && latest.values().any(|r| r.generation >= 3 && r.recursive_search_value)
+        && reports.iter().all(|r| r.model_accepted && r.quality_retained && r.candidate.future_loss == 0.0);
     println!("{}",serde_json::to_string_pretty(&serde_json::json!({
         "kind":"recursive-construction-development","independent_qualification":false,
         "hand_injected_solutions":0,"hand_injected_constructors":0,
@@ -54,6 +60,6 @@ fn main() -> Result<(),Box<dyn std::error::Error>> {
         "constructors":registry.constructors(),"ledger":registry.meta_ledger(),
         "checkpoint_bytes":saved.len(),"checkpoint_round_trip":true
     }))?);
-    if generation < 2 || !improved { return Err("development recursion criterion not met; inspect report, do not rename failure a pass".into()); }
+    if generation < 3 || !improved { return Err("retained multi-generation recursion criterion not met; inspect the entire sequence".into()); }
     Ok(())
 }

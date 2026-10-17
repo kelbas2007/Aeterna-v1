@@ -148,7 +148,7 @@ impl Enumerator {
                 p.push(Expr::Call(f.id,(0..f.arity).map(|i| hole(i as u16,Ty::Int)).collect()));
             }
         }
-        p
+        return p;
     }
     pub fn next(&mut self,lib: &Library,meter: &mut Meter) -> Result<Option<Expr>> {
         while let Some(Reverse((_,_,e))) = self.queue.pop() {
@@ -276,22 +276,29 @@ pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &Searc
     let (old,_) = replay(parent,data,lib,&mut meter)?;
     let old_loss = absolute_loss(&old,data)?;
     let mut best = Best { patch: None,loss: old_loss,nodes: parent.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
-    // Learned executable schemas get a bounded first opportunity. Every schema
-    // receives its own share: one failed hint cannot consume the broad reserve
-    // or starve the remaining hints. Unspent shares return to broad search.
+    // Search in increasing structural extensions, not huge per-hint blocks.
+    // A narrow proposal first tries leaf bindings; larger computations get a
+    // turn only after every other schema had that same opportunity. This keeps
+    // a new over-specialization from consuming the entire learned-search lane.
+    // The cost of all unsuccessful rounds is charged, including repeated setup.
     let reserve = if hints.is_empty() { meter.remaining() } else { meter.remaining()/4 };
     let mut constructor_work = 0;
     let usable = hints.len().min(32);
-    for (index,hint) in hints.iter().take(usable).enumerate() {
-        let available = meter.remaining().saturating_sub(reserve);
-        let cap = available / (usable-index) as u64;
-        if cap == 0 { break; }
-        let mut local = Meter::new(cap);
-        let result = search_output(parent,data,&job,hint.cells.clone(),hint.output.clone(),Some(hint.constructor_id),cfg,lib,&mut local,&mut best);
-        constructor_work += local.spent;
-        meter.charge(local.spent)?;
-        if matches!(result,Ok(true)) { break; }
-        if let Err(e) = result { if e != Error::Budget { return Err(e); } }
+    'rounds: for extension in 0..=cfg.max_expr_nodes {
+        for hint in hints.iter().take(usable) {
+            let nodes = hint.output.nodes().saturating_add(extension);
+            if nodes > cfg.max_expr_nodes || (extension > 0 && hint.output.first_hole().is_none()) { continue; }
+            let available = meter.remaining().saturating_sub(reserve);
+            let cap = available / usable.max(1) as u64;
+            if cap == 0 { break 'rounds; }
+            let mut local = Meter::new(cap);
+            let mut bounded = cfg.clone(); bounded.max_expr_nodes = nodes;
+            let result = search_output(parent,data,&job,hint.cells.clone(),hint.output.clone(),Some(hint.constructor_id),&bounded,lib,&mut local,&mut best);
+            constructor_work += local.spent;
+            meter.charge(local.spent)?;
+            if matches!(result,Ok(true)) { break 'rounds; }
+            if let Err(e) = result { if e != Error::Budget { return Err(e); } }
+        }
     }
     let mut baseline_work = 0;
     if best.loss != 0.0 {
@@ -310,6 +317,7 @@ mod tests {
     use super::*;
     pub fn delayed() -> Vec<Transition> {
         let mut hidden = 0; let mut obs = 0; let mut data = Vec::new();
+        for (i,a) in [1,1,0,1,0,0,1,0][0..0].iter().enumerate() { let _ = (i,a); }
         for (i,a) in [1,1,0,1,0,0,1,0,1,1,0,0].into_iter().enumerate() {
             let post = hidden; hidden = a as i64;
             data.push(Transition { id: i as u64,restart: i == 0,pre: vec![obs],action: a,post: vec![post] }); obs = post;
