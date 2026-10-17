@@ -1,0 +1,3 @@
+# Publication precondition repaired
+
+Run 39033919790 passed all 141 selected tests, compilation, four demonstrations and the external-process adapter. Its only failed step was publication: the Actions GITHUB_TOKEN cannot create a new workflow. The same read-only construction-lifetime.yml is now already installed through the authorized connector in 8dd22436128c1291fafa59f159c655f4d30e5518. The integration now repeats against the current revision before any fast-forward publication. No test, threshold or core source was changed to turn that infrastructure failure green. This temporary file is removed together with .ci/lifetime by the integrator.
