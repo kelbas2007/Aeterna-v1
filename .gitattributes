@@ -1,0 +1,6 @@
+# Canonical source bytes on Linux and Windows. Frozen source-contract tests
+# compare actual Rust declarations, including the newline before the permit.
+*.rs text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
