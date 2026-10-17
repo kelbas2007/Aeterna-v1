@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse, hashlib, json, logging, os, subprocess
 from pathlib import Path
 from collections import Counter
+from enum import Enum
 
-def encode(raster: list[list[int]]) -> list[int]:
+def encode(raster) -> list[int]:
+    if hasattr(raster,'tolist'):raster=raster.tolist()
     if not raster or not raster[0] or len(raster)>256 or len(raster[0])>256:raise ValueError('invalid raster')
     height,width=len(raster),len(raster[0])
     if height<4 or width<4 or any(len(row)!=width for row in raster):raise ValueError('invalid raster shape')
@@ -19,7 +21,13 @@ def encode(raster: list[list[int]]) -> list[int]:
             result.append(sum(pixels)*16//len(pixels))
     return result
 
-def dump(value):return value.model_dump(mode='json') if hasattr(value,'model_dump') else value
+def dump(value):
+    if hasattr(value,'model_dump'):return dump(value.model_dump(mode='python'))
+    if hasattr(value,'tolist'):return dump(value.tolist())
+    if isinstance(value,Enum):return value.name
+    if isinstance(value,dict):return {str(k):dump(v) for k,v in value.items()}
+    if isinstance(value,(tuple,list)):return [dump(v) for v in value]
+    return value
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--binary',required=True);ap.add_argument('--trained',required=True)
@@ -34,7 +42,8 @@ def main():
     arc=arc_agi.Arcade(operation_mode=arc_agi.OperationMode.OFFLINE,logger=logger)
     env=arc.make(args.game,seed=0,save_recording=False)
     if env is None:raise RuntimeError('preloaded official game unavailable')
-    frame=env.observation_space or env.reset()
+    frame=env.observation_space
+    if frame is None:frame=env.reset()
     if frame is None:raise RuntimeError('no initial observation')
     action_map=[GameAction.ACTION1,GameAction.ACTION2,GameAction.ACTION3,GameAction.ACTION4]
     binary=Path(args.binary).resolve();trained=Path(args.trained).read_text()
@@ -48,7 +57,7 @@ def main():
             if value.get('type')=='error':raise RuntimeError('agent: '+value.get('message','unknown'))
             return value
         def command(v):send(v);return receive()
-        def record(v):events.write(json.dumps(v,separators=(',',':'))+'\n');events.flush();os.fsync(events.fileno())
+        def record(v):events.write(json.dumps(v,separators=(',',':'),allow_nan=False)+'\n');events.flush();os.fsync(events.fileno())
         actions=0;seen=set();reason='action_budget';status='RUNNING';report=None
         initial_levels=frame.levels_completed
         try:
@@ -67,11 +76,12 @@ def main():
                 old_levels=frame.levels_completed
                 following=env.step(action_map[a],reasoning={'source':'aeterna-unified','index':index});actions+=1
                 if following is None:raise RuntimeError('external outcome unknown; stop without retry')
-                encoded=encode(following.frame[-1]);reward=float(following.levels_completed>old_levels or following.state==GameState.WIN)
+                frame=following
+                encoded=encode(frame.frame[-1]);reward=float(frame.levels_completed>old_levels or frame.state==GameState.WIN)
                 send({'op':'post','result':{'observation':encoded,'cost':1,'reward':reward}});commit=receive()
                 if commit.get('type')!='committed':raise RuntimeError('missing factual commit')
-                record({'kind':'post','index':index,'raw':dump(following),'encoded':encoded,'commit':commit})
-                seen.add(tuple(encoded));frame=following
+                record({'kind':'post','index':index,'raw':dump(frame),'encoded':encoded,'commit':commit})
+                seen.add(tuple(encoded))
             report=command({'op':'report'})['report']
             saved=command({'op':'checkpoint'})['checkpoint'];(out/'after-external.json').write_text(saved)
             command({'op':'quit'});child.wait(timeout=10);status='COMPLETED'
