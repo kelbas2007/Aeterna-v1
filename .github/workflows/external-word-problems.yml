@@ -1,0 +1,45 @@
+name: External word problems development
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.github/workflows/external-word-problems.yml', 'src/word_problems.rs', 'scripts/word_problem*', 'tests/word_problem*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: external-word-problems-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export exact project and training-only external data
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p external-development
+          git archive --format=tar.gz --output=external-development/source.tar.gz HEAD
+          git rev-parse HEAD > external-development/revision.txt
+          python - <<'PY'
+          import hashlib,json,urllib.request
+          from pathlib import Path
+          root=Path('external-development')
+          ref='78e727689e1c1bebfc4be39c446898e8e10b0518'
+          base='https://raw.githubusercontent.com/arkilpatel/SVAMP/'+ref+'/'
+          manifest={}
+          for name,path in [('train.csv','data/mawps-asdiv-a_svamp/train.csv'),('LICENSE','LICENSE'),('README.md','README.md')]:
+              with urllib.request.urlopen(base+path,timeout=60) as response: data=response.read()
+              (root/name).write_bytes(data)
+              manifest[name]={'url':base+path,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)}
+          protocol={'stage':'TRAIN_ONLY','dataset_revision':ref,'training_source':'MAWPS+ASDiv-A official train.csv','reserved_external_test':'all 1000 SVAMP.json cases; not dev for tuning','test_fetched':False,'model_selection':'training-only deterministic grouped split','prohibited':'test answers or equations in learner input; LLM solving; task-ID solution rules','evaluation':'raw Body + Question; numeric exact match; all unsupported cases count wrong; duplicate audit; same-knowledge previous path and ablations; log every case; freeze before first test','pretrained_weights':False,'resources':manifest}
+          (root/'protocol.json').write_text(json.dumps(protocol,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: external-training-source-${{ github.sha }}
+          path: external-development/
+          retention-days: 1
