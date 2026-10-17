@@ -207,7 +207,7 @@ fn inverse_candidates(data: &[Transition],states: &[Vec<i64>],target: usize,widt
     }
     Ok(answers)
 }
-struct Best { patch: Option<Patch>,loss: f64,nodes: usize,candidates: u64,updates: u64,limited: bool,constructor: Option<u64> }
+struct Best { patch: Option<Patch>,target_exact:bool,loss: f64,nodes: usize,candidates: u64,updates: u64,limited: bool,constructor: Option<u64> }
 #[cfg(test)]
 fn search_output(parent: &Program,data: &[Transition],job: &Job,cells: Vec<StateCell>,root: Expr,constructor: Option<u64>,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<bool> {
     search_output_focused(false,parent,data,job,cells,root,constructor,cfg,lib,meter,best)
@@ -269,13 +269,13 @@ fn search_output_focused(focused: bool,parent: &Program,data: &[Transition],job:
         };
         let (loss,target_exact) = match loss_result { Ok(v) => v,Err(Error::Budget) => return Err(Error::Budget),Err(_) => continue };
         if loss < best.loss || (loss == best.loss && model.nodes() < best.nodes) {
-            best.loss = loss; best.nodes = model.nodes(); best.patch = Some(patch); best.constructor = constructor;
+            best.target_exact=target_exact; best.loss = loss; best.nodes = model.nodes(); best.patch = Some(patch); best.constructor = constructor;
         }
         best.limited |= enumeration.limited;
         if target_exact && (!focused || best.patch.is_some()) { return Ok(true); }
     }
 }
-fn baseline(focused: bool,parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<()> {
+fn baseline_single(focused: bool,parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,lib: &Library,meter: &mut Meter,best: &mut Best) -> Result<()> {
     let root = || Expr::Hole { id: 0,ty: Ty::Int };
     if !job.stateless_impossible || !parent.cells.is_empty() {
         let cap = (meter.remaining()/4).max(1);
@@ -308,6 +308,28 @@ fn baseline(focused: bool,parent: &Program,data: &[Transition],job: &Job,cfg: &S
     best.limited |= updates.limited;
     Ok(())
 }
+/// A finite joint lane can cross individually useless memory steps. No domain
+/// delay/counter operator is inserted; complete programs receive validation.
+fn baseline(focused:bool,parent:&Program,data:&[Transition],job:&Job,cfg:&SearchConfig,lib:&Library,meter:&mut Meter,best:&mut Best)->Result<()> {
+    let room=cfg.max_state.saturating_sub(parent.cells.len());
+    if !focused || room<2{return baseline_single(focused,parent,data,job,cfg,lib,meter,best);}
+    let mut single=Meter::new(meter.remaining()*3/4);
+    let result=baseline_single(focused,parent,data,job,cfg,lib,&mut single,best);meter.charge(single.spent)?;
+    if let Err(e)=result{if e!=Error::Budget{return Err(e);}}
+    if best.target_exact{return Ok(());}
+    let mut leaves:Vec<_>=[0,1,-1,2].into_iter().map(Expr::integer).collect();leaves.push(Expr::Action);
+    leaves.extend((0..parent.outputs.len()).map(Expr::Input));leaves.extend((0..parent.cells.len()+2).map(Expr::State));
+    let total=leaves.len().saturating_mul(leaves.len()).saturating_mul(3);
+    for index in 0..total {
+        let initial=[0,1,-1][index%3];let code=index/3;let mut cells=parent.cells.clone();
+        cells.push(StateCell{initial,update:leaves[code/leaves.len()].clone()});cells.push(StateCell{initial,update:leaves[code%leaves.len()].clone()});
+        let mut local=Meter::new((meter.remaining()/(total-index) as u64).max(1));
+        let found=search_output_focused(true,parent,data,job,cells,Expr::Hole{id:0,ty:Ty::Int},None,cfg,lib,&mut local,best);meter.charge(local.spent)?;
+        if matches!(found,Ok(true)){return Ok(());}if let Err(e)=found{if e!=Error::Budget{return Err(e);}}
+        if meter.remaining()==0{return Err(Error::Budget);}
+    }
+    Ok(())
+}
 /// Hints change search order, never acceptance or authority. A separate broad
 /// lane retains at least one quarter of the budget if learned search fails.
 /// Finding a zero-training-loss candidate stops search, not prospective checking.
@@ -322,7 +344,7 @@ pub fn synthesize_requested(parent: &Program,data: &[Transition],lib: &Library,c
     let job = discover_requested_job(parent,data,lib,cfg.deterministic,requested,&mut meter)?.ok_or(Error::NoEvidence)?;
     let (old,_) = replay(parent,data,lib,&mut meter)?;
     let old_loss = absolute_loss(&old,data)?;
-    let mut best = Best { patch: None,loss: old_loss,nodes: parent.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
+    let mut best = Best { patch: None,target_exact:false,loss: old_loss,nodes: parent.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
     // Search in increasing structural extensions, not huge per-hint blocks.
     // A narrow proposal first tries leaf bindings; larger computations get a
     // turn only after every other schema had that same opportunity. This keeps
@@ -395,7 +417,7 @@ mod tests {
         let data: Vec<_> = (0..8).map(|i| Transition { id: i as u64,restart: true,pre: vec![i],action: 0,post: vec![i+17] }).collect();
         let p = Program::identity(1); let lib = Library::default(); let mut meter = Meter::new(10000);
         let job = discover_job(&p,&data,&lib,true,&mut meter).unwrap().unwrap();
-        let mut best = Best { patch: None,loss: 136.0,nodes: p.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
+        let mut best = Best { patch: None,target_exact:false,loss: 136.0,nodes: p.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
         let solved = search_output(&p,&data,&job,vec![],Expr::integer(0),Some(9),&SearchConfig::default(),&lib,&mut meter,&mut best).unwrap();
         assert!(!solved); assert!(best.patch.is_none()); assert!(best.constructor.is_none());
     }

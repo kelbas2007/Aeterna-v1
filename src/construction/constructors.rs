@@ -113,7 +113,8 @@ impl Registry {
         }
         let before = self.constructors.len();
         for old in &self.traces {
-            if old.constructor_id != trace.constructor_id { continue; }
+            // Cross-origin evidence can teach shared structure, never recursive
+            // credit: that still requires two descendants of one generator.
             let Some(old_patch) = &old.winner else { continue; };
             if old_patch.cells.len() != patch.cells.len() || old_patch == patch { continue; }
             if self.constructors.len() >= 32 { break; }
@@ -182,11 +183,12 @@ impl Registry {
             };
             // Applicability is an acquired scheduling prior, not a hard ban.
             // A false or imperfect guard must not remove a schema from search.
+            let discouraged=discouraged || c.status==ConstructorStatus::RejectedOnDevelopmentBatch;
             ordered.push(((discouraged,holes.len(),std::cmp::Reverse(c.generation),c.id),c));
         }
         ordered.sort_by_key(|(key,_)| *key);
         for (_,c) in ordered {
-            if c.status == ConstructorStatus::RejectedOnDevelopmentBatch { continue; }
+            // Failed-batch status is an advisory priority, not a permanent ban.
             let generated = self.materialize_constructor(c.id,meter)?;
             // If only the output contains holes, leave them open: the acquired
             // computation becomes an executable SEARCH schema, not a saved answer.
@@ -359,6 +361,22 @@ mod tests {
         assert_eq!(hints.len(),1); let h = hints[0].output.first_hole().unwrap().0;
         assert_eq!(hints[0].output.substitute(h,&Expr::Input(2)),Expr::bin(Op::Mul,Expr::Input(2),Expr::Input(2)));
         assert_eq!(r.constructors()[0].status,ConstructorStatus::Proposed);
+    }
+    #[test] fn failed_batch_does_not_permanently_hide_a_constructor() {
+        let mut r=Registry::default();let lib=Library::default();let mut m=Meter::new(100000);
+        r.learn(trace(0),&lib,&mut m).unwrap();r.learn(trace(1),&lib,&mut m).unwrap();
+        r.constructors[0].status=ConstructorStatus::RejectedOnDevelopmentBatch;
+        assert!(!r.suggestions(&trace(0).job,2,&SearchConfig::default(),&lib,&mut m).unwrap().is_empty());
+    }
+    #[test] fn cross_origin_structure_is_learnable_without_inventing_recursive_credit() {
+        let mut r=Registry::default();let lib=Library::default();let mut m=Meter::new(1_000_000);
+        let mut a=trace(0);a.winner.as_mut().unwrap().replacement=Expr::State(0);a.winner.as_mut().unwrap().cells=vec![StateCell{initial:0,update:Expr::Action}];
+        let mut b=a.clone();b.job.target=1;b.winner.as_mut().unwrap().target=1;b.winner.as_mut().unwrap().replacement=Expr::bin(Op::Mul,Expr::Input(0),Expr::State(0));
+        r.learn(a,&lib,&mut m).unwrap();r.learn(b,&lib,&mut m).unwrap();let parent=r.constructors[0].id;
+        let mut c=trace(1);c.job.target=2;c.constructor_id=Some(parent);c.winner=Some(Patch{parent:7,target:2,replacement:Expr::bin(Op::Mul,Expr::Input(1),Expr::State(0)),cells:vec![StateCell{initial:0,update:Expr::Action}]});
+        r.learn(c,&lib,&mut m).unwrap();
+        let specific=r.constructors.iter().find(|c|matches!(unpack(&c.code,c.cell_count),Ok((Expr::Bin(Op::Mul,_,_),_)))).unwrap();
+        assert_eq!(specific.generation,1);assert!(specific.refinement.is_none());
     }
     #[test] fn training_success_is_not_promotion() {
         let mut t = trace(0); t.prospectively_accepted = false;

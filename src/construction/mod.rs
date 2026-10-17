@@ -11,3 +11,5 @@ pub use runtime::{Config, ExternalPost, Forecast, Learner, ProtectedConstruction
 pub use vm::{Error, Result};
 mod exact_completion;
 pub mod epistemic;
+pub mod autonomy;
+pub mod session;

@@ -1,6 +1,7 @@
 //! Persistent, opt-in construction runtime using EvoPhase's sealed permission
 //! boundary. Authored software synthesis is NOT physical SNN-owned computation.
 use super::constructors::*;
+use super::autonomy::{ActionOffer,AutonomyPolicy,AutonomyReport};
 use super::synthesis::*;
 use super::vm::*;
 use super::recursive::SearchTrial;
@@ -76,6 +77,10 @@ pub struct Learner {
     curriculum: Option<Curriculum>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     epistemic: Option<RiskLedger>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    autonomy: Option<AutonomyPolicy>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    frozen_at: Option<u64>,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 struct Commitment {
@@ -115,7 +120,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -134,6 +139,28 @@ impl Learner {
     }
     pub fn epistemic_report(&self) -> Option<EvidenceReport> {
         self.epistemic.as_ref().map(|risk| risk.report(self.shadow.as_ref().and_then(|s| s.evidence.as_ref())))
+    }
+    /// Enable the entire bounded loop atomically before experience.
+    pub fn enable_autonomy(&mut self,policy:AutonomyPolicy)->Result<()> {
+        if self.pending || self.poisoned || self.shadow.is_some() || !self.records.is_empty()
+            || self.curriculum.is_some() || self.epistemic.is_some() || self.autonomy.is_some()
+            || self.frozen_at.is_some() {return Err(Error::Busy);}
+        policy.validate(&self.config)?;
+        let curriculum=Curriculum::new(self.config.width,SelectionMode::Fair)?;
+        let risk=policy.evidence.as_ref().map(|e|RiskLedger::new(e.clone(),self.config.width)).transpose()?;
+        self.curriculum=Some(curriculum);self.epistemic=risk;self.autonomy=Some(policy);Ok(())
+    }
+    pub fn autonomy_report(&self)->Option<AutonomyReport> {
+        let policy=self.autonomy.as_ref()?;let c=self.curriculum.as_ref()?;
+        let levels:Vec<_>=(0..self.config.width).map(|j|policy.level(c,j)).collect();
+        let effective_limits=levels.iter().map(|&n|policy.limits(&self.config.search,n)).collect();
+        let external_cost=self.records.iter().fold(0_u64,|s,r|s.saturating_add(r.external_cost));
+        Some(AutonomyReport{levels,effective_limits,external_cost,remaining_cost:policy.max_external_cost.saturating_sub(external_cost),frozen_at:self.frozen_at,events:self.records.len()})
+    }
+    /// Irreversible freeze; facts and action costs continue, learning does not.
+    pub fn freeze_learning(&mut self)->Result<()> {
+        if self.pending || self.poisoned {return Err(Error::Busy);}
+        if self.frozen_at.is_none(){self.cancel_shadow();self.frozen_at=Some(self.next_id);}Ok(())
     }
     pub fn program(&self) -> &Program { &self.active.program }
     pub fn library(&self) -> &Library { &self.library }
@@ -200,13 +227,15 @@ impl Learner {
         let transition = Transition { id: token.id,restart: self.restart_next,pre: token.pre,action: token.action,post: post.clone() };
         self.records.push(Record { transition,model: token.model,prediction: token.prediction,candidate: token.candidate,candidate_prediction: token.candidate_prediction,permit_sequence,external_cost });
         self.current = post; self.next_id += 1; self.restart_next = false; self.pending = false;
+        // A costly contract violation stays in history, never promotes a model.
+        if self.poisoned {self.cancel_shadow();return Ok(());}
         if let Some(error) = evidence_error {
             self.last_error=Some(format!("epistemic observation: {error}")); self.cancel_shadow();
         }
         if self.shadow.as_ref().is_some_and(|s| s.evidence.as_ref().map_or(s.samples >= self.config.shadow_steps,|e| e.ready())) {
             if let Err(e) = self.finish_shadow() { self.last_error = Some(format!("validation: {e}")); self.cancel_shadow(); }
         }
-        if self.shadow.is_none() && self.records.len() >= self.config.minimum_training && self.records.len() % self.config.search_every == 0 {
+        if self.frozen_at.is_none() && self.shadow.is_none() && self.records.len() >= self.config.minimum_training && self.records.len() % self.config.search_every == 0 {
             if let Err(e) = self.construct() {
                 if e != Error::NoEvidence { self.last_error = Some(format!("construction: {e}")); }
             }
@@ -223,7 +252,7 @@ impl Learner {
     }
     fn construct_inner(&mut self) -> Result<()> {
         if self.pending || self.shadow.is_some() { return Err(Error::Busy); }
-        if self.poisoned || self.records.len() < self.config.minimum_training { return Err(Error::NoEvidence); }
+        if self.frozen_at.is_some() || self.poisoned || self.records.len() < self.config.minimum_training { return Err(Error::NoEvidence); }
         let data = self.data();
         let requested = if let Some(c) = &mut self.curriculum {
             let mut meter = Meter::new(2_000_000);
@@ -233,14 +262,21 @@ impl Learner {
                 for (p,t) in predictions.iter().zip(&data) {
                     for j in 0..errors.len() { meter.charge(1)?; errors[j] += ((p[j] as i128-t.post[j] as i128).abs()) as f64; }
                 }
+                if let Some(risk)=&self.epistemic {
+                    for j in risk.report(None).policy.protected_outputs {errors[j]=0.0;}
+                }
                 Ok(errors)
             })();
             self.construction_work = self.construction_work.saturating_add(meter.spent);
             c.select(&discovery?,self.next_id,self.construction_work)?
         } else { None };
         if self.curriculum.is_some() && requested.is_none() { return Err(Error::NoEvidence); }
+        let search=match (&self.autonomy,&self.curriculum,requested) {
+            (Some(policy),Some(c),Some(j))=>policy.limits(&self.config.search,policy.level(c,j)),
+            _=>self.config.search.clone(),
+        };
         let before = self.registry.meta_ledger().search_work;
-        let controls_result = self.registry.begin_requested_trial(&self.active.program,&data,&self.library,&self.config.search,requested);
+        let controls_result = self.registry.begin_requested_trial(&self.active.program,&data,&self.library,&search,requested);
         self.construction_work += self.registry.meta_ledger().search_work.saturating_sub(before);
         let controls = controls_result?;
         let trace = controls.trace().clone();
@@ -363,7 +399,7 @@ impl Learner {
     }
     /// Roll back computation, NOT history, costs, environment or permissions.
     pub fn rollback(&mut self) -> Result<()> {
-        if self.pending || self.poisoned { return Err(Error::Busy); }
+        if self.frozen_at.is_some() || self.pending || self.poisoned { return Err(Error::Busy); }
         let program = self.previous.clone().ok_or(Error::NoEvidence)?;
         let mut meter = Meter::new(2000000);
         let (state,scale) = calibrate(&program,&self.data(),&self.library,&mut meter)?;
@@ -386,26 +422,31 @@ impl Learner {
     }
     /// Explicit setpoints on a subset of observable coordinates. Unspecified
     /// nuisance channels are not silently assigned a goal or a semantic label.
-    pub fn choose_masked(&self,goal: Option<&[Option<i64>]>) -> Result<usize> {
+    pub fn choose_masked(&self,goal: Option<&[Option<i64>]>) -> Result<usize> {self.choose_offered(goal,None)}
+    pub fn choose_offered(&self,goal:Option<&[Option<i64>]>,offers:Option<&[ActionOffer]>)->Result<usize> {
         if self.pending || self.poisoned { return Err(Error::Busy); }
         if goal.is_some_and(|g| g.len() != self.config.width) { return Err(Error::InvalidData); }
-        let word = exploration_word(self.next_id);
-        if goal.is_none() && word & 3 == 0 {
-            return Ok(((word >> 2) % self.config.actions as u64) as usize);
-        }
+        let remaining=self.autonomy_report().map(|r|r.remaining_cost).unwrap_or(u64::MAX);
+        if offers.is_some_and(|o|o.len()!=self.config.actions){return Err(Error::InvalidData);}
+        let allowed:Vec<_>=(0..self.config.actions).filter(|&a|offers.is_none_or(|o|o[a].available && o[a].max_cost<=remaining)).collect();
+        if allowed.is_empty(){return Err(Error::Blocked);}
+        let word=exploration_word(self.next_id);
+        if goal.is_none() && word & 3 == 0 {return Ok(allowed[((word>>2)%allowed.len() as u64) as usize]);}
         let mut models = vec![&self.active]; if let Some(s) = &self.shadow { models.push(&s.model); }
         let mut meter = Meter::new(self.config.planning_work);
         let mut usage = vec![0usize;self.config.actions];
         for r in &self.records { usage[r.transition.action] += 1; }
-        let fallback = (0..self.config.actions).min_by_key(|&a| (usage[a],a)).ok_or(Error::Index)?;
+        let fallback=allowed.iter().copied().min_by_key(|&a|(usage[a],a)).ok_or(Error::Blocked)?;
         let mut best = (f64::NEG_INFINITY,fallback); let mut paths = vec![vec![]];
         for depth in 1..=self.config.planning_depth {
             let mut next_paths = Vec::new();
             for prefix in paths {
-                for action in 0..self.config.actions {
+                for action in allowed.iter().copied() {
                     if meter.remaining() < 10 { return Ok(best.1); }
                     meter.charge(1)?;
                     let mut path = prefix.clone(); path.push(action);
+                    let quoted=offers.map(|o|path.iter().try_fold(0_u64,|sum,&a|sum.checked_add(o[a].max_cost))).unwrap_or(Some(0));
+                    let Some(quoted)=quoted.filter(|&cost|cost<=remaining) else {continue};
                     let mut predictions = Vec::new(); let mut valid = true;
                     for model in &models {
                         let mut input = self.current.clone(); let mut state = model.state.clone();
@@ -424,7 +465,8 @@ impl Learner {
                         if p.iter().zip(g).all(|(&a,b)| b.is_none_or(|v| a == v)) { 5.0 }
                         else { -p.iter().zip(g).filter_map(|(&a,b)| b.map(|v| ((a as i128-v as i128).abs()) as f64)).sum::<f64>() }
                     }).sum::<f64>()/predictions.len() as f64).unwrap_or(0.0);
-                    let score = utility+information+0.1/(1.0+usage[path[0]] as f64)-0.01*depth as f64;
+                    let penalty=if offers.is_some(){0.01*(quoted as f64).ln_1p()}else{0.0};
+                    let score = utility+information+0.1/(1.0+usage[path[0]] as f64)-0.01*depth as f64-penalty;
                     if score > best.0 { best = (score,path[0]); }
                     if next_paths.len() < 4096 { next_paths.push(path); }
                 }
@@ -448,6 +490,12 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
+        if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
+        if let Some(policy)=&state.autonomy {
+            policy.validate(&state.config)?;
+            if state.curriculum.as_ref().is_none_or(|c|c.mode!=SelectionMode::Fair)
+                || policy.evidence!=state.epistemic.as_ref().map(|r|r.report(None).policy){return Err(Error::InvalidData);}
+        }
         if let Some(risk) = &state.epistemic {
             risk.validate(state.config.width)?;
             if state.config.search.deterministic { return Err(Error::InvalidData); }
@@ -504,13 +552,29 @@ impl Learner {
 pub struct ExternalPost { pub observation: Vec<i64>,pub cost: u64 }
 /// Does not clone or serialize the live action authority.
 #[derive(Debug)]
-pub struct ProtectedConstructionRuntime { organism: EvoPhase,learner: Learner }
+pub struct ProtectedConstructionRuntime { organism: EvoPhase,learner: Learner,permit_offset:u64 }
 impl ProtectedConstructionRuntime {
     pub fn new(organism: EvoPhase,config: Config,initial: Vec<i64>) -> Result<Self> {
         if organism.config().motor_cells != config.actions || organism.config().sensory_cells != config.width { return Err(Error::InvalidData); }
-        Ok(Self { organism,learner: Learner::new(config,initial)? })
+        Ok(Self { organism,learner: Learner::new(config,initial)?,permit_offset:0 })
     }
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> { self.learner.enable_curriculum(mode) }
+    pub fn enable_autonomy(&mut self,policy:AutonomyPolicy)->Result<()> {self.learner.enable_autonomy(policy)}
+    pub fn freeze_learning(&mut self)->Result<()> {self.learner.freeze_learning()}
+    pub fn step_autonomous<H,F>(&mut self,goal:Option<&[Option<i64>]>,offers:&[ActionOffer],hazard:H,execute:F)->Result<usize>
+    where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->Result<ExternalPost> {
+        if self.learner.autonomy.is_none(){return Err(Error::InvalidData);}
+        let action=self.learner.choose_offered(goal,Some(offers))?;
+        self.step_action_inner(action,hazard,execute,Some(offers[action].max_cost))
+    }
+    /// Restores software cognition only, never the old SNN or a live permit.
+    pub(super) fn resume_session(bytes:&[u8],emergency_latched:bool)->Result<Self> {
+        let learner=Learner::from_checkpoint(bytes)?;
+        if learner.poisoned || emergency_latched || learner.autonomy.is_none(){return Err(Error::Blocked);}
+        let permit_offset=learner.records.iter().map(|r|r.permit_sequence).max().unwrap_or(0);
+        let organism=EvoPhase::new(crate::EvoConfig{sensory_cells:learner.config.width,motor_cells:learner.config.actions,..Default::default()});
+        Ok(Self{organism,learner,permit_offset})
+    }
     pub fn enable_epistemic(&mut self,policy: EvidencePolicy) -> Result<()> { self.learner.enable_epistemic(policy) }
     pub fn learner(&self) -> &Learner { &self.learner }
     pub fn organism(&self) -> &EvoPhase { &self.organism }
@@ -534,18 +598,28 @@ impl ProtectedConstructionRuntime {
         let action = self.learner.choose_masked(Some(goal))?; self.step_action(action,hazard,execute)
     }
     /// Explicitly supervised interventions, still protected and fact-recorded.
-    pub fn step_action<H,F>(&mut self,action: usize,hazard: H,execute: F) -> Result<usize>
-    where H: FnOnce(usize)->HumanProtectionEvidence,F: FnOnce(usize)->Result<ExternalPost> {
+    pub fn step_action<H,F>(&mut self,action:usize,hazard:H,execute:F)->Result<usize>
+    where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->Result<ExternalPost> {
+        if self.learner.autonomy.is_some(){return Err(Error::Execution("autonomous lifetime requires PRE action offers".into()));}
+        self.step_action_inner(action,hazard,execute,None)
+    }
+    fn step_action_inner<H,F>(&mut self,action:usize,hazard:H,execute:F,max_cost:Option<u64>)->Result<usize>
+    where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->Result<ExternalPost> {
         let token = self.learner.prepare(action)?;
         match self.organism.screen_physical_action(action,hazard(action)) {
             HumanProtectionDecision::Blocked(_) => { self.learner.cancel(token)?; Err(Error::Blocked) },
             HumanProtectionDecision::Allowed { permit,.. } => {
-                let sequence = permit.sequence();
+                let sequence=self.permit_offset.checked_add(permit.sequence()).ok_or(Error::Capacity)?;
                 let permitted = match self.organism.consume_physical_action_permit(permit) {
                     Ok(a) => a,Err(e) => { self.learner.cancel(token)?; return Err(Error::Execution(format!("permit: {e:?}"))); }
                 };
                 match execute(permitted) {
-                    Ok(post) => { self.learner.commit(token,post.observation,sequence,post.cost)?; Ok(permitted) },
+                    Ok(post)=>{
+                        let exceeded=max_cost.is_some_and(|cap|post.cost>cap);
+                        if exceeded {self.learner.poisoned=true;self.learner.last_error=Some("external cost exceeded PRE quote".into());}
+                        self.learner.commit(token,post.observation,sequence,post.cost)?;
+                        if exceeded{Err(Error::Execution("external cost exceeded PRE quote".into()))}else{Ok(permitted)}
+                    },
                     Err(e) => { self.learner.fault(token,format!("external callback: {e}")); Err(e) }
                 }
             }
