@@ -45,6 +45,8 @@ pub struct School {
     composition:bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
     word_problems:Option<crate::word_problems::WordProblemModel>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    quantity_relations:Option<crate::quantity_relations::RelationalModel>,
 }
 fn clean(s:&str)->String {
     s.to_lowercase().chars().map(|c|if c.is_alphanumeric() || "+-*/%=<>".contains(c){c}else{' '})
@@ -280,6 +282,7 @@ impl School {
     }
     pub fn validate(&self)->Result<()> {
         if let Some(model)=&self.word_problems{model.validate()?;}
+        if let Some(model)=&self.quantity_relations{model.validate()?;}
         if self.skills.len()>128 || self.lessons.len()>128 || self.facts.len()>8192{return Err(Error::Capacity);}
         self.library.validate(6)?;
         let mut patterns=BTreeSet::new();let mut meter=Meter::new(20_000_000);
@@ -319,6 +322,29 @@ impl School {
         if self.frozen{return Err(Error::Busy);} model.validate()?;self.word_problems=Some(model);Ok(())
     }
     pub fn word_problem_answer(&self,question:&str,prior_only:bool)->Result<crate::word_problems::WordProblemAnswer> {
+        // Installed relational learning replaces the default whole-program guess.
+        // Keep the previous model for explicit prior-only controls and old states.
+        if !prior_only {
+            if let Some(model)=&self.quantity_relations {
+                let answer=model.answer(question)?;
+                return Ok(crate::word_problems::WordProblemAnswer {
+                    answer:answer.answer,reason:answer.reason,source_sha256:model.source_sha256.clone(),
+                    interpretations:answer.interpretations.into_iter().map(|p|crate::word_problems::Interpretation {
+                        program:p.program,equation:p.equation,answer:p.answer,score:p.score,support:0
+                    }).collect(),numbers:answer.quantity_values,margin:answer.margin,
+                    inference_work:answer.inference_work.saturating_add(answer.candidates_constructed),confidence_is_probability:false,
+                });
+            }
+        }
         self.word_problems.as_ref().ok_or(Error::NoEvidence)?.answer(question,prior_only)
+    }
+}
+
+impl School {
+    pub(crate) fn install_quantity_relations(&mut self, model:crate::quantity_relations::RelationalModel)->Result<()> {
+        if self.frozen{return Err(Error::Busy);}model.validate()?;self.quantity_relations=Some(model);Ok(())
+    }
+    pub fn relational_answer(&self, question:&str)->Result<crate::quantity_relations::RelationalAnswer> {
+        self.quantity_relations.as_ref().ok_or(Error::NoEvidence)?.answer(question)
     }
 }

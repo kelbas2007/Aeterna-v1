@@ -115,3 +115,17 @@ impl ScientificRuntime {
         u.education.as_ref().ok_or(UError::NoEvidence)?.word_problem_answer(question,prior_only)
     }
 }
+
+impl ScientificRuntime {
+    pub fn install_quantity_relations(&mut self, model:crate::quantity_relations::RelationalModel)->UResult<()> {
+        if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Busy);}model.validate()?;
+        u.education.get_or_insert_with(Default::default).install_quantity_relations(model)
+    }
+    pub fn answer_relational(&self, question:&str)->UResult<crate::quantity_relations::RelationalAnswer> {
+        if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
+        let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;
+        u.education.as_ref().ok_or(UError::NoEvidence)?.relational_answer(question)
+    }
+}

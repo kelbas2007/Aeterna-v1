@@ -40,3 +40,5 @@ pub use planning::{EvoImaginationPlanner, ImaginedNode, LearnedTransition, PlanD
 pub mod education;
 
 pub mod word_problems;
+
+pub mod quantity_relations;

@@ -107,7 +107,7 @@ pub fn features(g:&GroundedText,kind:&str)->BTreeMap<String,u32> {
     }
     add(format!("count:{}",g.numbers.len()));out
 }
-mod matrix_hex {
+pub(crate) mod matrix_hex {
     use serde::{Deserialize,Deserializer,Serializer};
     pub fn serialize<S:Serializer>(a:&Vec<i16>,s:S)->Result<S::Ok,S::Error>{
         let mut text=String::with_capacity(a.len()*4);for n in a{use std::fmt::Write;write!(&mut text,"{:04x}",*n as u16).unwrap();}s.serialize_str(&text)
@@ -138,12 +138,12 @@ pub struct WordProblemAnswer {
     pub numbers:Vec<String>,pub margin:Option<f64>,pub inference_work:u64,
     pub confidence_is_probability:bool,
 }
-fn signature(e:&Expr,depth:usize)->Result<(usize,usize)> {
+fn signature(e:&Expr,depth:usize,max_nodes:usize)->Result<(usize,usize)> {
     if depth>4{return Err(Error::InvalidProgram);}
     match e {
         Expr::Input(i) if *i<6=>Ok((1,1<<i)),
-        Expr::Bin(Op::Add|Op::Sub|Op::Mul|Op::DivExact,a,b)=>{let (n,x)=signature(a,depth+1)?;let(m,y)=signature(b,depth+1)?;
-            if x&y!=0 || n+m+1>5{return Err(Error::InvalidProgram);}Ok((n+m+1,x|y))},
+        Expr::Bin(Op::Add|Op::Sub|Op::Mul|Op::DivExact,a,b)=>{let (n,x)=signature(a,depth+1,max_nodes)?;let(m,y)=signature(b,depth+1,max_nodes)?;
+            if x&y!=0 || n+m+1>max_nodes{return Err(Error::InvalidProgram);}Ok((n+m+1,x|y))},
         _=>Err(Error::InvalidProgram)
     }
 }
@@ -157,7 +157,7 @@ fn equation(e:&Expr,values:&[Rational])->String {
 impl WordProblemModel {
     pub fn validate(&self)->Result<()> {
         let f=self.vocabulary.len();let k=self.programs.len();
-        if self.version!=1 || !["role","bag"].contains(&self.feature_kind.as_str()) || self.source_sha256.len()!=64 || !self.source_sha256.chars().all(|c|c.is_ascii_hexdigit())
+        if ![1,2].contains(&self.version) || !["role","bag"].contains(&self.feature_kind.as_str()) || self.source_sha256.len()!=64 || !self.source_sha256.chars().all(|c|c.is_ascii_hexdigit())
             || f==0||f>MAX_TERMS||k<2||k>MAX_CLASSES||self.idf.len()!=f||self.intercept.len()!=k||self.scales.len()!=k||self.weights.len()!=f*k
             || self.training_examples==0 || self.training_examples>100_000 || self.supported_training_examples>self.training_examples
             || self.vocabulary.windows(2).any(|w|w[0]>=w[1])||self.vocabulary.iter().any(|w|w.is_empty()||w.len()>512)
@@ -165,7 +165,7 @@ impl WordProblemModel {
             || self.scales.iter().any(|x|!x.is_finite()||*x<=0.0||*x>1e6)||!self.developer_margin.is_finite()||self.developer_margin<0.0{return Err(Error::InvalidData);}
         let mut seen=std::collections::BTreeSet::new();let mut support=0usize;
         for p in &self.programs {
-            signature(&p.expression,0)?;
+            signature(&p.expression,0,if self.version==1{5}else{7})?;
             if p.support==0||p.support>self.supported_training_examples||!seen.insert(&p.expression){return Err(Error::InvalidData);}support+=p.support;
         }
         if support!=self.supported_training_examples{return Err(Error::InvalidData);}Ok(())

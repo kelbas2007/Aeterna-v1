@@ -23,6 +23,7 @@ fn configuration()->(Config,AutonomyPolicy){
     (cfg,policy)
 }
 fn main()->Result<()>{
+    if std::env::args().nth(1).as_deref()==Some("--relations"){return relation_console();}
     if std::env::args().nth(1).as_deref()==Some("--school"){return school_console();}
     if std::env::args().nth(1).as_deref()==Some("--word-problems"){return word_console();}
     let stdin=io::stdin();let stdout=io::stdout();let mut input=stdin.lock();let mut out=stdout.lock();
@@ -37,6 +38,22 @@ fn main()->Result<()>{
                     Ok(json!({"type":"initialized"}))
                 },
                 "begin_education_extension"=>{runtime.as_mut().ok_or("not loaded")?.begin_education_extension()?;Ok(json!({"type":"education_open"}))},
+                "install_quantity_relations"=>{
+                    let model=serde_json::from_value(request.get("model").ok_or("missing model")?.clone())?;
+                    runtime.as_mut().ok_or("not loaded")?.install_quantity_relations(model)?;
+                    Ok(json!({"type":"quantity_relations_installed"}))
+                }
+                "ask_relational"=>{
+                    let question=request.get("question").and_then(Value::as_str).ok_or("missing question")?;
+                    Ok(json!({"type":"relational_answer","result":runtime.as_ref().ok_or("not loaded")?.answer_relational(question)?}))
+                }
+                "inspect_relational"=>{
+                    let question=request.get("question").and_then(Value::as_str).ok_or("missing question")?;
+                    let g=aeterna_v1::word_problems::ground(question)?;
+                    let a=request.get("a").and_then(Value::as_u64).ok_or("missing a")? as usize;
+                    let b=request.get("b").and_then(Value::as_u64).map(|v|v as usize);
+                    Ok(json!({"features":aeterna_v1::quantity_relations::features(&g,a,b)?}))
+                }
                 "install_word_problems"=>{
                     let model=serde_json::from_value(request["model"].clone())?;
                     runtime.as_mut().ok_or("not loaded")?.install_word_problem_knowledge(model)?;
@@ -175,4 +192,26 @@ fn word_console()->Result<()> {
             },Err(e)=>println!("Error: {e}")
         }
     }Ok(())
+}
+
+fn relation_console()->Result<()> {
+    let path=std::env::args().nth(2).ok_or("usage: aeterna-unified --relations learned-relations.json")?;
+    let runtime=ScientificRuntime::from_constructing_checkpoint(&std::fs::read(path)?)?;
+    println!("AETERNA REL-1: learned quantity relations. English arithmetic questions; /exit to stop.");
+    println!("These are hypotheses, not verified semantic understanding. Original Russian lessons: /school <question>.");
+    let stdin=io::stdin();
+    loop {
+        print!("> ");io::stdout().flush()?;let mut line=String::new();
+        if stdin.read_line(&mut line)?==0 || line.trim()=="/exit"{break;}
+        if let Some(q)=line.trim().strip_prefix("/school ") {
+            let a=runtime.answer_school(q,aeterna_v1::education::AnswerMode::All)?;
+            println!("{}",a.answer.as_deref().unwrap_or("No supported interpretation"));continue;
+        }
+        match runtime.answer_relational(line.trim()) {
+            Ok(a)=>{println!("{} [{}]",a.answer.as_deref().unwrap_or("No supported interpretation"),a.reason);
+                for c in a.interpretations.iter().take(1){println!("{} = {}; used quantities {:?}",c.equation,c.answer,c.used);}},
+            Err(e)=>println!("Rejected: {e}"),
+        }
+    }
+    Ok(())
 }
