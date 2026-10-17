@@ -1,0 +1,160 @@
+name: Integrate, teach and examine education runtime
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.ci/education/**', '.github/workflows/education-apply.yml']
+permissions:
+  contents: write
+concurrency:
+  group: education-apply-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      revision: ${{ steps.publish.outputs.revision }}
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Apply checksum-pinned locally tested source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .ci/education/part0 .ci/education/part1 .ci/education/part2 > /tmp/education.patch.gz
+          echo '20c36ef3dc20a157aa93dcbf14e645331cc0f0edfcebf049ada92f83f1ad383a  /tmp/education.patch.gz' | sha256sum -c -
+          gzip -dc /tmp/education.patch.gz > /tmp/education.patch
+          git apply --check /tmp/education.patch
+          git apply /tmp/education.patch
+          git rm -r .ci/education .github/workflows/education-apply.yml
+          git add .github/workflows/education-development.yml docs/SCHOOL_PROTOCOL.md scripts/education_experiment.py scripts/education_verify.py src/bin/aeterna-unified.rs src/construction/induction.rs src/construction/mod.rs src/construction/vm.rs src/education.rs src/education_runtime.rs src/lib.rs src/unified_runtime.rs tests/education_runtime.rs
+          git diff --cached --check
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Integrate example-induced school programs, attributed factual memory and frozen read-only examination'
+          mkdir -p school-evidence
+          git rev-parse HEAD > school-evidence/revision.txt
+          sha256sum src/education* src/construction/induction.rs src/construction/vm.rs src/unified_runtime.rs src/bin/aeterna-unified.rs tests/education_runtime.rs scripts/education*.py > school-evidence/source-sha256.txt
+          git archive --format=tar.gz --output=school-evidence/tested-source.tar.gz HEAD
+      - name: Install fixed Rust and Cargo
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > school-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install external data reader
+        run: |
+          python -m pip install pyarrow==19.0.1
+          python -m pip freeze > school-evidence/python-versions.txt
+      - name: Compile and check retained abilities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee school-evidence/check.log
+          cargo test --locked --lib construction:: 2>&1 | tee school-evidence/construction-unit.log
+          cargo test --locked --test education_runtime --test unified_runtime --test human_protection --test u1_meta_control 2>&1 | tee school-evidence/school-tests.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "school-evidence/$name.log"
+          done
+          cargo build --locked --release --bin aeterna-unified
+      - name: Train then freeze before any external test is downloaded
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/education_experiment.py --binary target/release/aeterna-unified --output school-evidence/curriculum --external > school-evidence/summary.log
+          python scripts/education_verify.py school-evidence/curriculum > school-evidence/recount.json
+      - name: Publish verified implementation without force
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/beyond-intel4'
+          git diff --exit-code
+          header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$header"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/research/beyond-intel4
+          git rev-parse HEAD > school-evidence/published-revision.txt
+          echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Preserve acquired state and all measured outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: education-integrated-evidence
+          path: school-evidence/
+          retention-days: 7
+          if-no-files-found: error
+  windows:
+    needs: integrate
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.integrate.outputs.revision }}
+          persist-credentials: false
+      - name: Fixed compiler
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: education-integrated-evidence
+          path: upstream-evidence
+      - name: Check Windows build and data-only persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p windows-evidence package
+          git rev-parse HEAD > windows-evidence/revision.txt
+          { rustc --version --verbose; cargo --version; } > windows-evidence/toolchain.txt
+          cargo check --locked --all-targets 2>&1 | tee windows-evidence/check.log
+          cargo test --locked --test education_runtime --test unified_runtime --test human_protection 2>&1 | tee windows-evidence/tests.log
+          cargo build --locked --release --bin aeterna-unified
+          cp target/release/aeterna-unified.exe package/
+          cp upstream-evidence/curriculum/learned-school.json package/
+          cp upstream-evidence/curriculum/DATA_NOTICE.txt package/
+          cp docs/SCHOOL_PROTOCOL.md package/
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          p=pathlib.Path('package')
+          state=(p/'learned-school.json').read_text(encoding='utf-8')
+          commands=[{'op':'load','checkpoint':state},{'op':'ask','question':'Площадь прямоугольника со сторонами 17 и 23.'},{'op':'checkpoint'},{'op':'quit'}]
+          process=subprocess.run([str((p/'aeterna-unified.exe').resolve())],input=''.join(json.dumps(c,ensure_ascii=False)+'\n' for c in commands),text=True,encoding='utf-8',capture_output=True,timeout=120,check=True)
+          rows=[json.loads(s) for s in process.stdout.splitlines() if s.strip()]
+          if len(rows)!=4 or rows[1].get('result',{}).get('answer')!='391' or rows[2].get('checkpoint')!=state:
+              raise RuntimeError('Windows failed to restore or apply acquired example: '+str(rows)[:2000])
+          report={'separate_process_restore':True,'checkpoint_byte_equivalent':True,'example':rows[1],'checkpoint_sha256':hashlib.sha256(state.encode()).hexdigest()}
+          pathlib.Path('windows-evidence/restore.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          (p/'START-SCHOOL.cmd').write_bytes(b'@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-unified.exe --school learned-school.json\r\npause\r\n')
+          (p/'README_RU.txt').write_text('AETERNA: экспериментальное обучение по примерам. Запуск START-SCHOOL.cmd. Введите вопрос; /exit завершает работу. Это не интеллект уровня 12 лет и не свободный чат. Поддерживаются изученные формулировки и ограниченный лексический перенос.\nПримеры: Найди сумму 17 и 23.\nПлощадь прямоугольника со сторонами 17 и 23.\nПереведи 3 часов в минуты.\nМодель и ответы внешнего экзамена не меняются во время опроса. Фактические Q/A принадлежат открытому набору Ai2 ARC, см. DATA_NOTICE.txt.\n',encoding='utf-8')
+          PY
+      - name: Runnable Windows school package
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeterna-school-Windows-${{ needs.integrate.outputs.revision }}
+          path: package/
+          retention-days: 7
+      - name: Windows evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: education-Windows-evidence
+          path: windows-evidence/
+          retention-days: 7
