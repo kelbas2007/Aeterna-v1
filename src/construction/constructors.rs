@@ -149,11 +149,18 @@ impl Registry {
     }
     pub fn suggestions(&self,job: &Job,width: usize,cfg: &SearchConfig,lib: &Library,meter: &mut Meter) -> Result<Vec<Hint>> {
         let mut hints = Vec::new();
-        let mut ordered: Vec<_> = self.constructors.iter().collect();
-        // Refined search code gets a bounded trial before its more general
-        // ancestors; failure still returns to ancestors and broad synthesis.
-        ordered.sort_by_key(|c| (std::cmp::Reverse(c.generation),c.id));
-        for c in ordered {
+        let mut ordered = Vec::new();
+        for c in &self.constructors {
+            meter.charge(c.code.nodes() as u64)?;
+            let mut holes = BTreeSet::new();
+            c.code.map(&mut |e| { if let Expr::Hole { id,.. } = e { holes.insert(*id); } None });
+            // A new generation is not automatically cheaper. Independent holes
+            // multiply the number of smallest completions; try fewer bindings
+            // first, and use generation only to break that structural tie.
+            ordered.push(((holes.len(),std::cmp::Reverse(c.generation),c.id),c));
+        }
+        ordered.sort_by_key(|(key,_)| *key);
+        for (_,c) in ordered {
             if c.status == ConstructorStatus::RejectedOnDevelopmentBatch { continue; }
             if c.guard.eval(Context { input: &job.features,action: 0,state: &[],args: &[] },lib,meter) != Ok(Value::Bool(true)) { continue; }
             let generated = self.materialize_constructor(c.id,meter)?;

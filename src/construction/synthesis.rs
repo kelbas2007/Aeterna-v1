@@ -148,7 +148,7 @@ impl Enumerator {
                 p.push(Expr::Call(f.id,(0..f.arity).map(|i| hole(i as u16,Ty::Int)).collect()));
             }
         }
-        return p;
+        p
     }
     pub fn next(&mut self,lib: &Library,meter: &mut Meter) -> Result<Option<Expr>> {
         while let Some(Reverse((_,_,e))) = self.queue.pop() {
@@ -254,7 +254,7 @@ fn baseline(parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,li
             let mut cells = parent.cells.clone(); cells.push(StateCell { initial,update: update.clone() });
             let cap = (meter.remaining()/4).max(1);
             let mut local = Meter::new(cap);
-            let found = search_output(parent,data,job,cells,root(),None,cfg,lib,&mut local,best);
+            let found = search_output(parent,data,job,cells,root(),None,cfg,lib,&mut local,&mut *best);
             meter.charge(local.spent)?;
             if matches!(found,Ok(true)) { return Ok(()); }
             if let Err(e) = found { if e != Error::Budget { return Err(e); } }
@@ -317,7 +317,6 @@ mod tests {
     use super::*;
     pub fn delayed() -> Vec<Transition> {
         let mut hidden = 0; let mut obs = 0; let mut data = Vec::new();
-        for (i,a) in [1,1,0,1,0,0,1,0][0..0].iter().enumerate() { let _ = (i,a); }
         for (i,a) in [1,1,0,1,0,0,1,0,1,1,0,0].into_iter().enumerate() {
             let post = hidden; hidden = a as i64;
             data.push(Transition { id: i as u64,restart: i == 0,pre: vec![obs],action: a,post: vec![post] }); obs = post;
