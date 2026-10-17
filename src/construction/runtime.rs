@@ -213,29 +213,45 @@ impl Learner {
             let cost = |p: &[i64]| p.iter().zip(&t.post).map(|(&x,&y)| (x as i128-y as i128).abs()).sum::<i128>(); cost(b) <= cost(a)
         });
         let complexity = 0.01 * (shadow.model.program.nodes() as f64-self.active.program.nodes() as f64);
-        let accepted = retention_ok && shadow.candidate_nll+complexity < shadow.incumbent_nll;
-        let promotion = Promotion { first_id: shadow.start_id,last_id: self.next_id-1,parent: self.active.program.fingerprint(),candidate: shadow.model.program.fingerprint(),accepted,retention_ok,incumbent_nll: shadow.incumbent_nll,candidate_nll: shadow.candidate_nll };
+        let local_acceptance = retention_ok && shadow.candidate_nll+complexity < shadow.incumbent_nll;
         if self.promotions.len() >= 128 { return Err(Error::Capacity); }
         let mut shadow = self.shadow.take().ok_or(Error::NoEvidence)?;
-        self.promotions.push(promotion);
-        let audited = shadow.controls.is_some();
+        let mut accepted = false;
         if let Some(controls) = shadow.controls.take() {
             let ledger = self.registry.meta_ledger();
             let before = ledger.check_work.saturating_add(ledger.construction_work);
-            let result = self.registry.complete_trial(controls,&data[shadow.training_len..],accepted);
+            let result = self.registry.complete_trial(controls,&data[shadow.training_len..],local_acceptance);
             let ledger = self.registry.meta_ledger();
             self.construction_work += ledger.check_work.saturating_add(ledger.construction_work).saturating_sub(before);
-            if let Err(e) = result { self.last_error = Some(format!("recursive validation: {e}")); }
+            // Local likelihood is a proposal, never authority to bypass the
+            // prospective gate. An audit error must also fail closed.
+            match result {
+                Ok(verdict) => {
+                    accepted = local_acceptance && verdict.model_accepted;
+                    if local_acceptance && !verdict.model_accepted {
+                        self.last_error = Some("recursive validation: model installation vetoed".into());
+                    }
+                },
+                Err(e) => {
+                    accepted = false;
+                    self.last_error = Some(format!("recursive validation: {e}"));
+                },
+            }
+        } else {
+            // Old checkpoints may contain an unaudited pending shadow. Retain
+            // their factual history, but never install it through a local-only
+            // compatibility path. The next search creates a fresh audited trial.
+            self.last_error = Some("recursive validation: missing frozen trial".into());
         }
+        // Publish one FINAL decision only after every applicable gate. Rejected
+        // trials cannot become successful promotions or accepted search traces.
+        shadow.trace.prospectively_accepted = accepted;
+        self.last_trace = Some(shadow.trace.clone());
+        self.promotions.push(Promotion { first_id: shadow.start_id,last_id: self.next_id-1,parent: self.active.program.fingerprint(),candidate: shadow.model.program.fingerprint(),accepted,retention_ok,incumbent_nll: shadow.incumbent_nll,candidate_nll: shadow.candidate_nll });
         if accepted {
             self.previous = Some(self.active.program.clone()); self.active = shadow.model;
-            shadow.trace.prospectively_accepted = true;
-            self.last_trace = Some(shadow.trace.clone());
             if let Some(patch) = &shadow.trace.winner {
                 if let Err(e) = acquire_function(&patch.replacement,&mut self.library,self.config.width) { self.last_error = Some(format!("library: {e}")); }
-            }
-            if !audited {
-                if let Err(e) = self.registry.learn(shadow.trace,&self.library,&mut meter) { self.last_error = Some(format!("constructor acquisition: {e}")); }
             }
         }
         self.construction_work += meter.spent;
@@ -492,4 +508,107 @@ mod tests {
         let mut r = runtime(); train(&mut r,32); let n = r.learner.records().len();
         r.rollback_cognition().unwrap(); assert_eq!(r.learner.records().len(),n); assert_eq!(r.learner.next_id,n as u64);
     }
+    // Fault-injection fixture for authority precedence, not a learning benchmark.
+    // Deliberately control the local likelihood vote while keeping the real
+    // begin_trial/complete_trial implementation and its frozen candidate.
+    fn audit_shadow_fixture(future_offset: i64,invalid_future: bool,local_vote: bool) -> (Learner,Program) {
+        let config = Config { minimum_training: 6,shadow_steps: 6,..Default::default() };
+        let mut learner = Learner::new(config,vec![0]).unwrap();
+        let acquisition: Vec<_> = (0..6u64).map(|i| Transition {
+            id: i,restart: true,pre: vec![i as i64],action: 0,post: vec![i as i64+17],
+        }).collect();
+        let controls = learner.registry.begin_trial(&learner.active.program,&acquisition,&learner.library,&learner.config.search).unwrap();
+        let candidate = controls.program().clone();
+        assert_ne!(candidate,learner.active.program);
+        let trace = controls.trace().clone();
+        let (state,scale) = calibrate(&candidate,&acquisition,&learner.library,&mut Meter::new(1_000_000)).unwrap();
+        let mut future: Vec<_> = (6..12u64).map(|i| Transition {
+            id: i,restart: true,pre: vec![i as i64],action: 0,post: vec![i as i64+future_offset],
+        }).collect();
+        if invalid_future { future[0].id = 0; } // duplicate evidence, not a new trial
+        let mut records = acquisition.clone(); records.extend(future);
+        let parent = learner.active.program.fingerprint();
+        learner.records = records.into_iter().enumerate().map(|(index,transition)| Record {
+            prediction: Forecast { center: transition.pre.clone(),scale: vec![1.0] },
+            transition,model: parent,candidate: None,candidate_prediction: None,
+            permit_sequence: index as u64+1,external_cost: 1,
+        }).collect();
+        learner.current = learner.records.last().unwrap().transition.post.clone();
+        learner.next_id = learner.records.len() as u64;
+        learner.restart_next = false;
+        learner.shadow = Some(Shadow {
+            model: Model { program: candidate.clone(),state,scale },trace,
+            training_len: acquisition.len(),start_id: 6,samples: 6,
+            incumbent_nll: if local_vote { 1_000_000.0 } else { 0.0 },
+            candidate_nll: if local_vote { 0.0 } else { 1_000_000.0 },
+            controls: Some(controls),
+        });
+        (learner,candidate)
+    }
+    fn assert_audit_rejection(learner: &Learner,parent: &Program,library: &Library,events: usize) {
+        assert_eq!(learner.program(),parent);
+        assert_eq!(learner.library(),library);
+        assert_eq!(learner.records.len(),events);
+        assert_eq!(learner.next_id,events as u64);
+        assert!(learner.previous.is_none());
+        assert!(learner.shadow.is_none());
+        assert!(learner.registry.traces().is_empty());
+        assert!(learner.registry.constructors().is_empty());
+        assert_eq!(learner.promotions.len(),1);
+        assert!(!learner.promotions[0].accepted);
+        assert!(!learner.last_search().unwrap().prospectively_accepted);
+    }
+    #[test] fn shadow_audit_error_cannot_install_locally_preferred_model() {
+        let (mut learner,_) = audit_shadow_fixture(17,true,true);
+        let parent = learner.program().clone(); let library = learner.library().clone();
+        let events = learner.records.len();
+        learner.finish_shadow().unwrap();
+        assert_audit_rejection(&learner,&parent,&library,events);
+        assert_eq!(learner.registry.meta_ledger().abandoned,1);
+        assert!(learner.registry.meta_ledger().reports().is_empty());
+        assert!(learner.last_error.as_deref().unwrap().contains("InvalidData"));
+    }
+    #[test] fn shadow_audit_veto_cannot_install_locally_preferred_model() {
+        let (mut learner,_) = audit_shadow_fixture(0,false,true);
+        let parent = learner.program().clone(); let library = learner.library().clone();
+        let events = learner.records.len();
+        learner.finish_shadow().unwrap();
+        assert_audit_rejection(&learner,&parent,&library,events);
+        assert!(!learner.registry.meta_ledger().reports().last().unwrap().model_accepted);
+        assert!(learner.last_error.as_deref().unwrap().contains("vetoed"));
+    }
+    #[test] fn shadow_audit_acceptance_still_requires_local_vote() {
+        let (mut learner,_) = audit_shadow_fixture(17,false,false);
+        let parent = learner.program().clone(); let library = learner.library().clone();
+        let events = learner.records.len();
+        learner.finish_shadow().unwrap();
+        assert_audit_rejection(&learner,&parent,&library,events);
+        assert!(!learner.registry.meta_ledger().reports().last().unwrap().model_accepted);
+    }
+    #[test] fn shadow_joint_acceptance_installs_exact_frozen_candidate() {
+        let (mut learner,candidate) = audit_shadow_fixture(17,false,true);
+        let parent = learner.program().clone(); let events = learner.records.len();
+        learner.finish_shadow().unwrap();
+        assert_eq!(learner.program(),&candidate);
+        assert_eq!(learner.previous.as_ref(),Some(&parent));
+        assert_eq!(learner.records.len(),events);
+        assert!(learner.shadow.is_none());
+        assert!(learner.promotions.last().unwrap().accepted);
+        assert!(learner.registry.meta_ledger().reports().last().unwrap().model_accepted);
+        assert!(learner.last_search().unwrap().prospectively_accepted);
+        assert_eq!(learner.registry.traces().len(),1);
+    }
+
+    #[test] fn shadow_missing_audit_cannot_use_legacy_installation_path() {
+        let (mut learner,_) = audit_shadow_fixture(17,false,true);
+        let controls = learner.shadow.as_mut().unwrap().controls.take().unwrap();
+        learner.registry.cancel_trial(controls).unwrap();
+        let parent = learner.program().clone(); let library = learner.library().clone();
+        let events = learner.records.len();
+        learner.finish_shadow().unwrap();
+        assert_audit_rejection(&learner,&parent,&library,events);
+        assert!(learner.last_error.as_deref().unwrap().contains("missing frozen trial"));
+        assert!(learner.registry.meta_ledger().reports().is_empty());
+    }
+
 }
