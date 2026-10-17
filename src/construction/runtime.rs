@@ -3,6 +3,7 @@
 use super::constructors::*;
 use super::synthesis::*;
 use super::vm::*;
+use super::recursive::SearchTrial;
 use crate::{EvoPhase, HumanProtectionDecision, HumanProtectionEvidence};
 use serde::{Deserialize, Serialize};
 
@@ -43,10 +44,12 @@ impl Forecast {
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Model { program: Program,state: Vec<i64>,scale: Vec<f64> }
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Shadow {
     model: Model, trace: SearchTrace, training_len: usize, start_id: u64,
     samples: usize, incumbent_nll: f64,candidate_nll: f64,
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    controls: Option<SearchTrial>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Record {
@@ -77,6 +80,9 @@ pub struct SnapshotReport {
     pub library_nodes: usize,pub constructors: usize,pub promotions: usize,
     pub construction_work: u64,pub shadow_pending: bool,pub poisoned: bool,
     pub last_error: Option<String>,
+    pub constructor_generation: u32,
+    pub recursive_trials: usize,
+    pub recursive_improvements: usize,
 }
 fn calibrate(program: &Program,data: &[Transition],lib: &Library,meter: &mut Meter) -> Result<(Vec<i64>,Vec<f64>)> {
     let (predicted,state) = replay(program,data,lib,meter)?;
@@ -111,7 +117,10 @@ impl Learner {
     pub fn last_search(&self) -> Option<&SearchTrace> { self.last_trace.as_ref() }
     pub fn current(&self) -> &[i64] { &self.current }
     pub fn report(&self) -> SnapshotReport {
-        SnapshotReport { events: self.records.len(),active_program: self.active.program.fingerprint(),state_cells: self.active.program.cells.len(),program_nodes: self.active.program.nodes(),library_nodes: self.library.nodes(),constructors: self.registry.constructors().len(),promotions: self.promotions.iter().filter(|p| p.accepted).count(),construction_work: self.construction_work,shadow_pending: self.shadow.is_some(),poisoned: self.poisoned,last_error: self.last_error.clone() }
+        SnapshotReport { events: self.records.len(),active_program: self.active.program.fingerprint(),state_cells: self.active.program.cells.len(),program_nodes: self.active.program.nodes(),library_nodes: self.library.nodes(),constructors: self.registry.constructors().len(),promotions: self.promotions.iter().filter(|p| p.accepted).count(),construction_work: self.construction_work,shadow_pending: self.shadow.is_some(),poisoned: self.poisoned,last_error: self.last_error.clone(),
+            constructor_generation: self.registry.constructors().iter().map(|c| c.generation).max().unwrap_or(0),
+            recursive_trials: self.registry.meta_ledger().reports().len(),
+            recursive_improvements: self.registry.meta_ledger().reports().iter().filter(|r| r.recursive_search_value).count() }
     }
     fn data(&self) -> Vec<Transition> { self.records.iter().map(|r| r.transition.clone()).collect() }
     fn prepare(&mut self,action: usize) -> Result<Commitment> {
@@ -125,7 +134,7 @@ impl Learner {
         if let Some(shadow) = &self.shadow {
             match shadow.model.program.step(&self.current,action,&shadow.model.state,&self.library,&mut meter) {
                 Ok((p,s)) => { candidate = Some(shadow.model.program.fingerprint()); candidate_prediction = Some(Forecast { center: p,scale: shadow.model.scale.clone() }); candidate_state = Some(s); },
-                Err(e) => { self.last_error = Some(format!("shadow execution rejected: {e}")); self.shadow = None; }
+                Err(e) => { self.last_error = Some(format!("shadow execution rejected: {e}")); self.cancel_shadow(); }
             }
         }
         self.pending = true;
@@ -155,7 +164,7 @@ impl Learner {
         self.records.push(Record { transition,model: token.model,prediction: token.prediction,candidate: token.candidate,candidate_prediction: token.candidate_prediction,permit_sequence,external_cost });
         self.current = post; self.next_id += 1; self.restart_next = false; self.pending = false;
         if self.shadow.as_ref().is_some_and(|s| s.samples >= self.config.shadow_steps) {
-            if let Err(e) = self.finish_shadow() { self.last_error = Some(format!("validation: {e}")); self.shadow = None; }
+            if let Err(e) = self.finish_shadow() { self.last_error = Some(format!("validation: {e}")); self.cancel_shadow(); }
         }
         if self.shadow.is_none() && self.records.len() >= self.config.minimum_training && self.records.len() % self.config.search_every == 0 {
             if let Err(e) = self.construct() {
@@ -169,29 +178,33 @@ impl Learner {
         if self.pending || self.shadow.is_some() { return Err(Error::Busy); }
         if self.poisoned || self.records.len() < self.config.minimum_training { return Err(Error::NoEvidence); }
         let data = self.data();
-        let mut overhead = Meter::new(self.config.search.work/8);
-        let job_result = discover_job(&self.active.program,&data,&self.library,self.config.search.deterministic,&mut overhead);
-        let job = match job_result { Ok(Some(j)) => j,Ok(None) => { self.construction_work += overhead.spent; return Err(Error::NoEvidence); },Err(e) => { self.construction_work += overhead.spent; return Err(e); } };
-        let hints_result = self.registry.suggestions(&job,self.config.width,&self.config.search,&self.library,&mut overhead);
-        self.construction_work += overhead.spent;
-        let hints = match hints_result { Ok(h) => h,Err(Error::Budget) => vec![],Err(e) => return Err(e) };
-        let mut config = self.config.search.clone(); config.work -= overhead.spent;
-        let trace = synthesize(&self.active.program,&data,&self.library,&config,&hints)?;
-        self.construction_work += trace.work;
+        let before = self.registry.meta_ledger().search_work;
+        let controls_result = self.registry.begin_trial(&self.active.program,&data,&self.library,&self.config.search);
+        self.construction_work += self.registry.meta_ledger().search_work.saturating_sub(before);
+        let controls = controls_result?;
+        let trace = controls.trace().clone();
         self.last_trace = Some(trace.clone());
-        let Some(patch) = &trace.winner else { return Ok(()); };
-        let program = patch.apply(&self.active.program,&self.library)?;
-        if program == self.active.program { return Ok(()); }
+        if trace.winner.is_none() || controls.program() == &self.active.program {
+            self.registry.cancel_trial(controls)?; return Ok(());
+        }
+        let program = controls.program().clone();
         let mut meter = Meter::new(1000000);
-        let (state,scale) = calibrate(&program,&data,&self.library,&mut meter)?;
-        let (_,incumbent_scale) = calibrate(&self.active.program,&data,&self.library,&mut meter)?;
+        let calibration = (|| -> Result<_> {
+            let (state,scale) = calibrate(&program,&data,&self.library,&mut meter)?;
+            let (_,old_scale) = calibrate(&self.active.program,&data,&self.library,&mut meter)?;
+            Ok((state,scale,old_scale))
+        })();
+        let (state,scale,incumbent_scale) = match calibration {
+            Ok(value) => value,
+            Err(e) => { self.construction_work += meter.spent; self.registry.cancel_trial(controls)?; return Err(e); }
+        };
         self.construction_work += meter.spent;
         self.active.scale = incumbent_scale;
-        self.shadow = Some(Shadow { model: Model { program,state,scale },trace,training_len: data.len(),start_id: self.next_id,samples: 0,incumbent_nll: 0.0,candidate_nll: 0.0 });
+        self.shadow = Some(Shadow { model: Model { program,state,scale },trace,training_len: data.len(),start_id: self.next_id,samples: 0,incumbent_nll: 0.0,candidate_nll: 0.0,controls: Some(controls) });
         Ok(())
     }
     fn finish_shadow(&mut self) -> Result<()> {
-        let mut shadow = self.shadow.take().ok_or(Error::NoEvidence)?;
+        let shadow = self.shadow.as_ref().ok_or(Error::NoEvidence)?;
         let data = self.data(); let training = &data[..shadow.training_len];
         let mut meter = Meter::new(2000000);
         let (old,_) = replay(&self.active.program,training,&self.library,&mut meter)?;
@@ -203,7 +216,17 @@ impl Learner {
         let accepted = retention_ok && shadow.candidate_nll+complexity < shadow.incumbent_nll;
         let promotion = Promotion { first_id: shadow.start_id,last_id: self.next_id-1,parent: self.active.program.fingerprint(),candidate: shadow.model.program.fingerprint(),accepted,retention_ok,incumbent_nll: shadow.incumbent_nll,candidate_nll: shadow.candidate_nll };
         if self.promotions.len() >= 128 { return Err(Error::Capacity); }
+        let mut shadow = self.shadow.take().ok_or(Error::NoEvidence)?;
         self.promotions.push(promotion);
+        let audited = shadow.controls.is_some();
+        if let Some(controls) = shadow.controls.take() {
+            let ledger = self.registry.meta_ledger();
+            let before = ledger.check_work.saturating_add(ledger.construction_work);
+            let result = self.registry.complete_trial(controls,&data[shadow.training_len..],accepted);
+            let ledger = self.registry.meta_ledger();
+            self.construction_work += ledger.check_work.saturating_add(ledger.construction_work).saturating_sub(before);
+            if let Err(e) = result { self.last_error = Some(format!("recursive validation: {e}")); }
+        }
         if accepted {
             self.previous = Some(self.active.program.clone()); self.active = shadow.model;
             shadow.trace.prospectively_accepted = true;
@@ -211,10 +234,17 @@ impl Learner {
             if let Some(patch) = &shadow.trace.winner {
                 if let Err(e) = acquire_function(&patch.replacement,&mut self.library,self.config.width) { self.last_error = Some(format!("library: {e}")); }
             }
-            if let Err(e) = self.registry.learn(shadow.trace,&self.library,&mut meter) { self.last_error = Some(format!("constructor acquisition: {e}")); }
+            if !audited {
+                if let Err(e) = self.registry.learn(shadow.trace,&self.library,&mut meter) { self.last_error = Some(format!("constructor acquisition: {e}")); }
+            }
         }
         self.construction_work += meter.spent;
         Ok(())
+    }
+    fn cancel_shadow(&mut self) {
+        if let Some(mut shadow) = self.shadow.take() {
+            if let Some(controls) = shadow.controls.take() { let _ = self.registry.cancel_trial(controls); }
+        }
     }
     /// Roll back computation, NOT history, costs, environment or permissions.
     pub fn rollback(&mut self) -> Result<()> {
@@ -222,7 +252,7 @@ impl Learner {
         let program = self.previous.clone().ok_or(Error::NoEvidence)?;
         let mut meter = Meter::new(2000000);
         let (state,scale) = calibrate(&program,&self.data(),&self.library,&mut meter)?;
-        self.previous = Some(self.active.program.clone()); self.active = Model { program,state,scale }; self.shadow = None;
+        self.previous = Some(self.active.program.clone()); self.active = Model { program,state,scale }; self.cancel_shadow();
         self.construction_work += meter.spent; Ok(())
     }
     /// Records a real host-observed reset, retaining one lifetime journal.
@@ -310,12 +340,18 @@ impl Learner {
         Forecast { center: state.current.clone(),scale: state.active.scale.clone() }.nll(&state.current)?;
         let data = state.data();
         if let Some(s) = &mut state.shadow {
+            if let Some(trial) = &s.controls {
+                trial.validate()?;
+                if trial.training_len() != s.training_len || trial.program() != &s.model.program
+                    || state.registry.meta.pending != Some(trial.fingerprint()) { return Err(Error::InvalidData); }
+            } else if state.registry.meta.pending.is_some() { return Err(Error::InvalidData); }
             s.model.program.validate(state.config.width,&state.library)?;
             if s.training_len > data.len() || s.start_id != s.training_len as u64 || s.samples != data.len()-s.training_len || s.samples >= state.config.shadow_steps || !s.incumbent_nll.is_finite() || !s.candidate_nll.is_finite() { return Err(Error::InvalidData); }
             s.model.state = replay(&s.model.program,&data,&state.library,&mut meter)?.1;
             if state.restart_next { s.model.state = s.model.program.initial_state(); }
             Forecast { center: state.current.clone(),scale: s.model.scale.clone() }.nll(&state.current)?;
         }
+        if state.shadow.is_none() && state.registry.meta.pending.is_some() { return Err(Error::InvalidData); }
         Ok(state)
     }
 }

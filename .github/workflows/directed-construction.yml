@@ -39,7 +39,8 @@ jobs:
       - name: Verify exact checkout
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA" && git diff --exit-code
       - name: Compile current source
-        run: cargo check --locked --all-targets
+        shell: bash
+        run: set -o pipefail; cargo check --locked --all-targets 2>&1 | tee construction-check.log
       - name: Construction and protection controls
         shell: bash
         run: |
@@ -52,15 +53,23 @@ jobs:
           cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee legacy-controls.log
       - name: Protected lifetime and frozen transfer controls
         run: cargo run --locked --example directed_construction > construction-demo.json
+      - name: Cold-to-recursive construction with ancestor control
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked --example directed_construction_recursive > construction-recursive.json 2> construction-recursive.log
       - name: Preserve small development evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: directed-construction-${{ github.sha }}
           path: |
+            construction-check.log
             construction-tests.log
             directed_construction*.log
             legacy-controls.log
             construction-demo.json
+            construction-recursive.json
+            construction-recursive.log
           retention-days: 7
           if-no-files-found: ignore

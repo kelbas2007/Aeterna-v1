@@ -265,7 +265,8 @@ fn baseline(parent: &Program,data: &[Transition],job: &Job,cfg: &SearchConfig,li
     Ok(())
 }
 /// Hints change search order, never acceptance or authority. A separate broad
-/// lane is always offered at least one quarter of the available search budget.
+/// lane retains at least one quarter of the budget if learned search fails.
+/// Finding a zero-training-loss candidate stops search, not prospective checking.
 pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &SearchConfig,hints: &[Hint]) -> Result<SearchTrace> {
     cfg.validate()?; lib.validate(parent.outputs.len())?; parent.validate(parent.outputs.len(),lib)?;
     let actions = data.iter().map(|t| t.action).max().unwrap_or(0).checked_add(1).ok_or(Error::Capacity)?;
@@ -275,21 +276,30 @@ pub fn synthesize(parent: &Program,data: &[Transition],lib: &Library,cfg: &Searc
     let (old,_) = replay(parent,data,lib,&mut meter)?;
     let old_loss = absolute_loss(&old,data)?;
     let mut best = Best { patch: None,loss: old_loss,nodes: parent.nodes(),candidates: 0,updates: 0,limited: false,constructor: None };
-    let mut broad = Meter::new(if hints.is_empty() { meter.remaining() } else { meter.remaining()/4 });
-    let broad_result = baseline(parent,data,&job,cfg,lib,&mut broad,&mut best);
-    meter.charge(broad.spent)?;
-    if let Err(e) = broad_result { if e != Error::Budget { return Err(e); } }
-    let baseline_work = broad.spent;
+    // Learned executable schemas get a bounded first opportunity. Every schema
+    // receives its own share: one failed hint cannot consume the broad reserve
+    // or starve the remaining hints. Unspent shares return to broad search.
+    let reserve = if hints.is_empty() { meter.remaining() } else { meter.remaining()/4 };
     let mut constructor_work = 0;
+    let usable = hints.len().min(32);
+    for (index,hint) in hints.iter().take(usable).enumerate() {
+        let available = meter.remaining().saturating_sub(reserve);
+        let cap = available / (usable-index) as u64;
+        if cap == 0 { break; }
+        let mut local = Meter::new(cap);
+        let result = search_output(parent,data,&job,hint.cells.clone(),hint.output.clone(),Some(hint.constructor_id),cfg,lib,&mut local,&mut best);
+        constructor_work += local.spent;
+        meter.charge(local.spent)?;
+        if matches!(result,Ok(true)) { break; }
+        if let Err(e) = result { if e != Error::Budget { return Err(e); } }
+    }
+    let mut baseline_work = 0;
     if best.loss != 0.0 {
-        for hint in hints.iter().take(32) {
-            if meter.remaining() == 0 { break; }
-            let mut local = Meter::new(meter.remaining());
-            let result = search_output(parent,data,&job,hint.cells.clone(),hint.output.clone(),Some(hint.constructor_id),cfg,lib,&mut local,&mut best);
-            constructor_work += local.spent; meter.charge(local.spent)?;
-            if matches!(result,Ok(true)) { break; }
-            if let Err(e) = result { if e != Error::Budget { return Err(e); } }
-        }
+        let mut broad = Meter::new(meter.remaining());
+        let result = baseline(parent,data,&job,cfg,lib,&mut broad,&mut best);
+        baseline_work = broad.spent;
+        meter.charge(broad.spent)?;
+        if let Err(e) = result { if e != Error::Budget { return Err(e); } }
     }
     Ok(SearchTrace { job,candidates: best.candidates,updates_tested: best.updates,work: meter.spent,
         baseline_work,constructor_work,exhausted: meter.remaining() == 0,frontier_limited: best.limited,

@@ -1,10 +1,10 @@
-//! Directed construction: factual discrepancy -> typed program -> prospective
-//! validation -> acquired search schema. Opt-in research, not AGI qualification.
-//! See docs/DIRECTED_CONSTRUCTION.md for contracts and implementation limits.
+//! Directed construction research lane: executable programs acquired from
+//! interaction, followed by prospective validation. This is not a new AGI claim.
+//! The interpreter and the EvoPhase human-protection boundary are immutable.
 pub mod vm;
 pub mod synthesis;
 pub mod constructors;
 pub mod runtime;
-
+pub mod recursive;
 pub use runtime::{Config, ExternalPost, Forecast, Learner, ProtectedConstructionRuntime, SnapshotReport};
 pub use vm::{Error, Result};

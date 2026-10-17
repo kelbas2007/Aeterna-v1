@@ -3,6 +3,7 @@
 //! search cost beats the same-library baseline on a fresh, single-use batch.
 use super::synthesis::*;
 use super::vm::*;
+use super::recursive::{MetaLedger, Refinement, match_schema, instantiate};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -11,6 +12,8 @@ pub enum ConstructorStatus { Proposed, UsefulOnDevelopmentBatch, RejectedOnDevel
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Constructor {
     pub id: u64, pub generation: u32,
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    pub refinement: Option<Refinement>,
     /// Packed expression tree representing output and state edits as DATA.
     pub code: Expr, pub cell_count: usize,
     pub guard: Expr, pub training_trace_ids: Vec<u64>,
@@ -18,16 +21,18 @@ pub struct Constructor {
 }
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Registry {
-    constructors: Vec<Constructor>, traces: Vec<SearchTrace>,
+    pub(super) constructors: Vec<Constructor>, traces: Vec<SearchTrace>,
     consumed_batches: BTreeSet<u64>,
     guard_observations: Vec<(Vec<i64>,bool)>,
+    #[serde(default, skip_serializing_if="MetaLedger::is_empty")]
+    pub(super) meta: MetaLedger,
 }
-fn pack(patch: &Patch) -> Expr {
+pub(super) fn pack(patch: &Patch) -> Expr {
     let mut parts = vec![patch.replacement.clone()];
     for c in &patch.cells { parts.push(Expr::integer(c.initial)); parts.push(c.update.clone()); }
     parts.into_iter().rev().fold(Expr::integer(0),|tail,head| Expr::bin(Op::Add,head,tail))
 }
-fn unpack(code: &Expr,ncells: usize) -> Result<(Expr,Vec<StateCell>)> {
+pub(super) fn unpack(code: &Expr,ncells: usize) -> Result<(Expr,Vec<StateCell>)> {
     let mut cursor = code; let mut parts = Vec::new();
     for _ in 0..1+2*ncells {
         if let Expr::Bin(Op::Add,head,tail) = cursor { parts.push((**head).clone()); cursor = tail; }
@@ -54,18 +59,44 @@ impl Registry {
         for c in &self.constructors {
             if c.code.ty(lib)? != Ty::Int || c.guard.ty(lib)? != Ty::Bool || c.cell_count > 8 || c.code.nodes() > 1024 || c.guard.nodes() > 64 || c.training_trace_ids.len() > 128 || !ids.insert(c.id) { return Err(Error::InvalidProgram); }
         }
+        self.meta.validate()?;
+        for c in &self.constructors {
+            if let Some(edit) = &c.refinement {
+                let parent = self.constructors.iter().find(|p| p.id == edit.parent).ok_or(Error::InvalidProgram)?;
+                if c.generation != parent.generation.checked_add(1).ok_or(Error::Capacity)?
+                    || parent.cell_count != c.cell_count || instantiate(&parent.code,&edit.bindings) != c.code
+                    || parent.code == c.code { return Err(Error::InvalidProgram); }
+            } else if c.generation > 1 { return Err(Error::InvalidProgram); }
+        }
         Ok(())
     }
     /// Only accept traces whose candidate has already passed a prospective
     /// model trial. Search success alone is explicitly insufficient.
     pub fn learn(&mut self, trace: SearchTrace, lib: &Library,meter: &mut Meter) -> Result<usize> {
+        if self.meta.pending.is_some() { return Err(Error::Busy); }
+        let start = meter.spent;
+        let mut next = self.clone();
+        let result = next.learn_inner(trace,lib,meter);
+        // Failed construction attempts also cost work; an error never installs
+        // half of a generator revision.
+        self.meta.construction_work = self.meta.construction_work.saturating_add(meter.spent-start);
+        if result.is_ok() { next.meta.construction_work = self.meta.construction_work; *self = next; }
+        result
+    }
+    fn learn_inner(&mut self, trace: SearchTrace, lib: &Library,meter: &mut Meter) -> Result<usize> {
         if !trace.prospectively_accepted || trace.winner.is_none() { return Err(Error::NoEvidence); }
         if self.traces.len() >= 128 { return Err(Error::Capacity); }
         let id = trace_id(&trace);
         if self.traces.iter().any(|t| trace_id(t) == id) { return Err(Error::Stale); }
         let patch = trace.winner.as_ref().ok_or(Error::NoEvidence)?;
+        if let Some(cid) = trace.constructor_id {
+            let c = self.constructors.iter().find(|c| c.id == cid).ok_or(Error::InvalidProgram)?;
+            meter.charge((c.code.nodes()+pack(patch).nodes()) as u64)?;
+            if match_schema(&c.code,&pack(patch),lib)?.is_none() { return Err(Error::InvalidProgram); }
+        }
         let before = self.constructors.len();
         for old in &self.traces {
+            if old.constructor_id != trace.constructor_id { continue; }
             let Some(old_patch) = &old.winner else { continue; };
             if old_patch.cells.len() != patch.cells.len() || old_patch == patch { continue; }
             if self.constructors.len() >= 32 { break; }
@@ -75,21 +106,37 @@ impl Registry {
             let code = generalize(&a,&b,lib)?;
             // A hole spanning the entire packed edit encodes no useful structure.
             if matches!(code,Expr::Hole { .. }) || code.first_hole().is_none() { continue; }
+            if patch.cells.is_empty() && matches!(&code,Expr::Bin(Op::Add,head,_) if matches!(head.as_ref(),Expr::Hole { .. })) { continue; }
             let cid = fingerprint(&serde_json::to_vec(&code).map_err(|_| Error::InvalidData)?);
             if self.constructors.iter().any(|c| c.id == cid) { continue; }
-            let generation = [old.constructor_id,trace.constructor_id].into_iter().flatten()
-                .filter_map(|parent| self.constructors.iter().find(|c| c.id == parent).map(|c| c.generation))
-                .max().unwrap_or(0).saturating_add(1);
+            // Recursive credit requires TWO successful descendants of the same
+            // executed generator, plus a replayable edit of its search code.
+            // Merely writing a larger generation number is not recursion.
+            let refinement = if old.constructor_id.is_some() && old.constructor_id == trace.constructor_id {
+                let parent = self.constructors.iter().find(|c| Some(c.id) == trace.constructor_id).ok_or(Error::InvalidProgram)?;
+                meter.charge((parent.code.nodes()+code.nodes()+a.nodes()) as u64)?;
+                if match_schema(&parent.code,&a,lib)?.is_none() { return Err(Error::InvalidProgram); }
+                match match_schema(&parent.code,&code,lib)? {
+                    Some(bindings) if parent.code != code => Some(Refinement { parent: parent.id,bindings }),
+                    _ => None,
+                }
+            } else { None };
+            // A generalization whose lineage is not causal remains generation 1.
+            let generation = refinement.as_ref().map(|r| self.constructors.iter().find(|c| c.id == r.parent).unwrap().generation+1).unwrap_or(1);
             // No negative guard evidence yet: do not invent a task classifier.
             let guard = fit_guard(&self.guard_observations,lib,meter)?.unwrap_or(Expr::Lit(Value::Bool(true)));
-            self.constructors.push(Constructor { id: cid,generation,code,cell_count: patch.cells.len(),guard,
+            self.constructors.push(Constructor { id: cid,generation,refinement,code,cell_count: patch.cells.len(),guard,
                 training_trace_ids: vec![trace_id(old),id],construction_work: meter.spent-start,status: ConstructorStatus::Proposed });
         }
         self.traces.push(trace); Ok(self.constructors.len()-before)
     }
     pub fn suggestions(&self,job: &Job,width: usize,cfg: &SearchConfig,lib: &Library,meter: &mut Meter) -> Result<Vec<Hint>> {
         let mut hints = Vec::new();
-        for c in &self.constructors {
+        let mut ordered: Vec<_> = self.constructors.iter().collect();
+        // Refined search code gets a bounded trial before its more general
+        // ancestors; failure still returns to ancestors and broad synthesis.
+        ordered.sort_by_key(|c| (std::cmp::Reverse(c.generation),c.id));
+        for c in ordered {
             if c.status == ConstructorStatus::RejectedOnDevelopmentBatch { continue; }
             if c.guard.eval(Context { input: &job.features,action: 0,state: &[],args: &[] },lib,meter) != Ok(Value::Bool(true)) { continue; }
             // If only the output contains holes, leave them open: the acquired
@@ -98,6 +145,7 @@ impl Registry {
                 if cells.iter().all(|cell| cell.update.first_hole().is_none()) {
                     meter.charge(c.code.nodes() as u64)?;
                     hints.push(Hint { constructor_id: c.id,output,cells });
+                    if hints.len() >= 32 { return Ok(hints); }
                     continue;
                 }
             }
@@ -113,7 +161,7 @@ impl Registry {
         Ok(hints)
     }
     /// Consumed holdout labels may train the NEXT guard. This never changes the
-    /// result of the already completed batch and that batch cannot be reused.
+    /// generator that produced the proposals currently being evaluated.
     pub fn record_guard_observation(&mut self,features: Vec<i64>,useful: bool,lib: &Library,meter: &mut Meter) -> Result<()> {
         if features.len() != 4 || self.guard_observations.len() >= 128 { return Err(Error::Capacity); }
         self.guard_observations.push((features,useful));
