@@ -24,6 +24,7 @@ fn configuration()->(Config,AutonomyPolicy){
 }
 fn main()->Result<()>{
     if std::env::args().nth(1).as_deref()==Some("--school"){return school_console();}
+    if std::env::args().nth(1).as_deref()==Some("--word-problems"){return word_console();}
     let stdin=io::stdin();let stdout=io::stdout();let mut input=stdin.lock();let mut out=stdout.lock();
     let mut runtime:Option<ScientificRuntime>=None;
     loop {
@@ -34,6 +35,23 @@ fn main()->Result<()>{
                     if runtime.is_some(){return Err("already initialized".into());}
                     let (cfg,policy)=configuration();runtime=Some(ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"interactive-v1")?);
                     Ok(json!({"type":"initialized"}))
+                },
+                "begin_education_extension"=>{runtime.as_mut().ok_or("not loaded")?.begin_education_extension()?;Ok(json!({"type":"education_open"}))},
+                "install_word_problems"=>{
+                    let model=serde_json::from_value(request["model"].clone())?;
+                    runtime.as_mut().ok_or("not loaded")?.install_word_problem_knowledge(model)?;
+                    Ok(json!({"type":"word_problem_knowledge_installed"}))
+                },
+                "inspect_word_problem"=>{
+                    let q=request["question"].as_str().ok_or("missing question")?;
+                    let g=aeterna_v1::word_problems::ground(q)?;
+                    let kind=request.get("kind").and_then(Value::as_str).unwrap_or("role");
+                    Ok(json!({"type":"word_problem_inspection","features":aeterna_v1::word_problems::features(&g,kind),"ground":g}))
+                },
+                "ask_word_problem"=>{
+                    let question=request["question"].as_str().ok_or("missing question")?;
+                    let prior=request.get("prior_only").and_then(Value::as_bool).unwrap_or(false);
+                    Ok(json!({"type":"word_problem_answer","result":runtime.as_ref().ok_or("not loaded")?.answer_word_problem(question,prior)?}))
                 },
                 "teach"=>{
                     let examples=serde_json::from_value(request["examples"].clone())?;
@@ -119,6 +137,9 @@ fn school_console()->Result<()> {
     let stdin=io::stdin();
     loop {
         print!("> ");io::stdout().flush()?;let mut line=String::new();if stdin.read_line(&mut line)?==0 || line.trim()=="/exit" {break;}
+        if let Some(q)=line.trim().strip_prefix("/solve ") {
+            println!("{}",serde_json::to_string_pretty(&runtime.answer_word_problem(q,false)?)?);continue;
+        }
         if let Some(q)=line.trim().strip_prefix("/why ") {
             println!("{}",serde_json::to_string_pretty(&runtime.understand_school(q,aeterna_v1::education::GroundingLimits::default())?)?);continue;
         }
@@ -134,6 +155,24 @@ fn school_console()->Result<()> {
                 }
             },
             Err(e)=>println!("Error: {e}"),
+        }
+    }Ok(())
+}
+
+fn word_console()->Result<()> {
+    let path=std::env::args().nth(2).ok_or("usage: aeterna-unified --word-problems acquired-checkpoint.json")?;
+    let runtime=ScientificRuntime::from_constructing_checkpoint(&std::fs::read(path)?)?;
+    println!("AETERNA: learned English word problems. /exit to stop. Answers are hypotheses, not guaranteed facts.");
+    let stdin=io::stdin();
+    loop {
+        print!("> ");io::stdout().flush()?;let mut line=String::new();
+        if stdin.read_line(&mut line)?==0||line.trim()=="/exit"{break;}
+        match runtime.answer_word_problem(line.trim(),false) {
+            Ok(r)=>{
+                println!("{} [{}]",r.answer.as_deref().unwrap_or("Unsupported input"),r.reason);
+                if let Some(p)=r.interpretations.first(){println!("{} = {}",p.equation,p.answer);}
+                if let Some(m)=r.margin{println!("Interpretation margin: {:.3}; not a probability.",m);}
+            },Err(e)=>println!("Error: {e}")
         }
     }Ok(())
 }

@@ -43,6 +43,8 @@ pub struct School {
     fact_index:BTreeMap<String,Vec<usize>>,terms:BTreeMap<String,Vec<usize>>,word_counts:Vec<usize>,
     #[serde(default,skip_serializing_if="composition_disabled")]
     composition:bool,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    word_problems:Option<crate::word_problems::WordProblemModel>,
 }
 fn clean(s:&str)->String {
     s.to_lowercase().chars().map(|c|if c.is_alphanumeric() || "+-*/%=<>".contains(c){c}else{' '})
@@ -277,6 +279,7 @@ impl School {
             work:best.5,support:best.1.training.len()+best.1.validation.len(),controller_score:None}}])
     }
     pub fn validate(&self)->Result<()> {
+        if let Some(model)=&self.word_problems{model.validate()?;}
         if self.skills.len()>128 || self.lessons.len()>128 || self.facts.len()>8192{return Err(Error::Capacity);}
         self.library.validate(6)?;
         let mut patterns=BTreeSet::new();let mut meter=Meter::new(20_000_000);
@@ -309,3 +312,13 @@ impl School {
 }
 
 include!("semantic_grounding.rs");
+
+impl School {
+    pub(crate) fn begin_extension(&mut self){self.frozen=false;}
+    pub(crate) fn install_word_problems(&mut self,model:crate::word_problems::WordProblemModel)->Result<()> {
+        if self.frozen{return Err(Error::Busy);} model.validate()?;self.word_problems=Some(model);Ok(())
+    }
+    pub fn word_problem_answer(&self,question:&str,prior_only:bool)->Result<crate::word_problems::WordProblemAnswer> {
+        self.word_problems.as_ref().ok_or(Error::NoEvidence)?.answer(question,prior_only)
+    }
+}

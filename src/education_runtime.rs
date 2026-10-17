@@ -89,3 +89,29 @@ impl ScientificRuntime {
         Ok(answer)
     }
 }
+
+impl ScientificRuntime {
+    /// Explicit teacher-opened epoch. Preserves programs, controller weights,
+    /// factual history, pending world trials and risk debt; no authority reset.
+    pub fn begin_education_extension(&mut self)->UResult<()> {
+        if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.current.learner.report().poisoned{return Err(UError::Stale);}
+        u.education.get_or_insert_with(Default::default).begin_extension();
+        u.freeze_controller=false;
+        self.organism.set_phase_native_meta_learning_enabled(true);
+        Ok(())
+    }
+    pub fn install_word_problem_knowledge(&mut self,model:crate::word_problems::WordProblemModel)->UResult<()> {
+        if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Busy);}
+        model.validate()?; // Reject before even creating an empty School.
+        u.education.get_or_insert_with(Default::default).install_word_problems(model)
+    }
+    pub fn answer_word_problem(&self,question:&str,prior_only:bool)->UResult<crate::word_problems::WordProblemAnswer> {
+        if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
+        let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;
+        u.education.as_ref().ok_or(UError::NoEvidence)?.word_problem_answer(question,prior_only)
+    }
+}

@@ -38,3 +38,5 @@ pub use trace::{CarrierTrace, ShapeTrace};
 
 pub use planning::{EvoImaginationPlanner, ImaginedNode, LearnedTransition, PlanDecision, PlanningConfig};
 pub mod education;
+
+pub mod word_problems;
