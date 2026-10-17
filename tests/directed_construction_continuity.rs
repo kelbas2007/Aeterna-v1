@@ -65,7 +65,8 @@ fn pending_trials_and_final_decisions_survive_every_step_round_trip() {
             restored.step_action(action, safe, |a| Ok(advance(&mut second_device, a))).unwrap();
             let checkpoint = restored.checkpoint().unwrap();
             pending_snapshots += usize::from(restored.learner().report().shadow_pending);
-            let decoded = Learner::from_checkpoint(&checkpoint).unwrap();
+            let decoded = Learner::from_checkpoint(&checkpoint)
+                .unwrap_or_else(|error| panic!("checkpoint decode at shift={shift}, step={i}: {error:?}"));
             assert_eq!(decoded.checkpoint().unwrap(), checkpoint);
             restored.restore_cognition(&checkpoint).unwrap();
             assert_eq!(uninterrupted.checkpoint().unwrap(), restored.checkpoint().unwrap(),
@@ -151,4 +152,21 @@ fn pending_cognitive_trial_does_not_restore_emergency_stop_authority() {
     }), Err(Error::Blocked));
     assert_eq!(calls, 0);
     assert_eq!(rt.learner().records().len(), events);
+}
+
+#[test]
+fn json_likelihoods_and_scales_round_trip_without_bit_changes() {
+    // These are numeric-format controls, not training examples or a tolerance
+    // for changing persisted beliefs. Tiny rounding changes invalidate exact
+    // hashes and can alter a pending audit after restart.
+    for n in 1..=4096 {
+        let scale = n as f64 / 113.0 + 0.25;
+        let forecast = aeterna_v1::construction::Forecast { center: vec![n], scale: vec![scale] };
+        let values = [scale, forecast.nll(&[17]).unwrap()];
+        let encoded = serde_json::to_vec(&values).unwrap();
+        let decoded: [f64; 2] = serde_json::from_slice(&encoded).unwrap();
+        for (before, after) in values.into_iter().zip(decoded) {
+            assert_eq!(before.to_bits(), after.to_bits(), "JSON changed f64 at n={n}");
+        }
+    }
 }
