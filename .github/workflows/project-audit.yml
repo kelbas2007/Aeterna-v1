@@ -1,0 +1,35 @@
+name: Project consolidation source audit
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.github/workflows/project-audit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Export source and non-destructive ancestry evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p project-audit
+          git rev-parse HEAD > project-audit/revision.txt
+          git archive --format=tar.gz --output=project-audit/source.tar.gz HEAD
+          git for-each-ref --format='%(refname:short) %(objectname)' refs/remotes/origin > project-audit/branches.txt
+          git log --oneline -30 > project-audit/recent-commits.txt
+          git rev-list --left-right --count origin/main...HEAD > project-audit/main-divergence.txt
+          git merge-base --is-ancestor origin/main HEAD
+          git merge-base --is-ancestor origin/codex/rsp1-search-repair HEAD
+          echo 'main and RSP2 repair are ancestors; no commit discarded' > project-audit/ancestry.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project-consolidation-source-${{ github.sha }}
+          path: project-audit/
+          retention-days: 1
