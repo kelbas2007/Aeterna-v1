@@ -2,7 +2,7 @@ name: AETERNA project checks
 on:
   pull_request:
   push:
-    branches: [main, research/beyond-intel4, 'integration/**', 'codex/**']
+    branches: [main, research/beyond-intel4, 'research/rsp3-*', 'integration/**', 'codex/**']
   workflow_dispatch:
 permissions:
   contents: read
