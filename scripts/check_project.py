@@ -21,6 +21,6 @@ def main():
  assert len(names)==len(set(names))
  cmd=['cargo','test',*flags]
  for name in names:cmd+=['--test',name]
- run(*cmd);run('cargo','build',*flags,'--bin','aeterna-v1','--bin','aeterna-unified')
+ run(*cmd);run('cargo','test',*flags,'--example','rsp3_experience');run('cargo','build',*flags,'--bin','aeterna-v1','--bin','aeterna-unified')
  print(json.dumps({'status':'PASS','suites':names,'fresh_intelligence_claim':False}))
 if __name__=='__main__':main()
