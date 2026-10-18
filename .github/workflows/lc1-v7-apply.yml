@@ -84,7 +84,7 @@ jobs:
           python scripts/lc1_joint_demo.py --binary target/debug/aeterna-v1 --output lc1-v7-evidence/demo.json | tee lc1-v7-evidence/demo.log
       - name: Publish exact passing code without workflow edits
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -97,6 +97,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: lc1-v7-\${{ github.sha }}
+          name: lc1-v7-${{ github.sha }}
           path: lc1-v7-evidence/
           retention-days: 7
