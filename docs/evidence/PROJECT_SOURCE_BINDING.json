@@ -24,11 +24,11 @@
   ],
   "reviewed_rsp3_extension": {
     "added_file": "src/construction/experiential.rs",
-    "added_sha256": "ad69b0c508474c2c329e4e9521a3b41552c96c7d3b6492e771bffb4720898d97",
+    "added_sha256": "977f91ccdad985f0908dc667f2b491491371a431525043d4fc35ec9453757494",
     "touched_module": "src/construction/mod.rs",
     "module_before_sha256": "637123e1bd311c7aadd477c677754ee000fb1a39f63e11b1e665f3a9d6ae75f0",
     "module_after_sha256": "17da23bfb9fcaeb8d3f377ac4562702d84fa7f564fa58377682b16d392e03743",
     "added_line": "pub mod experiential;\n",
-    "note": "Pure VM policy candidate study, not RSP2 generation or admission; all original RSP2 bytes unchanged"
+    "note": "Round-robin residual-feature grammar, validated cases before indexing, candidate-only RSP3; RSP2 remains byte-identical"
   }
 }

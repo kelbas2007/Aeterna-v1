@@ -13,13 +13,25 @@ fn curriculum()->(Vec<ValidationCase>,Vec<ValidationCase>){
  let mut train=group(0xE110,24,0);train.extend(group(0xE120,24,4));
  let mut dev=group(0xE210,24,0);dev.extend(group(0xE220,24,4));(train,dev)
 }
+// Lock the actual search, mutation, VM and family generator implementations,
+// not just the new candidate learner. This snapshot is written BEFORE exams.
+fn sources()->Value{json!({
+ "experiential":include_str!("../src/construction/experiential.rs"),
+ "search_policy":include_str!("../src/construction/search_policy.rs"),
+ "vm":include_str!("../src/construction/vm.rs"),
+ "generator":include_str!("rsp1_support/mod.rs"),
+ "exam_harness":include_str!("rsp3_experience.rs"),
+})}
+fn source_lock_valid(protocol:&Value,report:&StudyReport)->bool {
+ protocol["sources"]==sources() && report.config==config()
+}
 fn train(root:PathBuf)->Result<(),E>{
  if root.exists(){return Err("Refusing to overwrite previous results".into())}fs::create_dir_all(&root)?;
  let (train,dev)=curriculum();let cfg=config();
  fs::write(root.join("protocol.json"),serde_json::to_vec_pretty(&json!({"kind":"RSP3_DEVELOPMENT_PROPOSAL","test_families_not_seen":[8,9,10,11],
  "train_seed":[0xE110,0xE120],"internal_dev_seed":[0xE210,0xE220],"test_seeds":[0xE310,0xE320,0xE330],"config":cfg,
  "baseline":["cold","loss_plus_size"],"ablation":"scrambled residual association","adoption":"NONE; producer gate still mandatory",
- "source":include_str!("../src/construction/experiential.rs")}))?)?;
+ "sources":sources()}))?)?;
  let r=study(&train,&dev,cfg)?;
  fs::write(root.join("report.json"),serde_json::to_vec_pretty(&r)?)?;
  let cold=evaluate_policy(&SearchPolicy::default(),&dev,&r.config.limits,r.config.validation_seed,false)?;
@@ -33,7 +45,7 @@ fn examine(root:PathBuf)->Result<(),E>{
  if root.join("exam.json").exists(){return Err("Reserved exam already used".into())}
  let report:StudyReport=serde_json::from_slice(&fs::read(root.join("report.json"))?)?;
  let protocol:Value=serde_json::from_slice(&fs::read(root.join("protocol.json"))?)?;
- if protocol["source"]!=include_str!("../src/construction/experiential.rs")||report.config!=config(){return Err("Unfrozen implementation or config".into())}
+ if !source_lock_valid(&protocol,&report){return Err("Unfrozen generator/search/VM/exam code or config".into())}
  let mut result=serde_json::Map::new();
  for (name,first,seed) in [("related",0usize,0xE310u64),("transfer",4usize,0xE320),("reserved",8usize,0xE330)]{
    let cases=group(seed,64,first);let mut variants=serde_json::Map::new();
@@ -55,7 +67,7 @@ fn confirm(root:PathBuf)->Result<(),E>{
  if root.join("confirmation.json").exists(){return Err("Confirmation already consumed".into())}
  let r:StudyReport=serde_json::from_slice(&fs::read(root.join("report.json"))?)?;
  let frozen:Value=serde_json::from_slice(&fs::read(root.join("protocol.json"))?)?;
- if frozen["source"]!=include_str!("../src/construction/experiential.rs")||r.config!=config(){return Err("Policy is not frozen".into())}
+ if !source_lock_valid(&frozen,&r){return Err("Policy or relevant code is not frozen".into())}
  let mut batches=Vec::new();
  for cohort in 0..8u64 {
      let mut groups=serde_json::Map::new();
@@ -86,7 +98,7 @@ fn producer(root:PathBuf)->Result<(),E>{
  if root.join("producer.json").exists(){return Err("Producer check already consumed".into())}
  let r:StudyReport=serde_json::from_slice(&fs::read(root.join("report.json"))?)?;
  let frozen:Value=serde_json::from_slice(&fs::read(root.join("protocol.json"))?)?;
- if frozen["source"]!=include_str!("../src/construction/experiential.rs")||r.config!=config(){return Err("Policy is not frozen".into())}
+ if !source_lock_valid(&frozen,&r){return Err("Policy or relevant code is not frozen".into())}
  let object=&r.config.limits;
  let meta=SearchLimits{work:8_000_000,evaluations:24,max_nodes:23,frontier:128,edits_per_expansion:12};
  let cold=SearchPolicy::default();let mut comparisons=Vec::new();

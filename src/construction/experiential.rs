@@ -83,11 +83,13 @@ pub fn policy_grammar(width:usize,limit:usize)->Result<Vec<SearchPolicy>> {
     let locations=[Expr::Input(9),Expr::integer(0),Expr::Input(7)];
     let mutations=[Expr::Input(8),Expr::integer(0),Expr::integer(1),Expr::integer(3)];
     let mut variants=mutations.to_vec();
-    for feature in [14usize,16,17] {
-        for edit in [0,1,3] {for arithmetic in [0,2] {for gate in [0,2,4] {
+    // Round-robin feature coverage BEFORE candidate_limit truncation. Otherwise
+    // the 128-slot study can only see feature 14: a hidden grammar-order bias.
+    for edit in [0,1,3] {for arithmetic in [0,2] {for gate in [0,2,4] {
+        for feature in [14usize,16,17] {
             variants.push(directed(feature,edit,arithmetic,width,gate));
-        }}}
-    }
+        }
+    }}}
     // Mix all variations rather than hand-selecting the prior best.
     for variation in &variants {
         for location in &locations {for priority in &priorities {
@@ -158,9 +160,12 @@ fn better(a:&ExperienceScore,b:&ExperienceScore)->bool{
 pub fn study(train:&[ValidationCase],validation:&[ValidationCase],config:StudyConfig)->Result<StudyReport>{
     config.validate()?;
     if !(8..=128).contains(&train.len())||!(8..=128).contains(&validation.len()){return Err(Error::Capacity)}
+    // Validate ALL cases before inspecting their first row. Public callers may
+    // supply malformed data; return Error::InvalidData, never panic on [0].
+    for c in train.iter().chain(validation){c.validate()?;}
     let width=train[0].support.examples[0].input.len();
     let mut keys=BTreeSet::new();
-    for c in train.iter().chain(validation){c.validate()?;
+    for c in train.iter().chain(validation){
         if c.support.examples[0].input.len()!=width{return Err(Error::InvalidData)}
         // Disjoint support/probe rows inside each case and no exact case reuse.
         if !keys.insert(super::vm::fingerprint(&serde_json::to_vec(c).unwrap())){return Err(Error::Stale)}
