@@ -1,109 +1,36 @@
-name: DC-2 autonomous learning obligations
+name: DC-2 installed-code verification
+# One-use installer is already integrated. Do not apply it to its descendants.
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['research/dc2/**', '.github/workflows/dc2-autonomy.yml']
   workflow_dispatch:
 permissions:
-  contents: write
-concurrency:
-  group: dc2-autonomy-${{ github.ref }}
-  cancel-in-progress: false
+  contents: read
 jobs:
-  evidence:
-    if: github.ref == 'refs/heads/research/beyond-intel4'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     env:
       CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
-      - name: Install exact reviewed source
+          persist-credentials: false
+      - name: Pinned toolchain
         run: |
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          python3 research/dc2/apply.py
-          tar -czf dc2-source.tar.gz src/construction examples/directed_construction_autonomy.rs tests/directed_construction_autonomy.rs Cargo.toml Cargo.lock
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: '1.99.0'
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
       - uses: Swatinem/rust-cache@v2
-      - name: Compile all targets
-        shell: bash
-        run: set -o pipefail; cargo check --locked --all-targets 2>&1 | tee dc2-check.log
-      - name: Construction, continuity and permission regression tests
+      - name: Verify existing integrated source, never rerun the installer
         shell: bash
         run: |
           set -euo pipefail
-          cargo test --locked --lib construction:: -- --nocapture 2>&1 | tee dc2-unit.log
-          for source in tests/directed_construction*.rs; do
-            name=$(basename "$source" .rs)
-            cargo test --locked --test "$name" -- --nocapture 2>&1 | tee "dc2-$name.log"
-          done
-          cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee dc2-protection.log
-      - name: Preserve previous bounded demonstrations
-        shell: bash
-        run: |
-          set -euo pipefail
-          cargo run --locked --example directed_construction > dc2-legacy-autonomous.json
-          cargo run --locked --example directed_construction_recursive > dc2-legacy-recursive.json
-      - name: Frozen development protocol -- negative outcomes are retained
-        shell: bash
-        run: |
-          set -euo pipefail
-          cargo run --release --locked --example directed_construction_autonomy -- 917 4 160 > dc2-development.json 2> dc2-development.log
-      - name: Scientific verdict distinct from build success
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import json, os, hashlib
-          from pathlib import Path
-          d=json.loads(Path('dc2-development.json').read_text())
-          rows=d['runs'] if 'runs' in d else d['rows']
-          seeds=sorted({r['seed'] for r in rows})
-          comparisons=[]
-          for seed in seeds:
-              group={r['mode']:r for r in rows if r['seed']==seed}
-              p,f,b=(group[k] for k in ('Progress','Fair','LargestResidual'))
-              comparisons.append({'seed':seed,'progress':p['learned_laws'],'fair':f['learned_laws'],'largest_residual':b['learned_laws'],'progress_work':p['before_probe']['construction_work'],'fair_work':f['before_probe']['construction_work'],'largest_residual_work':b['before_probe']['construction_work']})
-          positive=len(seeds)==4 and all(c['progress']>=2 and c['progress']>c['largest_residual'] for c in comparisons)
-          summary={'status':'DEVELOPMENT_POSITIVE' if positive else 'DEVELOPMENT_NEGATIVE','independent_qualification':False,'general_intelligence_proven':False,'workflow_source':os.environ['GITHUB_SHA'],'run_id':os.environ['GITHUB_RUN_ID'],'comparisons':comparisons,'source_sha256':json.loads(Path('dc2-source-manifest.json').read_text()),'result_sha256':hashlib.sha256(Path('dc2-development.json').read_bytes()).hexdigest()}
-          Path('dc2-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
-          print(json.dumps(summary,indent=2))
-          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f: f.write('## DC-2 scientific outcome\n\n'+summary['status']+'\n\n```json\n'+json.dumps(comparisons,indent=2)+'\n```\n')
-          PY
-      - name: Publish exact tested source and small evidence -- never force push
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF" = refs/heads/research/beyond-intel4
-          remote=$(git ls-remote origin refs/heads/research/beyond-intel4 | cut -f1)
-          test "$remote" = "$GITHUB_SHA"
-          python3 - <<'PY'
-          import json,hashlib
-          from pathlib import Path
-          for p,h in json.loads(Path('dc2-source-manifest.json').read_text()).items():
-              assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h, p
-          PY
-          mkdir -p docs/evidence
-          cp dc2-summary.json docs/evidence/dc2_development_summary.json
-          cp dc2-development.json docs/evidence/dc2_development.json
-          git config user.name 'AETERNA verified research'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/construction/synthesis.rs src/construction/recursive.rs src/construction/runtime.rs src/construction/mod.rs src/construction/curriculum.rs examples/directed_construction_autonomy.rs tests/directed_construction_autonomy.rs docs/evidence/dc2_development_summary.json docs/evidence/dc2_development.json
-          git commit -m 'Implement and measure DC-2 self-selected learning obligations; retain scientific verdict'
-          git push origin HEAD:refs/heads/research/beyond-intel4
-          git rev-parse HEAD > dc2-published-commit.txt
-      - name: Preserve bounded evidence including failed runs
+          mkdir -p installed-code-evidence
+          git rev-parse HEAD > installed-code-evidence/revision.txt
+          python scripts/project_audit.py > installed-code-evidence/source-binding.json
+          python scripts/check_project.py 2>&1 | tee installed-code-evidence/tests.log
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: dc2-autonomy-${{ github.sha }}
-          path: |
-            dc2-*.log
-            dc2-*.json
-            dc2-source.tar.gz
-            dc2-published-commit.txt
-          retention-days: 7
-          if-no-files-found: warn
+          name: dc2-autonomy-installed-${{ github.sha }}
+          path: installed-code-evidence/
+          retention-days: 3

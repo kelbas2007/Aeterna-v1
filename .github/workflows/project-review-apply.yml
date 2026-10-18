@@ -1,0 +1,69 @@
+name: Apply reviewed joint-restore guards
+on:
+  push:
+    branches: [integration/project-20261018]
+    paths: ['.ci/review/**', '.github/workflows/project-review-apply.yml']
+permissions:
+  contents: write
+concurrency:
+  group: project-review-apply
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Apply only the reviewed guards against exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python .ci/review/apply.py
+          git rm -r .ci/review
+          git add src/scientific_runtime.rs tests/unified_restore_guards.rs scripts/check_project.py scripts/project_audit.py docs/PROJECT_STATE.json docs/PROJECT_OVERVIEW.md docs/evidence/PROJECT_SOURCE_BINDING.json
+          git diff --cached --check
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Guard joint cognition against partial native restoration; cover reviewed boundaries'
+          mkdir -p review-evidence
+          git rev-parse HEAD > review-evidence/revision.txt
+          git archive --format=tar.gz --output=review-evidence/source.tar.gz HEAD
+      - name: Pinned toolchain
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > review-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile all targets and run all selected compatibility tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/check_project.py 2>&1 | tee review-evidence/tests.log
+          python scripts/check_docs.py > review-evidence/docs.log
+          python scripts/project_audit.py > review-evidence/source-binding.json
+          python scripts/project_demo.py --binary target/debug/aeterna-v1 --output review-evidence/example > review-evidence/example.log
+      - name: Publish tested code without changing workflow files or force
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = integration/project-20261018
+          git diff --exit-code
+          header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$header"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/integration/project-20261018
+          git rev-parse HEAD > review-evidence/published-revision.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-consolidation-${{ github.sha }}
+          path: review-evidence/
+          retention-days: 7

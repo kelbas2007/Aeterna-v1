@@ -1,8 +1,7 @@
 name: Education development
+# Historical teaching/examination remains available explicitly; routine source
+# changes are covered by the unified project workflow, not a new external exam.
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/education*', 'src/unified_runtime.rs', 'src/construction/induction.rs', 'src/construction/vm.rs', 'src/bin/aeterna-unified.rs', 'tests/education*', 'scripts/education*', '.github/workflows/education-development.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -56,3 +55,4 @@ jobs:
           name: education-results-${{ github.sha }}
           path: school-evidence/
           retention-days: 7
+          if-no-files-found: warn
