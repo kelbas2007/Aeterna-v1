@@ -68,6 +68,36 @@ pub fn validate_completion_task(task: &SynthesisTask) -> Result<()> {
     if task.examples[0].input.len() > MAX_LC1_INPUTS { return Err(Error::Capacity); }
     Ok(())
 }
+// Check shape and size without recursively traversing attacker-supplied VM trees.
+// The VM type checker bounds depth at 48; validate that bound *before* using
+// recursive helpers such as nodes(), first_hole(), or references_valid().
+fn sketch_nodes_bounded(sketch:&Expr,max_nodes:usize)->Result<usize> {
+    let mut stack=vec![(sketch,0usize)];
+    let mut nodes=0usize;
+    while let Some((expr,depth))=stack.pop() {
+        if depth>48{return Err(Error::Capacity)}
+        nodes=nodes.checked_add(1).ok_or(Error::Capacity)?;
+        if nodes>max_nodes{return Err(Error::InvalidProgram)}
+        match expr {
+            Expr::Bin(_,a,b)=>{stack.push((b,depth+1));stack.push((a,depth+1));},
+            Expr::Not(a)|Expr::AsInt(a)=>stack.push((a,depth+1)),
+            Expr::If(c,a,b)=>{stack.push((b,depth+1));stack.push((a,depth+1));stack.push((c,depth+1));},
+            Expr::Call(_,args)=>{
+                // Reject a huge argument fan-out before allocating a similarly
+                // huge traversal stack from an untrusted in-process caller.
+                if args.len()>max_nodes.saturating_sub(nodes+stack.len()){
+                    return Err(Error::InvalidProgram)
+                }
+                for e in args.iter().rev(){stack.push((e,depth+1));}
+            },
+            Expr::Fold{count,seed,body}=>{
+                stack.push((body,depth+1));stack.push((seed,depth+1));stack.push((count,depth+1));
+            },
+            _=>(),
+        }
+    }
+    Ok(nodes)
+}
 // This is public preflight for the existing runtime budget reservation. A
 // malformed sketch never launches inference, so it must not consume the entire
 // reserved work allotment before being rejected.
@@ -78,9 +108,10 @@ pub fn validate_completion_sketch(task: &SynthesisTask, sketch: &Expr, limits: &
     // The hole must be replaced by at least one VM node, so completion
     // cannot make an already-oversized skeleton smaller. Reject *before*
     // reserving the runtime search budget.
-    if !matches!(missing.as_ref(), Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op) || sketch.nodes() > limits.nodes {
+    if !matches!(missing.as_ref(), Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op) {
         return Err(Error::InvalidProgram);
     }
+    sketch_nodes_bounded(sketch,limits.nodes)?;
     // The fragment runs in a pure, stateless Context. A type-correct Input,
     // State, or Arg can still be out of bounds; fail BEFORE reserving work.
     if known.first_hole().is_some()
@@ -193,30 +224,54 @@ impl RequirementMemory {
     /// Complete an explicitly identified missing right subcomputation. Support
     /// outcomes are shown to the solver; withheld probes are never passed in.
     pub fn complete(&self,task:&SynthesisTask,sketch:&Expr,limits:&CompletionLimits)->Result<CompletionReport>{
-        validate_completion_sketch(task,sketch,limits)?;
-        // The checked structure and types are guaranteed by preflight.
-        let Expr::Bin(op,known,_) = sketch else {unreachable!("validated LC1 sketch")};
-        if self.rules.iter().all(|r|r.op!=*op) {return Ok(CompletionReport{program:None,required_values:vec![],work:0,tried_rules:0,forward_verified:false,used_acquired_inverse:false})}
+        self.complete_measured(task,sketch,limits).0
+    }
+    /// LC1 attempt contract: every exit (including Err) carries the metered
+    /// work used before that exit. The runtime must never keep an entire
+    /// reservation merely because the solver failed after starting.
+    pub(crate) fn complete_measured(&self,task:&SynthesisTask,sketch:&Expr,limits:&CompletionLimits)->(Result<CompletionReport>,u64){
         let mut meter=Meter::new(limits.work);
-        let mut needed=Vec::with_capacity(task.examples.len());
-        for row in &task.examples {
-            let lhs=known.eval(Context{input:&row.input,action:0,state:&[],args:&[]},&task.library,&mut meter)?.int()?;
-            let Some(right)=self.requirement(*op,lhs,row.output,&mut meter)? else {
-                return Ok(CompletionReport{program:None,required_values:needed,work:meter.spent,tried_rules:1,forward_verified:false,used_acquired_inverse:false});
+        let result=(||->Result<CompletionReport>{
+            validate_completion_sketch(task,sketch,limits)?;
+            let Expr::Bin(op,known,_) = sketch else {unreachable!("validated LC1 sketch")};
+            if self.rules.iter().all(|r|r.op!=*op) {
+                return Ok(CompletionReport{program:None,required_values:vec![],work:0,tried_rules:0,forward_verified:false,used_acquired_inverse:false})
+            }
+            let mut needed=Vec::with_capacity(task.examples.len());
+            for row in &task.examples {
+                let lhs=known.eval(Context{input:&row.input,action:0,state:&[],args:&[]},&task.library,&mut meter)?.int()?;
+                let Some(right)=self.requirement(*op,lhs,row.output,&mut meter)? else {
+                    return Ok(CompletionReport{program:None,required_values:needed,work:meter.spent,tried_rules:1,forward_verified:false,used_acquired_inverse:false});
+                };
+                needed.push(right);
+            }
+            let demand=task.examples.iter().zip(&needed).map(|(r,&y)|induction::Example{input:r.input.clone(),output:y}).collect::<Vec<_>>();
+            let remaining=meter.remaining();
+            if remaining<100 {return Ok(CompletionReport{program:None,required_values:needed,work:meter.spent,tried_rules:1,forward_verified:false,used_acquired_inverse:true})}
+            // Only the actual free output slots are available to fragment search.
+            // Induction can search 1- and 2-node fragments; never widen to 3.
+            let free_nodes=limits.nodes.saturating_sub(known.nodes()+1);
+            let induction=match induction::infer(&demand,&task.library,&InductionConfig{max_nodes:free_nodes,max_terms:limits.terms,work:remaining}) {
+                Ok(done)=>done,
+                Err(err)=>{
+                    // The existing induction API does not expose work on Err.
+                    // Charge only the delegated *subsearch* allowance as a
+                    // conservative bound, never the full LC1 outer reservation.
+                    meter.charge(remaining)?;
+                    return Err(err);
+                },
             };
-            needed.push(right);
-        }
-        let demand=task.examples.iter().zip(&needed).map(|(r,&y)|induction::Example{input:r.input.clone(),output:y}).collect::<Vec<_>>();
-        let remaining=meter.remaining();
-        if remaining<100 {return Ok(CompletionReport{program:None,required_values:needed,work:meter.spent,tried_rules:1,forward_verified:false,used_acquired_inverse:true})}
-        let induction=induction::infer(&demand,&task.library,&InductionConfig{max_nodes:limits.nodes.saturating_sub(known.nodes()+1).max(3),max_terms:limits.terms,work:remaining})?;
-        meter.charge(induction.work)?;
-        let Some(fragment)=induction.expression else {return Ok(CompletionReport{program:None,required_values:needed,work:meter.spent,tried_rules:1,forward_verified:false,used_acquired_inverse:true})};
-        let completed=sketch.substitute(0,&fragment);
-        let verified=completed.nodes()<=limits.nodes && task.examples.iter().all(|r| {
-            completed.eval(Context{input:&r.input,action:0,state:&[],args:&[]},&task.library,&mut meter)==Ok(Value::Int(r.output))
-        });
-        Ok(CompletionReport{program:verified.then_some(completed),required_values:needed,work:meter.spent,tried_rules:1,forward_verified:verified,used_acquired_inverse:true})
+            meter.charge(induction.work)?;
+            let Some(fragment)=induction.expression else {
+                return Ok(CompletionReport{program:None,required_values:needed,work:meter.spent,tried_rules:1,forward_verified:false,used_acquired_inverse:true})
+            };
+            let completed=sketch.substitute(0,&fragment);
+            let verified=completed.nodes()<=limits.nodes && task.examples.iter().all(|r|{
+                completed.eval(Context{input:&r.input,action:0,state:&[],args:&[]},&task.library,&mut meter)==Ok(Value::Int(r.output))
+            });
+            Ok(CompletionReport{program:verified.then_some(completed),required_values:needed,work:meter.spent,tried_rules:1,forward_verified:verified,used_acquired_inverse:true})
+        })();
+        (result,meter.spent)
     }
 
     /// Find the first missing intermediate expression without a caller-supplied
@@ -224,40 +279,48 @@ impl RequirementMemory {
     /// operator relations and input compositions; the VM alone verifies a fit.
     /// Ordinary RSP2 induction is left available and never pruned by this hint.
     pub fn discover(&self,task:&SynthesisTask,limits:&CompletionLimits)->Result<CompletionReport>{
-        validate_completion_task(task)?;limits.validate()?;
-        if self.rules.is_empty(){return Ok(CompletionReport{program:None,required_values:vec![],work:0,tried_rules:0,forward_verified:false,used_acquired_inverse:false})}
-        let width=task.examples[0].input.len().min(6);
-        let mut known=(0..width).map(Expr::Input).collect::<Vec<_>>();
-        for a in 0..width {for b in a+1..width {
-            for op in [Op::Add,Op::Sub,Op::Mul] {
+        self.discover_measured(task,limits).0
+    }
+    /// Return the actual cumulative delegated work on *both* success and
+    /// failure so the shared organism ledger can settle its reservation.
+    pub(crate) fn discover_measured(&self,task:&SynthesisTask,limits:&CompletionLimits)->(Result<CompletionReport>,u64){
+        let mut total=0u64;
+        let result=(||->Result<CompletionReport>{
+            validate_completion_task(task)?;limits.validate()?;
+            if self.rules.is_empty(){return Ok(CompletionReport{program:None,required_values:vec![],work:0,tried_rules:0,forward_verified:false,used_acquired_inverse:false})}
+            let width=task.examples[0].input.len().min(MAX_LC1_INPUTS);
+            let mut known=(0..width).map(Expr::Input).collect::<Vec<_>>();
+            for a in 0..width {for b in a+1..width {for op in [Op::Add,Op::Sub,Op::Mul] {
                 known.push(Expr::bin(op,Expr::Input(a),Expr::Input(b)));
-            }
-        }}
-        let mut total=0u64;let mut tried=0;
-        for stem in known {
-            for rule in &self.rules {
-                if total+10_000>limits.work {break}
-                let sub=CompletionLimits{work:limits.work.saturating_sub(total).min(120_000),nodes:limits.nodes,terms:limits.terms};
-                let sketch=Expr::bin(rule.op,stem.clone(),Expr::Hole{id:0,ty:Ty::Int});
-                // A generated sketch must meet exactly the same node bound
-                // as a supplied one. It has no searchable completion if too
-                // large; skipping it preserves prior search work/results.
-                if sketch.nodes()>limits.nodes {continue}
-                let result=self.complete(task,&sketch,&sub);
-                tried+=1;
-                match result {
-                    Ok(mut r)=>{
-                        total=total.saturating_add(r.work);
-                        if r.forward_verified {
-                            r.work=total;r.tried_rules=tried;return Ok(r)
-                        }
-                    },
-                    Err(Error::Budget)=>{total=total.saturating_add(sub.work);},
-                    Err(Error::Overflow)|Err(Error::InvalidData)=>{total=total.saturating_add(sub.work);},
-                    Err(error)=>return Err(error),
+            }}}
+            let mut tried=0;
+            for stem in known {
+                for rule in &self.rules {
+                    if total.saturating_add(10_000)>limits.work {break}
+                    let sub=CompletionLimits{work:limits.work.saturating_sub(total).min(120_000),nodes:limits.nodes,terms:limits.terms};
+                    let sketch=Expr::bin(rule.op,stem.clone(),Expr::Hole{id:0,ty:Ty::Int});
+                    // Impossible generated sketches are not failed queries:
+                    // skip before invoking any subsearch or charging work.
+                    if sketch.nodes()>limits.nodes {continue}
+                    let (attempt,spent)=self.complete_measured(task,&sketch,&sub);
+                    total=total.saturating_add(spent);
+                    tried+=1;
+                    match attempt {
+                        Ok(mut done)=>{
+                            if done.forward_verified {
+                                done.work=total;done.tried_rules=tried;return Ok(done)
+                            }
+                        },
+                        Err(Error::Budget)|Err(Error::Overflow)|Err(Error::InvalidData)=>{
+                            // A failed candidate is charged exactly as its
+                            // metered run reports; other candidates survive.
+                        },
+                        Err(err)=>return Err(err),
+                    }
                 }
             }
-        }
-        Ok(CompletionReport{program:None,required_values:vec![],work:total,tried_rules:tried,forward_verified:false,used_acquired_inverse:tried>0})
+            Ok(CompletionReport{program:None,required_values:vec![],work:total,tried_rules:tried,forward_verified:false,used_acquired_inverse:tried>0})
+        })();
+        (result,total)
     }
 }

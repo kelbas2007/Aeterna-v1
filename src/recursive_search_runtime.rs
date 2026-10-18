@@ -1,3 +1,11 @@
+/// The amount charged cannot depend on Ok versus Err. A metered computation
+/// reports the work completed, bounded by the reservation on all exits.
+fn settle_reserved_work(account:&mut u64,reserved:u64,spent:u64)->UResult<()> {
+    if spent>reserved{return Err(UError::InvalidData)}
+    *account=account.checked_sub(reserved-spent).ok_or(UError::InvalidData)?;
+    Ok(())
+}
+
 // No new organism or external-action commander. These are cognitive operations
 // in the already existing ScientificRuntime. The host supplies labelled lessons;
 // candidate policy code has no permission to evaluate hidden tasks or do I/O.
@@ -19,7 +27,7 @@ impl ScientificRuntime {
         limits.validate()?;task.validate()?;
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;
         let r=u.current.learner.solve_by_recursive_search(task,limits,seed)?;
-        u.computation_work-=limits.work-r.work;Ok(r)
+        settle_reserved_work(&mut u.computation_work,limits.work,r.work)?;Ok(r)
     }
     pub fn freeze_recursive_search(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;u.current.learner.freeze_recursive_search();Ok(())
@@ -62,8 +70,11 @@ impl ScientificRuntime {
         // Reserve the entire budget before execution; only actual spent work
         // remains charged on successful return. Do not expose free failures.
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;
-        let result=u.current.learner.complete_missing_computation(task,sketch,limits);
-        if let Ok(ref r)=result {u.computation_work-=limits.work-r.work;}
+        let (result,spent)=u.current.learner.complete_missing_computation_measured(task,sketch,limits);
+        // Settle even an unsuccessful attempt using its actual metered work.
+        // A malformed preflight spends zero; an arithmetic failure spends only
+        // the VM instructions reached before the failure.
+        settle_reserved_work(&mut u.computation_work,limits.work,spent)?;
         result
     }
 
@@ -76,8 +87,8 @@ impl ScientificRuntime {
         // preserves the joint checkpoint and existing RSP2 work accounting.
         if u.current.learner.requirements_report().is_none(){return Err(UError::NoEvidence)}
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;
-        let result=u.current.learner.discover_missing_computation(task,limits);
-        if let Ok(ref r)=result{u.computation_work-=limits.work-r.work;}
+        let (result,spent)=u.current.learner.discover_missing_computation_measured(task,limits);
+        settle_reserved_work(&mut u.computation_work,limits.work,spent)?;
         result
     }
 }

@@ -15,6 +15,19 @@ impl Learner {
         self.construction_work=self.construction_work.saturating_add(out.work-before);
         Ok(out)
     }
+    pub(crate) fn discover_missing_computation_measured(&self,task:&super::search_policy::SynthesisTask,limits:&super::requirements::CompletionLimits)->(Result<super::requirements::CompletionReport>,u64){
+        match self.requirements.as_ref(){
+            Some(book)=>book.discover_measured(task,limits),
+            None=>(Err(Error::NoEvidence),0),
+        }
+    }
+    pub(crate) fn complete_missing_computation_measured(&self,task:&super::search_policy::SynthesisTask,
+        sketch:&Expr,limits:&super::requirements::CompletionLimits)->(Result<super::requirements::CompletionReport>,u64){
+        match self.requirements.as_ref(){
+            Some(book)=>book.complete_measured(task,sketch,limits),
+            None=>(Err(Error::NoEvidence),0),
+        }
+    }
     pub fn discover_missing_computation(&self,task:&super::search_policy::SynthesisTask,limits:&super::requirements::CompletionLimits)->Result<super::requirements::CompletionReport>{
         self.requirements.as_ref().ok_or(Error::NoEvidence)?.discover(task,limits)
     }
