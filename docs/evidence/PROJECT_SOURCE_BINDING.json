@@ -34,7 +34,7 @@
   "reviewed_lc1_extension": {
     "purpose": "Acquired inverse requirements central to same Learner and ScientificRuntime, opt-in only; 100% preservation of original RSP2 search-policy code and admissibility.",
     "added": {
-      "src/construction/requirements.rs": "4f170c8ea0e17f17f977f984c900508d2943b114966558934a7349e8531e5407",
+      "src/construction/requirements.rs": "c8a267b67af9698c764f11346f7522d46ae782352aa22008d304f5bc59d8b64c",
       "src/construction/requirements_port.rs": "1eb0cb92c063aa43f1286f89785b5c5b7110305462aa95111c9ec2216bf69168"
     },
     "modified": {
@@ -48,8 +48,8 @@
       },
       "src/recursive_search_runtime.rs": {
         "before_sha256": "722552ff99cfa46d2f62b230c8e43fe47725a02895fb05a2c6fe29cdc83619e1",
-        "after_sha256": "244bc70b3433a05b7e582691b0e3d185e14c723e92e16fdd1afb62cd7b56b323",
-        "review": "PR8 Codex P1: LC1 must charge delta of Learner total construction_work, not cumulative LC1-only RequirementReport.work minus Learner total."
+        "after_sha256": "6ef6be4a3adc475773a74533522da37de63aa199f343fde3e0e58a5d5ec5ff50",
+        "review": "PR8 Codex P1: LC1 must charge delta of Learner total construction_work, not cumulative LC1-only RequirementReport.work minus Learner total. PR8 Codex P2: LC1 rejects >128 support rows before reserving work; general SynthesisTask unchanged."
       }
     },
     "jsonl_source_after_sha256": "f7517ba87387bbb8ea4f72cf22f6bae66f9a5efa5104681dac6e24505599e89d"

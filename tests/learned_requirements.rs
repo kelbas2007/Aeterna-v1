@@ -202,3 +202,41 @@ fn lc1_after_charged_rsp2_failure_uses_shared_learner_counter() {
     let restored=ScientificRuntime::from_constructing_checkpoint(&cp).unwrap();
     assert_eq!(restored.unified_report().unwrap().computation_work,after.computation_work);
 }
+
+#[test]
+fn lc1_induction_support_limit_rejects_before_work_reservation() {
+    // General synthesis admits 256 rows; the current fragment-induction
+    // backend supports only 128. LC1 must refuse the larger, otherwise valid
+    // input before consuming or reserving the entire requested budget.
+    use aeterna_v1::construction::requirements::{validate_completion_task, MAX_LC1_SUPPORT_ROWS};
+    assert_eq!(MAX_LC1_SUPPORT_ROWS,128);
+    let boundary=task(128,1);
+    assert!(boundary.validate().is_ok());
+    assert!(validate_completion_task(&boundary).is_ok());
+    let mut memory=RequirementMemory::default();
+    memory.observe(&executed(Op::Sub,35)).unwrap();
+    let limits=CompletionLimits{work:2_000_000,nodes:7,terms:4096};
+    let mut runtime=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},
+        AutonomyPolicy::default(),vec![0;4],"LC1-ROW-BOUNDARY"
+    ).unwrap();
+    runtime.enable_missing_computation_learning().unwrap();
+    runtime.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let checkpoint=runtime.checkpoint_constructing().unwrap();
+    let baseline=runtime.unified_report().unwrap();
+    for rows in [129,256] {
+        let unsupported=task(rows,1);
+        assert!(unsupported.validate().is_ok(),"SynthesisTask must still admit {rows}");
+        assert_eq!(validate_completion_task(&unsupported),Err(Error::Capacity));
+        assert_eq!(memory.complete(&unsupported,&sketch(),&limits),Err(Error::Capacity));
+        assert_eq!(memory.discover(&unsupported,&limits),Err(Error::Capacity));
+        assert_eq!(runtime.complete_missing_computation(&unsupported,&sketch(),&limits),Err(Error::Capacity));
+        assert_eq!(runtime.discover_missing_computation(&unsupported,&limits),Err(Error::Capacity));
+        assert_eq!(runtime.checkpoint_constructing().unwrap(),checkpoint);
+        assert_eq!(runtime.unified_report().unwrap().computation_work,baseline.computation_work);
+    }
+    // A fully supported task still goes through the ordinary solver with
+    // acquired inverse rules and a true forward-VM check.
+    let result=runtime.complete_missing_computation(&task(22,5),&sketch(),&limits).unwrap();
+    assert!(result.forward_verified);
+}

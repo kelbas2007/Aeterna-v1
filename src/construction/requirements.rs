@@ -54,6 +54,16 @@ pub struct CompletionReport {
     pub program: Option<Expr>,pub required_values: Vec<i64>,pub work: u64,
     pub tried_rules: usize,pub forward_verified: bool,pub used_acquired_inverse: bool,
 }
+// LC1 delegates missing-fragment inference to induction::infer, which accepts
+// at most 128 support rows. SynthesisTask itself permits up to 256, so LC1
+// must enforce its own narrower contract BEFORE reserving runtime work.
+pub const MAX_LC1_SUPPORT_ROWS: usize = 128;
+pub fn validate_completion_task(task: &SynthesisTask) -> Result<()> {
+    task.validate()?;
+    if task.examples.len() < 4 { return Err(Error::InvalidData); }
+    if task.examples.len() > MAX_LC1_SUPPORT_ROWS { return Err(Error::Capacity); }
+    Ok(())
+}
 fn inputs(op: Op)->bool {op.input()==Ty::Int && op.output()==Ty::Int}
 fn candidates()->Vec<Expr>{
     let mut leaves=vec![Expr::Input(0),Expr::Input(1)];
@@ -142,8 +152,7 @@ impl RequirementMemory {
     /// Complete an explicitly identified missing right subcomputation. Support
     /// outcomes are shown to the solver; withheld probes are never passed in.
     pub fn complete(&self,task:&SynthesisTask,sketch:&Expr,limits:&CompletionLimits)->Result<CompletionReport>{
-        task.validate()?;limits.validate()?;
-        if task.examples.len()<4{return Err(Error::InvalidData)}
+        validate_completion_task(task)?;limits.validate()?;
         let Expr::Bin(op,known,missing)=sketch else {return Err(Error::InvalidProgram)};
         if !matches!(missing.as_ref(),Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op)||sketch.nodes()>limits.nodes+4{return Err(Error::InvalidProgram)}
         if known.first_hole().is_some()||known.ty(&task.library)!=Ok(Ty::Int){return Err(Error::InvalidProgram)}
@@ -175,8 +184,7 @@ impl RequirementMemory {
     /// operator relations and input compositions; the VM alone verifies a fit.
     /// Ordinary RSP2 induction is left available and never pruned by this hint.
     pub fn discover(&self,task:&SynthesisTask,limits:&CompletionLimits)->Result<CompletionReport>{
-        task.validate()?;limits.validate()?;
-        if task.examples.len()<4{return Err(Error::InvalidData)}
+        validate_completion_task(task)?;limits.validate()?;
         if self.rules.is_empty(){return Ok(CompletionReport{program:None,required_values:vec![],work:0,tried_rules:0,forward_verified:false,used_acquired_inverse:false})}
         let width=task.examples[0].input.len().min(6);
         let mut known=(0..width).map(Expr::Input).collect::<Vec<_>>();

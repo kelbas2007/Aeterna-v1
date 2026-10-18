@@ -53,7 +53,7 @@ impl ScientificRuntime {
         limits:&crate::construction::requirements::CompletionLimits
     )->UResult<crate::construction::requirements::CompletionReport>{
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
-        limits.validate()?;task.validate()?;
+        limits.validate()?;crate::construction::requirements::validate_completion_task(task)?;
         // Reserve the entire budget before execution; only actual spent work
         // remains charged on successful return. Do not expose free failures.
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;
@@ -66,7 +66,7 @@ impl ScientificRuntime {
         limits:&crate::construction::requirements::CompletionLimits
     )->UResult<crate::construction::requirements::CompletionReport>{
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
-        limits.validate()?;task.validate()?;
+        limits.validate()?;crate::construction::requirements::validate_completion_task(task)?;
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;
         let result=u.current.learner.discover_missing_computation(task,limits);
         if let Ok(ref r)=result{u.computation_work-=limits.work-r.work;}
