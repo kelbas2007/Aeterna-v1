@@ -1,0 +1,265 @@
+name: RSP1 executable recursive search verification
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.ci/rsp1/**', '.github/workflows/recursive-search-integration.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: rsp1-integration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      CARGO_PROFILE_RELEASE_LTO: 'false'
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: '2'
+      PYTHONUTF8: '1'
+    outputs:
+      tested_sha: ${{ steps.publish.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Apply exact frozen implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -d .ci/rsp1; then
+            python - <<'PY'
+          from pathlib import Path
+          import gzip,hashlib,subprocess
+          raw=b''.join((Path('.ci/rsp1')/f'part{i}.bin').read_bytes() for i in range(10))
+          assert hashlib.sha256(raw).hexdigest()=='67a0993e096b865631a197aab19ce47a6364e43eff1f0a5f6201c61de11dcc0a'
+          patch=gzip.decompress(raw)
+          assert hashlib.sha256(patch).hexdigest()=='2ff83b088267451dd6419b2d8c0bbe8f38eb45bef1c11722959ec8eaa4387a6a'
+          subprocess.run(['git','apply','--check','-'],input=patch,check=True)
+          subprocess.run(['git','apply','--index','-'],input=patch,check=True)
+          PY
+            git rm -r .ci/rsp1
+            git diff --cached --check
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Integrate bounded executable search-policy self-construction and independent producer evaluation'
+            echo 'RSP_APPLIED=1' >> "$GITHUB_ENV"
+          fi
+          mkdir -p rsp-evidence
+          git rev-parse HEAD > rsp-evidence/revision.txt
+          git archive --format=tar.gz --output=rsp-evidence/source.tar.gz HEAD
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          freeze=json.loads(Path('docs/evidence/RSP1_PRETEST_FREEZE.json').read_text())
+          for name,digest in freeze['source_sha256'].items():
+              assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==digest,name
+          Path('rsp-evidence/source-check.json').write_text(json.dumps(freeze,indent=2)+'\n')
+          PY
+      - name: Pinned Rust and Cargo
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > rsp-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Independent SMT checker, unavailable to search policies
+        run: |
+          python -m pip install z3-solver==5.3.1.0 > rsp-evidence/checker-install.log 2>&1
+          python -m pip freeze > rsp-evidence/python-versions.txt
+      - name: Compile and check existing integration and protections
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee rsp-evidence/check.log
+          cargo test --locked --lib construction:: 2>&1 | tee rsp-evidence/construction.log
+          cargo test --locked --test recursive_search_policy --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection --test u1_meta_control 2>&1 | tee rsp-evidence/integration.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "rsp-evidence/$name.log"
+          done
+          python scripts/rsp1_external_test.py 2>&1 | tee rsp-evidence/checker-tests.log
+          cargo build --locked --release --bin aeterna-unified --example recursive_search 2>&1 | tee rsp-evidence/build.log
+      - name: Reproduce all eight precommitted learned states
+        shell: bash
+        run: |
+          set -euo pipefail
+          target/release/examples/recursive_search train rsp-evidence/lifetimes 2>&1 | tee rsp-evidence/training.log
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          freeze=json.loads(Path('docs/evidence/RSP1_PRETEST_FREEZE.json').read_text())
+          matched={}
+          for name,digest in freeze['checkpoints_sha256'].items():
+              actual=hashlib.sha256((Path('rsp-evidence/lifetimes')/name).read_bytes()).hexdigest()
+              assert actual==digest,name
+              matched[name]=actual
+          Path('rsp-evidence/reproduced-freeze.json').write_text(json.dumps(matched,indent=2)+'\n')
+          PY
+      - name: Preserve freeze before external tasks
+        uses: actions/upload-artifact@v4
+        with:
+          name: rsp1-freeze-${{ github.sha }}
+          path: |
+            rsp-evidence/source-check.json
+            rsp-evidence/reproduced-freeze.json
+            rsp-evidence/revision.txt
+          retention-days: 7
+      - name: Execute frozen solver controls and producer swaps
+        shell: bash
+        run: |
+          set -euo pipefail
+          target/release/examples/recursive_search examine rsp-evidence/lifetimes 2>&1 | tee rsp-evidence/producer-exam.log
+      - name: Download syntax-selected external source after freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,urllib.request,concurrent.futures
+          from pathlib import Path,PurePosixPath
+          tree='b7d6bffdda8b0a00ea841a1c7d0171b4cfcbe465'
+          revision='13c8deb68a873635879c9a69bc78caebd340f646'
+          root=Path('rsp-evidence/sygus-source');root.mkdir()
+          def read(url):
+              req=urllib.request.Request(url,headers={'User-Agent':'AETERNA-RSP1-frozen-verifier'})
+              with urllib.request.urlopen(req,timeout=60) as f:return f.read()
+          listing=json.loads(read('https://api.github.com/repos/SyGuS-Org/benchmarks/git/trees/'+tree+'?recursive=1'))
+          assert not listing.get('truncated')
+          entries=[e for e in listing['tree'] if e['type']=='blob' and e['path'].endswith('.sl')]
+          def download(e):
+              path=PurePosixPath(e['path'])
+              assert not path.is_absolute() and '..' not in path.parts
+              url='https://raw.githubusercontent.com/SyGuS-Org/benchmarks/'+revision+'/comp/2017/CLIA_Track/'+str(path)
+              data=read(url)
+              assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()==e['sha'],str(path)
+              p=root/str(path);p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+              return {'path':str(path),'blob':e['sha'],'sha256':hashlib.sha256(data).hexdigest(),'url':url}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:manifest=list(pool.map(download,entries))
+          (root/'manifest.json').write_text(json.dumps({'tree':tree,'revision':revision,'files':manifest},indent=2)+'\n')
+          PY
+      - name: Native external search and independent bounded formal verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/rsp1_external.py --binary target/release/aeterna-unified --trained rsp-evidence/lifetimes/trained-101.json --sources rsp-evidence/sygus-source --output rsp-evidence/external 2>&1 | tee rsp-evidence/external.log
+      - name: Publish tested code without changing main or forcing history
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/beyond-intel4'
+          git diff --exit-code
+          if test "${RSP_APPLIED:-0}" = 1; then
+            header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+            echo "::add-mask::$header"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/research/beyond-intel4
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git rev-parse HEAD > rsp-evidence/published-revision.txt
+      - name: Preserve all measurements, never hide a negative benchmark
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rsp1-Linux-${{ github.sha }}
+          path: rsp-evidence/
+          retention-days: 7
+          if-no-files-found: warn
+  windows:
+    needs: verify
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      CARGO_PROFILE_RELEASE_LTO: 'false'
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: '2'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify.outputs.tested_sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pinned toolchain and independent checker transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p rsp-windows
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > rsp-windows/toolchain.txt
+          git rev-parse HEAD > rsp-windows/revision.txt
+          python -m pip install z3-solver==5.3.1.0 > rsp-windows/checker-install.log 2>&1
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/download-artifact@v4
+        with:
+          name: rsp1-Linux-${{ github.sha }}
+          path: linux-evidence
+      - name: Compile and test the same runtime on Windows
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee rsp-windows/check.log
+          cargo test --locked --test recursive_search_policy --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee rsp-windows/tests.log
+          cargo build --locked --release --bin aeterna-unified --example recursive_search 2>&1 | tee rsp-windows/build.log
+      - name: Reproduce native external decisions, without training or changing policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' 2>&1 | tee rsp-windows/replay.log
+          from pathlib import Path
+          import sys,json,hashlib
+          sys.path.insert(0,'scripts')
+          from rsp1_external import Client,LIMITS
+          root=Path('linux-evidence');out=Path('rsp-windows')
+          c=Client(Path('target/release/aeterna-unified.exe'),out/'native.log')
+          state=(root/'lifetimes/trained-101.json').read_text(encoding='utf-8')
+          c.request({'op':'load','checkpoint':state})
+          before=c.request({'op':'recursive_search_report'})['state']
+          assert c.request({'op':'checkpoint'})['checkpoint']==state
+          matched=0;results=[]
+          for row in json.loads((root/'external/cases.json').read_text(encoding='utf-8')):
+              if 'task' not in row or 'search' not in row['arms'].get('learned',{}):continue
+              result=c.request({'op':'solve_synthesis','task':row['task'],'limits':LIMITS,'seed':0xC11A})['result']
+              assert result==row['arms']['learned']['search'],row['path']
+              matched+=1;results.append({'path':row['path'],'search':result})
+          assert before==c.request({'op':'recursive_search_report'})['state'];c.close()
+          (out/'replayed.json').write_text(json.dumps(results,indent=2)+'\n',encoding='utf-8')
+          (out/'summary.json').write_text(json.dumps({'native_searches_identical':matched,'policy_unchanged':True,'checkpoint_loaded_bit_exactly':True,'new_independent_test':False},indent=2)+'\n',encoding='utf-8')
+          print(matched)
+          PY
+      - name: Package runnable research system and preselected acquired policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,hashlib
+          p=Path('rsp1-package');p.mkdir()
+          for src,name in [('target/release/aeterna-unified.exe','aeterna-unified.exe'),('target/release/examples/recursive_search.exe','recursive_search.exe'),('linux-evidence/lifetimes/trained-101.json','trained-101.json'),('linux-evidence/lifetimes/exam-summary.json','EXAM_RESULTS.json'),('linux-evidence/external/summary.json','EXTERNAL_RESULTS.json'),('docs/RECURSIVE_SEARCH_POLICY_PROTOCOL.md','PROTOCOL.md'),('docs/evidence/RSP1_PRETEST_FREEZE.json','PRETEST_FREEZE.json')]:shutil.copyfile(src,p/name)
+          (p/'README_RU.txt').write_text('AETERNA RSP1 — исполняемые программы поиска и создания следующих программ поиска. Это исследовательский режим, не свободный собеседник и не доказанный общий интеллект.\nВнешний и внутренний экзамены сохранены полностью в EXAM_RESULTS.json и EXTERNAL_RESULTS.json. Рост числа поколений не означает устойчивого усиления.\ntrained-101.json — заранее выбранная новая учебная жизнь, не замена прежним школьным знаниям. aeterna-unified.exe принимает JSONL через stdin; запуск без адаптера ожидает команды.\nПовторить полный учебный эксперимент: recursive_search.exe train new-session\nПосле него: recursive_search.exe examine new-session\nКаталог должен быть новым; старые результаты не перезаписываются. Команды запускаются без Rust, Python, интернета или LLM. Для отдельного SMT-проверяющего внешних формальных задач нужен Python с z3-solver; он не является частью обучаемой политики.\n',encoding='utf-8')
+          (p/'SHA256SUMS.txt').write_text('\n'.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name for f in sorted(p.iterdir()))+'\n',encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AETERNA-RSP1-Windows-${{ needs.verify.outputs.tested_sha }}
+          path: rsp1-package/
+          retention-days: 7
+      - name: Preserve Windows verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rsp1-Windows-evidence-${{ github.sha }}
+          path: rsp-windows/
+          retention-days: 7
+          if-no-files-found: warn
