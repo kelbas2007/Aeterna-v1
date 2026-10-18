@@ -38,6 +38,7 @@ pub(crate) fn main()->Result<()>{
             }));
             println!("{}",serde_json::to_string_pretty(&json!({"type":"checkpoint_inspection",
                 "organism":rt.unified_report(),"school":rt.school_report(),"recursive_search":recursive,
+                "learned_requirements":rt.requirements_report(),
                 "read_only":true,"external_actions_executed":0}))?);
             return Ok(());
         },
@@ -67,6 +68,26 @@ pub(crate) fn main()->Result<()>{
                     let config=serde_json::from_value(request["config"].clone())?;
                     runtime.as_mut().ok_or("not loaded")?.enable_recursive_search(config)?;
                     Ok(json!({"type":"recursive_search_enabled"}))
+                },
+                "enable_missing_computation_learning"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_missing_computation_learning()?;
+                    Ok(json!({"type":"requirements_enabled"}))
+                },
+                "observe_executed_computations"=>{
+                    let rows:Vec<aeterna_v1::construction::requirements::ExecutedOperation>=serde_json::from_value(request["observations"].clone())?;
+                    let report=runtime.as_mut().ok_or("not loaded")?.observe_executed_computations(&rows)?;
+                    Ok(json!({"type":"requirements_learned","report":report}))
+                },
+                "missing_computation_report"=>Ok(json!({"type":"requirements_report","report":runtime.as_ref().ok_or("not loaded")?.requirements_report()})),
+                "complete_missing_computation"=>{
+                    let task=serde_json::from_value(request["task"].clone())?;
+                    let limits=serde_json::from_value(request.get("limits").cloned().unwrap_or(
+                        serde_json::to_value(aeterna_v1::construction::requirements::CompletionLimits::default())?))?;
+                    let report=if let Some(s)=request.get("sketch") {
+                        let sketch=serde_json::from_value(s.clone())?;
+                        runtime.as_mut().ok_or("not loaded")?.complete_missing_computation(&task,&sketch,&limits)?
+                    }else{runtime.as_mut().ok_or("not loaded")?.discover_missing_computation(&task,&limits)?};
+                    Ok(json!({"type":"missing_computation_result","result":report}))
                 },
                 "improve_recursive_search"=>{
                     let training:Vec<aeterna_v1::construction::search_policy::SynthesisTask>=serde_json::from_value(request["training"].clone())?;
@@ -287,6 +308,9 @@ The aeterna-unified binary is a compatibility alias of this same code.
 A learned checkpoint must be supplied explicitly; no pretrained state is invented.
 RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
 solve_synthesis, recursive_search_report, checkpoint, quit.
+LC1: enable_missing_computation_learning, observe_executed_computations,
+complete_missing_computation, missing_computation_report; learned rules share
+one checkpoint. Both LC1 and RSP3 remain candidate-only without RSP2 adoption.
 Legacy RSP1 states remain readable; old admission history is not upgraded silently.
 Virtual environments only. General intelligence and reliable self-improvement
 have not been demonstrated. See docs/PROJECT_OVERVIEW.md.

@@ -17,10 +17,12 @@ def main():
  run('cargo','check',*common,'--all-targets')
  flags=common+(['--release'] if a.release else [])
  run('cargo','test',*flags,'--lib','construction::')
- names=['project_entrypoint','recursive_search_policy','recursive_search_repair','experiential','quantity_relations','word_problems','education_runtime','semantic_grounding','unified_runtime','unified_restore_guards','human_protection','u1_meta_control']+[p.stem for p in sorted((ROOT/'tests').glob('directed_construction*.rs'))]
+ names=['project_entrypoint','recursive_search_policy','recursive_search_repair','experiential','learned_requirements','quantity_relations','word_problems','education_runtime','semantic_grounding','unified_runtime','unified_restore_guards','human_protection','u1_meta_control']+[p.stem for p in sorted((ROOT/'tests').glob('directed_construction*.rs'))]
  assert len(names)==len(set(names))
  cmd=['cargo','test',*flags]
  for name in names:cmd+=['--test',name]
  run(*cmd);run('cargo','test',*flags,'--example','rsp3_experience');run('cargo','build',*flags,'--bin','aeterna-v1','--bin','aeterna-unified')
+ binary=ROOT/'target'/('release' if a.release else 'debug')/('aeterna-v1.exe' if os.name=='nt' else 'aeterna-v1')
+ run('python','scripts/lc1_joint_demo.py','--binary',str(binary),'--output',str(temp/'lc1_joint_demo.json'))
  print(json.dumps({'status':'PASS','suites':names,'fresh_intelligence_claim':False}))
 if __name__=='__main__':main()
