@@ -495,7 +495,17 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
-        if let Some(book)=&state.requirements{book.validate()?;if state.frozen_at.is_some()&&!book.report().frozen{return Err(Error::InvalidData)}}
+        if let Some(book)=&state.requirements{
+            book.validate()?;
+            // LC1-only acquisition work is included in Learner's cumulative
+            // all-mechanism ledger. A re-enveloped book may not claim to have
+            // spent more than its owning Learner has ever charged.
+            let learned=book.report();
+            if learned.work>state.construction_work{return Err(Error::InvalidData)}
+            // Only the Learner's irreversible freeze can freeze LC1.
+            // Reject BOTH impossible directions in restored checkpoints.
+            if learned.frozen!=state.frozen_at.is_some(){return Err(Error::InvalidData)}
+        }
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
         if let Some(policy)=&state.autonomy {
             policy.validate(&state.config)?;

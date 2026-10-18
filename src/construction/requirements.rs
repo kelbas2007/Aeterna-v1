@@ -81,7 +81,12 @@ pub fn validate_completion_sketch(task: &SynthesisTask, sketch: &Expr, limits: &
     if !matches!(missing.as_ref(), Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op) || sketch.nodes() > limits.nodes {
         return Err(Error::InvalidProgram);
     }
-    if known.first_hole().is_some() || known.ty(&task.library) != Ok(Ty::Int) {return Err(Error::InvalidProgram)}
+    // The fragment runs in a pure, stateless Context. A type-correct Input,
+    // State, or Arg can still be out of bounds; fail BEFORE reserving work.
+    if known.first_hole().is_some()
+        || known.ty(&task.library) != Ok(Ty::Int)
+        || !known.references_valid(task.examples[0].input.len(),0,0,&task.library)
+    {return Err(Error::InvalidProgram)}
     Ok(())
 }
 fn inputs(op: Op)->bool {op.input()==Ty::Int && op.output()==Ty::Int}
@@ -153,6 +158,10 @@ impl RequirementMemory {
             if let Some(rule)=acquired_rule_for_rows(op,&rows,&mut validation_work){derived.push(rule)}
         }
         if self.rules!=derived{return Err(Error::InvalidData)}
+        // A forged checksum does not justify rewriting acquisition cost.
+        // A genuine acquisition may include multiple earlier learning passes,
+        // so the canonical final replay is a LOWER BOUND, not an equality.
+        if self.work<validation_work{return Err(Error::InvalidData)}
         Ok(())
     }
     /// Atomic intake: all new records must be real, coherent *forward* executions.
@@ -230,6 +239,10 @@ impl RequirementMemory {
                 if total+10_000>limits.work {break}
                 let sub=CompletionLimits{work:limits.work.saturating_sub(total).min(120_000),nodes:limits.nodes,terms:limits.terms};
                 let sketch=Expr::bin(rule.op,stem.clone(),Expr::Hole{id:0,ty:Ty::Int});
+                // A generated sketch must meet exactly the same node bound
+                // as a supplied one. It has no searchable completion if too
+                // large; skipping it preserves prior search work/results.
+                if sketch.nodes()>limits.nodes {continue}
                 let result=self.complete(task,&sketch,&sub);
                 tried+=1;
                 match result {

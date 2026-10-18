@@ -393,12 +393,16 @@ fn lc1_restored_rule_cannot_claim_acquisition_from_undiverse_records() {
     base.enable_requirements().unwrap();
     let mut value=serde_json::to_value(&base).unwrap();
     value["requirements"]=forged_json;
+    // The fixture must preserve a realistic parent work ledger so that the
+    // test isolates the undiverse acquisition error, not ledger mismatch.
+    value["construction_work"]=serde_json::json!(book.report().work);
     let forged_state:Learner=serde_json::from_value(value).unwrap();
     let re_enveloped=forged_state.checkpoint().unwrap();
     assert!(Learner::from_checkpoint(&re_enveloped).is_err());
     // Original real acquired state still restores with its rule.
     let mut sound=serde_json::to_value(&base).unwrap();
     sound["requirements"]=serde_json::to_value(&book).unwrap();
+    sound["construction_work"]=serde_json::json!(book.report().work);
     let sound_state:Learner=serde_json::from_value(sound).unwrap();
     assert_eq!(Learner::from_checkpoint(&sound_state.checkpoint().unwrap()).unwrap().requirements_report().unwrap().learned_rules,1);
 }
@@ -424,4 +428,109 @@ fn lc1_checkpoint_rejects_fitting_but_noncanonical_inverse() {
     let edited:RequirementMemory=serde_json::from_value(encoded).unwrap();
     assert_eq!(edited.validate(),Err(Error::InvalidData),"only the actual first acquired rule is admissible");
     assert_eq!(memory.validate(),Ok(()));
+}
+
+#[test]
+fn lc1_discovery_skips_impossible_generated_skeletons_without_discarding_work_receipt() {
+    let mut memory=RequirementMemory::default();
+    memory.observe(&executed(Op::Sub,35)).unwrap();
+    // A root binary op + an input + a hole needs 3 nodes. A composed input
+    // adds two more nodes. With nodes=3 the latter must be SKIPPED, not
+    // propagated as InvalidProgram after valid hypotheses were evaluated.
+    let limits=CompletionLimits{work:500_000,nodes:3,terms:256};
+    let result=memory.discover(&task(22,5),&limits).expect("skip unbuildable automatic sketches");
+    assert!(!result.forward_verified);
+    assert!(result.tried_rules>0);
+    assert!(result.work<=limits.work);
+    let mut rt=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},AutonomyPolicy::default(),
+        vec![0;4],"LC1-AUTO-SIZE-PREFLIGHT").unwrap();
+    rt.enable_missing_computation_learning().unwrap();
+    rt.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let before=rt.unified_report().unwrap().computation_work;
+    let run=rt.discover_missing_computation(&task(22,5),&limits).expect("valid capped discovery");
+    assert_eq!(run.work,result.work);
+    assert_eq!(rt.unified_report().unwrap().computation_work-before,run.work);
+}
+
+#[test]
+fn lc1_known_references_are_checked_before_shared_budget_reservation() {
+    use aeterna_v1::construction::requirements::validate_completion_sketch;
+    let mut rt=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},AutonomyPolicy::default(),
+        vec![0;4],"LC1-REFERENCE-PREFLIGHT").unwrap();
+    rt.enable_missing_computation_learning().unwrap();
+    rt.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let limits=CompletionLimits{work:20_000_000,nodes:7,terms:4096};
+    let data=task(22,5);
+    let checkpoint=rt.checkpoint_constructing().unwrap();
+    let charged=rt.unified_report().unwrap().computation_work;
+    for invalid_reference in [Expr::Input(99),Expr::State(0),Expr::Arg(0)] {
+        let bad=Expr::bin(Op::Sub,invalid_reference,Expr::Hole{id:0,ty:Ty::Int});
+        assert_eq!(validate_completion_sketch(&data,&bad,&limits),Err(Error::InvalidProgram));
+        assert_eq!(rt.complete_missing_computation(&data,&bad,&limits),Err(Error::InvalidProgram));
+        assert_eq!(rt.checkpoint_constructing().unwrap(),checkpoint);
+        assert_eq!(rt.unified_report().unwrap().computation_work,charged);
+    }
+    assert!(validate_completion_sketch(&data,&sketch(),&limits).is_ok());
+    assert!(rt.complete_missing_computation(&data,&sketch(),&limits).unwrap().forward_verified);
+}
+
+#[test]
+fn lc1_restored_ledger_cannot_claim_free_acquisition() {
+    let mut memory=RequirementMemory::default();
+    memory.observe(&executed(Op::Sub,35)).unwrap();
+    assert!(memory.report().learned_rules>0);
+    assert!(memory.report().work>0);
+    let mut forged=serde_json::to_value(&memory).unwrap();
+    forged["work"]=serde_json::json!(0);
+    let edited:RequirementMemory=serde_json::from_value(forged.clone()).unwrap();
+    assert_eq!(edited.validate(),Err(Error::InvalidData));
+    let mut learner=Learner::new(Config::default(),vec![0]).unwrap();
+    learner.enable_requirements().unwrap();
+    let mut value=serde_json::to_value(&learner).unwrap();
+    value["requirements"]=forged;
+    let re_enveloped:Learner=serde_json::from_value(value).unwrap();
+    assert!(Learner::from_checkpoint(&re_enveloped.checkpoint().unwrap()).is_err());
+    assert!(memory.validate().is_ok());
+}
+
+#[test]
+fn lc1_frozen_book_must_match_learner_freeze_both_directions() {
+    let mut learner=Learner::new(Config::default(),vec![0]).unwrap();
+    learner.enable_requirements().unwrap();
+    learner.teach_executed_operations(&executed(Op::Sub,35)).unwrap();
+    let before=learner.checkpoint().unwrap();
+    assert!(Learner::from_checkpoint(&before).is_ok());
+    // Attacker re-envelopes valid acquired observations with a *book-only*
+    // frozen flag. No public Learner API creates frozen book + active learner.
+    let mut active=serde_json::to_value(&learner).unwrap();
+    active["requirements"]["frozen"]=serde_json::json!(true);
+    let forgery:Learner=serde_json::from_value(active).unwrap();
+    assert!(Learner::from_checkpoint(&forgery.checkpoint().unwrap()).is_err());
+    // The real global freeze still admits an exact restore.
+    learner.freeze_learning().unwrap();
+    let frozen=learner.checkpoint().unwrap();
+    let restored=Learner::from_checkpoint(&frozen).unwrap();
+    assert!(restored.requirements_report().unwrap().frozen);
+    // Reverse mismatch is already refused and must remain so.
+    let mut thawed=serde_json::to_value(&learner).unwrap();
+    thawed["requirements"]["frozen"]=serde_json::json!(false);
+    let illegal:Learner=serde_json::from_value(thawed).unwrap();
+    assert!(Learner::from_checkpoint(&illegal.checkpoint().unwrap()).is_err());
+}
+
+#[test]
+fn lc1_restored_book_work_cannot_exceed_parent_learner_ledger() {
+    let mut learner=Learner::new(Config::default(),vec![0]).unwrap();
+    learner.enable_requirements().unwrap();
+    learner.teach_executed_operations(&executed(Op::Sub,35)).unwrap();
+    assert!(Learner::from_checkpoint(&learner.checkpoint().unwrap()).is_ok());
+    let mut forged=serde_json::to_value(&learner).unwrap();
+    let total=forged["construction_work"].as_u64().unwrap();
+    assert!(total>0);
+    forged["requirements"]["work"]=serde_json::json!(total+1);
+    let forged:Learner=serde_json::from_value(forged).unwrap();
+    assert!(Learner::from_checkpoint(&forged.checkpoint().unwrap()).is_err(),
+        "LC1-only charged acquisition may not exceed all-mechanism Learner work");
 }
