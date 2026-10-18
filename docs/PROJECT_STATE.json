@@ -14,7 +14,8 @@
     "prospective_evidence_ep1": true,
     "school_memory_and_composition_sg1": true,
     "quantity_relations_rel1": true,
-    "recursive_search_rsp2": true
+    "recursive_search_rsp2": true,
+    "rsp3_experiential_proposal_research": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -32,7 +33,8 @@
     "stable_recursive_improvement",
     "all_optional_neural_lanes_in_one_checkpoint",
     "arbitrary_language_understanding",
-    "ARC_AGI_3_success"
+    "ARC_AGI_3_success",
+    "rsp3_policy_admitted_by_rsp2_producer_gate"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -46,7 +48,8 @@
   "guides": [
     "docs/PROJECT_OVERVIEW.md",
     "docs/RSP2_REPAIR.md",
-    "docs/RSP2_REPAIR_RESULTS.md"
+    "docs/RSP2_REPAIR_RESULTS.md",
+    "docs/RSP3_EXPERIENCE_RESULTS.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
