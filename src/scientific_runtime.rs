@@ -1205,6 +1205,8 @@ impl ScientificRuntime {
     /// In-memory cognitive restart only. External safety authority, goal and
     /// lifetime audit survive. No saved observation is replayed as fresh fact.
     pub fn restart_cognition(&mut self) -> Result<(), RuntimeError> {
+        // This mode owns a joint Learner/U1 checkpoint, not a native-only one.
+        if self.constructing.is_some() { return Err(RuntimeError::ConstructionModeRequired); }
         let checkpoint: PhaseNativeCheckpoint = self.organism.phase_native_checkpoint()
             .ok_or(RuntimeError::NativeModelRequired)?;
         self.restore_native_checkpoint(checkpoint)
@@ -1214,6 +1216,8 @@ impl ScientificRuntime {
     /// and lifetime audit survive; a fresh factual observation is mandatory.
     /// The opaque checkpoint carries no actuator permit or external authority.
     pub fn restore_native_checkpoint(&mut self, checkpoint:PhaseNativeCheckpoint) -> Result<(),RuntimeError> {
+        // This mode owns a joint Learner/U1 checkpoint, not a native-only one.
+        if self.constructing.is_some() { return Err(RuntimeError::ConstructionModeRequired); }
         let mut replacement = EvoPhase::new(self.organism.config().clone());
         if !replacement.restore_phase_native_checkpoint(checkpoint)
             || replacement.phase_partial_enabled()!=self.organism.phase_partial_enabled()
@@ -1230,6 +1234,8 @@ impl ScientificRuntime {
     /// Restore persisted online cognition atomically while keeping the current
     /// protection latch, goal and audit. Checkpoint data has no actuator authority.
     pub fn restore_online_checkpoint(&mut self, bytes: &[u8]) -> Result<(), RuntimeError> {
+        // This mode owns a joint Learner/U1 checkpoint, not a native-only one.
+        if self.constructing.is_some() { return Err(RuntimeError::ConstructionModeRequired); }
         let mut replacement = EvoPhase::from_online_checkpoint(bytes)
             .map_err(|_| RuntimeError::InvalidCheckpoint)?;
         if replacement.config().sensory_cells != self.organism.config().sensory_cells

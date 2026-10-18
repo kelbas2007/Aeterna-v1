@@ -59,6 +59,10 @@
     "external-word-problems.yml",
     "quantity-relations.yml",
     "recursive-search-integration.yml",
-    "project-audit.yml"
-  ]
+    "project-audit.yml",
+    "dc2-autonomy.yml",
+    "dc2-r1.yml",
+    "education-development.yml"
+  ],
+  "restoration_contract": "construction state must use joint checkpoint APIs; native-only restart/restore rejected before mutation"
 }

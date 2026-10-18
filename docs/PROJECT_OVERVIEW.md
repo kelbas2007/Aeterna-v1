@@ -77,3 +77,12 @@ Linux дополнительно выполняет прежние scripts/check
 Исторические квалификации не возобновляются. Крупные сборки, toolchain и
 локальные результаты не добавляются в Git. CI-пакеты имеют ограниченный срок,
 а точный исходный код остаётся в истории. Новые изменения идут через PR.
+
+## Review correction before consolidation
+
+Generic native-only restart/restore APIs reject construction mode before any
+mutation. Use the joint checkpoint API for a Learner/U1 state. Four regression
+tests fail on the former source and pass with these three entry guards.
+The RSP2 search algorithm and its admission rules remain byte-identical.
+Two already-consumed DC-2 installers now have read-only manual verification
+workflows; no current workflow applies those historical patches again.
