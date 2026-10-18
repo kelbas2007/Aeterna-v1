@@ -66,6 +66,8 @@ pub struct SearchTrace {
     pub exhausted: bool, pub frontier_limited: bool,
     pub winner: Option<Patch>, pub training_loss: f64,
     pub constructor_id: Option<u64>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub search_policy_id: Option<u64>,
     pub prospectively_accepted: bool,
 }
 #[derive(Debug, Clone)]
@@ -380,7 +382,7 @@ pub fn synthesize_requested(parent: &Program,data: &[Transition],lib: &Library,c
     }
     Ok(SearchTrace { job,candidates: best.candidates,updates_tested: best.updates,work: meter.spent,
         baseline_work,constructor_work,exhausted: meter.remaining() == 0,frontier_limited: best.limited,
-        winner: best.patch,training_loss: best.loss,constructor_id: best.constructor,prospectively_accepted: false })
+        winner: best.patch,training_loss: best.loss,constructor_id: best.constructor,search_policy_id:None,prospectively_accepted: false })
 }
 #[cfg(test)]
 mod tests {

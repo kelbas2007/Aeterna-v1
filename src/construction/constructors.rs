@@ -32,6 +32,8 @@ pub struct Registry {
     guard_evidence: BTreeMap<u64,Vec<GuardOutcome>>,
     #[serde(default, skip_serializing_if="MetaLedger::is_empty")]
     pub(super) meta: MetaLedger,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub(super) recursive_search: Option<super::search_policy::RecursiveSearch>,
 }
 pub(super) fn pack(patch: &Patch) -> Expr {
     let mut parts = vec![patch.replacement.clone()];
@@ -77,6 +79,7 @@ impl Registry {
             }
         }
         self.meta.validate()?;
+        if let Some(s)=&self.recursive_search{s.validate()?;}
         for c in &self.constructors {
             if let Some(edit) = &c.refinement {
                 let parent = self.constructors.iter().find(|p| p.id == edit.parent).ok_or(Error::InvalidProgram)?;
@@ -352,7 +355,7 @@ mod tests {
     fn trace(index: usize) -> SearchTrace {
         SearchTrace { job: Job { parent: 7,target: 0,witness_ids: vec![],deterministic_contract: true,stateless_impossible: false,exposed_sources: vec![0,1],features: vec![2,8,0,0] },
             candidates: 8,updates_tested: 1,work: 100,baseline_work: 100,constructor_work: 0,exhausted: false,frontier_limited: false,
-            winner: Some(Patch { parent: 7,target: 0,replacement: Expr::bin(Op::Mul,Expr::Input(index),Expr::Input(index)),cells: vec![] }),training_loss: 0.0,constructor_id: None,prospectively_accepted: true }
+            winner: Some(Patch { parent: 7,target: 0,replacement: Expr::bin(Op::Mul,Expr::Input(index),Expr::Input(index)),cells: vec![] }),training_loss: 0.0,constructor_id: None,search_policy_id:None,prospectively_accepted: true }
     }
     #[test] fn executable_schema_is_acquired_and_keeps_bound_holes() {
         let mut r = Registry::default(); let lib = Library::default(); let mut m = Meter::new(100000);

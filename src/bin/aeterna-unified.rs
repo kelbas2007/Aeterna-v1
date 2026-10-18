@@ -37,6 +37,33 @@ fn main()->Result<()>{
                     let (cfg,policy)=configuration();runtime=Some(ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"interactive-v1")?);
                     Ok(json!({"type":"initialized"}))
                 },
+                "enable_recursive_search"=>{
+                    let config=serde_json::from_value(request["config"].clone())?;
+                    runtime.as_mut().ok_or("not loaded")?.enable_recursive_search(config)?;
+                    Ok(json!({"type":"recursive_search_enabled"}))
+                },
+                "improve_recursive_search"=>{
+                    let training:Vec<aeterna_v1::construction::search_policy::SynthesisTask>=serde_json::from_value(request["training"].clone())?;
+                    let gate:Vec<aeterna_v1::construction::search_policy::SynthesisTask>=serde_json::from_value(request["gate"].clone())?;
+                    let seed=request["seed"].as_u64().ok_or("missing seed")?;
+                    let audit=runtime.as_mut().ok_or("not loaded")?.improve_recursive_search(&training,&gate,seed)?;
+                    Ok(json!({"type":"recursive_search_audit","audit":audit}))
+                },
+                "solve_synthesis"=>{
+                    let task=serde_json::from_value(request["task"].clone())?;
+                    let limits=serde_json::from_value(request["limits"].clone())?;
+                    let seed=request["seed"].as_u64().ok_or("missing seed")?;
+                    let result=runtime.as_mut().ok_or("not loaded")?.solve_by_recursive_search(&task,&limits,seed)?;
+                    Ok(json!({"type":"synthesis_result","result":result}))
+                },
+                "recursive_search_report"=>{
+                    let rt=runtime.as_ref().ok_or("not loaded")?;
+                    Ok(json!({"type":"recursive_search_report","state":rt.construction_learner().and_then(|l|l.recursive_search())}))
+                },
+                "freeze_recursive_search"=>{
+                    runtime.as_mut().ok_or("not loaded")?.freeze_recursive_search()?;
+                    Ok(json!({"type":"recursive_search_frozen"}))
+                },
                 "begin_education_extension"=>{runtime.as_mut().ok_or("not loaded")?.begin_education_extension()?;Ok(json!({"type":"education_open"}))},
                 "install_quantity_relations"=>{
                     let model=serde_json::from_value(request.get("model").ok_or("missing model")?.clone())?;

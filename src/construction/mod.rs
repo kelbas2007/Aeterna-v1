@@ -14,3 +14,5 @@ pub mod epistemic;
 pub mod autonomy;
 pub mod session;
 pub mod induction;
+
+pub mod search_policy;

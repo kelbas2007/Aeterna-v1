@@ -162,7 +162,9 @@ fn run_arm(parent: &Program,data: &[Transition],lib: &Library,cfg: &SearchConfig
     } else { vec![] };
     let mut adjusted = cfg.clone(); adjusted.work = cfg.work.checked_sub(meter.spent).ok_or(Error::Budget)?;
     if adjusted.work < 100 { return Err(Error::Budget); }
-    let trace = synthesize_requested(parent,data,lib,&adjusted,&hints,requested)?;
+    let trace = if let Some(state)=registry.and_then(|r|r.recursive_search.as_ref()) {
+        super::search_policy::synthesis_lane(parent,data,lib,&adjusted,requested,state.policy())?
+    } else {synthesize_requested(parent,data,lib,&adjusted,&hints,requested)?};
     let program = trace.winner.as_ref().map(|p| p.apply(parent,lib)).transpose()?.unwrap_or_else(|| parent.clone());
     let work = trace.work+meter.spent;
     Ok(FrozenArm { trace,program,work })

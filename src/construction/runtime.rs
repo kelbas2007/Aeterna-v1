@@ -162,7 +162,8 @@ impl Learner {
     /// Irreversible freeze; facts and action costs continue, learning does not.
     pub fn freeze_learning(&mut self)->Result<()> {
         if self.pending || self.poisoned {return Err(Error::Busy);}
-        if self.frozen_at.is_none(){self.cancel_shadow();self.frozen_at=Some(self.next_id);}Ok(())
+        if self.frozen_at.is_none(){self.cancel_shadow();self.frozen_at=Some(self.next_id);}
+        self.freeze_recursive_search();Ok(())
     }
     pub fn program(&self) -> &Program { &self.active.program }
     pub fn library(&self) -> &Library { &self.library }
@@ -826,3 +827,5 @@ mod tests {
 
 fn carrier_unmanaged(v:&bool)->bool{!*v}
 include!("unified_port.rs");
+
+include!("recursive_search_port.rs");

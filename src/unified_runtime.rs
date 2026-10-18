@@ -205,10 +205,12 @@ impl ScientificRuntime {
         let old=self.constructing.as_ref().ok_or(UError::NoEvidence)?;let new=candidate.constructing.as_ref().ok_or(UError::NoEvidence)?;
         if new.current.name!=old.current.name || new.current.learner.checkpoint()?!=old.current.learner.checkpoint()?
             || serde_json::to_vec(&old.education).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.education).map_err(|_|UError::InvalidData)?
-            || new.nonce<old.nonce || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
+            || new.nonce<old.nonce || new.computation_work<old.computation_work || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
         if candidate.emergency_latched(){let mut e=Self::absent_evidence();e.emergency_stop=true;self.protection.screen(0,e);}
         self.organism=candidate.organism;self.constructing=candidate.constructing.take();Ok(())
     }
 }
 
 include!("education_runtime.rs");
+
+include!("recursive_search_runtime.rs");
