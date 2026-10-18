@@ -240,3 +240,72 @@ fn lc1_induction_support_limit_rejects_before_work_reservation() {
     let result=runtime.complete_missing_computation(&task(22,5),&sketch(),&limits).unwrap();
     assert!(result.forward_verified);
 }
+
+
+#[test]
+fn lc1_induction_input_width_validation_is_before_work_reservation() {
+    use aeterna_v1::construction::requirements::{validate_completion_task, MAX_LC1_INPUTS};
+    assert_eq!(MAX_LC1_INPUTS, 6);
+    let mut memory=RequirementMemory::default();
+    memory.observe(&executed(Op::Sub,35)).unwrap();
+    let limits=CompletionLimits{work:2_000_000,nodes:7,terms:4096};
+    let mut runtime=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},
+        AutonomyPolicy::default(),vec![0;4],"LC1-INPUT-WIDTH-PREFLIGHT").unwrap();
+    runtime.enable_missing_computation_learning().unwrap();
+    runtime.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let checkpoint=runtime.checkpoint_constructing().unwrap();
+    let before=runtime.unified_report().unwrap();
+    let mut supported_six=task(22,5);
+    for row in &mut supported_six.examples {row.input.extend([0,0]);}
+    assert!(validate_completion_task(&supported_six).is_ok(),"six inputs remain supported");
+    for width in [7,32] {
+        let mut unsupported=task(22,5);
+        for row in &mut unsupported.examples {
+            row.input.extend(std::iter::repeat(0).take(width - row.input.len()));
+        }
+        assert!(unsupported.validate().is_ok(),"generic SynthesisTask accepts width {width}");
+        assert_eq!(validate_completion_task(&unsupported),Err(Error::Capacity));
+        assert_eq!(memory.complete(&unsupported,&sketch(),&limits),Err(Error::Capacity));
+        assert_eq!(memory.discover(&unsupported,&limits),Err(Error::Capacity));
+        assert_eq!(runtime.complete_missing_computation(&unsupported,&sketch(),&limits),Err(Error::Capacity));
+        assert_eq!(runtime.discover_missing_computation(&unsupported,&limits),Err(Error::Capacity));
+        assert_eq!(runtime.checkpoint_constructing().unwrap(),checkpoint);
+        assert_eq!(runtime.unified_report().unwrap().computation_work,before.computation_work);
+    }
+    // The original 4-input task still succeeds after the rejected requests.
+    let solved=runtime.complete_missing_computation(&task(22,5),&sketch(),&limits).unwrap();
+    assert!(solved.forward_verified);
+}
+
+#[test]
+fn lc1_invalid_sketches_are_rejected_before_work_reservation() {
+    use aeterna_v1::construction::requirements::validate_completion_sketch;
+    let mut memory=RequirementMemory::default();memory.observe(&executed(Op::Sub,35)).unwrap();
+    let limits=CompletionLimits{work:2_000_000,nodes:7,terms:4096};
+    let mut runtime=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},
+        AutonomyPolicy::default(),vec![0;4],"LC1-SKETCH-PREFLIGHT").unwrap();
+    runtime.enable_missing_computation_learning().unwrap();
+    runtime.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let input=task(22,5);
+    let checkpoint=runtime.checkpoint_constructing().unwrap();
+    let before=runtime.unified_report().unwrap();
+    let invalid=[
+        Expr::integer(42),
+        Expr::bin(Op::Sub,Expr::Input(0),Expr::Hole{id:1,ty:Ty::Int}),
+        Expr::bin(Op::Sub,Expr::Hole{id:0,ty:Ty::Int},Expr::Hole{id:0,ty:Ty::Int}),
+        Expr::bin(Op::Sub,Expr::Lit(Value::Bool(true)),Expr::Hole{id:0,ty:Ty::Int}),
+        Expr::bin(Op::Lt,Expr::Input(0),Expr::Hole{id:0,ty:Ty::Int}),
+    ];
+    for bad in invalid {
+        assert_eq!(validate_completion_sketch(&input,&bad,&limits),Err(Error::InvalidProgram));
+        assert_eq!(memory.complete(&input,&bad,&limits),Err(Error::InvalidProgram));
+        assert_eq!(runtime.complete_missing_computation(&input,&bad,&limits),Err(Error::InvalidProgram));
+        assert_eq!(runtime.checkpoint_constructing().unwrap(),checkpoint,
+            "preflight failure cannot alter acquired state");
+        assert_eq!(runtime.unified_report().unwrap().computation_work,before.computation_work,
+            "preflight must not charge limits.work");
+    }
+    assert!(runtime.complete_missing_computation(&input,&sketch(),&limits).unwrap().forward_verified);
+}

@@ -53,7 +53,9 @@ impl ScientificRuntime {
         limits:&crate::construction::requirements::CompletionLimits
     )->UResult<crate::construction::requirements::CompletionReport>{
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
-        limits.validate()?;crate::construction::requirements::validate_completion_task(task)?;
+        // Both induction shape constraints AND the explicit sketch must pass
+        // before reserving work in the organism's shared computation ledger.
+        crate::construction::requirements::validate_completion_sketch(task,sketch,limits)?;
         // Reserve the entire budget before execution; only actual spent work
         // remains charged on successful return. Do not expose free failures.
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;

@@ -58,10 +58,27 @@ pub struct CompletionReport {
 // at most 128 support rows. SynthesisTask itself permits up to 256, so LC1
 // must enforce its own narrower contract BEFORE reserving runtime work.
 pub const MAX_LC1_SUPPORT_ROWS: usize = 128;
+// LC1 delegates fragment induction to induction::infer, which handles no
+// more than six input columns. Other SynthesisTask consumers may use 32.
+pub const MAX_LC1_INPUTS: usize = 6;
 pub fn validate_completion_task(task: &SynthesisTask) -> Result<()> {
     task.validate()?;
     if task.examples.len() < 4 { return Err(Error::InvalidData); }
     if task.examples.len() > MAX_LC1_SUPPORT_ROWS { return Err(Error::Capacity); }
+    if task.examples[0].input.len() > MAX_LC1_INPUTS { return Err(Error::Capacity); }
+    Ok(())
+}
+// This is public preflight for the existing runtime budget reservation. A
+// malformed sketch never launches inference, so it must not consume the entire
+// reserved work allotment before being rejected.
+pub fn validate_completion_sketch(task: &SynthesisTask, sketch: &Expr, limits: &CompletionLimits) -> Result<()> {
+    validate_completion_task(task)?;
+    limits.validate()?;
+    let Expr::Bin(op, known, missing) = sketch else { return Err(Error::InvalidProgram) };
+    if !matches!(missing.as_ref(), Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op) || sketch.nodes() > limits.nodes+4 {
+        return Err(Error::InvalidProgram);
+    }
+    if known.first_hole().is_some() || known.ty(&task.library) != Ok(Ty::Int) {return Err(Error::InvalidProgram)}
     Ok(())
 }
 fn inputs(op: Op)->bool {op.input()==Ty::Int && op.output()==Ty::Int}
@@ -152,10 +169,9 @@ impl RequirementMemory {
     /// Complete an explicitly identified missing right subcomputation. Support
     /// outcomes are shown to the solver; withheld probes are never passed in.
     pub fn complete(&self,task:&SynthesisTask,sketch:&Expr,limits:&CompletionLimits)->Result<CompletionReport>{
-        validate_completion_task(task)?;limits.validate()?;
-        let Expr::Bin(op,known,missing)=sketch else {return Err(Error::InvalidProgram)};
-        if !matches!(missing.as_ref(),Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op)||sketch.nodes()>limits.nodes+4{return Err(Error::InvalidProgram)}
-        if known.first_hole().is_some()||known.ty(&task.library)!=Ok(Ty::Int){return Err(Error::InvalidProgram)}
+        validate_completion_sketch(task,sketch,limits)?;
+        // The checked structure and types are guaranteed by preflight.
+        let Expr::Bin(op,known,_) = sketch else {unreachable!("validated LC1 sketch")};
         if self.rules.iter().all(|r|r.op!=*op) {return Ok(CompletionReport{program:None,required_values:vec![],work:0,tried_rules:0,forward_verified:false,used_acquired_inverse:false})}
         let mut meter=Meter::new(limits.work);
         let mut needed=Vec::with_capacity(task.examples.len());
