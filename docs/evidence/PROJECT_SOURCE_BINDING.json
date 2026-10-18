@@ -48,8 +48,8 @@
       },
       "src/recursive_search_runtime.rs": {
         "before_sha256": "722552ff99cfa46d2f62b230c8e43fe47725a02895fb05a2c6fe29cdc83619e1",
-        "after_sha256": "a41fa7750a1103cb8de7f39902fbcf6bba87ef6ca7c15da0f8ae85ece832bbe1",
-        "review": "PR8 P1 same-counter charge; P2 row-width 128 and six inputs before reserve; P2 sketch structural preflight before reserve; no RSP2 changes."
+        "after_sha256": "9e3d7daa3d4d0a7a266901a2d331b25fb7276b01abb9df3b403ef73193635c04",
+        "review": "PR8 P1 work counters, P2 row/input/sketch preflight, and P2 unenabled-LC1 NoEvidence rejected before shared work reservation; RSP2 unchanged."
       }
     },
     "jsonl_source_after_sha256": "f7517ba87387bbb8ea4f72cf22f6bae66f9a5efa5104681dac6e24505599e89d"

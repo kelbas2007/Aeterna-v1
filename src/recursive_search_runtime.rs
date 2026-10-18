@@ -56,6 +56,9 @@ impl ScientificRuntime {
         // Both induction shape constraints AND the explicit sketch must pass
         // before reserving work in the organism's shared computation ledger.
         crate::construction::requirements::validate_completion_sketch(task,sketch,limits)?;
+        // LC1 is opt-in. No acquired-requirement memory means the solver cannot
+        // execute: fail before reserving or mutating the organism work ledger.
+        if u.current.learner.requirements_report().is_none(){return Err(UError::NoEvidence)}
         // Reserve the entire budget before execution; only actual spent work
         // remains charged on successful return. Do not expose free failures.
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;
@@ -69,6 +72,9 @@ impl ScientificRuntime {
     )->UResult<crate::construction::requirements::CompletionReport>{
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         limits.validate()?;crate::construction::requirements::validate_completion_task(task)?;
+        // An unenabled LC1 cannot search; rejecting before budget reservation
+        // preserves the joint checkpoint and existing RSP2 work accounting.
+        if u.current.learner.requirements_report().is_none(){return Err(UError::NoEvidence)}
         u.computation_work=u.computation_work.checked_add(limits.work).ok_or(UError::Capacity)?;
         let result=u.current.learner.discover_missing_computation(task,limits);
         if let Ok(ref r)=result{u.computation_work-=limits.work-r.work;}

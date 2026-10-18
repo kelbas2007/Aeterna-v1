@@ -309,3 +309,41 @@ fn lc1_invalid_sketches_are_rejected_before_work_reservation() {
     }
     assert!(runtime.complete_missing_computation(&input,&sketch(),&limits).unwrap().forward_verified);
 }
+
+#[test]
+fn lc1_disabled_requests_cannot_consume_organism_budget() {
+    // Neither the explicit nor the automatic endpoint may charge work if
+    // the acquired-requirements book was never enabled. This previously
+    // returned NoEvidence *after* reserving up to 20 million work units.
+    let mut rt=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},
+        AutonomyPolicy::default(),vec![0;4],"LC1-UNENABLED-PREFLIGHT"
+    ).unwrap();
+    let valid_task=task(22,5);
+    let valid_sketch=sketch();
+    let limits=CompletionLimits{work:20_000_000,nodes:7,terms:4096};
+    assert!(rt.requirements_report().is_none());
+    let checkpoint=rt.checkpoint_constructing().unwrap();
+    let before=rt.unified_report().unwrap();
+    for _ in 0..2 {
+        assert_eq!(rt.complete_missing_computation(&valid_task,&valid_sketch,&limits),Err(Error::NoEvidence));
+        assert_eq!(rt.discover_missing_computation(&valid_task,&limits),Err(Error::NoEvidence));
+        assert_eq!(rt.checkpoint_constructing().unwrap(),checkpoint,
+            "disabled LC1 request must not mutate the whole organism checkpoint");
+        let now=rt.unified_report().unwrap();
+        assert_eq!(now.computation_work,before.computation_work,
+            "NoEvidence must not reserve any work when the study never ran");
+        assert_eq!(now.learner.construction_work,before.learner.construction_work);
+    }
+    // After normal opt-in, the very same saved organism is still usable.
+    let mut restored=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+    assert_eq!(restored.requirements_report(),None);
+    assert_eq!(restored.discover_missing_computation(&valid_task,&limits),Err(Error::NoEvidence));
+    restored.enable_missing_computation_learning().unwrap();
+    restored.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let answer=restored.complete_missing_computation(
+        &valid_task,&valid_sketch,
+        &CompletionLimits{work:2_000_000,nodes:7,terms:4096}
+    ).unwrap();
+    assert!(answer.forward_verified);
+}
