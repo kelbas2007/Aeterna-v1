@@ -1,5 +1,15 @@
 # Documentation index
 
+## Current consolidation — 2026-10-18
+
+Read [the current project overview](PROJECT_OVERVIEW.md) first. The canonical executable is
+`aeterna-v1`; `aeterna-unified` shares the same application code. RSP2 from PR #5
+is included. Run `python scripts/check_project.py` for the current regression
+set. Historical results below remain tied to their original code; statements
+calling older results “latest” apply only to their original date. The unified
+CI does not repeat external exams or consumed authority packs.
+
+
 Start with [the README](../README.md), [project map](../PROJECT_MAP.md) and
 [status](../STATUS.md). Current source and examples are integrated into `main`;
 `research/beyond-intel4` continues development from the integration point.

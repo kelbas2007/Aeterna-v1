@@ -1,0 +1,99 @@
+{
+  "kind": "runtime-audit-and-cognitive-round-trip-development",
+  "source_commit": "34cbc2c8f6ea63feaa18de2bb74871364e32a309",
+  "branch": "research/beyond-intel4",
+  "rust_version": "1.99.0",
+  "run_id": 39013968927,
+  "job_id": 117342118365,
+  "conclusion": "success",
+  "cargo_check_all_targets": "pass",
+  "artifact_id": 12094391371,
+  "artifact_zip_sha256": "ea9572c8604e89cede6fe13560ea286b63e8f1fee80082161e8f85581f2176e3",
+  "test_groups": {
+    "construction-tests.log": {"passed": 38, "failed": 0, "ignored": 0},
+    "directed_construction_continuity.log": {"passed": 5, "failed": 0, "ignored": 0},
+    "directed_construction_recursive.log": {"passed": 8, "failed": 0, "ignored": 0},
+    "directed_construction_scheduling.log": {"passed": 3, "failed": 0, "ignored": 0},
+    "directed_construction_transfer.log": {"passed": 3, "failed": 0, "ignored": 0},
+    "legacy-controls.log": {"passed": 13, "failed": 0, "ignored": 0}
+  },
+  "passed_tests": 70,
+  "continuity_scope": {
+    "independent_simulated_devices": true,
+    "supervised_sequences": 4,
+    "steps_per_supervised_sequence": 48,
+    "autonomous_steps": 64,
+    "round_trips_compared": 256,
+    "bit_exact_scalar_comparisons": 8192,
+    "os_process_restart_test": false,
+    "live_external_authority_copied": false
+  },
+  "retained_failure": {
+    "source_commit": "a145234cdaba429541b5b1bd119775ced4fc9c64",
+    "run_id": 39013753425,
+    "artifact_id": 12093902333,
+    "artifact_zip_sha256": "37f56c5386ea0e18d1b79f9520624ffba37247de19b2cae2882961a5d8f339fe",
+    "log_sha256": "140184eeee9d62bea7f6230e32a353fe439947e0152813dfb64a14128176c61e",
+    "passed_tests": 3,
+    "failed_tests": 1,
+    "failing_test": "pending_trials_and_final_decisions_survive_every_step_round_trip",
+    "error": "InvalidData on a freshly written unmodified checkpoint",
+    "extraction_rule": "ANSI removed; test result, test name, panic location and error lines retained",
+    "log_excerpt": [
+      "test pending_cognitive_trial_does_not_restore_emergency_stop_authority ... ok",
+      "test pending_trial_checkpoint_cannot_clear_external_fault_or_replay_action ... ok",
+      "thread 'pending_trials_and_final_decisions_survive_every_step_round_trip' (3110) panicked at tests/directed_construction_continuity.rs:68:65:",
+      "called `Result::unwrap()` on an `Err` value: InvalidData",
+      "test pending_trials_and_final_decisions_survive_every_step_round_trip ... FAILED",
+      "test autonomous_actions_and_forecasts_are_identical_after_round_trips ... ok",
+      "test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s"
+    ]
+  },
+  "autonomous_demo": {
+    "acquisition_actions": 64,
+    "frozen_probe_steps": 24,
+    "frozen_probe_errors": 0,
+    "cold_identity_errors": 13,
+    "goal_actions": 2,
+    "goal_reached": true,
+    "constructors": 0,
+    "state_cells": 2,
+    "accepted_promotions": 2,
+    "checkpoint_bytes": 19784
+  },
+  "recursive_demo": {
+    "tasks": 16,
+    "zero_future_loss_tasks": 16,
+    "constructors": 9,
+    "max_generation": 4,
+    "checkpoint_round_trip": true,
+    "recursive_improvement_observed": true,
+    "nontrivial_applicability_guards": 0,
+    "prospective_guard_outcomes": 14,
+    "last_case": {
+      "candidate_work": 4784,
+      "ancestor_control_work": 52110,
+      "candidate_future_loss": 0.0,
+      "ancestor_control_future_loss": 0.0
+    },
+    "worse_than_ancestor_control_cases_1based": [9, 10, 12, 14]
+  },
+  "limitations": [
+    "Bounded authored developmental tasks, not independent general-intelligence qualification.",
+    "Per-step cognitive serialization tests do not claim OS-process restart or cloned live action authority.",
+    "The recursive demo retains its registry but starts a local identity model per task; autonomous curriculum selection is not established.",
+    "No native SNN acquisition or natural-language understanding claim."
+  ],
+  "artifact_files_sha256": {
+    "construction-check.log": "c0569fc03e8532fab54af912f89c4a09d22886a1018be083fda1256c0a1c6b5e",
+    "construction-demo.json": "2c8fea58f02264fa3ceec7a44203d9fde03b923c9acdb01271796d4b2fa70ab8",
+    "construction-recursive.json": "adce7de59865e4307a095283a827c8af913b2c1fdc53ccfda56da1aa29515032",
+    "construction-recursive.log": "b5bc123cf174c1c18a72ba629b8843a49e65c4622d98d74a04b8b569131c4c1b",
+    "construction-tests.log": "9f2aa51154ecc9d9eec4388bc8ac2727d0eff864b27528d0c5ae90fad51dff29",
+    "directed_construction_continuity.log": "2853400f4f827f27b7da0f2495022ce601cf533e3c9f0d702ac05297f37b27a4",
+    "directed_construction_recursive.log": "6bc2276c7f73f1402ae71cd575dcabf012b92a653cf064fb86ff21b996afc8c0",
+    "directed_construction_scheduling.log": "eaa8fd97d1f3a3ddb3ad3ab285626e238371970cbe7ec5bd42ee8a32e6bf02ee",
+    "directed_construction_transfer.log": "3a1bef64846d4130504c331f49ad66ba554f5a82a478b770b2713b125bec6d40",
+    "legacy-controls.log": "6b2a77fda7752590622aad01ea60bbeb21c9fe82d2515b4d604af922605d8e91"
+  }
+}

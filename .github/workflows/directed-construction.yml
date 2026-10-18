@@ -1,0 +1,71 @@
+name: Directed construction regressions
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: directed-construction-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mechanism:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preserve exact bounded source for review
+        run: |
+          git rev-parse HEAD > construction-source-revision.txt
+          tar -czf construction-source.tar.gz src/construction Cargo.toml Cargo.lock examples/directed_construction*.rs tests/directed_construction*.rs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: construction-source-${{ github.sha }}
+          path: |
+            construction-source.tar.gz
+            construction-source-revision.txt
+          retention-days: 1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.0'
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify exact checkout
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA" && git diff --exit-code
+      - name: Compile current source
+        shell: bash
+        run: set -o pipefail; cargo check --locked --all-targets 2>&1 | tee construction-check.log
+      - name: Construction and protection controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: -- --nocapture 2>&1 | tee construction-tests.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" -- --nocapture 2>&1 | tee "$name.log"
+          done
+          cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee legacy-controls.log
+      - name: Protected lifetime and frozen transfer controls
+        run: cargo run --locked --example directed_construction > construction-demo.json
+      - name: Cold-to-recursive construction with ancestor control
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked --example directed_construction_recursive > construction-recursive.json 2> construction-recursive.log
+      - name: Preserve small development evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: directed-construction-${{ github.sha }}
+          path: |
+            construction-check.log
+            construction-tests.log
+            directed_construction*.log
+            legacy-controls.log
+            construction-demo.json
+            construction-recursive.json
+            construction-recursive.log
+          retention-days: 7
+          if-no-files-found: ignore

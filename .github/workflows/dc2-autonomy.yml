@@ -1,0 +1,36 @@
+name: DC-2 installed-code verification
+# One-use installer is already integrated. Do not apply it to its descendants.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned toolchain
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify existing integrated source, never rerun the installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p installed-code-evidence
+          git rev-parse HEAD > installed-code-evidence/revision.txt
+          python scripts/project_audit.py > installed-code-evidence/source-binding.json
+          python scripts/check_project.py 2>&1 | tee installed-code-evidence/tests.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dc2-autonomy-installed-${{ github.sha }}
+          path: installed-code-evidence/
+          retention-days: 3

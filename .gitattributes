@@ -1,0 +1,10 @@
+# Canonical source bytes on Linux and Windows. Frozen source-contract tests
+# compare actual Rust declarations, including the newline before the permit.
+*.rs text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+# RSP1 was frozen with one whitespace-only line (211). Preserve the exact
+# preregistered SHA256 rather than edit policy source after viewing outcomes.
+# Source hashes and all semantic/protection tests remain mandatory in CI.
+src/construction/search_policy.rs whitespace=-blank-at-eol

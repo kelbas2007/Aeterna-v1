@@ -1,5 +1,15 @@
 # AETERNA-v1 — project map
 
+## Current consolidation — 2026-10-18
+
+Read [the current project overview](docs/PROJECT_OVERVIEW.md) first. The canonical executable is
+`aeterna-v1`; `aeterna-unified` shares the same application code. RSP2 from PR #5
+is included. Run `python scripts/check_project.py` for the current regression
+set. Historical results below remain tied to their original code; statements
+calling older results “latest” apply only to their original date. The unified
+CI does not repeat external exams or consumed authority packs.
+
+
 Updated 2026-10-10. Four maintained GitHub branches have distinct roles. This is the separate EvoPhase/no-LLM research repository. The mature Codex-AETERNA project is separate.
 
 ## Start here

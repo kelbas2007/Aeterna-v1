@@ -1,0 +1,25 @@
+{
+  "base_revision": "02b4175f34bcc68b8c80197cca6dd79f38b85892",
+  "unchanged_cognitive_source_files": 80,
+  "aggregate_sha256": "2b19688cb615cd0a6581aa9018df0c32efd311b01fa64e8be0ea965a33e65dc3",
+  "exclusions": [
+    "src/main.rs",
+    "src/bin/aeterna-unified.rs"
+  ],
+  "search_policy_sha256": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0",
+  "bound_cognitive_source_files": 81,
+  "reviewed_boundary_changes": [
+    {
+      "path": "src/scientific_runtime.rs",
+      "before_sha256": "8e09809514055de307becc1e490fd2f8d8f33902df38a5e06d998247214b00e1",
+      "after_sha256": "6e78805d8e7930518b8dd04a73d175010ca4d97dc45590c40c283a8d8872b1df",
+      "added_guard": "\n        // This mode owns a joint Learner/U1 checkpoint, not a native-only one.\n        if self.constructing.is_some() { return Err(RuntimeError::ConstructionModeRequired); }",
+      "function_signatures": [
+        "    pub fn restart_cognition(&mut self) -> Result<(), RuntimeError> {",
+        "    pub fn restore_native_checkpoint(&mut self, checkpoint:PhaseNativeCheckpoint) -> Result<(),RuntimeError> {",
+        "    pub fn restore_online_checkpoint(&mut self, bytes: &[u8]) -> Result<(), RuntimeError> {"
+      ],
+      "reason": "PR6 review 4306651478: forbid partial native restoration of a constructing runtime before any mutation"
+    }
+  ]
+}

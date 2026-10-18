@@ -1,0 +1,50 @@
+{
+  "kind": "construction-lifetime-development-pilots",
+  "independent_qualification": false,
+  "selection_warning": "These outcomes were inspected during development. They are not a held-out qualification. No failing layout is omitted.",
+  "layouts": [[0,1,2,3,4,5,6],[6,3,4,1,5,0,2],[2,5,1,6,0,3,4]],
+  "canonical_learnable_channels": [0,1,2,3],
+  "canonical_nuisance_channels": [4,5,6],
+  "frozen_probe_events_per_layout": 128,
+  "pilots": [
+    {
+      "name": "initial_unified",
+      "training_events_per_layout": 1024,
+      "raw_result_sha256": "34915a190c57c15bb08491fc3e13413c3ae65be826617a359cca905b75610de8",
+      "learnable_channels_exact": [false,false,false],
+      "frozen_errors_by_channel": [[86,73,75,73,110,112,72],[58,75,106,77,110,86,71],[73,108,75,60,86,74,106]],
+      "state_cells": [0,0,0],
+      "constructors": [0,0,0],
+      "promotions": [4,4,4],
+      "goal_steps": [4,4,4],
+      "interpretation": "Goal success alone hid the absence of an acquired memory model; the frozen dependency criterion failed in all layouts."
+    },
+    {
+      "name": "before_cross_origin_fix",
+      "training_events_per_layout": 3000,
+      "raw_result_sha256": "8c1f2b81ba219a73b8c7130b6346a1b2dad2a29bdcde5de71b8e8fd1f9fd44f3",
+      "learnable_channels_exact": [false,false,false],
+      "frozen_errors_by_channel": [[0,0,0,110,104,114,64],[67,114,112,0,112,0,0],[0,107,0,66,0,114,109]],
+      "state_cells": [1,1,1],
+      "constructors": [1,1,2],
+      "constructor_max_generation": [1,1,1],
+      "promotions": [3,4,3],
+      "goal_steps": [2,2,2],
+      "instrumented_construction_work": [513637999,555145393,434490871],
+      "interpretation": "Simple dependencies learned; compound h*(x+y) failed in all layouts before common-structure learning across different search origins was allowed."
+    },
+    {
+      "name": "800_event_budget_after_fix",
+      "training_events_per_layout": 800,
+      "raw_result_sha256": "a950ed1a84d10b68348b3c3069b09c038638e826d18c0ca4bc83e72bbf06d884",
+      "learnable_channels_exact": [true,false,false],
+      "frozen_errors_by_channel": [[0,0,0,0,107,110,58],[63,116,108,104,112,111,75],[111,107,103,72,111,109,109]],
+      "state_cells": [1,0,0],
+      "constructors": [2,0,0],
+      "promotions": [4,1,0],
+      "goal_steps": [1,1,1],
+      "instrumented_construction_work": [15469596,18473004,16182442],
+      "interpretation": "Reducing the experience budget to 800 failed on two layouts. The final run retains the original 3000-event budget. This is not evidence of algorithmic speedup."
+    }
+  ]
+}

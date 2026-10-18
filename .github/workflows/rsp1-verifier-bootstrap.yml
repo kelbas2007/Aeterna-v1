@@ -1,0 +1,25 @@
+name: RSP1 independent verifier setup
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.github/workflows/rsp1-verifier-bootstrap.yml']
+permissions:
+  contents: read
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download pinned independent checker without benchmark data
+        run: |
+          mkdir -p checker
+          python -m pip download --only-binary=:all: --no-deps z3-solver==5.3.1.0 --dest checker
+          sha256sum checker/* > checker/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rsp1-independent-verifier
+          path: checker/
+          retention-days: 1

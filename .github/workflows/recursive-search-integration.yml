@@ -1,0 +1,70 @@
+name: Recursive search policy regression checks
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: recursive-search-regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pinned compiler and exact revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p rsp-regression
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > rsp-regression/toolchain.txt
+          git rev-parse HEAD > rsp-regression/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile and test integrated runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee rsp-regression/check.log
+          cargo test --locked --test recursive_search_policy --test recursive_search_repair --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee rsp-regression/integration.log
+      - name: Existing construction and U1 regressions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: 2>&1 | tee rsp-regression/construction.log
+          cargo test --locked --test u1_meta_control 2>&1 | tee rsp-regression/u1.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "rsp-regression/$name.log"
+          done
+      - name: Independent formal-adapter unit tests, no benchmark search
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install z3-solver==5.3.1.0 > rsp-regression/checker-install.log 2>&1
+          python scripts/rsp1_external_test.py 2>&1 | tee rsp-regression/checker-tests.log
+      - name: Preserve bounded test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rsp-regression-${{ runner.os }}-${{ github.sha }}
+          path: rsp-regression/
+          retention-days: 3
+          if-no-files-found: warn

@@ -1,0 +1,71 @@
+name: Quantity relation integration regressions
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: quantity-relations-regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pinned toolchain and exact revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p relational-regression
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > relational-regression/toolchain.txt
+          git rev-parse HEAD > relational-regression/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Compile all targets and test native integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee relational-regression/check.log
+          cargo test --locked --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee relational-regression/integration.log
+      - name: Existing construction and controller regressions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: 2>&1 | tee relational-regression/construction.log
+          cargo test --locked --test u1_meta_control 2>&1 | tee relational-regression/u1.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "relational-regression/$name.log"
+          done
+      - name: Training and input helper tests without external fitting
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.3.5 scipy==1.17.0 scikit-learn==1.8.0 > relational-regression/python-install.log 2>&1
+          python scripts/relational_tests.py 2>&1 | tee relational-regression/python-tests.log
+          python scripts/word_problem_test.py 2>&1 | tee relational-regression/previous-python-tests.log
+      - name: Preserve bounded verification results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relational-regression-${{ runner.os }}-${{ github.sha }}
+          path: relational-regression/
+          retention-days: 3
+          if-no-files-found: warn

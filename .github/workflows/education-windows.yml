@@ -1,0 +1,84 @@
+name: Verified education Windows package
+on:
+  push:
+    branches: [research/beyond-intel4]
+    paths: ['.github/workflows/education-windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: education-windows-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: a0c7db1dbe3f8e6ba5655deeb22793e00cb94c34
+          persist-credentials: false
+      - name: Fixed compiler
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: education-integrated-evidence
+          run-id: 39049830709
+          github-token: ${{ github.token }}
+          path: upstream-evidence
+      - name: Check Windows build and data-only persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p windows-evidence package
+          git rev-parse HEAD > windows-evidence/revision.txt
+          test "$(cat upstream-evidence/revision.txt)" = "$(git rev-parse HEAD)"
+          { rustc --version --verbose; cargo --version; } > windows-evidence/toolchain.txt
+          cargo check --locked --all-targets 2>&1 | tee windows-evidence/check.log
+          cargo test --locked --test education_runtime --test unified_runtime --test human_protection 2>&1 | tee windows-evidence/tests.log
+          cargo build --locked --release --bin aeterna-unified
+          cp target/release/aeterna-unified.exe package/
+          cp upstream-evidence/curriculum/learned-school.json package/
+          cp upstream-evidence/curriculum/DATA_NOTICE.txt package/
+          cp docs/SCHOOL_PROTOCOL.md package/
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          p=pathlib.Path('package')
+          state=(p/'learned-school.json').read_text(encoding='utf-8')
+          digest=hashlib.sha256(state.encode()).hexdigest()
+          if digest!='8ea373bb96d588041f9f31c0d63e4aeb3c6caf38d0023aa0bfe064c365439914':
+              raise RuntimeError('Checkpoint hash mismatch')
+          commands=[{'op':'load','checkpoint':state},{'op':'ask','question':'Площадь прямоугольника со сторонами 17 и 23.'},{'op':'checkpoint'},{'op':'quit'}]
+          process=subprocess.run([str((p/'aeterna-unified.exe').resolve())],input=''.join(json.dumps(c,ensure_ascii=False)+'\n' for c in commands),text=True,encoding='utf-8',capture_output=True,timeout=120,check=True)
+          rows=[json.loads(s) for s in process.stdout.splitlines() if s.strip()]
+          if len(rows)!=4 or rows[1].get('result',{}).get('answer')!='391' or rows[2].get('checkpoint')!=state:
+              raise RuntimeError('Windows failed to restore or apply acquired example: '+str(rows)[:2000])
+          report={'separate_process_restore':True,'checkpoint_byte_equivalent':True,'example':rows[1],'checkpoint_sha256':digest}
+          pathlib.Path('windows-evidence/restore.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          (p/'START-SCHOOL.cmd').write_bytes(b'@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-unified.exe --school learned-school.json\r\npause\r\n')
+          (p/'README_RU.txt').write_text('AETERNA: обучение по примерам и память источников. Запуск START-SCHOOL.cmd. Введите вопрос; /exit завершает работу. Это НЕ интеллект уровня 12 лет и не свободный чат. Поддерживаются изученные формулировки и ограниченный лексический перенос.\nПримеры: Найди сумму 17 и 23.\nПлощадь прямоугольника со сторонами 17 и 23.\nПереведи 3 часов в минуты.\n\nОбучено: 3328 числовых примеров, 3370 школьных вопросов-ответов TRAIN Ai2 ARC. Приобретены 22 вычислительные функции и 52 языковые привязки. Проверка: 3328/3328 на новых числах, 16/208 на новых формулировках. На внешних школьных вопросах без точных совпадений с обучением: 8/3532; большинство ответов отсутствуют. Это не стандартная оценка Ai2 ARC: программа не получала варианты ответа.\n\nМодель и знания не меняются при опросе. Инструмент работает локально и не вызывает LLM. Учебные Q/A принадлежат открытому набору Ai2 ARC, см. DATA_NOTICE.txt.\n',encoding='utf-8')
+          (p/'SHA256SUMS.txt').write_text('\n'.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name for f in sorted(p.iterdir()) if f.is_file())+'\n',encoding='utf-8')
+          PY
+      - name: Runnable Windows school package
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeterna-school-Windows-a0c7db1d
+          path: package/
+          retention-days: 7
+      - name: Windows evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: education-Windows-evidence-a0c7db1d
+          path: windows-evidence/
+          retention-days: 7

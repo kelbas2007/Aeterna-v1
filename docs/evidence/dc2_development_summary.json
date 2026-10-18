@@ -1,0 +1,55 @@
+{
+  "status": "DEVELOPMENT_NEGATIVE",
+  "independent_qualification": false,
+  "general_intelligence_proven": false,
+  "workflow_source": "77a73cc354b833d79def42e7f002bdfba9b7e6f0",
+  "run_id": "39016558100",
+  "comparisons": [
+    {
+      "seed": 917,
+      "progress": 0,
+      "fair": 0,
+      "largest_residual": 0,
+      "progress_work": 52119160,
+      "fair_work": 52119160,
+      "largest_residual_work": 52118516
+    },
+    {
+      "seed": 1926,
+      "progress": 0,
+      "fair": 0,
+      "largest_residual": 0,
+      "progress_work": 52117392,
+      "fair_work": 52117392,
+      "largest_residual_work": 52118440
+    },
+    {
+      "seed": 2935,
+      "progress": 3,
+      "fair": 3,
+      "largest_residual": 0,
+      "progress_work": 44579055,
+      "fair_work": 44579055,
+      "largest_residual_work": 52118304
+    },
+    {
+      "seed": 3944,
+      "progress": 0,
+      "fair": 0,
+      "largest_residual": 0,
+      "progress_work": 52117328,
+      "fair_work": 52117328,
+      "largest_residual_work": 52118304
+    }
+  ],
+  "source_sha256": {
+    "src/construction/synthesis.rs": "35c9cd62991ded318f4a4ee9f86d9283892188d8c211bd6b75d42ada9f2b6a0b",
+    "src/construction/recursive.rs": "98fdbf7a175455975c558afc4d86f0d3328560bd62de229031d0836b693cd627",
+    "src/construction/runtime.rs": "6788e553c03a91b7b909a950a26d493196e0c48d368dcec9637da763a95b51fc",
+    "src/construction/mod.rs": "b081294449a0f15d785fbdb0ac100974174bbaa6cd0b573c3ccda653b9831906",
+    "src/construction/curriculum.rs": "827f15adc84da7e7361af412d3fd8f4ac59914012ba6f9902b6228b039e7f6f2",
+    "examples/directed_construction_autonomy.rs": "c1f11603bb2fe973115ce0ea137f12075b4fd48b685d61e2820132916ec4c58d",
+    "tests/directed_construction_autonomy.rs": "c28c13dd2ea107f0a142d3e1bcff1ada903b9dfac4537dd14eb2a69ee413c09f"
+  },
+  "result_sha256": "7a96a1cfab50b694fba7ea72327c9d42b6ba0dba6807953e94175e9fb56b8f60"
+}

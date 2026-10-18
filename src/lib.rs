@@ -13,6 +13,7 @@ pub mod planning;
 pub mod raster;
 pub mod scientific_runtime;
 pub mod trace;
+pub mod construction;
 
 pub use authority::Authority;
 pub use belief::{BeliefConfig, EvoBeliefState};
@@ -36,3 +37,8 @@ pub use raster::{EvoRasterField, OutcomeStat, PhaseFieldUnit, RasterFieldConfig}
 pub use trace::{CarrierTrace, ShapeTrace};
 
 pub use planning::{EvoImaginationPlanner, ImaginedNode, LearnedTransition, PlanDecision, PlanningConfig};
+pub mod education;
+
+pub mod word_problems;
+
+pub mod quantity_relations;

@@ -1,0 +1,9 @@
+# DC-2 R1: witness-directed completion after a recorded negative
+
+This development revision is defined AFTER observing DC-2's negative result at `23633720`. Initial run `39016558100` compiled and passed 80 tests, but Progress learned 0,0,3,0 of four laws; Fair was identical, LargestResidual learned none. The initial protocol is not relabelled successful. Its source, summary and raw results remain unchanged in history and `docs/evidence/dc2_development*.json`.
+
+Hypothesis for R1: part of the failure is search-order starvation. Add a bounded lane that fills the actual typed search root with existing leaves/arithmetic and rejects an expression immediately on a contradictory past witness. Every observation is still required before returning an exact fit; the unchanged future audit is still required before installation. The root is genuinely instantiated, so an unrelated solution cannot receive constructor credit. No new world-specific operator, channel number, delay law or task identity is added. This is an implementation of well-established constraint-guided search principles, not a world-first claim.
+
+Same 4 worlds, seeds, 160 steps, grammar limits, 2M per-search budget, 48-step frozen probes and success criterion as DC2_AUTONOMY_PROTOCOL.md. SAME new solver in Progress, Fair and LargestResidual. No budget increase or easier world. New correctness controls cover all seven non-target source positions, actual learned-root instantiation and rejection of a false one-row match. These are development/integrity tests, not independent qualification.
+
+Do not attribute any improvement over LargestResidual uniquely to the learned priority formula: Fair is a required comparator. Record constructor generations AND executed/counterfactual gains separately. Source hashes and actual total work are reported. Fresh-seed replication must use code frozen before selecting those seeds.

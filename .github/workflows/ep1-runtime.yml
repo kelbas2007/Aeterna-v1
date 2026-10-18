@@ -1,0 +1,70 @@
+name: EP1 runtime integration
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: ep1-runtime-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export exact source (no target directory)
+        run: |
+          mkdir -p ep1-evidence
+          git rev-parse HEAD > ep1-evidence/revision.txt
+          git archive --format=tar.gz --output=ep1-source.tar.gz HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ep1-source-${{ github.sha }}
+          path: ep1-source.tar.gz
+          retention-days: 1
+      - name: Install pinned Rust and Cargo
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal --component rustfmt
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } | tee ep1-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Check all targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee ep1-evidence/check.log
+      - name: Construction and external-protection regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: -- --nocapture 2>&1 | tee ep1-evidence/unit.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" -- --nocapture 2>&1 | tee "ep1-evidence/$name.log"
+          done
+          cargo test --locked --test human_protection --test online_learning --test induced_programs 2>&1 | tee ep1-evidence/protection.log
+      - name: Executable demonstrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run --locked --example directed_construction > ep1-evidence/lifetime.json
+          cargo run --locked --example directed_construction_recursive > ep1-evidence/recursive.json
+          if test -f examples/directed_construction_epistemic.rs; then
+            cargo run --locked --example directed_construction_epistemic > ep1-evidence/epistemic.json
+          fi
+      - name: Preserve test results, not build output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ep1-results-${{ github.sha }}
+          path: ep1-evidence/
+          retention-days: 7
+          if-no-files-found: error

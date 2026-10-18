@@ -1,0 +1,68 @@
+{
+  "schema": "aeterna.project.v1",
+  "project": "AETERNA-v1",
+  "consolidation": "2026-10-18",
+  "canonical_binary": "aeterna-v1",
+  "compatibility_binary": "aeterna-unified",
+  "runtime": "ScientificRuntime",
+  "checkpoint_loaded": false,
+  "source_base": "02b4175f34bcc68b8c80197cca6dd79f38b85892",
+  "rsp2_commit": "6d8a58ad12909a7b195afa99ef6c0ffc3c407f6f",
+  "capabilities": {
+    "protected_virtual_interaction": true,
+    "directed_construction": true,
+    "prospective_evidence_ep1": true,
+    "school_memory_and_composition_sg1": true,
+    "quantity_relations_rel1": true,
+    "recursive_search_rsp2": true
+  },
+  "recursive_admission": {
+    "new_states": 2,
+    "legacy_states": "read/solve; cannot resume legacy admission as RSP2",
+    "requires": [
+      "fresh",
+      "transfer",
+      "producers",
+      "automatic_retention"
+    ],
+    "feedback_features": 20
+  },
+  "not_established": [
+    "human_level_intelligence",
+    "stable_recursive_improvement",
+    "all_optional_neural_lanes_in_one_checkpoint",
+    "arbitrary_language_understanding",
+    "ARC_AGI_3_success"
+  ],
+  "historical_only": {
+    "rsp2_local_exam": {
+      "acquired": 120,
+      "cold": 121,
+      "authored": 137,
+      "total": 384,
+      "independently_rerun_by_consolidation": false
+    }
+  },
+  "guides": [
+    "docs/PROJECT_OVERVIEW.md",
+    "docs/RSP2_REPAIR.md",
+    "docs/RSP2_REPAIR_RESULTS.md"
+  ],
+  "manual_specialized_workflows": [
+    "baseline.yml",
+    "documentation.yml",
+    "directed-construction.yml",
+    "ep1-runtime.yml",
+    "construction-lifetime.yml",
+    "unified-external.yml",
+    "semantic-integration.yml",
+    "external-word-problems.yml",
+    "quantity-relations.yml",
+    "recursive-search-integration.yml",
+    "project-audit.yml",
+    "dc2-autonomy.yml",
+    "dc2-r1.yml",
+    "education-development.yml"
+  ],
+  "restoration_contract": "construction state must use joint checkpoint APIs; native-only restart/restore rejected before mutation"
+}

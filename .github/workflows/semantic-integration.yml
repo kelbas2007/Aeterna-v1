@@ -1,0 +1,59 @@
+name: Grounded composition regression checks
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: semantic-regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned Rust and Cargo
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p semantic-regression
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > semantic-regression/toolchain.txt
+          git rev-parse HEAD > semantic-regression/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: All targets and semantic integration tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee semantic-regression/check.log
+          cargo test --locked --test semantic_grounding --test education_runtime --test unified_runtime --test human_protection 2>&1 | tee semantic-regression/tests.log
+      - name: Existing construction and U1 regressions
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: 2>&1 | tee semantic-regression/construction-unit.log
+          cargo test --locked --test u1_meta_control 2>&1 | tee semantic-regression/u1.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "semantic-regression/$name.log"
+          done
+      - name: Preserve bounded verification output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-regression-${{ runner.os }}-${{ github.sha }}
+          path: semantic-regression/
+          retention-days: 3
+          if-no-files-found: warn

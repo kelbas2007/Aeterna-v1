@@ -259,3 +259,10 @@ impl HumanProtection {
 fn valid_probability(value: f32) -> bool {
     value.is_finite() && (0.0..=1.0).contains(&value)
 }
+
+impl HumanProtection {
+    pub(crate) fn audit_position(&self)->(u64,bool) {(self.sequence,self.emergency_stop_latched)}
+    pub(crate) fn from_audit_position(sequence:u64,latched:bool)->Self {
+        Self {sequence,emergency_stop_latched:latched,last_record:None,last_issued_sequence:None,last_consumed_sequence:None}
+    }
+}

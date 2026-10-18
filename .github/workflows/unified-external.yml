@@ -1,0 +1,99 @@
+name: Unified organism and external ARC-AGI-3
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: unified-external-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact revision and toolchain
+        run: |
+          set -euo pipefail
+          mkdir -p unified-evidence dist
+          git rev-parse HEAD > unified-evidence/revision.txt
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > unified-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install official toolkit and verify pixel transport
+        run: |
+          set -euo pipefail
+          python -m pip install arc-agi==0.9.9 > unified-evidence/python-install.log 2>&1
+          python -m pip freeze > unified-evidence/python-versions.txt
+          python scripts/unified_arc3_test.py 2>&1 | tee unified-evidence/python-tests.log
+      - name: Compile every target and check unified ownership
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee unified-evidence/check.log
+          cargo test --locked --test unified_runtime --test u1_meta_control --test human_protection 2>&1 | tee unified-evidence/bridge-tests.log
+      - name: Existing construction and learning regressions
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: 2>&1 | tee unified-evidence/unit-tests.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "unified-evidence/$name-tests.log"
+          done
+          cargo test --locked --test online_learning --test induced_programs 2>&1 | tee unified-evidence/learning-tests.log
+      - name: Teach and execute a separately restored binary
+        run: |
+          set -euo pipefail
+          cargo run --locked --example unified_learning -- unified-evidence/trained.json > unified-evidence/learning.json
+          cargo build --locked --bin aeterna-unified
+          suffix=''; if test "$RUNNER_OS" = 'Windows'; then suffix='.exe'; fi
+          python scripts/unified_transport_smoke.py "target/debug/aeterna-unified$suffix" unified-evidence/trained.json > unified-evidence/transport.json
+          cp "target/debug/aeterna-unified$suffix" "dist/aeterna-unified$suffix"
+          cp "target/debug/examples/unified_learning$suffix" "dist/unified-learning$suffix"
+          cp unified-evidence/trained.json dist/trained.json
+          cp scripts/unified_arc3.py dist/
+          cp docs/UNIFIED_EXTERNAL_PROTOCOL.md dist/PROTOCOL.md
+      - name: Reproduce frozen external attempt with original pixels
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import logging,arc_agi
+          logger=logging.getLogger('setup');logger.setLevel(logging.ERROR)
+          arc=arc_agi.Arcade(logger=logger)
+          env=arc.make('ls20-9607627b',save_recording=False)
+          if env is None: raise RuntimeError('Frozen official game version unavailable')
+          PY
+          python scripts/unified_arc3.py --binary target/debug/aeterna-unified --game ls20 --max-actions 256 --output unified-evidence/arc3 --trained unified-evidence/trained.json > unified-evidence/arc3-run.log
+          python scripts/unified_evidence.py unified-evidence > unified-evidence/verification.log
+      - name: Save runnable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeterna-unified-${{ runner.os }}-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+      - name: Preserve measured evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-evidence-${{ runner.os }}-${{ github.sha }}
+          path: unified-evidence/
+          retention-days: 7
+          if-no-files-found: warn

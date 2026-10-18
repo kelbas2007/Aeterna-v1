@@ -1,0 +1,70 @@
+name: External word problem integration regressions
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: ewp-regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ewp-regression
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > ewp-regression/toolchain.txt
+          git rev-parse HEAD > ewp-regression/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test exact arithmetic and integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee ewp-regression/check.log
+          cargo test --locked --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test human_protection 2>&1 | tee ewp-regression/tests.log
+      - name: Existing construction and U1 compatibility
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib construction:: 2>&1 | tee ewp-regression/construction-unit.log
+          cargo test --locked --test u1_meta_control 2>&1 | tee ewp-regression/u1.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "ewp-regression/$name.log"
+          done
+      - name: Test training and input transport helpers
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.3.5 scipy==1.17.0 scikit-learn==1.8.0 > ewp-regression/python-install.log 2>&1
+          python scripts/word_problem_test.py 2>&1 | tee ewp-regression/python-tests.log
+      - name: Preserve bounded verification output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ewp-regression-${{ runner.os }}-${{ github.sha }}
+          path: ewp-regression/
+          retention-days: 3
+          if-no-files-found: warn

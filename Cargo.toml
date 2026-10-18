@@ -2,12 +2,14 @@
 name = "aeterna-v1"
 version = "0.1.0"
 edition = "2021"
+default-run = "aeterna-v1"
 license = "LicenseRef-AETERNA-Research"
 description = "No-LLM EvoPhase cognitive carrier research runtime"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# Checkpoint hashes and frozen search commitments require bit-exact f64 reads.
+serde_json = { version = "1", features = ["float_roundtrip"] }
 image = { version = "=0.25.8", default-features = false, features = ["png", "jpeg", "pnm"] }
 
 [lib]

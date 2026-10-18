@@ -1,0 +1,58 @@
+name: Education development
+# Historical teaching/examination remains available explicitly; routine source
+# changes are covered by the unified project workflow, not a new external exam.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: education-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Toolchain and source identity
+        run: |
+          mkdir -p school-evidence
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          git rev-parse HEAD > school-evidence/revision.txt
+          { rustc --version --verbose; cargo --version; } > school-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pyarrow==19.0.1
+      - name: Compile and regression checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --all-targets 2>&1 | tee school-evidence/check.log
+          cargo test --locked --lib construction:: 2>&1 | tee school-evidence/construction-unit.log
+          cargo test --locked --test education_runtime --test unified_runtime --test human_protection --test u1_meta_control 2>&1 | tee school-evidence/school-tests.log
+          for source in tests/directed_construction*.rs; do
+            name=$(basename "$source" .rs)
+            cargo test --locked --test "$name" 2>&1 | tee "school-evidence/$name.log"
+          done
+      - name: Teach, freeze, restart and examine
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo build --locked --release --bin aeterna-unified
+          python scripts/education_experiment.py --binary target/release/aeterna-unified --output school-evidence/curriculum --external > school-evidence/summary.log
+          python scripts/education_verify.py school-evidence/curriculum > school-evidence/recount.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: education-results-${{ github.sha }}
+          path: school-evidence/
+          retention-days: 7
+          if-no-files-found: warn
