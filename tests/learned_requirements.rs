@@ -347,3 +347,81 @@ fn lc1_disabled_requests_cannot_consume_organism_budget() {
     ).unwrap();
     assert!(answer.forward_verified);
 }
+
+#[test]
+fn lc1_oversized_but_well_formed_sketch_rejected_before_budget_charge() {
+    use aeterna_v1::construction::requirements::validate_completion_sketch;
+    let mut rt=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},
+        AutonomyPolicy::default(),vec![0;4],"LC1-OVERSIZE-SKETCH").unwrap();
+    rt.enable_missing_computation_learning().unwrap();
+    rt.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let training=task(22,5);
+    let limits=CompletionLimits{work:20_000_000,nodes:5,terms:4096};
+    let known=Expr::bin(Op::Add,Expr::bin(Op::Add,Expr::Input(0),Expr::Input(1)),Expr::Input(2));
+    let too_big=Expr::bin(Op::Sub,known,Expr::Hole{id:0,ty:Ty::Int});
+    assert_eq!(too_big.nodes(),7);
+    assert!(too_big.nodes()<=limits.nodes+4,"old code must accept this invalid bound");
+    let before=rt.checkpoint_constructing().unwrap();
+    let work_before=rt.unified_report().unwrap().computation_work;
+    assert_eq!(validate_completion_sketch(&training,&too_big,&limits),Err(Error::InvalidProgram));
+    assert_eq!(rt.complete_missing_computation(&training,&too_big,&limits),Err(Error::InvalidProgram));
+    assert_eq!(rt.checkpoint_constructing().unwrap(),before);
+    assert_eq!(rt.unified_report().unwrap().computation_work,work_before);
+    // A sketch exactly as large as the limit still passes preflight.
+    assert_eq!(sketch().nodes(),limits.nodes);
+    assert!(validate_completion_sketch(&training,&sketch(),&limits).is_ok());
+}
+
+#[test]
+fn lc1_restored_rule_cannot_claim_acquisition_from_undiverse_records() {
+    let mut book=RequirementMemory::default();
+    book.observe(&executed(Op::Sub,35)).unwrap();
+    assert_eq!(book.report().learned_rules,1);
+    let mut forged_json=serde_json::to_value(&book).unwrap();
+    // Every row remains a *valid forward execution* and the stored inverse
+    // continues to fit it; only the actual learning prerequisite of five
+    // distinct left/right/output observations has been deliberately broken.
+    let one=forged_json["observations"][0].clone();
+    for r in forged_json["observations"].as_array_mut().unwrap(){*r=one.clone();}
+    let forged:RequirementMemory=serde_json::from_value(forged_json.clone()).unwrap();
+    assert_eq!(forged.report().learned_rules,1);
+    assert_eq!(forged.validate(),Err(Error::InvalidData));
+    // A recomputed checkpoint checksum must not turn forged learning
+    // provenance into a valid acquired rule.
+    let mut base=Learner::new(Config::default(),vec![0]).unwrap();
+    base.enable_requirements().unwrap();
+    let mut value=serde_json::to_value(&base).unwrap();
+    value["requirements"]=forged_json;
+    let forged_state:Learner=serde_json::from_value(value).unwrap();
+    let re_enveloped=forged_state.checkpoint().unwrap();
+    assert!(Learner::from_checkpoint(&re_enveloped).is_err());
+    // Original real acquired state still restores with its rule.
+    let mut sound=serde_json::to_value(&base).unwrap();
+    sound["requirements"]=serde_json::to_value(&book).unwrap();
+    let sound_state:Learner=serde_json::from_value(sound).unwrap();
+    assert_eq!(Learner::from_checkpoint(&sound_state.checkpoint().unwrap()).unwrap().requirements_report().unwrap().learned_rules,1);
+}
+
+#[test]
+fn lc1_checkpoint_rejects_fitting_but_noncanonical_inverse() {
+    // Every executed record is coherent and suitably diverse, but two
+    // expressions fit because the observed right operand equals left.
+    // Learning must canonically select Input(0), not another coincidentally
+    // fitting expression chosen by an edited checkpoint.
+    let data=(1..=20).map(|i|ExecutedOperation{op:Op::Add,left:i,right:i,output:i*2}).collect::<Vec<_>>();
+    let mut memory=RequirementMemory::default();
+    memory.observe(&data).unwrap();
+    assert_eq!(memory.rules().len(),1);
+    assert_eq!(memory.rules()[0].right,Expr::Input(0));
+    let mut encoded=serde_json::to_value(&memory).unwrap();
+    let impostor=Expr::bin(Op::Sub,Expr::Input(1),Expr::Input(0));
+    for row in &data {
+        let mut meter=Meter::new(100);
+        assert_eq!(impostor.eval(Context{input:&[row.left,row.output],action:0,state:&[],args:&[]},&Library::default(),&mut meter),Ok(Value::Int(row.right)));
+    }
+    encoded["rules"][0]["right"]=serde_json::to_value(&impostor).unwrap();
+    let edited:RequirementMemory=serde_json::from_value(encoded).unwrap();
+    assert_eq!(edited.validate(),Err(Error::InvalidData),"only the actual first acquired rule is admissible");
+    assert_eq!(memory.validate(),Ok(()));
+}

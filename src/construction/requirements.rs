@@ -75,7 +75,10 @@ pub fn validate_completion_sketch(task: &SynthesisTask, sketch: &Expr, limits: &
     validate_completion_task(task)?;
     limits.validate()?;
     let Expr::Bin(op, known, missing) = sketch else { return Err(Error::InvalidProgram) };
-    if !matches!(missing.as_ref(), Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op) || sketch.nodes() > limits.nodes+4 {
+    // The hole must be replaced by at least one VM node, so completion
+    // cannot make an already-oversized skeleton smaller. Reject *before*
+    // reserving the runtime search budget.
+    if !matches!(missing.as_ref(), Expr::Hole{id:0,ty:Ty::Int}) || !inputs(*op) || sketch.nodes() > limits.nodes {
         return Err(Error::InvalidProgram);
     }
     if known.first_hole().is_some() || known.ty(&task.library) != Ok(Ty::Int) {return Err(Error::InvalidProgram)}
@@ -94,6 +97,40 @@ fn candidates()->Vec<Expr>{
     result.sort_by(|a,b|a.nodes().cmp(&b.nodes()).then_with(||a.cmp(b)));
     result.dedup();result
 }
+// Canonical acquisition conditions are deliberately shared by training AND
+// checkpoint validation. A checksum authenticates serialization integrity,
+// not whether a stored rule could have passed the original learning gate.
+const ACQUIRED_OPERATORS: [Op;6] = [Op::Add,Op::Sub,Op::Mul,Op::DivExact,Op::Xor,Op::Rem];
+fn has_identifiable_inverse_examples(rows:&[&ExecutedOperation])->bool {
+    if rows.len()<12 {return false}
+    let distinct_l:BTreeSet<_>=rows.iter().map(|r|r.left).collect();
+    let distinct_r:BTreeSet<_>=rows.iter().map(|r|r.right).collect();
+    let distinct_z:BTreeSet<_>=rows.iter().map(|r|r.output).collect();
+    if distinct_l.len()<5||distinct_r.len()<5||distinct_z.len()<5{return false}
+    let mut labels=BTreeMap::new();
+    for r in rows {
+        if labels.insert((r.left,r.output),r.right).is_some_and(|old|old!=r.right){return false}
+    }
+    true
+}
+fn acquired_rule_for_rows(op:Op,rows:&[&ExecutedOperation],work:&mut u64)->Option<InverseRule> {
+    if !has_identifiable_inverse_examples(rows){return None}
+    // Same sorted, authored candidate grammar as the original acquisition.
+    // Validating the first full match rejects substituted noncanonical rules
+    // even when they happen to fit the stored examples.
+    for candidate in candidates(){
+        let mut correct=true;
+        for r in rows {
+            *work=work.saturating_add(1);
+            let mut meter=Meter::new(50);
+            let predicted=candidate.eval(Context{input:&[r.left,r.output],action:0,state:&[],args:&[]},&Library::default(),&mut meter);
+            *work=work.saturating_add(meter.spent);
+            if predicted!=Ok(Value::Int(r.right)){correct=false;break}
+        }
+        if correct{return Some(InverseRule{op,right:candidate,witnessed:rows.len()})}
+    }
+    None
+}
 impl RequirementMemory {
     pub fn report(&self)->RequirementReport {
         RequirementReport{observations:self.observations.len(),learned_rules:self.rules.len(),work:self.work,frozen:self.frozen}
@@ -105,19 +142,17 @@ impl RequirementMemory {
         for r in &self.observations {
             if !inputs(r.op)||r.op.apply(Value::Int(r.left),Value::Int(r.right))!=Ok(Value::Int(r.output)) {return Err(Error::InvalidData)}
         }
-        let mut seen=BTreeSet::new();
-        for rule in &self.rules {
-            if !seen.insert(rule.op)||!inputs(rule.op)||rule.right.nodes()>3||rule.witnessed>self.observations.len()||rule.witnessed<12 {
-                return Err(Error::InvalidData)
-            }
-            let rows:Vec<_>=self.observations.iter().filter(|r|r.op==rule.op).collect();
-            if rows.len()!=rule.witnessed{return Err(Error::InvalidData)}
-            for r in rows {
-                let mut meter=Meter::new(100);
-                let predicted=rule.right.eval(Context{input:&[r.left,r.output],action:0,state:&[],args:&[]},&Library::default(),&mut meter);
-                if predicted!=Ok(Value::Int(r.right)){return Err(Error::InvalidData)}
-            }
+        // Re-derive exactly the rules the public acquisition path would
+        // have selected. This checks support diversity, functional
+        // identifiability, allowed grammar, canonical candidate order and
+        // rule completeness, not just whether a forged expression fits.
+        let mut derived=Vec::new();
+        let mut validation_work=0u64; // Validation never rewrites learned work.
+        for op in ACQUIRED_OPERATORS {
+            let rows:Vec<_>=self.observations.iter().filter(|r|r.op==op).collect();
+            if let Some(rule)=acquired_rule_for_rows(op,&rows,&mut validation_work){derived.push(rule)}
         }
+        if self.rules!=derived{return Err(Error::InvalidData)}
         Ok(())
     }
     /// Atomic intake: all new records must be real, coherent *forward* executions.
@@ -131,29 +166,9 @@ impl RequirementMemory {
         }
         let mut next=self.clone();next.observations.extend_from_slice(new);
         let mut selected=Vec::new();
-        for op in [Op::Add,Op::Sub,Op::Mul,Op::DivExact,Op::Xor,Op::Rem] {
+        for op in ACQUIRED_OPERATORS {
             let rows:Vec<_>=next.observations.iter().filter(|r|r.op==op).collect();
-            if rows.len()<12 {continue}
-            let distinct_l:BTreeSet<_>=rows.iter().map(|r|r.left).collect();
-            let distinct_r:BTreeSet<_>=rows.iter().map(|r|r.right).collect();
-            let distinct_z:BTreeSet<_>=rows.iter().map(|r|r.output).collect();
-            if distinct_l.len()<5||distinct_r.len()<5||distinct_z.len()<5{continue}
-            let mut labels=BTreeMap::new();let mut identifiable=true;
-            for r in &rows {
-                if labels.insert((r.left,r.output),r.right).is_some_and(|old|old!=r.right){identifiable=false;break}
-            }
-            if !identifiable{continue}
-            for candidate in candidates(){
-                let mut correct=true;
-                for r in &rows {
-                    next.work=next.work.saturating_add(1);
-                    let mut meter=Meter::new(50);
-                    let predicted=candidate.eval(Context{input:&[r.left,r.output],action:0,state:&[],args:&[]},&Library::default(),&mut meter);
-                    next.work=next.work.saturating_add(meter.spent);
-                    if predicted!=Ok(Value::Int(r.right)) {correct=false;break;}
-                }
-                if correct{selected.push(InverseRule{op,right:candidate,witnessed:rows.len()});break}
-            }
+            if let Some(rule)=acquired_rule_for_rows(op,&rows,&mut next.work){selected.push(rule)}
         }
         next.rules=selected;next.validate()?;*self=next;Ok(self.report())
     }
