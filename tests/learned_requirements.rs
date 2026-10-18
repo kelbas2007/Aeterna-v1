@@ -116,3 +116,89 @@ fn contradictory_inverse_observations_refuse_an_unidentifiable_rule(){
     b.observe(&rows).unwrap();
     assert!(b.rules().iter().all(|r|r.op!=Op::Mul));
 }
+
+#[test]
+fn observed_lc1_work_is_the_change_in_total_learner_work_not_total_vs_lc1() {
+    let mut rt=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},
+        AutonomyPolicy::default(),vec![0;4],"LC1-SHARED-WORK"
+    ).unwrap();
+    rt.enable_missing_computation_learning().unwrap();
+    // An initial batch establishes a cumulative learned-requirement counter.
+    // A second batch must charge ONLY the incremental work to the common
+    // account, regardless of how much other construction has already spent.
+    let first=executed(Op::Sub,35);
+    let second=executed(Op::Add,16);
+    for batch in [&first[..],&second[..]] {
+        let before=rt.unified_report().unwrap();
+        let result=rt.observe_executed_computations(batch).unwrap();
+        let after=rt.unified_report().unwrap();
+        let total_delta=after.learner.construction_work-before.learner.construction_work;
+        let charged_delta=after.computation_work-before.computation_work;
+        assert!(total_delta>0,"an actual study must consume work");
+        assert_eq!(charged_delta,total_delta,"LC1 work charged using mismatched counters");
+        assert_eq!(result.work,rt.requirements_report().unwrap().work);
+        assert!(after.computation_work<1_000_000,"false saturation from underflow");
+    }
+    // Preserve both cumulative work counters through a real joint checkpoint.
+    let before=rt.unified_report().unwrap();
+    let cp=rt.checkpoint_constructing().unwrap();
+    let restored=ScientificRuntime::from_constructing_checkpoint(&cp).unwrap();
+    let after=restored.unified_report().unwrap();
+    assert_eq!(after.learner.construction_work,before.learner.construction_work);
+    assert_eq!(after.computation_work,before.computation_work);
+}
+
+#[test]
+fn lc1_after_charged_rsp2_failure_uses_shared_learner_counter() {
+    // A failed RSP2 producer attempt is still charged to construction_work.
+    // LC1's own cumulative RequirementReport.work starts from zero; mixing
+    // them caused `out.work - before` to underflow in debug (P1, PR #8).
+    use aeterna_v1::construction::search_policy::{
+        AdmissionSuite, EvolutionConfig, ProducerCase, SearchLimits, ValidationCase,
+    };
+    let mut rt=ScientificRuntime::new_constructing(
+        Config{width:4,actions:2,..Default::default()},
+        AutonomyPolicy::default(),vec![0;4],"LC1-AFTER-RSP2"
+    ).unwrap();
+    let object=SearchLimits{work:1000,evaluations:2,max_nodes:11,frontier:8,edits_per_expansion:1};
+    let meta=SearchLimits{work:100,evaluations:1,max_nodes:31,frontier:8,edits_per_expansion:1};
+    rt.enable_recursive_search(EvolutionConfig{
+        object:object.clone(),meta,max_lifetime_work:500_000,
+    }).unwrap();
+    let mk_task=|id:i64|SynthesisTask{
+        examples:(0..4).map(|j| {
+            let x=id*100+j as i64;
+            Example{input:vec![x,x+1],output:2*x+1}
+        }).collect(),
+        library:Library::default(),
+    };
+    let mk_case=|id:i64|ValidationCase{
+        support:mk_task(id*2),probes:mk_task(id*2+1),
+    };
+    let gate=AdmissionSuite{
+        fresh:(1..=8).map(mk_case).collect(),
+        transfer:(21..=28).map(mk_case).collect(),
+        producers:vec![
+            ProducerCase{training:vec![mk_task(501)],examination:vec![mk_case(101),mk_case(102)]},
+            ProducerCase{training:vec![mk_task(502)],examination:vec![mk_case(103),mk_case(104)]},
+        ],
+    };
+    // The tiny meta budget is intentionally insufficient for producing a
+    // candidate, but the valid gate causes real metered work to be reserved.
+    let rsp2_result=rt.improve_recursive_search(&[mk_task(300)],&gate,99);
+    assert!(rsp2_result.is_err());
+    let before=rt.unified_report().unwrap();
+    assert!(before.learner.construction_work>1000,
+        "test must establish non-LC1 learner work before observing LC1");
+    rt.enable_missing_computation_learning().unwrap();
+    let report=rt.observe_executed_computations(&executed(Op::Sub,35)).unwrap();
+    let after=rt.unified_report().unwrap();
+    assert_eq!(after.learner.construction_work-before.learner.construction_work, report.work);
+    assert_eq!(after.computation_work-before.computation_work,report.work,
+        "only LC1's new work may be charged, not the entire cumulative ledger");
+    assert!(after.computation_work<500_000,"the counter must not saturate");
+    let cp=rt.checkpoint_constructing().unwrap();
+    let restored=ScientificRuntime::from_constructing_checkpoint(&cp).unwrap();
+    assert_eq!(restored.unified_report().unwrap().computation_work,after.computation_work);
+}

@@ -36,9 +36,13 @@ impl ScientificRuntime {
     pub fn observe_executed_computations(&mut self,rows:&[crate::construction::requirements::ExecutedOperation])->UResult<crate::construction::requirements::RequirementReport>{
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.freeze_controller{return Err(UError::Blocked)}
+        // Both values must come from the same cumulative Learner counter:
+        // RequirementReport.work counts LC1 alone, while construction_work
+        // also includes work performed by RSP2 and ordinary construction.
         let before=u.current.learner.report().construction_work;
         let out=u.current.learner.teach_executed_operations(rows)?;
-        u.computation_work=u.computation_work.saturating_add(out.work-before);Ok(out)
+        let after=u.current.learner.report().construction_work;
+        u.computation_work=u.computation_work.saturating_add(after.saturating_sub(before));Ok(out)
     }
     pub fn requirements_report(&self)->Option<crate::construction::requirements::RequirementReport>{
         self.construction_learner()?.requirements_report()
