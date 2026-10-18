@@ -4,8 +4,12 @@ use aeterna_v1::scientific_runtime::ScientificRuntime;
 use aeterna_v1::construction::{Config,autonomy::AutonomyPolicy};
 fn limits()->SearchLimits{SearchLimits{work:20_000,evaluations:64,max_nodes:9,frontier:64,edits_per_expansion:12}}
 fn task(offset:i64)->SynthesisTask{SynthesisTask{examples:(1..=6).map(|x|Example{input:vec![x+offset,2*x-offset],output:3*x}).collect(),library:Library::default()}}
-fn config()->EvolutionConfig{EvolutionConfig{object:limits(),meta:SearchLimits{work:5_000_000,evaluations:12,max_nodes:15,frontier:32,edits_per_expansion:8},max_lifetime_work:10_000_000}}
-fn gate()->Vec<SynthesisTask>{(1..=8).map(|x|task(x*20)).collect()}
+fn config()->EvolutionConfig{EvolutionConfig{object:limits(),meta:SearchLimits{work:5_000_000,evaluations:12,max_nodes:15,frontier:32,edits_per_expansion:8},max_lifetime_work:100_000_000}}
+fn case(offset:i64)->ValidationCase{ValidationCase{support:task(offset),probes:task(offset+7)}}
+fn gate()->AdmissionSuite{AdmissionSuite{
+ fresh:(1..=8).map(|x|case(x*20)).collect(),transfer:(1..=8).map(|x|case(1000+x*20)).collect(),
+ producers:(0..2).map(|i|ProducerCase{training:vec![task(2000+i*100)],examination:vec![case(3000+i*100),case(5000+i*100)]}).collect(),
+}}
 #[test] fn code_roundtrip_includes_rank_operator_and_location(){let p=SearchPolicy::default();assert_eq!(SearchPolicy::from_code(&p.code()).unwrap(),p);}
 #[test] fn arbitrary_code_record_is_not_a_policy(){assert!(SearchPolicy::from_code(&Expr::integer(1)).is_err());}
 #[test] fn priority_cannot_read_outside_public_features(){let p=SearchPolicy{priority:Expr::Input(FEATURES),..Default::default()};assert!(p.validate().is_err());}
@@ -25,9 +29,9 @@ fn gate()->Vec<SynthesisTask>{(1..=8).map(|x|task(x*20)).collect()}
 #[test] fn proposal_serialization_and_generation_validation(){let mut e=RecursiveSearch::new(config()).unwrap();e.improve(&[task(0)],&gate(),19).unwrap();e.validate().unwrap();let b=serde_json::to_vec(&e).unwrap();let r:RecursiveSearch=serde_json::from_slice(&b).unwrap();r.validate().unwrap();assert_eq!(b,serde_json::to_vec(&r).unwrap());}
 #[test] fn fabricated_generation_fails_even_after_reserialization(){let e=RecursiveSearch::new(config()).unwrap();let mut j=serde_json::to_value(e).unwrap();j["generation"]=serde_json::json!(9);let f:RecursiveSearch=serde_json::from_value(j).unwrap();assert!(f.validate().is_err());}
 #[test] fn acceptance_requires_actual_execution_not_caller_boolean(){let mut e=RecursiveSearch::new(config()).unwrap();e.improve(&[task(0)],&gate(),17).unwrap();let mut j=serde_json::to_value(&e).unwrap();let old=j["audits"][0]["accepted"].as_bool().unwrap();j["audits"][0]["accepted"]=serde_json::json!(!old);let f:RecursiveSearch=serde_json::from_value(j).unwrap();assert!(f.validate().is_err());}
-#[test] fn gate_cannot_be_reused_or_become_training(){let mut e=RecursiveSearch::new(config()).unwrap();e.improve(&[task(0)],&gate(),1).unwrap();let before=e.clone();assert_eq!(e.improve(&[task(0)],&gate(),2).unwrap_err(),Error::Stale);assert_eq!(e,before);let other:Vec<_>=(1..=8).map(|x|task(300+x)).collect();assert_eq!(e.improve(&[task(20)],&other,3).unwrap_err(),Error::Stale);}
-#[test] fn changing_labels_does_not_reopen_gate(){let mut e=RecursiveSearch::new(config()).unwrap();let mut g=gate();e.improve(&[task(0)],&g,1).unwrap();for t in &mut g{t.examples[0].output+=1;}assert_eq!(e.improve(&[task(0)],&g,2).unwrap_err(),Error::Stale);}
-#[test] fn duplicate_or_overlapping_validation_inputs_rejected(){let mut e=RecursiveSearch::new(config()).unwrap();let g=vec![task(0);8];assert_eq!(e.improve(&[task(0)],&g,1).unwrap_err(),Error::Stale);}
+#[test] fn gate_cannot_be_reused_or_become_training(){let mut e=RecursiveSearch::new(config()).unwrap();e.improve(&[task(0)],&gate(),1).unwrap();let before=e.clone();assert_eq!(e.improve(&[task(0)],&gate(),2).unwrap_err(),Error::Stale);assert_eq!(e,before);assert_eq!(e.improve(&[task(20)],&gate(),3).unwrap_err(),Error::Stale);}
+#[test] fn changing_labels_does_not_reopen_gate(){let mut e=RecursiveSearch::new(config()).unwrap();let mut g=gate();e.improve(&[task(0)],&g,1).unwrap();for t in &mut g.fresh{t.support.examples[0].output+=1;}assert_eq!(e.improve(&[task(0)],&g,2).unwrap_err(),Error::Stale);}
+#[test] fn duplicate_or_overlapping_validation_inputs_rejected(){let mut e=RecursiveSearch::new(config()).unwrap();let mut g=gate();g.fresh=vec![case(0);8];assert_eq!(e.improve(&[task(0)],&g,1).unwrap_err(),Error::Stale);}
 #[test] fn freeze_prevents_generation_or_risk_reset(){let mut e=RecursiveSearch::new(config()).unwrap();e.freeze();let before=e.clone();assert_eq!(e.improve(&[task(0)],&gate(),1).unwrap_err(),Error::Blocked);assert_eq!(e,before);}
 #[test] fn insufficient_lifetime_budget_cannot_install_or_spend(){let mut c=config();c.max_lifetime_work=1;let mut e=RecursiveSearch::new(c).unwrap();let before=e.clone();assert_eq!(e.improve(&[task(0)],&gate(),1).unwrap_err(),Error::Budget);assert_eq!(e,before);}
 #[test] fn changing_mutation_or_location_changes_real_search(){let p=SearchPolicy::default();let mut q=p.clone();q.variation=Expr::integer(1);q.location=Expr::integer(0);let a=search(&p,Expr::integer(0),&mut task(0),&limits(),42).unwrap();let b=search(&q,Expr::integer(0),&mut task(0),&limits(),42).unwrap();assert_ne!(a.trace_hash,b.trace_hash);}

@@ -44,7 +44,7 @@ fn main()->Result<()>{
                 },
                 "improve_recursive_search"=>{
                     let training:Vec<aeterna_v1::construction::search_policy::SynthesisTask>=serde_json::from_value(request["training"].clone())?;
-                    let gate:Vec<aeterna_v1::construction::search_policy::SynthesisTask>=serde_json::from_value(request["gate"].clone())?;
+                    let gate:aeterna_v1::construction::search_policy::AdmissionSuite=serde_json::from_value(request["gate"].clone())?;
                     let seed=request["seed"].as_u64().ok_or("missing seed")?;
                     let audit=runtime.as_mut().ok_or("not loaded")?.improve_recursive_search(&training,&gate,seed)?;
                     Ok(json!({"type":"recursive_search_audit","audit":audit}))
