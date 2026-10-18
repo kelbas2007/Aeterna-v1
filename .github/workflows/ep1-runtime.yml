@@ -1,9 +1,7 @@
 name: EP1 runtime integration
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/construction/**', 'tests/directed_construction*', 'examples/directed_construction*', 'Cargo.toml', 'Cargo.lock', '.github/workflows/ep1-runtime.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

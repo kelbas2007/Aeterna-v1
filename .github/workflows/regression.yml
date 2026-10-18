@@ -1,48 +1,93 @@
-name: Development regressions
-
+name: AETERNA project checks
 on:
   pull_request:
   push:
-    branches: [main, research/beyond-intel4, 'codex/**']
+    branches: [main, research/beyond-intel4, 'integration/**', 'codex/**']
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
-  group: development-regression-${{ github.workflow }}-${{ github.ref }}
+  group: aeterna-project-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
-  regression:
-    runs-on: ubuntu-latest
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
       CARGO_BUILD_JOBS: 2
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: '1.99.0'
-      - uses: Swatinem/rust-cache@v2
-      - name: Check every compilation target
-        run: cargo check --locked --all-targets
-      - name: Run ordinary and causal regressions
-        shell: bash
-        run: |
-          set -o pipefail
-          bash scripts/check.sh 2>&1 | tee regression.log
-      - name: Persist and resume in separate processes
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pinned Rust and exact source
         shell: bash
         run: |
           set -euo pipefail
-          bash scripts/demo.sh 2>&1 | tee demos.log
-      - name: Preserve regression output
+          mkdir -p project-evidence .test-temp
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > project-evidence/toolchain.txt
+          git rev-parse HEAD > project-evidence/revision.txt
+          git archive --format=tar.gz --output=project-evidence/source.tar.gz HEAD
+      - uses: Swatinem/rust-cache@v2
+      - name: Unified entry point, RSP2, education and protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/check_project.py --release 2>&1 | tee project-evidence/integration.log
+          python scripts/check_docs.py 2>&1 | tee project-evidence/docs.log
+          python scripts/project_audit.py 2>&1 | tee project-evidence/source-binding.json
+      - name: Existing broad causal regressions and separate-process demos
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          export TMPDIR="$GITHUB_WORKSPACE/.test-temp"
+          bash scripts/check.sh 2>&1 | tee project-evidence/core-regression.log
+          bash scripts/demo.sh 2>&1 | tee project-evidence/core-demos.log
+      - name: One actual acquired state through the canonical executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          suffix=''
+          if test "$RUNNER_OS" = Windows; then suffix='.exe'; fi
+          python scripts/project_demo.py --binary "target/release/aeterna-v1$suffix" --output project-evidence/example 2>&1 | tee project-evidence/example.log
+      - name: Package one application and the explicit teaching example
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import os,hashlib,shutil
+          out=Path('aeterna-project');out.mkdir()
+          suffix='.exe' if os.environ['RUNNER_OS']=='Windows' else ''
+          shutil.copyfile('target/release/aeterna-v1'+suffix,out/('aeterna-v1'+suffix))
+          for src,name in [('project-evidence/example/example-state.json','example-state.json'),('project-evidence/example/summary.json','EXAMPLE_RESULTS.json'),('docs/PROJECT_OVERVIEW.md','README.md'),('docs/PROJECT_STATE.json','PROJECT_STATE.json'),('project-evidence/revision.txt','revision.txt')]:shutil.copyfile(src,out/name)
+          if suffix:
+              (out/'START-AETERNA.cmd').write_bytes(b'@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-v1.exe --help\r\npause\r\n')
+              (out/'START-EXAMPLE.cmd').write_bytes(b'@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\naeterna-v1.exe --school example-state.json\r\npause\r\n')
+          else:(out/'aeterna-v1').chmod(0o755)
+          (out/'SHA256SUMS.txt').write_text('\n'.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name for f in sorted(out.iterdir()))+'\n',encoding='utf-8')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AETERNA-project-${{ runner.os }}-${{ github.sha }}
+          path: aeterna-project/
+          retention-days: 7
+      - name: Preserve results, never target or a toolchain
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: development-regression-log
-          path: |
-            regression.log
-            demos.log
-          if-no-files-found: ignore
+          name: AETERNA-project-evidence-${{ runner.os }}-${{ github.sha }}
+          path: project-evidence/
+          retention-days: 7
+          if-no-files-found: warn

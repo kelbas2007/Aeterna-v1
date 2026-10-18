@@ -1,9 +1,7 @@
 name: External word problem integration regressions
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/word_problems.rs', 'src/education*', 'src/bin/aeterna-unified.rs', 'tests/word_problem*', 'scripts/word_problem*', '.github/workflows/external-word-problems.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

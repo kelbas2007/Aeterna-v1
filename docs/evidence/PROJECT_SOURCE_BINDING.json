@@ -1,0 +1,10 @@
+{
+  "base_revision": "02b4175f34bcc68b8c80197cca6dd79f38b85892",
+  "unchanged_cognitive_source_files": 81,
+  "aggregate_sha256": "2b19688cb615cd0a6581aa9018df0c32efd311b01fa64e8be0ea965a33e65dc3",
+  "exclusions": [
+    "src/main.rs",
+    "src/bin/aeterna-unified.rs"
+  ],
+  "search_policy_sha256": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0"
+}

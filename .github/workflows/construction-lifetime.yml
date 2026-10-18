@@ -1,9 +1,7 @@
 name: Construction lifetime
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/construction/**', 'src/bin/aeterna-construction.rs', 'tests/directed_construction*', 'examples/directed_construction*', 'scripts/construction_adapter_demo.py', '.github/workflows/construction-lifetime.yml', 'Cargo.toml', 'Cargo.lock']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

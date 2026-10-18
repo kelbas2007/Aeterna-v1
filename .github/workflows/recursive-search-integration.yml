@@ -1,9 +1,7 @@
 name: Recursive search policy regression checks
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/construction/search_policy.rs', 'src/construction/recursive_search_port.rs', 'src/recursive_search_runtime.rs', 'src/bin/aeterna-unified.rs', 'src/construction/constructors.rs', 'src/construction/recursive.rs', 'src/construction/synthesis.rs', 'src/unified_runtime.rs', 'tests/recursive_search_policy.rs', 'tests/recursive_search_repair.rs', 'examples/recursive_search.rs', 'examples/rsp1_support/**', 'scripts/rsp1_*.py', '.github/workflows/recursive-search-integration.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

@@ -2,6 +2,7 @@
 name = "aeterna-v1"
 version = "0.1.0"
 edition = "2021"
+default-run = "aeterna-v1"
 license = "LicenseRef-AETERNA-Research"
 description = "No-LLM EvoPhase cognitive carrier research runtime"
 

@@ -1,5 +1,15 @@
 # Aeterna-v1 status
 
+## Current consolidation — 2026-10-18
+
+Read [the current project overview](docs/PROJECT_OVERVIEW.md) first. The canonical executable is
+`aeterna-v1`; `aeterna-unified` shares the same application code. RSP2 from PR #5
+is included. Run `python scripts/check_project.py` for the current regression
+set. Historical results below remain tied to their original code; statements
+calling older results “latest” apply only to their original date. The unified
+CI does not repeat external exams or consumed authority packs.
+
+
 **Current integrated source: `main`; ongoing research: `research/beyond-intel4`; qualified historical baseline: `intel4-frozen-unified`.** Main now includes the tested research source and examples. INTEL-4 evidence remains pinned to its exact frozen cognitive source; integration does not qualify current development as INTEL-4 or create fresh intelligence claims. Read [PROJECT_MAP.md](PROJECT_MAP.md) and the [integration record](docs/BRANCH_INTEGRATION_20261009.md).
 
 ## Acquired representation and motor-skill transfer — 2026-10-10

@@ -1,11 +1,7 @@
 name: Directed construction regressions
 on:
-  push:
-    branches: [main, research/beyond-intel4]
-    paths: ['src/**', 'examples/directed_construction*.rs', 'tests/directed_construction*', 'Cargo.toml', 'Cargo.lock', '.github/workflows/directed-construction.yml']
-  pull_request:
-    paths: ['src/**', 'examples/directed_construction*.rs', 'tests/directed_construction*', 'Cargo.toml', 'Cargo.lock', '.github/workflows/directed-construction.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

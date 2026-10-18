@@ -1,9 +1,7 @@
 name: Grounded composition regression checks
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/semantic_grounding.rs', 'src/education*', 'src/bin/aeterna-unified.rs', 'tests/semantic*', 'scripts/semantic*', '.github/workflows/semantic-integration.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

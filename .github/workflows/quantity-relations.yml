@@ -1,9 +1,7 @@
 name: Quantity relation integration regressions
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/quantity_relations.rs', 'src/word_problems.rs', 'src/education*', 'src/bin/aeterna-unified.rs', 'tests/quantity_relations.rs', 'scripts/relational*.py', '.github/workflows/quantity-relations.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

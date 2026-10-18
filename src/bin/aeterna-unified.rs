@@ -22,7 +22,32 @@ fn configuration()->(Config,AutonomyPolicy){
     let policy=AutonomyPolicy{ceiling:SearchConfig{work:300_000,max_expr_nodes:5,max_frontier:2048,max_updates:8,max_state:1,deterministic:false},failures_per_expansion:2,max_external_cost:10000,evidence:Some(EvidencePolicy::default())};
     (cfg,policy)
 }
-fn main()->Result<()>{
+pub(crate) fn main()->Result<()>{
+    use std::io::IsTerminal;
+    let args: Vec<String> = std::env::args().collect();
+    match args.get(1).map(String::as_str) {
+        Some("--help" | "-h") if args.len()==2 => { print!("{}", PROJECT_HELP); return Ok(()); },
+        Some("--version") if args.len()==2 => { println!("AETERNA-v1 {} / project-20261018", env!("CARGO_PKG_VERSION")); return Ok(()); },
+        Some("--status") if args.len()==2 => { println!("{}", serde_json::to_string_pretty(&project_status())?); return Ok(()); },
+        Some("--inspect") if args.len()==3 => {
+            let bytes=std::fs::read(&args[2])?;
+            let rt=ScientificRuntime::from_constructing_checkpoint(&bytes)?;
+            let recursive=rt.construction_learner().and_then(|l|l.recursive_search()).map(|s|json!({
+                "generation":s.generation(),"work":s.work(),"attempts":s.audits().len(),
+                "retained_cases":s.retained().len(),"frozen":s.is_frozen()
+            }));
+            println!("{}",serde_json::to_string_pretty(&json!({"type":"checkpoint_inspection",
+                "organism":rt.unified_report(),"school":rt.school_report(),"recursive_search":recursive,
+                "read_only":true,"external_actions_executed":0}))?);
+            return Ok(());
+        },
+        Some("--school" | "--relations" | "--word-problems") if args.len()==3 => {},
+        Some("--jsonl") if args.len()==2 => {},
+        None if io::stdin().is_terminal() => { print!("{}",PROJECT_HELP); return Ok(()); },
+        None => {}, // Retain the original piped JSONL adapter contract.
+        _ => return Err("invalid arguments; run aeterna-v1 --help".into()),
+    }
+
     if std::env::args().nth(1).as_deref()==Some("--relations"){return relation_console();}
     if std::env::args().nth(1).as_deref()==Some("--school"){return school_console();}
     if std::env::args().nth(1).as_deref()==Some("--word-problems"){return word_console();}
@@ -32,6 +57,7 @@ fn main()->Result<()>{
         let request=read(&mut input)?;
         let response:Result<Value>=(||{
             match request["op"].as_str().ok_or("missing op")? {
+                "project_status"=>Ok(json!({"type":"project_status","project":project_status()})),
                 "init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
                     let (cfg,policy)=configuration();runtime=Some(ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"interactive-v1")?);
@@ -242,3 +268,26 @@ fn relation_console()->Result<()> {
     }
     Ok(())
 }
+
+
+fn project_status()->Value {
+    serde_json::from_str(include_str!("../../docs/PROJECT_STATE.json")).expect("checked static project manifest")
+}
+const PROJECT_HELP:&str = "AETERNA-v1 — one application, explicit research capabilities
+
+  aeterna-v1 --status                 Implementation inventory; no state loaded
+  aeterna-v1 --inspect STATE.json     Read-only checkpoint report
+  aeterna-v1 --school STATE.json      Acquired Russian/English school expressions
+  aeterna-v1 --relations STATE.json   Learned English quantity relations
+  aeterna-v1 --word-problems STATE.json  Existing word-problem interface
+  aeterna-v1 --jsonl                  Existing ScientificRuntime JSONL protocol
+  aeterna-v1 --version
+
+The aeterna-unified binary is a compatibility alias of this same code.
+A learned checkpoint must be supplied explicitly; no pretrained state is invented.
+RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
+solve_synthesis, recursive_search_report, checkpoint, quit.
+Legacy RSP1 states remain readable; old admission history is not upgraded silently.
+Virtual environments only. General intelligence and reliable self-improvement
+have not been demonstrated. See docs/PROJECT_OVERVIEW.md.
+";

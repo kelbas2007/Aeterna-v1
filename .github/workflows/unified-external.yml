@@ -1,9 +1,7 @@
 name: Unified organism and external ARC-AGI-3
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['src/unified*', 'src/phase_constructing_control.rs', 'src/construction/**', 'src/bin/aeterna-unified.rs', 'tests/unified*', 'examples/unified*', 'scripts/unified*', '.github/workflows/unified-external.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 concurrency:

@@ -1,9 +1,7 @@
 name: Project consolidation source audit
 on:
-  push:
-    branches: [research/beyond-intel4]
-    paths: ['.github/workflows/project-audit.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
 jobs:
@@ -26,7 +24,7 @@ jobs:
           git log --oneline -30 > project-audit/recent-commits.txt
           git rev-list --left-right --count origin/main...HEAD > project-audit/main-divergence.txt
           git merge-base --is-ancestor origin/main HEAD
-          git merge-base --is-ancestor origin/codex/rsp1-search-repair HEAD
+          git merge-base --is-ancestor 6d8a58ad12909a7b195afa99ef6c0ffc3c407f6f HEAD
           echo 'main and RSP2 repair are ancestors; no commit discarded' > project-audit/ancestry.txt
       - uses: actions/upload-artifact@v4
         with:
