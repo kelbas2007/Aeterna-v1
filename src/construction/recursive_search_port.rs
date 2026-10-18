@@ -5,7 +5,7 @@ impl Learner {
         self.registry.recursive_search=Some(super::search_policy::RecursiveSearch::new(cfg)?);Ok(())
     }
     pub fn recursive_search(&self)->Option<&super::search_policy::RecursiveSearch>{self.registry.recursive_search.as_ref()}
-    pub(crate) fn improve_recursive_search(&mut self,training:&[super::search_policy::SynthesisTask],gate:&[super::search_policy::SynthesisTask],seed:u64)->Result<super::search_policy::PolicyAudit>{
+    pub(crate) fn improve_recursive_search(&mut self,training:&[super::search_policy::SynthesisTask],gate:&super::search_policy::AdmissionSuite,seed:u64)->Result<super::search_policy::PolicyAudit>{
         if self.pending||self.shadow.is_some()||self.poisoned||self.frozen_at.is_some(){return Err(Error::Busy);}
         let state=self.registry.recursive_search.as_mut().ok_or(Error::NoEvidence)?;
         let before=state.work();let result=state.improve(training,gate,seed).cloned();

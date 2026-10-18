@@ -1,4 +1,8 @@
 /target
+/.rustup
+/.cargo-home
+/rsp2-results
+/.test-temp
 *.log
 .DS_Store
 __pycache__/

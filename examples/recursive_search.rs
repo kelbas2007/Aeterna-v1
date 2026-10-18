@@ -1,4 +1,4 @@
-//! RSP1 registered experiment. `train DIR`, then freeze artifacts, `examine DIR`.
+//! RSP2 acquisition and engineering check. Historical RSP1 evidence is unchanged.
 //! Does not call an LLM, read a target implementation, or execute external actions.
 mod rsp1_support;
 use rsp1_support::*;
@@ -19,7 +19,7 @@ fn train(root:&Path)->Result<()> {
   rt.enable_recursive_search(config())?;
   let (lessons,_)=tasks(seed*100,8,false);let mut actual_gates=Vec::new();
   for attempt in 0..24u64 {
-   let (gate,_)=tasks(seed*80000+attempt*1000,24,false);
+   let gate=admission(seed*80000+attempt*100_000);
    let a=rt.improve_recursive_search(&lessons,&gate,seed*1000+attempt)?;
    eprintln!("seed {seed} attempt {attempt} generation {} accepted {} gate solved {} -> {}",a.generation_after,a.accepted,a.before.solved,a.after.solved);
    actual_gates.push(gate);
@@ -33,7 +33,7 @@ fn train(root:&Path)->Result<()> {
   save(root.join(format!("development-{seed}.json")),&json!({"seed":seed,"lessons":lessons,"gates":actual_gates,"evolution":state,"runtime_report":rt.unified_report()}))?;
   summaries.push(json!({"seed":seed,"generation":state.generation(),"work":state.work(),"policy":state.policy(),"checkpoint_bytes":bytes.len(),"checkpoint_fingerprint":aeterna_v1::construction::vm::fingerprint(&bytes),"wall_seconds":clock.elapsed().as_secs_f64()}));
  }
- save(root.join("training-summary.json"),&json!({"kind":"RSP1_DEVELOPMENT_ONLY","seeds":summaries,"attempts_per_seed":24,"object_limits":limits(),"meta_limits":meta(),"test_outcomes_read":false}))?;Ok(())
+  save(root.join("training-summary.json"),&json!({"kind":"RSP2_DEVELOPMENT_ONLY","seeds":summaries,"attempts_per_seed":24,"object_limits":limits(),"meta_limits":meta(),"test_outcomes_read":false}))?;Ok(())
 }
 fn examine(root:&Path)->Result<()> {
  if root.join("exam-summary.json").exists(){return Err("Exam already consumed; replay into a separate copy, never retune on it.".into());}
@@ -81,10 +81,60 @@ fn examine(root:&Path)->Result<()> {
   summaries.push(json!({"seed":seed,"generation":state.generation(),"acquisition_work":state.work(),"frozen":families,"producer_swap":summary_pairs}));
   if bytes!=rt.checkpoint_constructing()?{return Err("evaluation altered frozen state".into());}
  }
- save(root.join("exam-summary.json"),&json!({"kind":"RSP1_FROZEN_DEVELOPMENT_DISTRIBUTION_TEST","independent_external_benchmark":false,"seeds":summaries,"immutable_after_exam":true,"solver_and_producer_roles_separate":true}))?;Ok(())
+  save(root.join("exam-summary.json"),&json!({"kind":"RSP2_FROZEN_DEVELOPMENT_DISTRIBUTION_TEST","independent_external_benchmark":false,"seeds":summaries,"immutable_after_exam":true,"solver_and_producer_roles_separate":true}))?;Ok(())
+}
+fn repair_check(root:&Path)->Result<()> {
+ if root.exists(){return Err("Refusing to overwrite a previous repair check".into());}
+ fs::create_dir_all(root)?;
+ let mut cfg=config();cfg.meta.work=20_000_000;cfg.meta.evaluations=32;
+ save(root.join("protocol.json"),&json!({
+  "kind":"RSP2_ENGINEERING_CHECK","seeds":[201,202,203,204],"attempts_per_seed":8,
+  "config":cfg,"admission_families":[0,1,2,3,4,5,6,7],"new_exam_families":[8,9,10,11],
+  "exam_tasks_per_group":32,"controls":["cold","loss_size"],"all_metered_search_and_validation_work_charged":true,
+  "not_a_wall_clock_speedup_claim":true,"source":include_str!("../src/construction/search_policy.rs")
+ }))?;
+ let whole=std::time::Instant::now();let mut summaries=Vec::new();
+ for seed in 201..=204u64 {
+  let clock=std::time::Instant::now();
+  let mut rt=ScientificRuntime::new_constructing(Config{width:3,..Default::default()},AutonomyPolicy::default(),vec![0;3],"RSP2-repair-check")?;
+  rt.enable_recursive_search(cfg.clone())?;
+  let lessons=tasks(seed*1000,8,false).0;let mut attempts=Vec::new();
+  for attempt in 0..8u64 {
+   let gate=admission(10_000_000+seed*1_000_000+attempt*100_000);
+   let a=rt.improve_recursive_search(&lessons,&gate,seed*1000+attempt)?;
+   let q=a.qualification.as_ref().ok_or("missing qualification")?;
+   eprintln!("repair seed {seed} attempt {attempt}: accepted={} direct={} producer={} generation={}",a.accepted,q.direct_pass(&cfg.object),q.producer_pass(&cfg.object),a.generation_after);
+   attempts.push(json!({"attempt":attempt,"accepted":a.accepted,"direct_pass":q.direct_pass(&cfg.object),"producer_pass":q.producer_pass(&cfg.object),
+    "producer_pairs":q.producers.len(),"work":a.consumed_work,"retention_cases":q.retention.after.search.tasks,
+    "retention_solved":q.retention.after.solved()}));
+  }
+  rt.freeze_recursive_search()?;
+  let bytes=rt.checkpoint_constructing()?;let restored=ScientificRuntime::from_constructing_checkpoint(&bytes)?;
+  if bytes!=restored.checkpoint_constructing()?{return Err("repair checkpoint was not exact".into());}
+  fs::write(root.join(format!("trained-{seed}.json")),&bytes)?;
+  let state=rt.construction_learner().unwrap().recursive_search().unwrap();state.validate()?;
+  let mut groups=serde_json::Map::new();
+  for (name,first) in [("related",0),("admission_transfer",4),("new_structure",8)] {
+   let (support,probes)=family_tasks(0xC200000+seed*10000+first as u64*1000,32,first);
+   let mut arms=serde_json::Map::new();
+   for (label,policy) in [("learned",state.policy().clone()),("cold",SearchPolicy::default()),("loss_size",loss_size())] {
+    arms.insert(label.into(),tested(&policy,&support,&probes,0xA200000+seed*100+first as u64)?);
+   }
+   groups.insert(name.into(),json!({"support":support,"probes":probes,"arms":arms}));
+  }
+  save(root.join(format!("seed-{seed}.json")),&json!({"seed":seed,"attempts":attempts,"groups":groups,"state":state,"exact_checkpoint":true}))?;
+  let counts:serde_json::Map<String,Value>=groups.iter().map(|(k,v)|{
+   let arms:serde_json::Map<String,Value>=v["arms"].as_object().unwrap().iter().map(|(a,s)|(a.clone(),json!({"solves":s["generalizing"],"work":s["score"]["work"],"false_fits":s["false_fits"]}))).collect();
+   (k.clone(),Value::Object(arms))
+  }).collect();
+  summaries.push(json!({"seed":seed,"generation":state.generation(),"retained":state.retained().len(),"acquisition_work":state.work(),
+   "attempts":attempts,"groups":counts,"checkpoint_bytes":bytes.len(),"wall_seconds":clock.elapsed().as_secs_f64()}));
+ }
+ save(root.join("summary.json"),&json!({"kind":"RSP2_ENGINEERING_CHECK","seeds":summaries,"wall_seconds":whole.elapsed().as_secs_f64()}))?;
+ Ok(())
 }
 fn main()->Result<()> {
  let args:Vec<_>=std::env::args().collect();let mode=args.get(1).map(String::as_str).unwrap_or("help");
  let root=PathBuf::from(args.get(2).map(String::as_str).unwrap_or("rsp1-session"));
- match mode {"train"=>train(&root),"examine"=>examine(&root),_=>{println!("AETERNA RSP1: recursive_search train DIR, then recursive_search examine DIR.\nUse a NEW directory. All seeds and failures remain in the report. This executable is not a conversational AI.");Ok(())}}
+  match mode {"train"=>train(&root),"examine"=>examine(&root),"repair-check"=>repair_check(&root),_=>{println!("AETERNA recursive_search: train DIR, examine DIR, or repair-check DIR.\nUse a NEW directory. All seeds and failures remain in the report. This executable is not a conversational AI.");Ok(())}}
 }
