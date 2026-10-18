@@ -1,0 +1,97 @@
+name: Apply reviewed LC1 input/sketch preflight
+on:
+  push:
+    branches: [integration/lc1-central-20261018]
+    paths: ['.ci/lc1/review4.diff.gz', '.github/workflows/lc1-review4-apply.yml']
+permissions:
+  contents: write
+concurrency:
+  group: lc1-review4-apply
+  cancel-in-progress: true
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact source and apply preflight correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 27eeec08103c367feebe349127820595b5c9ea1f HEAD
+          mkdir -p lc1-review4-evidence
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,gzip,subprocess
+          root=Path('.')
+          data=(root/'.ci/lc1/review4.diff.gz').read_bytes()
+          assert hashlib.sha256(data).hexdigest()=='48f36cd0253d4d58307cabda9eea6ce937a30bdda4acbc50ebdbe62d9ba39ca3'
+          diff=gzip.decompress(data)
+          assert hashlib.sha256(diff).hexdigest()=='83ece5d445694d1c7c06e9dfe4b693dc7dbe695517409c071d3cde28b761fe22'
+          expected={
+            'src/construction/requirements.rs':'c8a267b67af9698c764f11346f7522d46ae782352aa22008d304f5bc59d8b64c',
+            'src/recursive_search_runtime.rs':'6ef6be4a3adc475773a74533522da37de63aa199f343fde3e0e58a5d5ec5ff50',
+            'tests/learned_requirements.rs':'ffe8ed7bfdbf5901f6e79b37200feb8c956db90515d504443ee1dbdb9572ce27',
+            'docs/evidence/PROJECT_SOURCE_BINDING.json':'ef98b9acff58b9b47b4506429b1c8bcce4c0e3c8043a6ddcc52d1d7078654e5b',
+          }
+          for path,digest in expected.items():
+            assert hashlib.sha256((root/path).read_bytes()).hexdigest()==digest, path+' source modified before patch'
+          subprocess.run(['git','apply','--check','-'],input=diff,check=True)
+          subprocess.run(['git','apply','--index','-'],input=diff,check=True)
+          after={
+            'src/construction/requirements.rs':'56eb81c15c1b543d5eb4e773fa6cb1d658e84a66ac8b2c449be8b953ed20d3af',
+            'src/recursive_search_runtime.rs':'a41fa7750a1103cb8de7f39902fbcf6bba87ef6ca7c15da0f8ae85ece832bbe1',
+            'tests/learned_requirements.rs':'cdd00c7b2c1478f8c585cda83c27cd1a864792bc327a388593cdb9dfee075b0b',
+            'docs/evidence/PROJECT_SOURCE_BINDING.json':'6e9e6c51d1c8d994904dd2e7465e957bec0cb2eb0311df514e5c9ff1428a6347',
+            'docs/LC1_REVIEW_P2_INPUT_SKETCH.md':'1e0d3062c4dfadb40fc8b090ab67c7db98a1e6a0e13e21c606acbe192aa7ea22',
+          }
+          for path,digest in after.items():
+            assert hashlib.sha256((root/path).read_bytes()).hexdigest()==digest,path+' corrected file mismatch'
+          PY
+          git diff --cached --check
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Preflight LC1 input width and sketches before reserving work'
+          git rev-parse HEAD > lc1-review4-evidence/tested-revision.txt
+          sha256sum src/construction/requirements.rs src/recursive_search_runtime.rs tests/learned_requirements.rs > lc1-review4-evidence/source-hashes.txt
+      - name: Rust 1.99 pinned toolchain
+        shell: bash
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          { rustc --version --verbose; cargo --version; } > lc1-review4-evidence/toolchain.txt
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify fixed LC1 and historical cognitive safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/project_audit.py 2>&1 | tee lc1-review4-evidence/audit.log
+          python scripts/check_docs.py 2>&1 | tee lc1-review4-evidence/docs.log
+          cargo check --locked --all-targets 2>&1 | tee lc1-review4-evidence/check.log
+          cargo test --locked --test learned_requirements --test recursive_search_repair --test experiential --test unified_runtime --test human_protection 2>&1 | tee lc1-review4-evidence/regressions.log
+      - name: Publish same tested source to PR branch (no workflow files changed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$header"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $header" push origin HEAD:refs/heads/integration/lc1-central-20261018
+          git rev-parse HEAD > lc1-review4-evidence/published-revision.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: LC1-review4-verified-${{ github.sha }}
+          path: lc1-review4-evidence/
+          retention-days: 7
+          if-no-files-found: warn
