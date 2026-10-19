@@ -19,6 +19,16 @@ pub(crate) struct PortHistoryPlan{
     pub terminal:Vec<i64>,
     pub depth:usize,
 }
+
+#[derive(Debug,Clone)]
+pub(crate) struct PortCausalProbe{
+    pub action:usize,
+    /// Distinguishing this candidate from older physical observations is a
+    /// proposer-side *epistemic statistic*, not predicted goal progress.
+    pub novelty:f32,
+    pub disagreement:f32,
+    pub quoted_cost:u64,
+}
 impl Learner {
     pub(crate) fn manage_from_carrier(&mut self) -> Result<()> {
         if !self.records.is_empty() || self.pending { return Err(Error::Busy); }
@@ -159,6 +169,74 @@ impl Learner {
             }
         }
         (None,meter.spent)
+    }
+
+    /// This organism itself chooses an experiment intended to discriminate
+    /// under-sampled action pairs in the SAME observed environment state.
+    /// Only an executed no-visible-effect predecessor motivates a new pair:
+    /// it might have changed a latent state without sensor change.
+    ///
+    /// Observations after a reset / physical journal gap are never a
+    /// predecessor; inference and metering use only the pre-freeze journal.
+    /// No semantic motor roles, rewards, goals or synthetic future POSTs.
+    pub(crate) fn carrier_active_causal_probe_metered(
+        &self,allowed:&[bool],quoted:&[super::autonomy::ActionOffer],
+        budget:u64
+    )->(Option<PortCausalProbe>,u64){
+        if !self.active_pair_probes||self.pending||self.poisoned||
+            self.frozen_at.is_some()||budget==0||
+            allowed.len()!=self.config.actions||
+            quoted.len()!=self.config.actions{
+            return (None,0)
+        }
+        let Some(previous)=self.records.last()else{return (None,0)};
+        if self.restart_next || previous.transition.pre!=previous.transition.post ||
+            previous.transition.post!=self.current {return (None,0)}
+        let context=previous.transition.action;
+        let mut meter=Meter::new(budget);
+        let mut rank=None::<(usize,usize,u64,usize)>;
+        // Prioritise the least-tested (PRE, predecessor, next-motor)
+        // context, with an independent global-action frequency tie-break.
+        // The selector cannot know in advance which motor is "charge".
+        for action in 0..self.config.actions{
+            if !allowed[action] {continue}
+            let mut within=0usize;
+            let mut total=0usize;
+            let mut other_context=false;
+            let mut outcomes=std::collections::BTreeSet::new();
+            let end=self.frozen_at.map_or(self.records.len(),|id|
+                self.records.partition_point(|r|r.transition.id<id));
+            for index in (0..end).rev().take(128){
+                if meter.charge((self.current.len()+3) as u64).is_err(){
+                    return (None,meter.spent)
+                }
+                let row=&self.records[index].transition;
+                if row.action!=action{continue}
+                total+=1;
+                if row.pre!=self.current{continue}
+                let p=factual_predecessor(&self.records[..end],index);
+                if p==Some(context) {within+=1}
+                if p.is_some_and(|n|n!=context) {other_context=true}
+                if outcomes.len()<8 {outcomes.insert(row.post.clone());}
+            }
+            // Uncertainty is epistemic, not presumed success. Once a pair
+            // has at least three direct real witnesses we stop probing it.
+            if within>=3{continue}
+            let tie=exploration_word(self.next_id^
+                (action as u64).wrapping_mul(0x9e3779b97f4a7c15));
+            let key=(within,total,tie,action);
+            if rank.is_none_or(|b|key<b){rank=Some(key)}
+            // Every supported alternative context may indicate a useful
+            // contrast; a single unknown observation does not.
+            let _=(other_context,outcomes);
+        }
+        let Some((within,total,_,action))=rank else{return (None,meter.spent)};
+        let novelty=1.0/(1.0+within as f32);
+        let disagreement=1.0/(1.0+total as f32);
+        (Some(PortCausalProbe{
+            action,novelty,disagreement,
+            quoted_cost:quoted[action].max_cost,
+        }),meter.spent)
     }
     pub(crate) fn carrier_config(&self)->&super::runtime::Config {&self.config}
     pub(crate) fn carrier_prepare(&mut self,a:usize)->Result<Commitment> {self.prepare(a)}

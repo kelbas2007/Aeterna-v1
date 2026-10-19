@@ -95,6 +95,10 @@ pub struct Learner {
     certified_chains:bool,
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     predictive_history_states:bool,
+    /// Opt-in active discrimination of unknown predecessor/action pairs,
+    /// using only actual PRE/action/POSTs. Never actuator authority.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    active_pair_probes:bool,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -402,7 +406,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -712,6 +716,16 @@ impl Learner {
     pub fn self_directed_control_enabled(&self)->bool {self.self_directed}
     pub fn certified_chains_enabled(&self)->bool {self.certified_chains}
     pub fn predictive_history_states_enabled(&self)->bool{self.predictive_history_states}
+    pub fn active_pair_probes_enabled(&self)->bool{self.active_pair_probes}
+    /// Native U1 owns the final choice; historical contrasts are the ONLY
+    /// learning signal. The experiment is restricted to one-step suffixes.
+    pub fn enable_active_pair_probes(&mut self)->Result<()>{
+        if !self.self_directed || !self.predictive_history_states ||
+            self.active_pair_probes || self.pending || self.poisoned ||
+            self.frozen_at.is_some(){return Err(Error::Busy)}
+        if self.config.planning_work<32_000{return Err(Error::Capacity)}
+        self.active_pair_probes=true;Ok(())
+    }
     /// Uses the same Learner PRE/action/POST and one joint checkpoint.
     pub fn enable_predictive_history_states(&mut self)->Result<()>{
         if !self.self_directed || self.predictive_history_states ||
@@ -901,6 +915,10 @@ impl Learner {
         }
         if state.predictive_history_states &&
             (!state.self_directed || state.config.planning_work<32_000){
+            return Err(Error::InvalidData);
+        }
+        if state.active_pair_probes && (!state.predictive_history_states ||
+            !state.self_directed || state.config.planning_work<32_000){
             return Err(Error::InvalidData);
         }
         if let Some(policy)=&state.autonomy {

@@ -90,6 +90,12 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"predictive_history_states_enabled",
                         "proposal_authority":"u1_only","evidence":"real_executed_history"}))
                 },
+                "enable_active_causal_probes"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
+                    Ok(json!({"type":"active_causal_probes_enabled",
+                        "proposal_authority":"native_U1_only",
+                        "outcomes":"real_protected_POST_only"}))
+                },
                 "enable_trajectory_self_revision"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_trajectory_self_revision()?;
                     Ok(json!({"type":"trajectory_self_revision_enabled",
@@ -352,6 +358,7 @@ enable_agency_aware_credit BEFORE collecting experience; the organism
 still learns world effects from forced actions, not native choice weights.
 Optional predictive history states
 (planning_work>=32000): enable_predictive_history_states.
+Optional unforced causal pair experiments: enable_active_causal_probes.
 Optional own evaluator synthesis:
 enable_trajectory_self_revision, step(goal,available),
 trajectory_self_revision_report. The evaluator changes U1 valuation only,

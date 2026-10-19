@@ -39,6 +39,9 @@ pub struct UnifiedStep {
     /// A proposed invisible prerequisite is NOT evidence it was executed.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub predictive_history_plan_proposed:bool,
+    /// Proposal availability is NOT the same as executed curiosity.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    pub active_pair_probe_proposed:bool,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedReport {
@@ -547,6 +550,13 @@ impl ScientificRuntime {
         if u.freeze_controller{return Err(UError::Blocked)}
         u.current.learner.enable_predictive_history_states()
     }
+    /// The same U1 may elect to test an underobserved action pair. No other
+    /// action authority and no externally scheduled experiment steps.
+    pub fn enable_constructing_active_causal_probes(&mut self)->UResult<()>{
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller {return Err(UError::Blocked)}
+        u.current.learner.enable_active_pair_probes()
+    }
     /// Activates a same-organism, automatically triggered meta-synthesis lane.
     pub fn enable_constructing_trajectory_self_revision(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
@@ -801,13 +811,21 @@ impl ScientificRuntime {
                 u.current.learner.carrier_predictive_history_plan_metered(
                     g,&allowed,history_budget)
             } else {(None,0)};
+            let probe_budget=if u.current.learner.active_pair_probes_enabled()
+                && !u.freeze_controller && cfg.planning_work>=32_000 {
+                cfg.planning_work.saturating_sub(history_work)
+                    .saturating_sub(4_000).min(6_000)
+            }else{0};
+            let (probe,probe_work)=u.current.learner
+                .carrier_active_causal_probe_metered(&allowed,offers,probe_budget);
             let chain_budget=if goal.is_some() && u.current.learner.certified_chains_enabled() && cfg.planning_work>=32_000 {
-                cfg.planning_work.saturating_sub(history_work).saturating_sub(4_000)
+                cfg.planning_work.saturating_sub(history_work).saturating_sub(probe_work).saturating_sub(4_000)
             } else {0};
             let (chain,chain_work)=if let Some(g)=goal {
                 u.current.learner.carrier_certified_goal_chain_metered(g,&allowed,chain_budget)
             } else {(None,0)};
-            let residual=cfg.planning_work.saturating_sub(history_work).saturating_sub(chain_work);
+            let residual=cfg.planning_work.saturating_sub(history_work)
+                .saturating_sub(probe_work).saturating_sub(chain_work);
             let (action,chosen_work)=u.current.learner
                 .choose_offered_metered_budget(goal,Some(offers),residual)?;
             if !allowed[action] {return Err(UError::Blocked)}
@@ -818,8 +836,21 @@ impl ScientificRuntime {
             let (factual_prediction,factual_work)=u.current.learner
                 .carrier_factual_action_consequence_metered(action,remaining);
             u.computation_work=u.computation_work.checked_add(
-                history_work.saturating_add(chain_work).saturating_add(chosen_work).saturating_add(factual_work))
+                history_work.saturating_add(probe_work)
+                    .saturating_add(chain_work).saturating_add(chosen_work)
+                    .saturating_add(factual_work))
                 .ok_or(UError::Capacity)?;
+            if let Some(probe)=probe{
+                if !allowed[probe.action] {return Err(UError::Blocked)}
+                // Unknown predicted goal result: zero, not an optimistic
+                // progress label. Relevance is physical contextual novelty.
+                let fields=[0.0,probe.novelty,probe.disagreement,0.0,
+                    1.0/(1.0+(probe.quoted_cost as f32).ln_1p())];
+                options.push(UnifiedOption{p:PhaseCognitiveProposal{
+                    proposal_id:0x700+probe.action as u64,
+                    action:probe.action,fields
+                },kind:3,source:"causal-pair-probe",output:None});
+            }
             if let Some(plan)=history {
                 if !allowed[plan.first_action]{return Err(UError::Blocked)}
                 let observed=predictions.iter().find(|p|p.action==plan.first_action)
@@ -871,6 +902,7 @@ impl ScientificRuntime {
         }
         let certified_chain_proposed=options.iter().any(|o|o.source=="factual-chain");
         let predictive_history_plan_proposed=options.iter().any(|o|o.source=="predictive-history");
+        let active_pair_probe_proposed=options.iter().any(|o|o.source=="causal-pair-probe");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {
             let mut candidates=options.clone();
@@ -982,7 +1014,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;
