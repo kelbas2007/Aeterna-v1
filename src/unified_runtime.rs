@@ -100,6 +100,9 @@ pub struct UnifiedStep {
     /// Proposal availability is NOT the same as executed curiosity.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub active_pair_probe_proposed:bool,
+    /// Explicitly a proposal based on a TWO-action latent history suffix.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    pub adaptive_suffix_plan_proposed:bool,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedReport {
@@ -621,6 +624,13 @@ impl ScientificRuntime {
         if u.freeze_controller{return Err(UError::Blocked)}
         u.current.learner.enable_predictive_history_states()
     }
+    /// The SAME factual model may discriminate identical visible states by
+    /// observed action suffix length one or two. No new action authority.
+    pub fn enable_constructing_adaptive_history_suffix(&mut self)->UResult<()>{
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Blocked)}
+        u.current.learner.enable_adaptive_history_suffix()
+    }
     /// The same U1 may elect to test an underobserved action pair. No other
     /// action authority and no externally scheduled experiment steps.
     pub fn enable_constructing_active_causal_probes(&mut self)->UResult<()>{
@@ -906,8 +916,13 @@ impl ScientificRuntime {
                 cfg.planning_work.saturating_sub(4_000)
             } else {0};
             let (history,history_work)=if let Some(g)=goal {
-                u.current.learner.carrier_predictive_history_plan_metered(
-                    g,&allowed,history_budget)
+                if u.current.learner.adaptive_history_suffix_enabled(){
+                    u.current.learner.carrier_adaptive_history_plan_metered(
+                        g,&allowed,history_budget)
+                } else {
+                    u.current.learner.carrier_predictive_history_plan_metered(
+                        g,&allowed,history_budget)
+                }
             } else {(None,0)};
             let probe_budget=if u.current.learner.active_pair_probes_enabled()
                 && !u.freeze_controller && cfg.planning_work>=32_000 {
@@ -963,7 +978,9 @@ impl ScientificRuntime {
                 options.push(UnifiedOption{p:PhaseCognitiveProposal{
                     proposal_id:0x600+plan.first_action as u64,
                     action:plan.first_action,fields
-                },kind:3,source:"predictive-history",
+                },kind:3,source:if plan.history_suffix_depth>=2{
+                    "predictive-suffix"
+                }else{"predictive-history"},
                     output:Some(plan.first_consequence)});
             }
             if let Some(plan)=chain {
@@ -999,7 +1016,10 @@ impl ScientificRuntime {
             // an unverified factual hypothesis must ABSTAIN, not override it.
         }
         let certified_chain_proposed=options.iter().any(|o|o.source=="factual-chain");
-        let predictive_history_plan_proposed=options.iter().any(|o|o.source=="predictive-history");
+        let predictive_history_plan_proposed=options.iter().any(|o|
+            o.source=="predictive-history" || o.source=="predictive-suffix");
+        let adaptive_suffix_plan_proposed=options.iter().any(|o|
+            o.source=="predictive-suffix");
         let active_pair_probe_proposed=options.iter().any(|o|o.source=="causal-pair-probe");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {
@@ -1180,7 +1200,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,adaptive_suffix_plan_proposed})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;
