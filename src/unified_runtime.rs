@@ -24,6 +24,9 @@ pub struct UnifiedStep {
     /// Diagnostic only; a proposed path is not a selected or executed path.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub certified_chain_proposed:bool,
+    /// A proposed invisible prerequisite is NOT evidence it was executed.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    pub predictive_history_plan_proposed:bool,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedReport {
@@ -510,6 +513,12 @@ impl ScientificRuntime {
         if u.freeze_controller{return Err(UError::Blocked)}
         u.current.learner.enable_certified_chains()
     }
+    /// Same Learner/U1, with a factual predictor keyed by action history.
+    pub fn enable_constructing_predictive_history_states(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Blocked)}
+        u.current.learner.enable_predictive_history_states()
+    }
     /// Activates a same-organism, automatically triggered meta-synthesis lane.
     pub fn enable_constructing_trajectory_self_revision(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
@@ -748,13 +757,24 @@ impl ScientificRuntime {
             // 4k/20k development runs retain their EXACT previous behavior.
             // All chain edges must be validated independently against actual
             // chronological holdouts, unlike exploratory imagined plans.
-            let chain_budget=if goal.is_some() && u.current.learner.certified_chains_enabled() && cfg.planning_work>=32_000 {
+            // One shared finite factual-computation budget. The new
+            // experiment remains opt-in; existing 4k/20k runs are identical.
+            let history_budget=if goal.is_some() &&
+                u.current.learner.predictive_history_states_enabled() &&
+                cfg.planning_work>=32_000 {
                 cfg.planning_work.saturating_sub(4_000)
+            } else {0};
+            let (history,history_work)=if let Some(g)=goal {
+                u.current.learner.carrier_predictive_history_plan_metered(
+                    g,&allowed,history_budget)
+            } else {(None,0)};
+            let chain_budget=if goal.is_some() && u.current.learner.certified_chains_enabled() && cfg.planning_work>=32_000 {
+                cfg.planning_work.saturating_sub(history_work).saturating_sub(4_000)
             } else {0};
             let (chain,chain_work)=if let Some(g)=goal {
                 u.current.learner.carrier_certified_goal_chain_metered(g,&allowed,chain_budget)
             } else {(None,0)};
-            let residual=cfg.planning_work.saturating_sub(chain_work);
+            let residual=cfg.planning_work.saturating_sub(history_work).saturating_sub(chain_work);
             let (action,chosen_work)=u.current.learner
                 .choose_offered_metered_budget(goal,Some(offers),residual)?;
             if !allowed[action] {return Err(UError::Blocked)}
@@ -765,8 +785,25 @@ impl ScientificRuntime {
             let (factual_prediction,factual_work)=u.current.learner
                 .carrier_factual_action_consequence_metered(action,remaining);
             u.computation_work=u.computation_work.checked_add(
-                chain_work.saturating_add(chosen_work).saturating_add(factual_work))
+                history_work.saturating_add(chain_work).saturating_add(chosen_work).saturating_add(factual_work))
                 .ok_or(UError::Capacity)?;
+            if let Some(plan)=history {
+                if !allowed[plan.first_action]{return Err(UError::Blocked)}
+                let observed=predictions.iter().find(|p|p.action==plan.first_action)
+                    .ok_or(UError::InvalidData)?;
+                // The very FIRST action may leave sensors unchanged. The
+                // value comes from an empirically validated future edge,
+                // never a fabricated immediate POST.
+                let mut fields=ufields(&plan.terminal,goal,observed.novelty,
+                    observed.disagreement,0.9,offers[plan.first_action].max_cost
+                        .saturating_mul(plan.depth as u64));
+                fields[0]/=1.0+0.10*(plan.depth.saturating_sub(1) as f32);
+                options.push(UnifiedOption{p:PhaseCognitiveProposal{
+                    proposal_id:0x600+plan.first_action as u64,
+                    action:plan.first_action,fields
+                },kind:3,source:"predictive-history",
+                    output:Some(plan.first_consequence)});
+            }
             if let Some(plan)=chain {
                 if !allowed[plan.first_action]{return Err(UError::Blocked)}
                 let observed=predictions.iter().find(|p|p.action==plan.first_action)
@@ -800,6 +837,7 @@ impl ScientificRuntime {
             // an unverified factual hypothesis must ABSTAIN, not override it.
         }
         let certified_chain_proposed=options.iter().any(|o|o.source=="factual-chain");
+        let predictive_history_plan_proposed=options.iter().any(|o|o.source=="predictive-history");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {
             let mut candidates=options.clone();
@@ -886,7 +924,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;
