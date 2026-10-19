@@ -152,9 +152,14 @@ impl InstrumentalCredit {
 /// Independent counters: outcome evidence and action-choice credit are not
 /// synonyms. No evaluator-supplied label, action role, or source ID.
 #[derive(Debug,Clone,USerialize,UDeserialize)]
+fn agency_no_count(value:&u64)->bool{*value==0}
 pub struct AgencyCreditReport {
     pub externally_forced_actions:u64,
     pub self_selected_actions:u64,
+    /// These execute a previously native-selected higher-level option;
+    /// they are NOT freshly selected U1 primitive motor actions.
+    #[serde(default,skip_serializing_if="agency_no_count")]
+    pub option_continuation_actions:u64,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedPost {pub observation:Vec<i64>,pub cost:u64,pub reward:f32}
@@ -660,7 +665,8 @@ impl ScientificRuntime {
             !u.archived.is_empty() || !u.current.learner.records().is_empty() ||
             u.total_external_cost!=0{return Err(UError::Busy)}
         u.agency_credit=Some(AgencyCreditReport{
-            externally_forced_actions:0,self_selected_actions:0
+            externally_forced_actions:0,self_selected_actions:0,
+            option_continuation_actions:0,
         });
         Ok(())
     }
@@ -1322,6 +1328,7 @@ impl ScientificRuntime {
                 .map(|d|d.learner.records().len()).sum();
             if agency.externally_forced_actions
                 .checked_add(agency.self_selected_actions)
+                .and_then(|n|n.checked_add(agency.option_continuation_actions))
                 .is_none_or(|n|n>recorded as u64) {
                 return Err(UError::InvalidData)
             }
