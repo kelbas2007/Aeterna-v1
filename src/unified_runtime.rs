@@ -14,6 +14,18 @@ struct UnifiedConstruction {
     education:Option<crate::education::School>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     self_revision:Option<MetaRevision>,
+    /// Credit native U1 utility ONLY if the executed motor was freely
+    /// selected from at least two actually offered, affordable actions.
+    /// Physical PRE/action/POST learning is NEVER gated by this option.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    agency_credit:Option<AgencyCreditReport>,
+}
+/// Independent counters: outcome evidence and action-choice credit are not
+/// synonyms. No evaluator-supplied label, action role, or source ID.
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct AgencyCreditReport {
+    pub externally_forced_actions:u64,
+    pub self_selected_actions:u64,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedPost {pub observation:Vec<i64>,pub cost:u64,pub reward:f32}
@@ -35,6 +47,8 @@ pub struct UnifiedReport {
     pub computation_work:u64,pub total_external_cost:u64,pub controller_frozen:bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub self_revision:Option<MetaRevisionReport>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub agency_credit:Option<AgencyCreditReport>,
 }
 #[derive(USerialize,UDeserialize)]
 #[serde(deny_unknown_fields)]
@@ -493,10 +507,24 @@ impl ScientificRuntime {
         evo.set_phase_native_meta_monotone_evidence(true);evo.observe_initial_real(&usensory(&initial),false);
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;
         rt.constructing=Some(UnifiedConstruction{current:UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None},
-            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None});
+            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,agency_credit:None});
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
+    /// Decide before any experience whether the native action policy may be
+    /// credited for outcomes of externally FORCED identification actions.
+    /// When enabled, those actions still teach the causal/world Learner,
+    /// but they cannot train U1's choice weights.
+    pub fn enable_constructing_agency_aware_credit(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.agency_credit.is_some() ||
+            !u.archived.is_empty() || !u.current.learner.records().is_empty() ||
+            u.total_external_cost!=0{return Err(UError::Busy)}
+        u.agency_credit=Some(AgencyCreditReport{
+            externally_forced_actions:0,self_selected_actions:0
+        });
+        Ok(())
+    }
     /// Opt the SAME construction Learner into factual, self-selected probing.
     /// Goal and allowed offers are still host-supplied constraints, while the
     /// chosen action must compete in the existing U1 decision and pass the
@@ -695,7 +723,8 @@ impl ScientificRuntime {
         Some(UnifiedReport{domain:u.current.name.clone(),archived_domains:u.archived.iter().map(|d|d.name.clone()).collect(),learner:u.current.learner.report(),
             native_meta_observations:self.organism.phase_native_meta_observations(),native_weights:self.organism.phase_native_meta_weights()?,operations:u.operations,
             computation_work:u.computation_work,total_external_cost:u.total_external_cost,controller_frozen:u.freeze_controller,
-            self_revision:u.self_revision.as_ref().map(MetaRevision::report)})
+            self_revision:u.self_revision.as_ref().map(MetaRevision::report),
+            agency_credit:u.agency_credit.clone()})
     }
     // A new sensor contract does not reinterpret numeric variables as pixels.
     // U1 weights and complete old-domain cognitive checkpoints remain present.
@@ -742,6 +771,10 @@ impl ScientificRuntime {
         let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
         let allowed:Vec<_>=offers.iter().map(|o|o.available&&o.max_cost<=remaining).collect();
         if !allowed.iter().any(|&a|a){return Err(UError::Blocked);}
+        // This is the organism's observable opportunity to CHOOSE,
+        // not the actor's goal, motor role, reward, or proposal source.
+        let policy_has_choice=allowed.iter().filter(|&&v|v).count()>=2;
+        let native_credit_eligible=u.agency_credit.is_none() || policy_has_choice;
         let (predictions,overhead)=u.current.learner.carrier_predictions(&allowed)?;u.computation_work=u.computation_work.saturating_add(overhead);
         let pressure=u.current.learner.carrier_pressure();
         let mut options:Vec<UnifiedOption>=predictions.iter().map(|p|UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0x100+p.action as u64,action:p.action,
@@ -863,8 +896,12 @@ impl ScientificRuntime {
                 0=>{
                     u.current.last_construction=u.current.learner.records().len();let before=u.current.learner.report().construction_work;
                     let result=u.current.learner.construct();u.computation_work=u.computation_work.saturating_add(u.current.learner.report().construction_work.saturating_sub(before));
-                    if result.is_ok() && u.current.learner.report().shadow_pending {u.current.pending_credit=Some(chosen.p.fields);}
-                    else if !u.freeze_controller {self.organism.observe_phase_native_meta_utility(chosen.p.fields,0.0);}
+                    if result.is_ok() && u.current.learner.report().shadow_pending {
+                        if native_credit_eligible {u.current.pending_credit=Some(chosen.p.fields);}
+                    }
+                    else if !u.freeze_controller && native_credit_eligible {
+                        self.organism.observe_phase_native_meta_utility(chosen.p.fields,0.0);
+                    }
                     if let Err(e)=result {if !matches!(e,UError::NoEvidence|UError::Budget|UError::Capacity){return Err(e);}}
                 },
                 1=>{
@@ -902,10 +939,28 @@ impl ScientificRuntime {
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
         self.organism.observe_initial_real(&usensory(&post.observation),false);
         if !u.freeze_controller {
-            self.organism.observe_phase_native_meta_utility(option.p.fields,value);
+            if let Some(ledger)=u.agency_credit.as_mut() {
+                if policy_has_choice {
+                    ledger.self_selected_actions=ledger.self_selected_actions
+                        .checked_add(1).ok_or(UError::Capacity)?;
+                } else {
+                    ledger.externally_forced_actions=ledger.externally_forced_actions
+                        .checked_add(1).ok_or(UError::Capacity)?;
+                }
+            }
+            if native_credit_eligible {
+                self.organism.observe_phase_native_meta_utility(option.p.fields,value);
             for (source,fields) in helpers {self.organism.observe_phase_native_meta_utility(fields,if source==option.source{value}else{0.0});}
-            if u.current.learner.promotions().len()>verdicts {
-                if let Some(fields)=u.current.pending_credit.take(){let accepted=u.current.learner.promotions().last().is_some_and(|p|p.accepted);self.organism.observe_phase_native_meta_utility(fields,if accepted{1.0}else{0.0});}
+                if u.current.learner.promotions().len()>verdicts {
+                    if let Some(fields)=u.current.pending_credit.take(){
+                        let accepted=u.current.learner.promotions().last().is_some_and(|p|p.accepted);
+                        self.organism.observe_phase_native_meta_utility(fields,if accepted{1.0}else{0.0});
+                    }
+                }
+            }else if u.current.learner.promotions().len()>verdicts{
+                // A candidate produced under a forced choice cannot become
+                // a belatedly attributed native-U1 action-choice success.
+                u.current.pending_credit=None;
             }
         }
         if !u.freeze_controller{
@@ -941,6 +996,16 @@ impl ScientificRuntime {
         if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
         if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
         if let Some(revision)=&s.cognition.self_revision{revision.validate()?;}
+        if let Some(agency)=&s.cognition.agency_credit {
+            let recorded:usize = s.cognition.archived.iter()
+                .chain(std::iter::once(&s.cognition.current))
+                .map(|d|d.learner.records().len()).sum();
+            if agency.externally_forced_actions
+                .checked_add(agency.self_selected_actions)
+                .is_none_or(|n|n>recorded as u64) {
+                return Err(UError::InvalidData)
+            }
+        }
         let evo=EvoPhase::from_constructing_carrier_checkpoint(&s.carrier).ok_or(UError::InvalidData)?;
         let mut names=std::collections::BTreeSet::new();let mut costs=0u64;
         for d in s.cognition.archived.iter().chain(std::iter::once(&s.cognition.current)) {
