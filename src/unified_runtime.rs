@@ -75,14 +75,20 @@ struct MetaRevision {
     #[serde(default,skip_serializing_if="meta_zero_u32")]
     rollbacks:u32,
     receipts:Vec<MetaReceipt>,
+    /// One-bit readout ablation for a frozen, otherwise identical organism.
+    #[serde(default,skip_serializing_if="meta_false")]
+    readout_ablated:bool,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct MetaRevisionReport {
     pub episodes:u64,pub steps:usize,pub attempts:u32,pub rejected:u32,
     pub generations:usize,pub shadow:bool,pub computation_work:u64,
     pub unfinished_steps:usize,pub rollbacks:u32,pub active_program:Option<String>,
+    #[serde(default)]
+    pub readout_ablated:bool,
 }
 fn meta_zero_u32(n:&u32)->bool{*n==0}
+fn meta_false(v:&bool)->bool{!*v}
 struct MetaObjective<'a>{examples:&'a [MetaWitness],lib:MLibrary}
 impl MObjective for MetaObjective<'_>{
     fn input_width(&self)->usize{5}
@@ -103,7 +109,8 @@ impl MetaRevision {
             rejected:self.rejected,generations:self.receipts.len(),
             shadow:self.shadow.is_some(),computation_work:self.work,
             unfinished_steps:self.pending_steps.len(),rollbacks:self.rollbacks,
-            active_program:self.active.as_ref().map(|p|format!("{p:?}"))}
+            active_program:self.active.as_ref().map(|p|format!("{p:?}")),
+            readout_ablated:self.readout_ablated}
     }
     fn features(f:[f32;5])->[i64;5] {
         f.map(|v|(v.clamp(0.0,1.0)*100.0).round() as i64)
@@ -126,6 +133,7 @@ impl MetaRevision {
         })
     }
     fn adjust(&self,fields:&mut [f32;5]){
+        if self.readout_ablated{return}
         if let Some(code)=self.active.as_ref(){
             if let Some(v)=Self::score(Some(code),&Self::features(*fields)){
                 fields[0]=v as f32/100.0
@@ -135,6 +143,7 @@ impl MetaRevision {
     fn validate(&self)->UResult<()>{
         if self.rows.len()>128 || self.pending_steps.len()>M_MAX_EPISODE ||
             self.receipts.len()>3 || self.attempts>12 || self.rejected>self.attempts ||
+            (self.readout_ablated && self.active.is_none()) ||
             self.rollbacks!=self.receipts.iter().filter(|p|p.revoked).count() as u32 ||
             self.pending_goal.is_none()!=self.pending_steps.is_empty() ||
             self.pending_goal.as_ref().is_some_and(|g|g.len()>32) ||
@@ -350,6 +359,17 @@ impl ScientificRuntime {
     }
     pub fn trajectory_self_revision_report(&self)->Option<MetaRevisionReport>{
         Some(self.constructing.as_ref()?.self_revision.as_ref()?.report())
+    }
+    /// Explicit research ablation: only switch off the VM scorer in a frozen
+    /// replay. The certified program, journal, SNN weights, actions and
+    /// HumanProtection remain unchanged. No way to use this to train.
+    pub fn ablate_frozen_trajectory_evaluator(&mut self)->UResult<()>{
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if !u.freeze_controller{return Err(UError::Busy)}
+        let revision=u.self_revision.as_mut().ok_or(UError::NoEvidence)?;
+        if revision.active.is_none()||revision.readout_ablated{return Err(UError::NoEvidence)}
+        revision.readout_ablated=true;
+        Ok(())
     }
     pub fn unified_report(&self)->Option<UnifiedReport>{
         let u=self.constructing.as_ref()?;
