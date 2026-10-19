@@ -79,6 +79,12 @@ pub(crate) fn main()->Result<()>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_self_directed_control()?;
                     Ok(json!({"type":"self_directed_enabled","action_authority":"protected_u1"}))
                 },
+                "enable_agency_aware_credit"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_agency_aware_credit()?;
+                    Ok(json!({"type":"agency_aware_credit_enabled",
+                        "credit_rule":"only_if_more_than_one_feasible_motor",
+                        "causal_observations":"always_record_real_post"}))
+                },
                 "enable_predictive_history_states"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_predictive_history_states()?;
                     Ok(json!({"type":"predictive_history_states_enabled",
@@ -341,7 +347,10 @@ A learned checkpoint must be supplied explicitly; no pretrained state is invente
 RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
 solve_synthesis, recursive_search_report, checkpoint, quit.
 Self-directed factual control: init(width<=6), enable_self_directed_control,
-then step(goal,available). Optional predictive history states
+then step(goal,available). Optional opt-in credit:
+enable_agency_aware_credit BEFORE collecting experience; the organism
+still learns world effects from forced actions, not native choice weights.
+Optional predictive history states
 (planning_work>=32000): enable_predictive_history_states.
 Optional own evaluator synthesis:
 enable_trajectory_self_revision, step(goal,available),
