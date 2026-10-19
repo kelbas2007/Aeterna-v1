@@ -7,7 +7,10 @@ binding=json.loads((r/'docs/evidence/PROJECT_SOURCE_BINDING.json').read_text())
 changes={c['path']:c for c in binding.get('reviewed_boundary_changes',[])}
 rsp3=binding.get('reviewed_rsp3_extension')
 lc1=binding.get('reviewed_lc1_extension')
+autonomous=binding.get('reviewed_autonomous_u1_extension')
 sha=lambda b:hashlib.sha256(b).hexdigest()
+def git_blob(raw):
+ return hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
 added=set()
 original_hashes={}
 if lc1:
@@ -16,9 +19,23 @@ if lc1:
   added.add(path)
  for path,d in lc1['modified'].items():
   raw=(r/path).read_bytes()
-  assert sha(raw)==d['after_sha256'],path+' unreviewed LC1 source change'
+  if autonomous and path in autonomous['modified']:
+   assert autonomous['modified'][path]['before_sha256']==d['after_sha256'],path+' unexpected pre-autonomy LC1 revision'
+  else:
+   assert sha(raw)==d['after_sha256'],path+' unreviewed LC1 source change'
   original_hashes[path]=d['before_sha256']
- assert sha((r/'src/bin/aeterna-unified.rs').read_bytes())==lc1['jsonl_source_after_sha256'],'JSONL LC1 transport changed'
+ if not autonomous:
+  assert sha((r/'src/bin/aeterna-unified.rs').read_bytes())==lc1['jsonl_source_after_sha256'],'JSONL LC1 transport changed'
+if autonomous:
+ assert autonomous['jsonl_before_sha256']==lc1['jsonl_source_after_sha256'],'unexpected pre-autonomy JSONL revision'
+ assert sha((r/'src/bin/aeterna-unified.rs').read_bytes())==autonomous['jsonl_after_sha256'],'unreviewed autonomous JSONL mutation'
+ for path,d in autonomous['modified'].items():
+  raw=(r/path).read_bytes()
+  if 'after_git_blob' in d:
+   assert git_blob(raw)==d['after_git_blob'],path+' unreviewed autonomous Git source change'
+  else:
+   assert sha(raw)==d['after_sha256'],path+' unreviewed autonomous source change'
+  if path not in original_hashes: original_hashes[path]=d['before_sha256']
 if rsp3:
  path=r/rsp3['added_file']
  assert sha(path.read_bytes())==rsp3['added_sha256'],'RSP3 source changed'

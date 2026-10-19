@@ -1,6 +1,6 @@
 {
   "base_revision": "02b4175f34bcc68b8c80197cca6dd79f38b85892",
-  "unchanged_cognitive_source_files": 77,
+  "unchanged_cognitive_source_files": 75,
   "aggregate_sha256": "2b19688cb615cd0a6581aa9018df0c32efd311b01fa64e8be0ea965a33e65dc3",
   "exclusions": [
     "src/main.rs",
@@ -56,5 +56,25 @@
     "review_v5": "LC1 source v5: sketch preflight respects final node cap; checkpoint validation replays canonical acquisition criteria, witness diversity and identifiability. RSP2/RSP3 untouched.",
     "review_v6": "PR8 P2: generated sketches bounded, static references checked, acquired-rule replay work lower bound, mutually consistent LC1/Learner freeze, and LC1-only cost <= Learner total. Evidence via reproducible red/green Rust tests; original RSP2/RSP3 unchanged.",
     "review_v7": "LC1 error-aware metered attempts: record actual or conservatively bounded delegated search work on Err, skip impossible searches, cap syntax before traversal, Cargo metadata target directory; unchanged RSP2 admission code and check points."
+  },
+  "reviewed_autonomous_u1_extension": {
+    "purpose": "Unscheduled factual goal/probe choice from existing Learner is one candidate in U1/ScientificRuntime, never a second action authority; shared checkpoint.",
+    "modified": {
+      "src/unified_runtime.rs": {
+        "before_sha256": "8973cc39438c1450bf15c6dc0f48582ffdeb308418c32a7901fa8f414be1e098",
+        "after_sha256": "cf202910e84ba11b2be54565697b3609f8e0847c175c88907ce7b84d7c25594b"
+      },
+      "src/construction/unified_port.rs": {
+        "before_sha256": "7ef8bf7ed14fae7122f608c5db8e7c49a792833a9ae12dabf70952fc88f28e73",
+        "after_sha256": "f8134a72645e3ce1c325e2ea086e41abc263e05b87255a0380d7c186d1867159"
+      },
+      "src/construction/runtime.rs": {
+        "before_sha256": "0974602c4b5f9e14a8827c3fd70f3c44cdfdda88309d4485750586875e5bcb7a",
+        "after_git_blob": "d05745d54f42cb4fe6bcff4916bf31a5d198f2b9"
+      }
+    },
+    "jsonl_before_sha256": "f7517ba87387bbb8ea4f72cf22f6bae66f9a5efa5104681dac6e24505599e89d",
+    "jsonl_after_sha256": "e074efd1c45a87b87a3eab4e42b822c4a887485354443aacc925833282ec6e93",
+    "research_boundary": "Development-only 24 opaque role permutations (96 actions) and paired 32-step ablation; not an independent AGI qualification."
   }
 }

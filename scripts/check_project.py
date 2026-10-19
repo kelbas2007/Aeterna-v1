@@ -70,7 +70,7 @@ def main():
  run('cargo','check',*common,'--all-targets')
  flags=common+(['--release'] if a.release else [])
  run('cargo','test',*flags,'--lib','construction::')
- names=['project_entrypoint','recursive_search_policy','recursive_search_repair','experiential','learned_requirements','lc1_execution_contract','quantity_relations','word_problems','education_runtime','semantic_grounding','unified_runtime','unified_restore_guards','human_protection','u1_meta_control']+[p.stem for p in sorted((ROOT/'tests').glob('directed_construction*.rs'))]
+ names=['project_entrypoint','recursive_search_policy','recursive_search_repair','experiential','learned_requirements','lc1_execution_contract','quantity_relations','word_problems','education_runtime','semantic_grounding','unified_runtime','unified_restore_guards','unified_self_directed_lifetime','human_protection','u1_meta_control']+[p.stem for p in sorted((ROOT/'tests').glob('directed_construction*.rs'))]
  assert len(names)==len(set(names))
  cmd=['cargo','test',*flags]
  for name in names:cmd+=['--test',name]
@@ -79,5 +79,6 @@ def main():
  # CARGO_TARGET_DIR, CARGO_BUILD_TARGET and .cargo/config build.target.
  binary=build_and_locate_binary(env,flags)
  run('python','scripts/lc1_joint_demo.py','--binary',str(binary),'--output',str(temp/'lc1_joint_demo.json'))
+ run('python','scripts/unified_factual_autonomy_demo.py','--binary',str(binary),'--output',str(temp/'unscheduled_u1_loop.json'))
  print(json.dumps({'status':'PASS','suites':names,'fresh_intelligence_claim':False}))
 if __name__=='__main__':main()

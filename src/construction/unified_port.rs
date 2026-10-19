@@ -10,6 +10,12 @@ impl Learner {
         self.carrier_managed = true; Ok(())
     }
     pub(crate) fn carrier_is_managed(&self)->bool {self.carrier_managed}
+    /// Read-only consequence derived from real PRE/action/POST journal rows.
+    /// Imagined outcomes never enter the journal and cannot become authority.
+    pub(crate) fn carrier_factual_action_consequence(&self,action:usize)->Option<Vec<i64>> {
+        if action>=self.config.actions{return None}
+        super::runtime::factual_prediction(&self.records,&self.current,action)
+    }
     pub(crate) fn carrier_config(&self)->&super::runtime::Config {&self.config}
     pub(crate) fn carrier_prepare(&mut self,a:usize)->Result<Commitment> {self.prepare(a)}
     pub(crate) fn carrier_cancel(&mut self,t:Commitment)->Result<()> {self.cancel(t)}

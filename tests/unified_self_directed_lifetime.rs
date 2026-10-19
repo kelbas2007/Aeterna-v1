@@ -1,0 +1,134 @@
+//! Development-only integration: the existing Learner's factual exploration
+//! joins the SAME U1 arbitration / single-use protection boundary. This is not
+//! independent general intelligence, cross-domain transfer or a blind benchmark.
+use aeterna_v1::{HumanProtectionEvidence};
+use aeterna_v1::construction::{Config};
+use aeterna_v1::construction::autonomy::{ActionOffer,AutonomyPolicy};
+use aeterna_v1::scientific_runtime::{ScientificRuntime,UnifiedPost};
+
+fn safe(_:usize)->HumanProtectionEvidence {
+    HumanProtectionEvidence{human_present:false,physical_effect_possible:false,predicted_harm_probability:0.0,hazard_confidence:1.0,emergency_stop:false}
+}
+fn make(enabled:bool)->ScientificRuntime {
+    let cfg=Config{width:3,actions:4,minimum_training:128,search_every:4096,
+        planning_depth:4,planning_work:4000,..Default::default()};
+    let mut rt=ScientificRuntime::new_constructing(cfg,AutonomyPolicy::default(),vec![0;3],"unscheduled-world").unwrap();
+    if enabled{rt.enable_constructing_self_directed_control().unwrap();}
+    rt
+}
+fn world_step(world:&mut [i64;3],a:usize,roles:[usize;4]) {
+    if a==roles[0]{world[1]=1}
+    else if a==roles[1]{if world[1]==1{world[2]=1}}
+    else if a==roles[2]{if world[2]==1{world[0]+=1}}
+    else if a==roles[3]{world[2]=0}
+}
+fn offers()->Vec<ActionOffer>{vec![ActionOffer{available:true,max_cost:1};4]}
+#[test]
+fn unscheduled_probe_then_exploit_in_joint_u1_and_restore() {
+    let roles=[2,0,3,1];
+    let mut rt=make(true);let mut world=[0i64;3];
+    let goal=[Some(3),None,None];let mut sources=std::collections::BTreeSet::new();
+    for _ in 0..112 {
+        if world[0]>=3{break}
+        let step=rt.step_constructing(Some(&goal),&offers(),safe,|a|{
+            world_step(&mut world,a,roles);
+            Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
+        }).unwrap();
+        sources.insert(step.source);
+    }
+    eprintln!("U1_UNSCHEDULED world={world:?} events={} sources={sources:?}",rt.construction_learner().unwrap().records().len());
+    assert!(world[0]>=3,"goal not reached without an action script");
+    assert!(sources.contains("factual-experience"),"joint carrier did not use its factual proposal");
+    let checkpoint=rt.checkpoint_constructing().unwrap();
+    let mut restored=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+    assert!(restored.construction_learner().unwrap().self_directed_control_enabled());
+    assert_eq!(restored.checkpoint_constructing().unwrap(),checkpoint);
+    let mut more=0;
+    for _ in 0..36 {
+        if world[0]>=6 {break}
+        restored.step_constructing(Some(&[Some(6),None,None]),&offers(),safe,|a|{
+            world_step(&mut world,a,roles);
+            Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
+        }).unwrap();more+=1;
+    }
+    eprintln!("U1_UNSCHEDULED_TRANSFER world={world:?} extra={more}");
+    assert!(world[0]>=6,"failed to reuse physical consequences from prior goal after checkpoint restore");
+}
+#[test]
+fn physical_roles_remain_opaque_under_joint_arbitration() {
+    let mut all=0;
+    let mut solved=0;
+    let mut experience_choices=0;
+    let mut actions_total=0;
+    for a in 0..4 {for b in 0..4 {for c in 0..4 {for d in 0..4 {
+        let roles=[a,b,c,d];
+        if roles.iter().copied().collect::<std::collections::BTreeSet<_>>().len()!=4 {continue}
+        let mut rt=make(true);
+        let mut world=[0i64;3];
+        let mut actions=0;
+        while actions<96 && world[0]<3 {
+            let step=rt.step_constructing(Some(&[Some(3),None,None]),&offers(),safe,|action|{
+                world_step(&mut world,action,roles);
+                Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
+            }).unwrap();
+            experience_choices+=usize::from(step.source=="factual-experience");
+            actions+=1;
+        }
+        solved+=usize::from(world[0]>=3);actions_total+=actions;all+=1;
+    }}}}
+    eprintln!("JOINT_UNSCHEDULED roles={all} solved={solved} chosen_factual={experience_choices} actions_total={actions_total}");
+    assert_eq!(all,24);
+    assert_eq!(solved,24,"some opaque role assignments fail without prepared actions");
+    assert!(experience_choices>=24,"factual probe never participates in physical U1 selection");
+}
+
+#[test]
+fn protection_gate_still_owns_all_action_authority() {
+    use aeterna_v1::construction::vm::Error;
+    let mut rt=make(true);
+    let initial=rt.construction_learner().unwrap().current().to_vec();
+    let denied=rt.step_constructing(Some(&[Some(3),None,None]),&offers(),|_|{
+        HumanProtectionEvidence{human_present:true,physical_effect_possible:true,
+            predicted_harm_probability:1.0,hazard_confidence:1.0,emergency_stop:false}
+    },|_|panic!("external callback must not be executed after protection denies"));
+    assert!(matches!(denied,Err(Error::Blocked)));
+    assert_eq!(rt.construction_learner().unwrap().current(),initial);
+    assert_eq!(rt.construction_learner().unwrap().records().len(),0);
+    assert_eq!(rt.unified_report().unwrap().total_external_cost,0);
+}
+
+#[test]
+fn accomplished_goal_cannot_trigger_unnecessary_factual_action() {
+    use aeterna_v1::construction::vm::Error;
+    let mut rt=make(true);
+    let stop=rt.step_constructing(Some(&[Some(0),None,None]),&offers(),safe,
+        |_|panic!("no action after known goal already satisfied"));
+    assert!(matches!(stop,Err(Error::NoEvidence)));
+    assert_eq!(rt.construction_learner().unwrap().records().len(),0);
+}
+#[test]
+fn fixed_budget_ablation_reports_both_arms_without_relabeling() {
+    let mut counts=[0usize;2];let mut steps=[0usize;2];
+    let mut factual=[0usize;2];
+    for a in 0..4 {for b in 0..4 {for c in 0..4 {for d in 0..4 {
+        let roles=[a,b,c,d];
+        if roles.iter().copied().collect::<std::collections::BTreeSet<_>>().len()!=4 {continue}
+        for (arm,enabled) in [(0,true),(1,false)] {
+            let mut rt=make(enabled);
+            let mut world=[0i64;3];let mut count=0;
+            for _ in 0..32 {
+                if world[0]>=3{break}
+                let out=rt.step_constructing(Some(&[Some(3),None,None]),&offers(),safe,|action|{
+                    world_step(&mut world,action,roles);
+                    Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
+                }).unwrap();
+                factual[arm]+=usize::from(out.source=="factual-experience");
+                count+=1;
+            }
+            counts[arm]+=usize::from(world[0]>=3);steps[arm]+=count;
+        }
+    }}}}
+    eprintln!("UNSCHEDULED_ABLATION_32 with={}/24 steps={} factual={} without={}/24 steps={} factual={}",counts[0],steps[0],factual[0],counts[1],steps[1],factual[1]);
+    assert_eq!(factual[1],0,"default U1 must not pretend to have used the new factual path");
+    assert!(factual[0]>0);
+}

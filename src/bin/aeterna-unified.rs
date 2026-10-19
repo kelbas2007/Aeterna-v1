@@ -61,8 +61,23 @@ pub(crate) fn main()->Result<()>{
                 "project_status"=>Ok(json!({"type":"project_status","project":project_status()})),
                 "init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
-                    let (cfg,policy)=configuration();runtime=Some(ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"interactive-v1")?);
+                    let (mut cfg,policy)=configuration();
+                    // Backward-compatible opt-in sensor width. The ordinary
+                    // JSONL interface still defaults to 32 channels; a small
+                    // virtual world may expose 1..6 factual sensor values for
+                    // bounded self-directed exploration without motor tuition.
+                    if let Some(w)=request.get("width") {
+                        cfg.width=usize::try_from(w.as_u64().ok_or("width must be an integer")?)?;
+                    }
+                    let initial=if let Some(v)=request.get("observation"){
+                        serde_json::from_value::<Vec<i64>>(v.clone())?
+                    }else{vec![0;cfg.width]};
+                    runtime=Some(ScientificRuntime::new_constructing(cfg,policy,initial,"interactive-v1")?);
                     Ok(json!({"type":"initialized"}))
+                },
+                "enable_self_directed_control"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_self_directed_control()?;
+                    Ok(json!({"type":"self_directed_enabled","action_authority":"protected_u1"}))
                 },
                 "enable_recursive_search"=>{
                     let config=serde_json::from_value(request["config"].clone())?;
@@ -308,6 +323,8 @@ The aeterna-unified binary is a compatibility alias of this same code.
 A learned checkpoint must be supplied explicitly; no pretrained state is invented.
 RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
 solve_synthesis, recursive_search_report, checkpoint, quit.
+Self-directed factual control: init(width<=6), enable_self_directed_control,
+then step(goal,available). All actions still require the same protection gate.
 LC1: enable_missing_computation_learning, observe_executed_computations,
 complete_missing_computation, missing_computation_report; learned rules share
 one checkpoint. Both LC1 and RSP3 remain candidate-only without RSP2 adoption.

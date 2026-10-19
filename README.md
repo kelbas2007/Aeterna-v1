@@ -70,3 +70,5 @@ python scripts/check_project.py
 [Правила изменений](CONTRIBUTING.md). Прежние режимы и результаты сохранены в
 PROJECT_MAP.md, STATUS.md и docs/README.md. Лицензии внешних данных указаны
 в соответствующих исследовательских отчётах.
+
+Opt-in unscheduled factual-U1 loop: [design and limits](docs/AUTONOMY_UNIFIED_EXPERIMENT.md).

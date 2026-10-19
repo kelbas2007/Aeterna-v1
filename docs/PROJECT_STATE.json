@@ -16,7 +16,8 @@
     "quantity_relations_rel1": true,
     "recursive_search_rsp2": true,
     "rsp3_experiential_proposal_research": true,
-    "lc1_learned_computation_requirements_opt_in": true
+    "lc1_learned_computation_requirements_opt_in": true,
+    "unified_self_directed_factual_action_proposal_opt_in": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -38,7 +39,10 @@
     "rsp3_policy_admitted_by_rsp2_producer_gate",
     "open_ended_missing_computation_discovery",
     "learned_conditional_inverse_rules",
-    "stable_cross_domain_lc1_advantage"
+    "stable_cross_domain_lc1_advantage",
+    "broad_unfamiliar_external_world_autonomy",
+    "blind_independent_autonomous_advantage",
+    "native_spiking_discovery_of_symbolic_inverse_operators"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -55,7 +59,8 @@
     "docs/RSP2_REPAIR_RESULTS.md",
     "docs/RSP3_EXPERIENCE_RESULTS.md",
     "docs/LC1_PROTOCOL.md",
-    "docs/LC1_INTEGRATION.md"
+    "docs/LC1_INTEGRATION.md",
+    "docs/AUTONOMY_UNIFIED_EXPERIMENT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

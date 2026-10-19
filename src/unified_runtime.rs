@@ -56,6 +56,15 @@ impl ScientificRuntime {
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
+    /// Opt the SAME construction Learner into factual, self-selected probing.
+    /// Goal and allowed offers are still host-supplied constraints, while the
+    /// chosen action must compete in the existing U1 decision and pass the
+    /// original human protection/one-use execution permit.
+    pub fn enable_constructing_self_directed_control(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Blocked)}
+        u.current.learner.enable_self_directed_control()
+    }
     pub fn unified_report(&self)->Option<UnifiedReport>{
         let u=self.constructing.as_ref()?;
         Some(UnifiedReport{domain:u.current.name.clone(),archived_domains:u.archived.iter().map(|d|d.name.clone()).collect(),learner:u.current.learner.report(),
@@ -97,6 +106,13 @@ impl ScientificRuntime {
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
         let cfg=u.current.learner.carrier_config().clone();
         if offers.len()!=cfg.actions || goal.is_some_and(|g|g.len()!=cfg.width){return Err(UError::InvalidData);}
+        // Once all *specified* goal coordinates already match the last
+        // factual observation, do not issue an unneeded protected action.
+        // Masked goals may intentionally leave unrelated state unconstrained.
+        if u.current.learner.self_directed_control_enabled()
+            && goal.is_some_and(|g|g.iter().any(Option::is_some)
+                && udistance(u.current.learner.current(),Some(g))==0.0)
+        {return Err(UError::NoEvidence)}
         let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
         let allowed:Vec<_>=offers.iter().map(|o|o.available&&o.max_cost<=remaining).collect();
         if !allowed.iter().any(|&a|a){return Err(UError::Blocked);}
@@ -104,6 +120,29 @@ impl ScientificRuntime {
         let pressure=u.current.learner.carrier_pressure();
         let mut options:Vec<UnifiedOption>=predictions.iter().map(|p|UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0x100+p.action as u64,action:p.action,
             fields:ufields(&p.output,goal,p.novelty,p.disagreement,p.confidence,1)},kind:3,source:"predict",output:Some(p.output.clone())}).collect();
+        // The existing Learner already knows how to move from unexplained
+        // consequences toward information-gathering, then exploit verified
+        // transitions. Previously it was reachable only in the separate
+        // ProtectedConstructionRuntime. Here it is a *proposal*, never a
+        // bypass around U1 or the human-protection permit.
+        if u.current.learner.self_directed_control_enabled() {
+            let action=u.current.learner.choose_offered(goal,Some(offers))?;
+            if !allowed[action] {return Err(UError::Blocked)}
+            let evidence=predictions.iter().find(|p|p.action==action).ok_or(UError::InvalidData)?;
+            let factual = u.current.learner.carrier_factual_action_consequence(action)
+                .unwrap_or_else(||evidence.output.clone());
+            let supported = u.current.learner.carrier_factual_action_consequence(action).is_some();
+            // One common five-field contract: verified-goal proximity,
+            // local novelty, epistemic disagreement, factual support,
+            // and quoted action economy. No motor IDs or world role labels.
+            let mut fields=ufields(&factual,goal,evidence.novelty,
+                if supported {evidence.disagreement}else{1.0},
+                if supported {0.8}else{0.0},offers[action].max_cost);
+            if !supported {fields[1]=fields[1].max(0.75)}
+            options.push(UnifiedOption{p:PhaseCognitiveProposal{
+                proposal_id:0x400+action as u64,action,fields
+            },kind:3,source:"factual-experience",output:Some(factual)});
+        }
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {
             let mut candidates=options.clone();

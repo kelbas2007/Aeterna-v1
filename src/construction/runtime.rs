@@ -9,6 +9,7 @@ use super::curriculum::{Curriculum, SelectionMode};
 use super::epistemic::{EvidencePolicy, EvidenceReport, EvidenceTrial, RiskLedger};
 use crate::{EvoPhase, HumanProtectionDecision, HumanProtectionEvidence};
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeSet, VecDeque};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -85,6 +86,9 @@ pub struct Learner {
     carrier_managed: bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
     requirements: Option<super::requirements::RequirementMemory>,
+    /// Opt-in factual control; no extra teacher/model/independent checkpoint.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    self_directed: bool,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -118,13 +122,76 @@ fn exploration_word(event: u64) -> u64 {
     z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
     z ^ (z >> 31)
 }
+
+/// A tiny bounded grammar fitted to *executed* transitions in Learner's journal.
+/// The same facts, not a separately installed world model, are used after
+/// restart. These are authored mathematical operators, not invented by SNN.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+enum ObservedEffect { Keep, Delta(i64), Set(i64) }
+impl ObservedEffect {
+    fn apply(self,x:i64)->Option<i64>{ match self { Self::Keep=>Some(x), Self::Delta(d)=>x.checked_add(d),Self::Set(v)=>Some(v) } }
+}
+fn effect(rows:&[&Transition],axis:usize)->Option<ObservedEffect>{
+    if rows.len()<2 {return None;}
+    if rows.iter().all(|r|r.pre[axis]==r.post[axis]){return Some(ObservedEffect::Keep)}
+    let difference=rows[0].post[axis] as i128 - rows[0].pre[axis] as i128;
+    if let Ok(d)=i64::try_from(difference) {
+        if rows.iter().all(|r|r.post[axis] as i128-r.pre[axis] as i128==difference){return Some(ObservedEffect::Delta(d))}
+    }
+    let output=rows[0].post[axis];
+    if rows.iter().all(|r|r.post[axis]==output){return Some(ObservedEffect::Set(output))}
+    None
+}
+/// Reconstruct a simple conditional effect if the unconditional law was
+/// contradicted. Candidate guards come only from observed PRE coordinates.
+fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64])->Option<i64>{
+    if let Some(rule)=effect(rows,axis){return rule.apply(current[axis]);}
+    let width=current.len();
+    for guard in 0..width {
+        if guard==axis{continue}
+        let mut values:Vec<i64>=rows.iter().map(|r|r.pre[guard]).collect();
+        values.sort_unstable();values.dedup();
+        if values.len()>4 {continue;} // Reject identity-like one-off guards.
+        for value in values {
+            let yes=rows.iter().copied().filter(|r|r.pre[guard]==value).collect::<Vec<_>>();
+            let no=rows.iter().copied().filter(|r|r.pre[guard]!=value).collect::<Vec<_>>();
+            // An observed contradiction establishes that a global rule is false.
+            // Permit a supported branch (>=2) to predict a matching new context
+            // without pretending the other, singly observed branch is learned.
+            if yes.len()>=2 && !no.is_empty() && current[guard]==value {
+                if let Some(rule)=effect(&yes,axis) {
+                    if no.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {
+                        return rule.apply(current[axis]);
+                    }
+                }
+            }
+            if no.len()>=2 && !yes.is_empty() && current[guard]!=value {
+                if let Some(rule)=effect(&no,axis) {
+                    if yes.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {
+                        return rule.apply(current[axis]);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+fn factual_prediction(records:&[Record],pre:&[i64],action:usize)->Option<Vec<i64>>{
+    let observations=records.iter().rev().filter(|r|r.transition.action==action)
+        .take(96).map(|r|&r.transition).collect::<Vec<_>>();
+    if observations.len()<2 {return None;}
+    (0..pre.len()).map(|j|predict_axis(&observations,j,pre)).collect()
+}
+fn goal_distance(state:&[i64],goal:&[Option<i64>])->u128{
+    state.iter().zip(goal).filter_map(|(&x,g)|g.map(|v|(i128::from(x)-i128::from(v)).unsigned_abs())).sum()
+}
 impl Learner {
     pub fn new(config: Config,initial: Vec<i64>) -> Result<Self> {
         config.validate()?;
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -419,6 +486,64 @@ impl Learner {
         if let Some(s) = &mut self.shadow { s.model.state = s.model.program.initial_state(); }
         Ok(())
     }
+
+    /// Repair the existing Learner loop: factual uncertainty -> an information
+    /// probe -> observed consequence -> updated law -> goal action. All motors
+    /// still pass through ProtectedConstructionRuntime and HumanProtection.
+    /// No schedules, reward labels, privileged motor roles, or synthetic POSTs.
+    pub fn enable_self_directed_control(&mut self)->Result<()> {
+        if self.config.width>6 || self.config.actions>8 {return Err(Error::Capacity);}
+        if self.autonomy.is_none() || self.pending || self.poisoned || self.self_directed ||
+           self.frozen_at.is_some() {return Err(Error::Busy);}
+        self.self_directed=true;
+        Ok(())
+    }
+    pub fn self_directed_control_enabled(&self)->bool {self.self_directed}
+    fn factual_control(&self,goal:&[Option<i64>],allowed:&[usize])->usize {
+        let baseline=goal_distance(&self.current,goal);
+        // Only the runtime's factual journal can supply transitions. Any
+        // imagined successor is used for ranking, never written as evidence.
+        let mut best:Option<(u128,usize,usize)>=None;
+        let mut frontier=VecDeque::from([(self.current.clone(),None::<usize>,0usize)]);
+        let mut visited=BTreeSet::new();visited.insert(self.current.clone());
+        let mut expanded=0usize;
+        // Narrow CPU-first guard: the old Learner's optional planning budget
+        // is a ceiling, not a pretext for exhaustive state expansion.
+        let expansion_cap=self.config.planning_work.min(512) as usize;
+        while let Some((state,first,depth))=frontier.pop_front(){
+            if depth>=self.config.planning_depth || expanded>=expansion_cap {continue}
+            for &action in allowed {
+                expanded+=1;
+                let Some(next)=factual_prediction(&self.records,&state,action) else {continue};
+                if next==state {continue;}
+                let origin=first.unwrap_or(action);
+                let distance=goal_distance(&next,goal);
+                if distance<baseline {
+                    let candidate=(distance,depth+1,origin);
+                    if best.as_ref().is_none_or(|b|candidate<*b){best=Some(candidate);}
+                }
+                if visited.len()<2048 && visited.insert(next.clone()) {
+                    frontier.push_back((next,Some(origin),depth+1));
+                }
+            }
+        }
+        if let Some((_,_,action))=best {return action;}
+        // If no *factual* model predicts progress, probe the least tested
+        // action in the current situation. A new context reopens uncertainty.
+        let mut best_action=allowed[0];
+        let mut best_rank=(usize::MAX,usize::MAX,u64::MAX);
+        for &action in allowed {
+            let mut local=0usize;let mut total=0usize;
+            for r in &self.records {
+                if r.transition.action!=action {continue}
+                total+=1;
+                if r.transition.pre==self.current {local+=1;}
+            }
+            let rank=(local,total,exploration_word(self.next_id ^ action as u64));
+            if rank<best_rank {best_rank=rank;best_action=action;}
+        }
+        best_action
+    }
     /// Ephemeral imagination plus a model-independent exploration reserve.
     /// No simulated POST is inserted into the factual journal.
     pub fn choose_action(&self,goal: Option<&[i64]>) -> Result<usize> {
@@ -435,6 +560,14 @@ impl Learner {
         if offers.is_some_and(|o|o.len()!=self.config.actions){return Err(Error::InvalidData);}
         let allowed:Vec<_>=(0..self.config.actions).filter(|&a|offers.is_none_or(|o|o[a].available && o[a].max_cost<=remaining)).collect();
         if allowed.is_empty(){return Err(Error::Blocked);}
+        if self.self_directed {
+            if let Some(goal)=goal {
+                if goal.iter().all(Option::is_some) && goal_distance(&self.current,goal)==0 {
+                    return Err(Error::NoEvidence); // no unnecessary protected action
+                }
+            }
+            return Ok(self.factual_control(goal.unwrap_or(&[]),&allowed));
+        }
         let word=exploration_word(self.next_id);
         if goal.is_none() && word & 3 == 0 {return Ok(allowed[((word>>2)%allowed.len() as u64) as usize]);}
         let mut models = vec![&self.active]; if let Some(s) = &self.shadow { models.push(&s.model); }
@@ -507,6 +640,9 @@ impl Learner {
             if learned.frozen!=state.frozen_at.is_some(){return Err(Error::InvalidData)}
         }
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
+        if state.self_directed && (state.autonomy.is_none() || state.config.width>6 || state.config.actions>8) {
+            return Err(Error::InvalidData);
+        }
         if let Some(policy)=&state.autonomy {
             policy.validate(&state.config)?;
             if state.curriculum.as_ref().is_none_or(|c|c.mode!=SelectionMode::Fair)
@@ -577,6 +713,7 @@ impl ProtectedConstructionRuntime {
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> { self.learner.enable_curriculum(mode) }
     pub fn enable_autonomy(&mut self,policy:AutonomyPolicy)->Result<()> {self.learner.enable_autonomy(policy)}
     pub fn freeze_learning(&mut self)->Result<()> {self.learner.freeze_learning()}
+    pub fn enable_self_directed_control(&mut self)->Result<()> {self.learner.enable_self_directed_control()}
     pub fn step_autonomous<H,F>(&mut self,goal:Option<&[Option<i64>]>,offers:&[ActionOffer],hazard:H,execute:F)->Result<usize>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->Result<ExternalPost> {
         if self.learner.autonomy.is_none(){return Err(Error::InvalidData);}
@@ -595,6 +732,11 @@ impl ProtectedConstructionRuntime {
     pub fn learner(&self) -> &Learner { &self.learner }
     pub fn organism(&self) -> &EvoPhase { &self.organism }
     pub fn checkpoint(&self) -> Result<Vec<u8>> { self.learner.checkpoint() }
+    /// Environment-reported restart, not an imagined reset or action. It
+    /// leaves the cognitive journal and lifetime's physical permits intact.
+    pub fn observe_factual_restart(&mut self,observation:Vec<i64>)->Result<()> {
+        self.learner.record_external_restart(observation)
+    }
     /// Live round-trip requires the identical cognitive generation, including
     /// history, costs, consumed trials and fault state. Equal observations alone
     /// are insufficient. Use rollback_cognition to revert only computation.
