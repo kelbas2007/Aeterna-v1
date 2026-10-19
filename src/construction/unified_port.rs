@@ -4,6 +4,13 @@ pub(crate) struct PortPrediction {
     pub action: usize, pub output: Vec<i64>, pub confidence: f32,
     pub novelty: f32, pub disagreement: f32,
 }
+#[derive(Debug, Clone)]
+pub(crate) struct PortCertifiedChain {
+    pub first_action:usize,
+    pub first_consequence:Vec<i64>,
+    pub endpoint:Vec<i64>,
+    pub depth:usize,
+}
 impl Learner {
     pub(crate) fn manage_from_carrier(&mut self) -> Result<()> {
         if !self.records.is_empty() || self.pending { return Err(Error::Busy); }
@@ -17,6 +24,65 @@ impl Learner {
         let mut meter=Meter::new(budget);
         let result=super::runtime::calibrated_factual_prediction(&self.records,&self.current,action,self.frozen_at,&mut meter);
         (result,meter.spent)
+    }
+
+    /// Search a bounded multi-step path only through consequences that passed
+    /// an older-prefix / three-new-real-POST prospective validation.
+    /// Unlike the legacy exploratory planner, an unverified imagined edge
+    /// cannot become a high-scoring U1 candidate. The returned first action
+    /// still needs the original single-use HumanProtection permit.
+    pub(crate) fn carrier_certified_goal_chain_metered(
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+    )->(Option<PortCertifiedChain>,u64) {
+        if !self.self_directed || self.pending || self.poisoned || budget==0
+            || goal.len()!=self.config.width || allowed.len()!=self.config.actions
+            || !goal.iter().any(Option::is_some)
+            || goal_distance(&self.current,goal)==0 {
+            return (None,0);
+        }
+        let mut meter=Meter::new(budget);
+        let mut visited=BTreeSet::new();
+        visited.insert(self.current.clone());
+        let mut frontier=VecDeque::from([(self.current.clone(),None::<(usize,Vec<i64>)>,0usize)]);
+        let mut expansions=0_usize;
+        'search: while let Some((state,first,depth))=frontier.pop_front() {
+            if depth>=self.config.planning_depth || expansions>=96 {continue}
+            for action in 0..self.config.actions {
+                if !allowed[action]{continue}
+                if meter.charge(1+state.len() as u64).is_err(){break 'search}
+                // Cheap raw inference only prunes impossible/no-op branches.
+                // It NEVER authenticates the edge or enters a factual U1 slot.
+                let Some(proposed)=factual_prediction(
+                    &self.records,&state,action,self.frozen_at,&mut meter
+                ) else {
+                    if meter.remaining()==0{break 'search}
+                    continue
+                };
+                if proposed==state{continue}
+                let Some(next)=calibrated_factual_prediction(
+                    &self.records,&state,action,self.frozen_at,&mut meter
+                ) else {
+                    if meter.remaining()==0{break 'search}
+                    continue
+                };
+                if next!=proposed||next==state{continue}
+                expansions+=1;
+                let initial=first.clone().unwrap_or((action,next.clone()));
+                if goal_distance(&next,goal)==0 && depth+1>=2 {
+                    return (Some(PortCertifiedChain{
+                        first_action:initial.0,first_consequence:initial.1,
+                        endpoint:next,depth:depth+1,
+                    }),meter.spent);
+                }
+                if visited.len()<128 && depth+1<self.config.planning_depth {
+                    if meter.charge(12+next.len() as u64).is_err(){break 'search}
+                    if visited.insert(next.clone()){
+                        frontier.push_back((next,Some(initial),depth+1));
+                    }
+                }
+            }
+        }
+        (None,meter.spent)
     }
     pub(crate) fn carrier_config(&self)->&super::runtime::Config {&self.config}
     pub(crate) fn carrier_prepare(&mut self,a:usize)->Result<Commitment> {self.prepare(a)}

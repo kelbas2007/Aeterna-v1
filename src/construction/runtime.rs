@@ -619,14 +619,14 @@ impl Learner {
     /// Returns both the factual choice and its metered reasoning cost. All
     /// loops stop as soon as the configured work budget is spent. The candidate
     /// is still only a U1 proposal, not authority to perform an action.
-    fn factual_control_metered(&self,goal:&[Option<i64>],allowed:&[usize])->(usize,u64){
-        let mut meter=Meter::new(self.config.planning_work);
+    fn factual_control_metered(&self,goal:&[Option<i64>],allowed:&[usize],budget:u64)->(usize,u64){
+        let mut meter=Meter::new(budget);
         let baseline=goal_distance(&self.current,goal);
         let mut best:Option<(u128,usize,usize)>=None;
         let mut frontier=VecDeque::from([(self.current.clone(),None::<usize>,0usize)]);
         let mut visited=BTreeSet::new();visited.insert(self.current.clone());
         let mut expanded=0usize;
-        let cap=self.config.planning_work.min(512) as usize;
+        let cap=budget.min(512) as usize;
         'search: while let Some((state,first,depth))=frontier.pop_front() {
             if depth>=self.config.planning_depth || expanded>=cap {continue}
             for &action in allowed {
@@ -673,7 +673,7 @@ impl Learner {
     }
     /// Explicitly report factual planning work to its caller so both the
     /// standalone protected executor and U1 can charge their own ledgers.
-    pub(crate) fn choose_offered_metered(&self,goal:Option<&[Option<i64>]>,offers:Option<&[ActionOffer]>)->Result<(usize,u64)> {
+    pub(crate) fn choose_offered_metered_budget(&self,goal:Option<&[Option<i64>]>,offers:Option<&[ActionOffer]>,budget:u64)->Result<(usize,u64)> {
         if !self.self_directed {return self.choose_offered(goal,offers).map(|action|(action,0))}
         if self.pending||self.poisoned{return Err(Error::Busy)}
         if goal.is_some_and(|g|g.len()!=self.config.width) || offers.is_some_and(|o|o.len()!=self.config.actions){return Err(Error::InvalidData)}
@@ -681,7 +681,7 @@ impl Learner {
         let allowed=(0..self.config.actions).filter(|&a|offers.is_none_or(|o|o[a].available&&o[a].max_cost<=remaining)).collect::<Vec<_>>();
         if allowed.is_empty(){return Err(Error::Blocked)}
         if goal.is_some_and(|g|g.iter().any(Option::is_some)&&goal_distance(&self.current,g)==0){return Err(Error::NoEvidence)}
-        Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed))
+        Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed,budget))
     }
     /// Ephemeral imagination plus a model-independent exploration reserve.
     /// No simulated POST is inserted into the factual journal.
@@ -705,7 +705,7 @@ impl Learner {
                     return Err(Error::NoEvidence); // no unnecessary protected action
                 }
             }
-            return Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed).0);
+            return Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed,self.config.planning_work).0);
         }
         let word=exploration_word(self.next_id);
         if goal.is_none() && word & 3 == 0 {return Ok(allowed[((word>>2)%allowed.len() as u64) as usize]);}
@@ -1245,6 +1245,70 @@ mod factual_control_integrity_tests {
         let mut meter=Meter::new(100_000);
         assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),None,
             "do not certify a conditional cause from perfectly correlated sensors");
+    }
+
+
+    #[test]
+    fn certified_multistep_chain_uses_only_heldout_validated_factual_edges() {
+        // SYNTHETIC journal fixture, not an autonomous acquisition benchmark.
+        // The learner is never given motor role labels or prerequisite indices.
+        // Action 0 sets the first sensor, action 1 the second; action 2
+        // increments progress iff BOTH sensors were set. No one-step move
+        // from [0,0,0] reaches the masked goal.
+        let cfg=Config{width:3,actions:3,minimum_training:128,search_every:4096,
+            planning_depth:4,planning_work:120_000,..Default::default()};
+        let mut learner=Learner::new(cfg,vec![0,0,0]).unwrap();
+        learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
+        learner.enable_self_directed_control().unwrap();
+        let mut id=0_u64;
+        for i in 0..48_usize {
+            let (left,right)=[(0,0),(1,0),(0,1),(1,1)][i%4];
+            for action in 0..3 {
+                let pre=vec![0,left,right];
+                let mut post=pre.clone();
+                match action {
+                    0=>post[1]=1,
+                    1=>post[2]=1,
+                    2=>{if left==1&&right==1{post[0]+=1}},
+                    _=>unreachable!(),
+                }
+                learner.records.push(Record{
+                    transition:Transition{id,restart:id==0,pre,action,post:post.clone()},
+                    model:0,prediction:Forecast{center:post,scale:vec![1.0;3]},
+                    candidate:None,candidate_prediction:None,
+                    permit_sequence:id+1,external_cost:1,
+                });
+                id+=1;
+            }
+        }
+        learner.next_id=id;
+        let goal=[Some(1),None,None];
+        let (plan,spent)=learner.carrier_certified_goal_chain_metered(&goal,&[true;3],120_000);
+        let plan=plan.expect("a two-prerequisite acquired chain must be constructible");
+        assert_eq!(plan.depth,3);
+        assert!(plan.first_action==0||plan.first_action==1);
+        assert_eq!(plan.first_consequence[0],0,"first action must establish a prerequisite, not fake goal progress");
+        assert_eq!(plan.endpoint[0],1);
+        assert!(spent<=120_000);
+        let (disabled,spent)=learner.carrier_certified_goal_chain_metered(&goal,&[true,false,true],120_000);
+        assert!(disabled.is_none(),"an unavailable prerequisite must prevent a fabricated plan");
+        assert!(spent<=120_000);
+        let (unfunded,spent)=learner.carrier_certified_goal_chain_metered(&goal,&[true;3],100);
+        assert!(unfunded.is_none(),"insufficient proof budget must abstain");
+        assert!(spent<=100);
+        // Three genuine contradictory consequences of the same last action
+        // must revoke the previously accepted causal edge on recomputation.
+        for i in 0..3 {
+            let pre=vec![i,1,1];let post=vec![i+10,1,1];
+            learner.records.push(Record{
+                transition:Transition{id,restart:false,pre,action:2,post:post.clone()},
+                model:0,prediction:Forecast{center:post,scale:vec![1.0;3]},
+                candidate:None,candidate_prediction:None,permit_sequence:id+1,external_cost:1,
+            });id+=1;
+        }
+        learner.next_id=id;
+        let (revoked,_) = learner.carrier_certified_goal_chain_metered(&goal,&[true;3],120_000);
+        assert!(revoked.is_none(),"contradicting real consequences must not leave a trusted old chain");
     }
 
     #[test]

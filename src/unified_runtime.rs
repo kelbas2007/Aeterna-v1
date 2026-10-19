@@ -126,16 +126,45 @@ impl ScientificRuntime {
         // ProtectedConstructionRuntime. Here it is a *proposal*, never a
         // bypass around U1 or the human-protection permit.
         if u.current.learner.self_directed_control_enabled() {
-            let (action,chosen_work)=u.current.learner.choose_offered_metered(goal,Some(offers))?;
+            // Experimental multi-step search is enabled only when the caller
+            // explicitly allocates a larger bounded work budget. The published
+            // 4k/20k development runs retain their EXACT previous behavior.
+            // All chain edges must be validated independently against actual
+            // chronological holdouts, unlike exploratory imagined plans.
+            let chain_budget=if goal.is_some() && cfg.planning_work>=32_000 {
+                cfg.planning_work.saturating_sub(4_000)
+            } else {0};
+            let (chain,chain_work)=if let Some(g)=goal {
+                u.current.learner.carrier_certified_goal_chain_metered(g,&allowed,chain_budget)
+            } else {(None,0)};
+            let residual=cfg.planning_work.saturating_sub(chain_work);
+            let (action,chosen_work)=u.current.learner
+                .choose_offered_metered_budget(goal,Some(offers),residual)?;
             if !allowed[action] {return Err(UError::Blocked)}
             let evidence=predictions.iter().find(|p|p.action==action).ok_or(UError::InvalidData)?;
-            // Share one factual planning budget between goal/probe selection
-            // and verification of the proposed consequence. No double fitting.
-            let remaining=cfg.planning_work.saturating_sub(chosen_work);
+            // Share exactly ONE configured factual work budget between the
+            // validated chain, legacy probe selection and direct verification.
+            let remaining=residual.saturating_sub(chosen_work);
             let (factual_prediction,factual_work)=u.current.learner
                 .carrier_factual_action_consequence_metered(action,remaining);
-            u.computation_work=u.computation_work.checked_add(chosen_work.saturating_add(factual_work))
+            u.computation_work=u.computation_work.checked_add(
+                chain_work.saturating_add(chosen_work).saturating_add(factual_work))
                 .ok_or(UError::Capacity)?;
+            if let Some(plan)=chain {
+                if !allowed[plan.first_action]{return Err(UError::Blocked)}
+                let observed=predictions.iter().find(|p|p.action==plan.first_action)
+                    .ok_or(UError::InvalidData)?;
+                // Terminal goal value is a *discounted* predicted consequence
+                // of multiple certified edges; only FIRST action is executed.
+                let mut fields=ufields(&plan.endpoint,goal,observed.novelty,
+                    observed.disagreement,1.0/(plan.depth as f32),
+                    offers[plan.first_action].max_cost.saturating_mul(plan.depth as u64));
+                fields[0]/=1.0+0.15*(plan.depth.saturating_sub(1) as f32);
+                options.push(UnifiedOption{p:PhaseCognitiveProposal{
+                    proposal_id:0x500+plan.first_action as u64,
+                    action:plan.first_action,fields
+                },kind:3,source:"factual-chain",output:Some(plan.first_consequence)});
+            }
             // Only empirically calibrated consequences are allowed to compete.
             // An unknown prediction is not secretly a high-novelty U1 option.
             // Ordinary U1 handles observation and exploratory choice instead.
