@@ -97,11 +97,19 @@ impl World {
             (0,1)=>{if self.ready{self.progress+=1}self.ready=false},
             (0,2)=>self.ready=false,
             (0,3)=>{self.ready=false;self.progress=0},
-            // A pulse expires when ANY other motor intervenes.
-            (1,0)=>self.ready=true,
-            (1,1)=>{if self.ready{self.progress+=1}self.ready=false},
-            (1,2)=>self.ready=false,
-            (1,3)=>{self.ready=false;self.progress=0},
+            // ONE successful pulse; repeated preparation LOCKS the
+            // dormant counter until independently reset. This is not the
+            // unconditional ready-bit acquisition training world.
+            (1,0)=>{
+                self.counter=self.counter.saturating_add(1).min(2);
+                self.ready=self.counter==1;
+            },
+            (1,1)=>{
+                if self.ready{self.progress+=1}
+                self.ready=false;self.counter=0;
+            },
+            (1,2)=>{self.ready=false;self.counter=0},
+            (1,3)=>{self.ready=false;self.counter=0;self.progress=0},
             // Cannot be represented by a ONE-action suffix:
             // two preparatory events before the use operation.
             (2,0)=>self.counter=self.counter.saturating_add(1).min(2),
