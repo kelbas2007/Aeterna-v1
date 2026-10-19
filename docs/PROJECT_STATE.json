@@ -20,7 +20,8 @@
     "unified_self_directed_factual_action_proposal_opt_in": true,
     "trajectory_self_revision_opt_in_experimental": true,
     "trajectory_behavioral_admission_opt_in_development": true,
-    "predictive_short_history_states_opt_in_experimental": true
+    "predictive_short_history_states_opt_in_experimental": true,
+    "agency_aware_u1_credit_opt_in_experimental": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -49,7 +50,8 @@
     "independently_qualified_autonomous_self_improvement",
     "validated_behavioral_self_improvement_transfer",
     "general_POMDP_latent_state_recovery",
-    "blind_independent_hidden_state_transfer_advantage"
+    "blind_independent_hidden_state_transfer_advantage",
+    "independently_qualified_agency_credit_policy_advantage"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -70,7 +72,9 @@
     "docs/AUTONOMY_UNIFIED_EXPERIMENT.md",
     "docs/AUTONOMOUS_TRAJECTORY_SELF_REVISION.md",
     "docs/T_SR2_BEHAVIORAL_GATE_IMPLEMENTATION.md",
-    "docs/PREDICTIVE_HISTORY_STATES_EXPERIMENT.md"
+    "docs/PREDICTIVE_HISTORY_STATES_EXPERIMENT.md",
+    "docs/AGENCY_CREDIT1_PROTOCOL.md",
+    "docs/AGENCY_CREDIT1_IMPLEMENTATION.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
