@@ -1,0 +1,47 @@
+name: Cold unforced causal pair development
+on:
+  pull_request:
+    paths:
+      - 'src/construction/runtime.rs'
+      - 'src/construction/unified_port.rs'
+      - 'src/unified_runtime.rs'
+      - 'tests/cold_pair_probe_development.rs'
+      - '.github/workflows/cold-pair-probe-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: cold-pair-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned Rust
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/revision.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Real unforced cold history/probe engineering
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test cold_pair_probe_development -- --nocapture --test-threads=1 2>&1 | tee evidence/cold-probe.log
+          python scripts/project_audit.py | tee evidence/source-audit.json
+      - name: Preserve compact positive OR negative diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cold-pair-${{ github.sha }}
+          path: evidence/
+          retention-days: 2
