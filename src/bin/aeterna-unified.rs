@@ -96,6 +96,12 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"predictive_history_states_enabled",
                         "proposal_authority":"u1_only","evidence":"real_executed_history"}))
                 },
+                "enable_adaptive_history_suffix"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_adaptive_history_suffix()?;
+                    Ok(json!({"type":"adaptive_history_suffix_enabled",
+                        "max_predecessor_actions":2,"context":"real_protected_journal",
+                        "proposal_authority":"native_U1_only"}))
+                },
                 "enable_active_causal_probes"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
                     Ok(json!({"type":"active_causal_probes_enabled",
@@ -368,6 +374,7 @@ only after later REAL POST shows goal progress.
 Optional predictive history states
 (planning_work>=32000): enable_predictive_history_states.
 Optional unforced causal pair experiments: enable_active_causal_probes.
+Additional conditional past-length inference (opt-in): enable_adaptive_history_suffix.
 Optional own evaluator synthesis:
 enable_trajectory_self_revision, step(goal,available),
 trajectory_self_revision_report. The evaluator changes U1 valuation only,
