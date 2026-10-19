@@ -105,6 +105,46 @@ fn same_sensor_and_same_last_motor_but_different_older_action_are_distinguished(
     // plan when native U1 chooses something else. That is reported above.
     assert_eq!(learned.construction_learner().unwrap().records().len(),178);
 }
+
+#[test]
+fn native_u1_attempts_the_full_unforced_hidden_preparation_chain(){
+    let (trained,initial_world)=acquired(true);
+    let checkpoint=trained.checkpoint_constructing().unwrap();
+    let mut all=Vec::new();
+    let mut candidate_reached=false;
+    let mut candidate_suffix_actions=0usize;
+    for adaptive in [false,true]{
+        let mut rt=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+        enable(&mut rt,adaptive);
+        let mut w=initial_world.clone();
+        let mut trace=Vec::new();
+        for _ in 0..12{
+            if w.progress>=1{break}
+            let outcome=step(&mut rt,&mut w,None);
+            trace.push(json!({
+                "motor":outcome.action,"source":outcome.source,
+                "real_post":w.progress,
+                "suffix_available":outcome.adaptive_suffix_plan_proposed
+            }));
+        }
+        if adaptive{
+            candidate_reached=w.progress>=1;
+            candidate_suffix_actions=trace.iter()
+                .filter(|t|t["source"]=="predictive-suffix").count();
+        }
+        all.push(json!({"adaptive":adaptive,"solved":w.progress>=1,
+            "actions":trace.len(),"trace":trace}));
+    }
+    eprintln!("ADAPTIVE_SUFFIX_CLOSED_LOOP {}",json!({"arms":all,
+        "independent_qualification":false,
+        "all_test_motors_unforced":true,
+        "two_action_context_inferred_from_actual_training_POSTs":true}));
+    assert!(candidate_suffix_actions>0,
+        "the native controller must actually SELECT a depth-two plan");
+    assert!(candidate_reached,
+        "the native controller must finish its self-selected multi-step plan with an actual external goal POST");
+}
+
 #[test]
 fn no_hidden_history_effect_cannot_produce_spurious_suffix_goal_plan(){
     let (mut rt,mut w)=acquired(false);enable(&mut rt,true);
