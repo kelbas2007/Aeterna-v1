@@ -24,7 +24,8 @@
     "agency_aware_u1_credit_opt_in_experimental": true,
     "self_selected_causal_pair_probes_opt_in_experimental": true,
     "grounded_instrumental_credit_opt_in_development": true,
-    "truthful_external_episode_restart_development": true
+    "truthful_external_episode_restart_development": true,
+    "adaptive_two_action_predictive_history_opt_in_experimental": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -59,7 +60,9 @@
     "independently_qualified_autonomous_curriculum",
     "independent_cold_instrumental_credit_advantage",
     "self_selected_multiepisode_hidden_world_advantage",
-    "independent_cold_goal_transfer"
+    "independent_cold_goal_transfer",
+    "independent_adaptive_history_length_generalization",
+    "self_invented_history_grammar"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -86,7 +89,9 @@
     "docs/SELF_DIRECTED_CAUSAL_PROBES_DEVELOPMENT.md",
     "docs/INSTRUMENTAL_CREDIT1_PROTOCOL.md",
     "docs/SELF_DIRECTED_CAUSAL_PROBES_RESULT.md",
-    "docs/COLD_EPISODES1_DEVELOPMENT.md"
+    "docs/COLD_EPISODES1_DEVELOPMENT.md",
+    "docs/ADAPTIVE_HISTORY_SUFFIX1_PROTOCOL.md",
+    "docs/COLD_EPISODES_FRESH1_RESULT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
