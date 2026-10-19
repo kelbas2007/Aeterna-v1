@@ -62,7 +62,7 @@
     "modified": {
       "src/unified_runtime.rs": {
         "before_sha256": "8973cc39438c1450bf15c6dc0f48582ffdeb308418c32a7901fa8f414be1e098",
-        "after_git_blob": "9f8cb53fe10c7fc2b819e29dbb13132152bd1844"
+        "after_git_blob": "b11b81a4b25695cad45ce6499ae7147f70ee90a6"
       },
       "src/construction/unified_port.rs": {
         "before_sha256": "7ef8bf7ed14fae7122f608c5db8e7c49a792833a9ae12dabf70952fc88f28e73",
@@ -76,6 +76,6 @@
     "jsonl_before_sha256": "f7517ba87387bbb8ea4f72cf22f6bae66f9a5efa5104681dac6e24505599e89d",
     "jsonl_after_sha256": "1de34904c01de82d94d7ecab6763c9f724c9cd7a504d07fe644cd0cb30da7077",
     "research_boundary": "Development-only 24 opaque role permutations (96 actions) and paired 32-step ablation; not an independent AGI qualification.",
-    "review_revision": "PR9 experimental extension: independently contrast two observed pre-action sensor guards before fitting a joint factual effect; reject correlated-only sensor co-occurrence; demand chronological real heldout consequences and abstain if the metered proof fails. All prior synthetic tests exposed; not evidence of blind generalization. Conjunction fitting is evaluated before single-guard scans and bounded by the existing 4k prospective U1 work meter. Certified goal-chain research: every planned edge must pass actual chronological heldout calibration; one total metered budget and conservative abstention; exact 4k/20k exposed controls preserve old arbitration. Three-arm controlled ablation separates direct acquired factual effects from marginal chain proposals; explicit same-checkpoint opt-in, telemetry is observation-only."
+    "review_revision": "PR9 experimental extension: independently contrast two observed pre-action sensor guards before fitting a joint factual effect; reject correlated-only sensor co-occurrence; demand chronological real heldout consequences and abstain if the metered proof fails. All prior synthetic tests exposed; not evidence of blind generalization. Conjunction fitting is evaluated before single-guard scans and bounded by the existing 4k prospective U1 work meter. Certified goal-chain research: every planned edge must pass actual chronological heldout calibration; one total metered budget and conservative abstention; exact 4k/20k exposed controls preserve old arbitration. Three-arm controlled ablation separates direct acquired factual effects from marginal chain proposals; explicit same-checkpoint opt-in, telemetry is observation-only. Opt-in own delayed PRE/action/POST discrepancy -> typed executable expression search -> chronological real-episode shadow gate -> native U1 evidence valuation. Old RSP2 admission and HumanProtection stay unchanged."
   }
 }

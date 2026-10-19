@@ -12,6 +12,8 @@ struct UnifiedConstruction {
     computation_work:u64,total_external_cost:u64,max_external_cost:u64,freeze_controller:bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
     education:Option<crate::education::School>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    self_revision:Option<MetaRevision>,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedPost {pub observation:Vec<i64>,pub cost:u64,pub reward:f32}
@@ -28,6 +30,8 @@ pub struct UnifiedReport {
     pub domain:String,pub archived_domains:Vec<String>,pub learner:crate::construction::SnapshotReport,
     pub native_meta_observations:u64,pub native_weights:[f32;5],pub operations:[u64;4],
     pub computation_work:u64,pub total_external_cost:u64,pub controller_frozen:bool,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub self_revision:Option<MetaRevisionReport>,
 }
 #[derive(USerialize,UDeserialize)]
 #[serde(deny_unknown_fields)]
@@ -42,6 +46,210 @@ fn udistance(x:&[i64],goal:Option<&[Option<i64>]>)->f64 {
 fn ufields(p:&[i64],goal:Option<&[Option<i64>]>,novelty:f32,disagreement:f32,confidence:f32,cost:u64)->[f32;5] {
     [if goal.is_some(){(1.0/(1.0+udistance(p,goal))) as f32}else{0.0},novelty.clamp(0.0,1.0),disagreement.clamp(0.0,1.0),confidence.clamp(0.0,1.0),1.0/(1.0+(cost as f32).ln_1p())]
 }
+
+// Experimental same-organism evaluator revision. This does not edit Rust,
+// execute actuators, access hidden world outcomes, or bypass native U1.
+use crate::construction::vm::{Expr as MExpr,Ty as MTy,Context as MContext,Library as MLibrary,Meter as MMeter};
+use crate::construction::induction::{Example as MExample,InductionConfig as MInductionConfig};
+use crate::construction::search_policy::{Objective as MObjective,SearchPolicy as MSearchPolicy,SearchLimits as MSearchLimits};
+const M_MAX_EPISODE:usize=8;
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+struct MetaWitness {episode:u64,features:[i64;5],outcome:i64}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+struct MetaShadow {program:MExpr,trained_episodes:u64}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+struct MetaReceipt {
+    program:MExpr,incumbent:Option<MExpr>,trained_episodes:u64,
+    future:Vec<MetaWitness>,before:u64,after:u64,
+}
+#[derive(Debug,Default,USerialize,UDeserialize)]
+struct MetaRevision {
+    active:Option<MExpr>,shadow:Option<MetaShadow>,
+    rows:Vec<MetaWitness>,pending_steps:Vec<[i64;5]>,
+    pending_goal:Option<Vec<Option<i64>>>,
+    episodes:u64,attempts:u32,rejected:u32,work:u64,next_trial:u64,
+    receipts:Vec<MetaReceipt>,
+}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct MetaRevisionReport {
+    pub episodes:u64,pub steps:usize,pub attempts:u32,pub rejected:u32,
+    pub generations:usize,pub shadow:bool,pub computation_work:u64,
+    pub active_program:Option<String>,
+}
+struct MetaObjective<'a>{examples:&'a [MetaWitness],lib:MLibrary}
+impl MObjective for MetaObjective<'_>{
+    fn input_width(&self)->usize{5}
+    fn library(&self)->&MLibrary{&self.lib}
+    fn score(&mut self,p:&MExpr,meter:&mut MMeter)->UResult<u64>{
+        let mut total=0u64;
+        for r in self.examples{
+            let prediction=p.eval(MContext{input:&r.features,action:0,state:&[],args:&[]},
+                &self.lib,meter)?.int()?.clamp(0,100);
+            total=total.saturating_add(prediction.abs_diff(r.outcome));
+        }
+        Ok(total)
+    }
+}
+impl MetaRevision {
+    fn report(&self)->MetaRevisionReport{
+        MetaRevisionReport{episodes:self.episodes,steps:self.rows.len(),attempts:self.attempts,
+            rejected:self.rejected,generations:self.receipts.len(),
+            shadow:self.shadow.is_some(),computation_work:self.work,
+            active_program:self.active.as_ref().map(|p|format!("{p:?}"))}
+    }
+    fn features(f:[f32;5])->[i64;5] {
+        f.map(|v|(v.clamp(0.0,1.0)*100.0).round() as i64)
+    }
+    fn valid_program(p:&MExpr)->bool{
+        let lib=MLibrary::default();
+        p.nodes()<=11 && p.ty(&lib)==Ok(MTy::Int) &&
+            p.references_valid(5,0,0,&lib)
+    }
+    fn score(p:Option<&MExpr>,features:&[i64;5])->Option<i64>{
+        let Some(expr)=p else {return Some(features[0])};
+        if !Self::valid_program(expr){return None}
+        let mut meter=MMeter::new(256);
+        expr.eval(MContext{input:features,action:0,state:&[],args:&[]},
+            &MLibrary::default(),&mut meter).ok()?.int().ok().map(|v|v.clamp(0,100))
+    }
+    fn loss(p:Option<&MExpr>,examples:&[MetaWitness])->Option<u64>{
+        examples.iter().try_fold(0_u64,|sum,r|{
+            Some(sum.saturating_add(Self::score(p,&r.features)?.abs_diff(r.outcome)))
+        })
+    }
+    fn adjust(&self,fields:&mut [f32;5]){
+        if let Some(code)=self.active.as_ref(){
+            if let Some(v)=Self::score(Some(code),&Self::features(*fields)){
+                fields[0]=v as f32/100.0
+            }
+        }
+    }
+    fn validate(&self)->UResult<()>{
+        if self.rows.len()>128 || self.pending_steps.len()>M_MAX_EPISODE ||
+            self.receipts.len()>3 || self.attempts>12 || self.rejected>self.attempts ||
+            self.pending_goal.is_none()!=self.pending_steps.is_empty() ||
+            self.pending_goal.as_ref().is_some_and(|g|g.len()>32) ||
+            self.active.as_ref().is_some_and(|p|!Self::valid_program(p)) ||
+            self.shadow.as_ref().is_some_and(|s|s.trained_episodes>self.episodes||!Self::valid_program(&s.program)) ||
+            self.rows.iter().any(|r|r.episode>self.episodes||
+                !(0..=100).contains(&r.outcome)||
+                r.features.iter().any(|x|!(0..=100).contains(x)))||
+            self.rows.windows(2).any(|w|w[0].episode>w[1].episode)||
+            self.pending_steps.iter().flatten().any(|x|!(0..=100).contains(x))||
+            self.receipts.last().is_some_and(|p|self.active.as_ref()!=Some(&p.program)){
+            return Err(UError::InvalidData)
+        }
+        for p in &self.receipts{
+            if !Self::valid_program(&p.program)||p.future.len()<4||p.future.len()>64||
+                p.future.iter().any(|r|r.episode<=p.trained_episodes)||
+                Self::loss(p.incumbent.as_ref(),&p.future)!=Some(p.before)||
+                Self::loss(Some(&p.program),&p.future)!=Some(p.after)||
+                p.before==0||p.after.saturating_mul(100)>p.before.saturating_mul(85){
+                return Err(UError::InvalidData)
+            }
+        }
+        Ok(())
+    }
+    // A changed goal invalidates pending credit instead of fabricating labels.
+    // Only the REAL outcome of a completed action can close an episode.
+    fn observe(&mut self,fields:[f32;5],goal:&[Option<i64>],pre:&[i64],post:&[i64])->u64{
+        if pre.len()!=goal.len()||post.len()!=goal.len()||
+            !goal.iter().any(Option::is_some){return 0}
+        if self.pending_goal.as_deref()!=Some(goal){
+            self.pending_steps.clear();
+            self.pending_goal=Some(goal.to_vec());
+        }
+        if udistance(pre,Some(goal))==0.0 {
+            self.pending_steps.clear();
+            self.pending_goal=None;
+            return 0
+        }
+        self.pending_steps.push(Self::features(fields));
+        let reached=udistance(post,Some(goal))==0.0;
+        if !reached&&self.pending_steps.len()<M_MAX_EPISODE{return 0}
+        let len=self.pending_steps.len();
+        self.episodes=self.episodes.saturating_add(1);
+        for (i,features) in self.pending_steps.drain(..).enumerate(){
+            // Developer-specified objective, not authored evaluator code.
+            // Earlier actions inherit future success with bounded time cost.
+            let outcome=if reached {(100-5*(len-i-1) as i64).max(0)}else{0};
+            self.rows.push(MetaWitness{episode:self.episodes,features,outcome});
+        }
+        self.pending_goal=None;
+        if self.rows.len()>128 {
+            let drop_count=self.rows.len()-128;self.rows.drain(..drop_count);
+        }
+        let before=self.work;
+        if self.shadow.is_some(){self.prospective_gate()}else{self.propose_from_own_error()}
+        self.work.saturating_sub(before)
+    }
+    fn propose_from_own_error(&mut self){
+        if self.receipts.len()>=3||self.attempts>=12||self.episodes<self.next_trial{return}
+        let training=&self.rows[self.rows.len().saturating_sub(96)..];
+        let distinct=training.iter().map(|r|r.episode).collect::<std::collections::BTreeSet<_>>().len();
+        if training.len()<24||distinct<8||!training.iter().any(|r|r.outcome==0)||
+           !training.iter().any(|r|r.outcome>=90){return}
+        let incumbent_loss=Self::loss(self.active.as_ref(),training).unwrap_or(u64::MAX);
+        if incumbent_loss<150{return}
+        self.attempts+=1;self.next_trial=self.episodes.saturating_add(6);
+        let samples:Vec<MExample>=training.iter().map(|r|MExample{
+            input:r.features.to_vec(),output:r.outcome}).collect();
+        let induced=crate::construction::induction::infer(
+            &samples,&MLibrary::default(),
+            &MInductionConfig{max_nodes:7,max_terms:1024,work:100_000});
+        let mut program=None;
+        if let Ok(out)=induced {self.work=self.work.saturating_add(out.work);program=out.expression;}
+        if program.is_none(){
+            let mut objective=MetaObjective{examples:training,lib:MLibrary::default()};
+            let limits=MSearchLimits{work:150_000,evaluations:128,max_nodes:9,
+                frontier:256,edits_per_expansion:16};
+            let seed=uword(self.episodes^self.work);
+            match crate::construction::search_policy::search(&MSearchPolicy::default(),
+                MExpr::Input(0),&mut objective,&limits,seed){
+                Ok(out)=>{self.work=self.work.saturating_add(out.work);program=Some(out.program);}
+                Err(_)=>{self.work=self.work.saturating_add(limits.work);}
+            }
+        }
+        let Some(code)=program else {self.rejected+=1;return};
+        if !Self::valid_program(&code)||self.active.as_ref()==Some(&code)||
+            (self.active.is_none()&&code==MExpr::Input(0)){
+            self.rejected+=1;return
+        }
+        let next_loss=Self::loss(Some(&code),training).unwrap_or(u64::MAX);
+        if next_loss.saturating_mul(100)>incumbent_loss.saturating_mul(80){
+            self.rejected+=1;return
+        }
+        self.shadow=Some(MetaShadow{program:code,trained_episodes:self.episodes});
+    }
+    fn prospective_gate(&mut self){
+        let Some(shadow)=&self.shadow else {return};
+        let future:Vec<_>=self.rows.iter().filter(|r|r.episode>shadow.trained_episodes)
+            .take(64).cloned().collect();
+        let independent=future.iter().map(|r|r.episode).collect::<std::collections::BTreeSet<_>>().len();
+        if independent<4{return}
+        let has_both=future.iter().any(|r|r.outcome==0)&&future.iter().any(|r|r.outcome>=90);
+        if !has_both&&independent<8{return}
+        let before=Self::loss(self.active.as_ref(),&future).unwrap_or(u64::MAX);
+        let after=Self::loss(Some(&shadow.program),&future).unwrap_or(u64::MAX);
+        let mut no_regression=has_both;
+        for failed in [false,true]{
+            let group:Vec<_>=future.iter().filter(|r|(r.outcome==0)==failed).cloned().collect();
+            if group.is_empty(){no_regression=false;break}
+            if Self::loss(Some(&shadow.program),&group).unwrap_or(u64::MAX)>
+                Self::loss(self.active.as_ref(),&group).unwrap_or(u64::MAX){
+                no_regression=false
+            }
+        }
+        if no_regression&&before>0&&after.saturating_mul(100)<=before.saturating_mul(85){
+            let program=shadow.program.clone();
+            self.receipts.push(MetaReceipt{program:program.clone(),incumbent:self.active.clone(),
+                trained_episodes:shadow.trained_episodes,future,before,after});
+            self.active=Some(program);
+        }else{self.rejected+=1}
+        self.shadow=None;
+    }
+}
+
 impl ScientificRuntime {
     pub fn new_constructing(config:UConfig,mut policy:UPolicy,initial:Vec<i64>,name:&str)->UResult<Self> {
         config.validate()?;
@@ -55,7 +263,7 @@ impl ScientificRuntime {
         evo.set_phase_native_meta_monotone_evidence(true);evo.observe_initial_real(&usensory(&initial),false);
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;
         rt.constructing=Some(UnifiedConstruction{current:UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None},
-            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None});
+            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None});
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
@@ -75,11 +283,21 @@ impl ScientificRuntime {
         if u.freeze_controller{return Err(UError::Blocked)}
         u.current.learner.enable_certified_chains()
     }
+    /// Activates a same-organism, automatically triggered meta-synthesis lane.
+    pub fn enable_constructing_trajectory_self_revision(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller||u.self_revision.is_some(){return Err(UError::Busy)}
+        u.self_revision=Some(MetaRevision::default());Ok(())
+    }
+    pub fn trajectory_self_revision_report(&self)->Option<MetaRevisionReport>{
+        Some(self.constructing.as_ref()?.self_revision.as_ref()?.report())
+    }
     pub fn unified_report(&self)->Option<UnifiedReport>{
         let u=self.constructing.as_ref()?;
         Some(UnifiedReport{domain:u.current.name.clone(),archived_domains:u.archived.iter().map(|d|d.name.clone()).collect(),learner:u.current.learner.report(),
             native_meta_observations:self.organism.phase_native_meta_observations(),native_weights:self.organism.phase_native_meta_weights()?,operations:u.operations,
-            computation_work:u.computation_work,total_external_cost:u.total_external_cost,controller_frozen:u.freeze_controller})
+            computation_work:u.computation_work,total_external_cost:u.total_external_cost,controller_frozen:u.freeze_controller,
+            self_revision:u.self_revision.as_ref().map(MetaRevision::report)})
     }
     // A new sensor contract does not reinterpret numeric variables as pixels.
     // U1 weights and complete old-domain cognitive checkpoints remain present.
@@ -93,7 +311,7 @@ impl ScientificRuntime {
         policy.max_external_cost=policy.max_external_cost.min(u.max_external_cost.saturating_sub(u.total_external_cost));
         let mut learner=ULearner::new(config,initial.clone())?;learner.enable_autonomy(policy)?;learner.manage_from_carrier()?;
         let old=std::mem::replace(&mut u.current,UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None});
-        u.archived.push(old);self.organism.observe_initial_real(&usensory(&initial),false);self.record(LifetimeEventKind::ExternalObservation);Ok(())
+        u.archived.push(old);if let Some(revision)=u.self_revision.as_mut(){revision.pending_steps.clear();revision.pending_goal=None;}self.organism.observe_initial_real(&usensory(&initial),false);self.record(LifetimeEventKind::ExternalObservation);Ok(())
     }
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
@@ -203,6 +421,11 @@ impl ScientificRuntime {
                 if !tried[1] && goal.is_some(){candidates.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:2,action,fields:[0.5,0.5,pressure,0.5,0.4]},kind:1,source:"plan",output:None});}
                 if !tried[2] && !u.current.learner.records().is_empty(){candidates.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:3,action,fields:[0.0,0.5,pressure,0.5,0.7]},kind:2,source:"recall",output:None});}
             }
+            // Only a prospectively admitted program can rewrite goal evidence.
+            // The new VM expression has no actuator or safety authority.
+            if let Some(revision)=&u.self_revision {
+                for c in &mut candidates {if c.kind==3 {revision.adjust(&mut c.p.fields);}}
+            }
             let raw:Vec<_>=candidates.iter().map(|x|x.p).collect();u.nonce=u.nonce.checked_add(1).ok_or(UError::Capacity)?;
             let choice=self.organism.choose_phase_meta_exploratory(&raw,uword(u.nonce),!u.freeze_controller).ok_or(UError::NoEvidence)?;
             let chosen=candidates.into_iter().find(|p|p.p.proposal_id==choice.proposal_id).ok_or(UError::InvalidData)?;
@@ -233,6 +456,8 @@ impl ScientificRuntime {
             }
         }
         let (option,score)=selected.ok_or(UError::NoEvidence)?;let a=option.p.action;
+        let original_fields=options.iter().find(|c|c.p.proposal_id==option.p.proposal_id)
+            .map(|c|c.p.fields).unwrap_or(option.p.fields);
         let token=u.current.learner.carrier_prepare(a)?;
         let decision=self.protection.screen(a,hazard(a));let record=decision.record().clone();
         let Some(permit)=decision.into_permit() else {u.current.learner.carrier_cancel(token)?;self.record(LifetimeEventKind::Blocked(record));return Err(UError::Blocked);};
@@ -256,6 +481,16 @@ impl ScientificRuntime {
                 if let Some(fields)=u.current.pending_credit.take(){let accepted=u.current.learner.promotions().last().is_some_and(|p|p.accepted);self.organism.observe_phase_native_meta_utility(fields,if accepted{1.0}else{0.0});}
             }
         }
+        if !u.freeze_controller{
+            if let (Some(g),Some(revision))=(goal,u.self_revision.as_mut()){
+                // This evidence originates exclusively in the committed
+                // single-use-authorized external PRE/action/POST record.
+                let actual=u.current.learner.records().last().ok_or(UError::InvalidData)?;
+                let meta_work=revision.observe(original_fields,g,
+                    &actual.transition.pre,&actual.transition.post);
+                u.computation_work=u.computation_work.checked_add(meta_work).ok_or(UError::Capacity)?;
+            }
+        }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
         Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed})
@@ -274,6 +509,7 @@ impl ScientificRuntime {
         let hash=uhash(&serde_json::to_vec(&(s.version,&s.carrier,&s.cognition,s.sequence,s.emergency,s.protection_sequence)).map_err(|_|UError::InvalidData)?);
         if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
         if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
+        if let Some(revision)=&s.cognition.self_revision{revision.validate()?;}
         let evo=EvoPhase::from_constructing_carrier_checkpoint(&s.carrier).ok_or(UError::InvalidData)?;
         let mut names=std::collections::BTreeSet::new();let mut costs=0u64;
         for d in s.cognition.archived.iter().chain(std::iter::once(&s.cognition.current)) {
@@ -294,6 +530,7 @@ impl ScientificRuntime {
         let old=self.constructing.as_ref().ok_or(UError::NoEvidence)?;let new=candidate.constructing.as_ref().ok_or(UError::NoEvidence)?;
         if new.current.name!=old.current.name || new.current.learner.checkpoint()?!=old.current.learner.checkpoint()?
             || serde_json::to_vec(&old.education).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.education).map_err(|_|UError::InvalidData)?
+            || serde_json::to_vec(&old.self_revision).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.self_revision).map_err(|_|UError::InvalidData)?
             || new.nonce<old.nonce || new.computation_work<old.computation_work || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
         if candidate.emergency_latched(){let mut e=Self::absent_evidence();e.emergency_stop=true;self.protection.screen(0,e);}
         self.organism=candidate.organism;self.constructing=candidate.constructing.take();Ok(())
@@ -303,3 +540,54 @@ impl ScientificRuntime {
 include!("education_runtime.rs");
 
 include!("recursive_search_runtime.rs");
+
+
+#[cfg(test)]
+mod autonomous_temporal_revision_tests {
+    use super::*;
+    fn episode(m:&mut MetaRevision,success:bool)->u64{
+        let goal=[Some(2_i64)];
+        if success{
+            // Earlier successful preparation has 0 one-step goal value but
+            // an existing epistemic field offers predictive context.
+            m.observe([0.0,0.95,0.0,0.0,0.5],&goal,&[0],&[1])+
+            m.observe([0.0,1.0,0.0,0.0,0.5],&goal,&[1],&[2])
+        }else{
+            let mut cost=0;
+            for _ in 0..M_MAX_EPISODE{
+                cost+=m.observe([0.0,0.0,0.0,0.0,0.5],&goal,&[0],&[0]);
+            }
+            cost
+        }
+    }
+    #[test]
+    fn delayed_outcomes_initiate_vm_program_change_and_prospective_admission(){
+        let mut m=MetaRevision::default();let mut total=0;
+        for i in 0..8{total+=episode(&mut m,i%2==0);}
+        assert!(m.shadow.is_some(),"the organism must propose its own bounded evaluator");
+        assert!(m.active.is_none(),"no adoption from training");
+        for i in 0..4 {total+=episode(&mut m,i%2==0);}
+        assert!(m.active.is_some(),"future real-episode gate must qualify a useful VM program");
+        assert_eq!(m.receipts.len(),1);
+        let mut f=[0.0,0.95,0.0,0.0,0.5];m.adjust(&mut f);
+        assert!(f[0]>=0.80,"adopted executable expression must revise U1 goal evidence");
+        assert_eq!(total,m.work);
+        m.validate().unwrap();
+        let raw=serde_json::to_vec(&m).unwrap();
+        let restored:MetaRevision=serde_json::from_slice(&raw).unwrap();
+        restored.validate().unwrap();
+        assert_eq!(restored.report().active_program,m.report().active_program);
+        let mut forged:serde_json::Value=serde_json::from_slice(&raw).unwrap();
+        forged["receipts"][0]["after"]=serde_json::json!(999);
+        let forged:MetaRevision=serde_json::from_value(forged).unwrap();
+        assert!(forged.validate().is_err(),"promotion ledger must replay its heldout evidence");
+    }
+    #[test]
+    fn interrupted_goal_does_not_create_fake_success_or_failure(){
+        let mut m=MetaRevision::default();
+        m.observe([0.0,0.5,0.0,0.0,0.0],&[Some(3)],&[0],&[1]);
+        m.observe([0.0,0.5,0.0,0.0,0.0],&[Some(4)],&[1],&[2]);
+        assert_eq!(m.pending_steps.len(),1);assert_eq!(m.episodes,0);
+        assert!(m.rows.is_empty());m.validate().unwrap();
+    }
+}
