@@ -148,6 +148,10 @@ fn effect(rows:&[&Transition],axis:usize,meter:&mut Meter)->Option<ObservedEffec
 }
 fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64],meter:&mut Meter)->Option<i64>{
     if let Some(rule)=effect(rows,axis,meter){return rule.apply(current[axis]);}
+    // Test an independently contrasted joint effect before sweeping cheaper
+    // but insufficient single-guard hypotheses: prospective re-fitting must
+    // fit inside the SAME finite planning budget, not demand extra compute.
+    if let Some(joint)=predict_conjunctive_axis(rows,axis,current,meter){return Some(joint)}
     for guard in 0..current.len() {
         if guard==axis{continue}
         // Upfront charge covers collection, sorting and de-duplication of at
@@ -181,10 +185,9 @@ fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64],meter:&mut Meter)-
         }
     }
 
-    // A one-guard explanation is insufficient if the putative guard and a
-    // second observable always change together. Only witnessed controlled
-    // contrasts allow attributing a conditional consequence to this axis.
-    predict_conjunctive_axis(rows,axis,current,meter)
+    // An unidentifiable conditional effect is unknown; do not invent a
+    // proposed consequence when no controlled explanation survives.
+    None
 }
 /// Find an observed contrast in which the candidate guard changes but all
 /// OTHER pre-action sensors (excluding the predicted output's own input)
@@ -1219,10 +1222,10 @@ mod factual_control_integrity_tests {
         let prior=&data[..25];
         let mut meter=Meter::new(100_000);
         assert_eq!(factual_prediction(prior,&[99,1,1],0,None,&mut meter),Some(vec![100,1,1]));
-        let mut meter=Meter::new(100_000);
+        let mut meter=Meter::new(4_000);
         assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),
-            Some(vec![100,1,1]),"three subsequent real outcomes must validate the learned conjunction");
-        assert!(meter.spent<=100_000);
+            Some(vec![100,1,1]),"verified conjunction must fit the existing U1 planning budget");
+        assert!(meter.spent<=4_000);
 
         // Three newest contradictory real POSTs revoke the original effect,
         // rather than treating the first acquired conjunction as immutable.
