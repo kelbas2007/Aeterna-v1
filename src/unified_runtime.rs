@@ -154,7 +154,12 @@ impl MetaRevision {
     // Only the REAL outcome of a completed action can close an episode.
     fn observe(&mut self,fields:[f32;5],goal:&[Option<i64>],pre:&[i64],post:&[i64])->u64{
         if pre.len()!=goal.len()||post.len()!=goal.len()||
-            !goal.iter().any(Option::is_some){return 0}
+            !goal.iter().any(Option::is_some){
+            // No goal or malformed observation interrupts credit assignment.
+            // Never span an episode across unobserved external operations.
+            self.pending_steps.clear();self.pending_goal=None;
+            return 0
+        }
         if self.pending_goal.as_deref()!=Some(goal){
             self.pending_steps.clear();
             self.pending_goal=Some(goal.to_vec());
