@@ -61,6 +61,10 @@ struct MetaShadow {program:MExpr,trained_episodes:u64}
 struct MetaReceipt {
     program:MExpr,incumbent:Option<MExpr>,trained_episodes:u64,
     future:Vec<MetaWitness>,before:u64,after:u64,
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    revoked:bool,
+    #[serde(default,skip_serializing_if="Vec::is_empty")]
+    rollback_witness:Vec<MetaWitness>,
 }
 #[derive(Debug,Default,USerialize,UDeserialize)]
 struct MetaRevision {
@@ -68,14 +72,17 @@ struct MetaRevision {
     rows:Vec<MetaWitness>,pending_steps:Vec<[i64;5]>,
     pending_goal:Option<Vec<Option<i64>>>,
     episodes:u64,attempts:u32,rejected:u32,work:u64,next_trial:u64,
+    #[serde(default,skip_serializing_if="meta_zero_u32")]
+    rollbacks:u32,
     receipts:Vec<MetaReceipt>,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct MetaRevisionReport {
     pub episodes:u64,pub steps:usize,pub attempts:u32,pub rejected:u32,
     pub generations:usize,pub shadow:bool,pub computation_work:u64,
-    pub active_program:Option<String>,
+    pub unfinished_steps:usize,pub rollbacks:u32,pub active_program:Option<String>,
 }
+fn meta_zero_u32(n:&u32)->bool{*n==0}
 struct MetaObjective<'a>{examples:&'a [MetaWitness],lib:MLibrary}
 impl MObjective for MetaObjective<'_>{
     fn input_width(&self)->usize{5}
@@ -95,6 +102,7 @@ impl MetaRevision {
         MetaRevisionReport{episodes:self.episodes,steps:self.rows.len(),attempts:self.attempts,
             rejected:self.rejected,generations:self.receipts.len(),
             shadow:self.shadow.is_some(),computation_work:self.work,
+            unfinished_steps:self.pending_steps.len(),rollbacks:self.rollbacks,
             active_program:self.active.as_ref().map(|p|format!("{p:?}"))}
     }
     fn features(f:[f32;5])->[i64;5] {
@@ -127,6 +135,7 @@ impl MetaRevision {
     fn validate(&self)->UResult<()>{
         if self.rows.len()>128 || self.pending_steps.len()>M_MAX_EPISODE ||
             self.receipts.len()>3 || self.attempts>12 || self.rejected>self.attempts ||
+            self.rollbacks!=self.receipts.iter().filter(|p|p.revoked).count() as u32 ||
             self.pending_goal.is_none()!=self.pending_steps.is_empty() ||
             self.pending_goal.as_ref().is_some_and(|g|g.len()>32) ||
             self.active.as_ref().is_some_and(|p|!Self::valid_program(p)) ||
@@ -136,7 +145,9 @@ impl MetaRevision {
                 r.features.iter().any(|x|!(0..=100).contains(x)))||
             self.rows.windows(2).any(|w|w[0].episode>w[1].episode)||
             self.pending_steps.iter().flatten().any(|x|!(0..=100).contains(x))||
-            self.receipts.last().is_some_and(|p|self.active.as_ref()!=Some(&p.program)){
+            self.receipts.last().is_some_and(|p|if p.revoked {
+                self.active!=p.incumbent
+            }else{self.active.as_ref()!=Some(&p.program)}){
             return Err(UError::InvalidData)
         }
         for p in &self.receipts{
@@ -147,6 +158,22 @@ impl MetaRevision {
                 p.before==0||p.after.saturating_mul(100)>p.before.saturating_mul(85){
                 return Err(UError::InvalidData)
             }
+            if p.revoked{
+                let later=p.future.last().map_or(u64::MAX,|r|r.episode);
+                let reobserved=p.rollback_witness.iter()
+                    .map(|r|r.episode).collect::<std::collections::BTreeSet<_>>().len();
+                if p.rollback_witness.len()<4||p.rollback_witness.len()>64||reobserved<4||
+                    p.rollback_witness.iter().any(|r|r.episode<=later)||
+                    !p.rollback_witness.iter().any(|r|r.outcome==0)||
+                    !p.rollback_witness.iter().any(|r|r.outcome>=90){
+                    return Err(UError::InvalidData)
+                }
+                let old=Self::loss(p.incumbent.as_ref(),&p.rollback_witness).ok_or(UError::InvalidData)?;
+                let new=Self::loss(Some(&p.program),&p.rollback_witness).ok_or(UError::InvalidData)?;
+                if new<=old.saturating_add(100)||new.saturating_mul(100)<old.saturating_mul(125){
+                    return Err(UError::InvalidData)
+                }
+            }else if !p.rollback_witness.is_empty(){return Err(UError::InvalidData)}
         }
         Ok(())
     }
@@ -185,8 +212,34 @@ impl MetaRevision {
             let drop_count=self.rows.len()-128;self.rows.drain(..drop_count);
         }
         let before=self.work;
+        self.revoke_on_new_contradictory_episodes();
         if self.shadow.is_some(){self.prospective_gate()}else{self.propose_from_own_error()}
         self.work.saturating_sub(before)
+    }
+    /// Post-admission evidence can revoke a previously accepted evaluator.
+    /// It measures predictive drift only, NOT counterfactual policy benefit.
+    fn revoke_on_new_contradictory_episodes(&mut self){
+        let Some(last)=self.receipts.last().cloned() else{return};
+        if last.revoked||self.active.as_ref()!=Some(&last.program){return}
+        let boundary=last.future.last().map_or(last.trained_episodes,|r|r.episode);
+        let followup:Vec<_>=self.rows.iter().filter(|r|r.episode>boundary)
+            .take(64).cloned().collect();
+        let distinct=followup.iter().map(|r|r.episode)
+            .collect::<std::collections::BTreeSet<_>>().len();
+        if distinct<4||!followup.iter().any(|r|r.outcome==0)||
+            !followup.iter().any(|r|r.outcome>=90){return}
+        let old=Self::loss(last.incumbent.as_ref(),&followup).unwrap_or(u64::MAX);
+        let new=Self::loss(Some(&last.program),&followup).unwrap_or(u64::MAX);
+        if new>old.saturating_add(100)&&
+            new.saturating_mul(100)>=old.saturating_mul(125){
+            self.active=last.incumbent;
+            self.shadow=None;
+            let receipt=self.receipts.last_mut().expect("validated receipt");
+            receipt.revoked=true;
+            receipt.rollback_witness=followup;
+            self.rollbacks=self.rollbacks.saturating_add(1);
+            self.next_trial=self.episodes.saturating_add(6);
+        }
     }
     fn propose_from_own_error(&mut self){
         if self.receipts.len()>=3||self.attempts>=12||self.episodes<self.next_trial{return}
@@ -248,7 +301,8 @@ impl MetaRevision {
         if no_regression&&before>0&&after.saturating_mul(100)<=before.saturating_mul(85){
             let program=shadow.program.clone();
             self.receipts.push(MetaReceipt{program:program.clone(),incumbent:self.active.clone(),
-                trained_episodes:shadow.trained_episodes,future,before,after});
+                trained_episodes:shadow.trained_episodes,future,before,after,
+                revoked:false,rollback_witness:Vec::new()});
             self.active=Some(program);
         }else{self.rejected+=1}
         self.shadow=None;
@@ -487,13 +541,17 @@ impl ScientificRuntime {
             }
         }
         if !u.freeze_controller{
-            if let (Some(g),Some(revision))=(goal,u.self_revision.as_mut()){
-                // This evidence originates exclusively in the committed
-                // single-use-authorized external PRE/action/POST record.
-                let actual=u.current.learner.records().last().ok_or(UError::InvalidData)?;
-                let meta_work=revision.observe(original_fields,g,
-                    &actual.transition.pre,&actual.transition.post);
-                u.computation_work=u.computation_work.checked_add(meta_work).ok_or(UError::Capacity)?;
+            if let Some(revision)=u.self_revision.as_mut(){
+                if let Some(g)=goal{
+                    // Exclusively an already committed, authorized REAL POST.
+                    let actual=u.current.learner.records().last().ok_or(UError::InvalidData)?;
+                    let meta_work=revision.observe(original_fields,g,
+                        &actual.transition.pre,&actual.transition.post);
+                    u.computation_work=u.computation_work.checked_add(meta_work).ok_or(UError::Capacity)?;
+                }else{
+                    // A goal-less real step breaks the causal credit episode.
+                    revision.pending_steps.clear();revision.pending_goal=None;
+                }
             }
         }
         let _=option.output;
@@ -586,6 +644,25 @@ mod autonomous_temporal_revision_tests {
         forged["receipts"][0]["after"]=serde_json::json!(999);
         let forged:MetaRevision=serde_json::from_value(forged).unwrap();
         assert!(forged.validate().is_err(),"promotion ledger must replay its heldout evidence");
+        // The acquired VM score can become stale; later contradictory REAL
+        // trajectories MUST return to the prior evaluation program.
+        for i in 0..4{
+            let g=[Some(2_i64)];
+            if i%2==0{
+                m.observe([0.0,0.0,0.0,0.0,0.5],&g,&[0],&[1]);
+                m.observe([0.0,0.0,0.0,0.0,0.5],&g,&[1],&[2]);
+            }else{
+                for _ in 0..M_MAX_EPISODE {
+                    m.observe([0.0,1.0,0.0,0.0,0.5],&g,&[0],&[0]);
+                }
+            }
+        }
+        assert_eq!(m.rollbacks,1);
+        assert!(m.active.is_none(),"contradictory post-admission episodes must revoke the VM scorer");
+        assert!(m.receipts[0].revoked);
+        m.validate().unwrap();
+        let restored:MetaRevision=serde_json::from_slice(&serde_json::to_vec(&m).unwrap()).unwrap();
+        restored.validate().unwrap();
     }
     #[test]
     fn interrupted_goal_does_not_create_fake_success_or_failure(){

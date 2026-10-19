@@ -11,3 +11,16 @@ After qualification, the acquired VM expression replaces only the numeric goal-v
 **Research limits:** Predicted delayed utility on *observed actions* is not an unbiased counterfactual policy-value estimate. The tests' useful epistemic signal is a disclosed educational fixture, not a blind independent experiment. There is no qualified improvement of external actions due to the newly induced evaluator; no unconstrained novel primitive creation, self-generated goals or native SNN discovery is claimed. Further qualification needs randomized paired actual execution in disjoint environments and a check for policy-induced distribution shift.
 
 Reproduce via project CI and `cargo test --lib autonomous_temporal_revision_tests`. Promotion of PR9 to main still prohibited absent independent prospective action advantage.
+
+## Post-admission rejection / drift rollback
+
+An accepted expression is not permanent. After at least four later completed episodes
+with diverse success/failure outcomes, the organism compares the active expression's
+delayed-outcome prediction error against its previous evaluator. A sufficiently
+large prospective regression revokes the active expression, restores its previous
+evaluator, cancels any shadow candidate, and saves the *actual later* contradiction
+witnesses in a checkpoint-verifiable receipt. This is conservative predictive
+rollback, not proof that an alternative policy would choose better actions.
+
+A goal-less external action interrupts the open credit episode and cannot be
+retrospectively mislabeled as though no interaction intervened.
