@@ -30,10 +30,13 @@ fn step(rt:&mut ScientificRuntime,w:&mut World,forced:Option<usize>,goal:Option<
         w.act(a);Ok(UnifiedPost{observation:vec![w.value],cost:1,reward:0.0})
     }).unwrap()
 }
-fn acquire(roles:[usize;4])->(ScientificRuntime,World){
+fn acquire(roles:[usize;4],agency_aware:bool)->(ScientificRuntime,World){
     let cfg=Config{width:1,actions:4,minimum_training:128,search_every:4096,
         planning_depth:3,planning_work:120_000,journal_capacity:1024,..Default::default()};
     let mut rt=ScientificRuntime::new_constructing(cfg,AutonomyPolicy::default(),vec![0],"history-action-regression").unwrap();
+    if agency_aware {
+        rt.enable_constructing_agency_aware_credit().unwrap();
+    }
     let mut w=World{value:0,primed:false,roles,broken:false};
     // Exactly the already-exposed identification fixture, motor-permuted.
     // The world is only a real-POST callback, never a learner-side simulator.
@@ -51,7 +54,9 @@ fn enable(rt:&mut ScientificRuntime){
 }
 #[test]
 fn prepared_context_executes_the_remaining_step_after_checkpoint(){
-    let (mut rt,mut w)=acquire([0,1,2,3]);
+    // Agency credit is enabled ONCE before real factual identification.
+    // This corrects policy-credit provenance, not the causal-rule grammar.
+    let (mut rt,mut w)=acquire([0,1,2,3],true);
     // Disclosed controlled preparation through the normal protection gate.
     // This is not an autonomous-acquisition or start-to-finish claim.
     step(&mut rt,&mut w,Some(0),Some(1));
@@ -68,7 +73,7 @@ fn prepared_context_executes_the_remaining_step_after_checkpoint(){
 }
 #[test]
 fn real_contradiction_retires_previously_supported_history_route(){
-    let (mut rt,mut w)=acquire([0,1,2,3]);
+    let (mut rt,mut w)=acquire([0,1,2,3],false);
     enable(&mut rt);
     w.broken=true; // evaluator-only world change, not a learner instruction
     step(&mut rt,&mut w,Some(0),Some(1));
@@ -81,7 +86,7 @@ fn real_contradiction_retires_previously_supported_history_route(){
 }
 #[test]
 fn actual_denial_does_not_advance_the_history_or_execute_a_plan(){
-    let (mut rt,mut w)=acquire([0,1,2,3]);
+    let (mut rt,mut w)=acquire([0,1,2,3],false);
     enable(&mut rt);
     let events=rt.construction_learner().unwrap().records().len();
     let offers=vec![ActionOffer{available:true,max_cost:1};4];
@@ -101,7 +106,7 @@ fn report_unforced_closed_loop_for_all_opaque_role_permutations(){
     let mut selected_history=0usize;
     for a in 0..4 {for b in 0..4 {if b==a{continue}for c in 0..4 {
         if c==a||c==b{continue}let d=(0..4).find(|&d|d!=a&&d!=b&&d!=c).unwrap();
-        let roles=[a,b,c,d];let (rt,w)=acquire(roles);let cp=rt.checkpoint_constructing().unwrap();
+        let roles=[a,b,c,d];let (rt,w)=acquire(roles,false);let cp=rt.checkpoint_constructing().unwrap();
         let mut pair=Vec::new();
         for arm in 0..2 {
             let mut rt=ScientificRuntime::from_constructing_checkpoint(&cp).unwrap();
