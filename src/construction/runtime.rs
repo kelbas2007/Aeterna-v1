@@ -683,6 +683,11 @@ impl Learner {
         if goal.is_some_and(|g|g.iter().any(Option::is_some)&&goal_distance(&self.current,g)==0){return Err(Error::NoEvidence)}
         Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed,budget))
     }
+    /// Compatibility entry point: the existing default budget remains intact.
+    /// Chain-aware U1 may explicitly share that budget with its certificate search.
+    pub(crate) fn choose_offered_metered(&self,goal:Option<&[Option<i64>]>,offers:Option<&[ActionOffer]>)->Result<(usize,u64)> {
+        self.choose_offered_metered_budget(goal,offers,self.config.planning_work)
+    }
     /// Ephemeral imagination plus a model-independent exploration reserve.
     /// No simulated POST is inserted into the factual journal.
     pub fn choose_action(&self,goal: Option<&[i64]>) -> Result<usize> {
