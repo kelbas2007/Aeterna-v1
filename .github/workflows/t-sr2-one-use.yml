@@ -1,9 +1,8 @@
+# T-SR2 scientific run 39267209746 consumed; original evidence retained.
+# Workflow is now inert. Do not rerun an exposed cohort as a fresh test.
 name: T-SR2 one-use behavior-first qualification
 on:
-  pull_request:
-    paths:
-      - 'tests/t_sr2_one_use.rs'
-      - '.github/workflows/t-sr2-one-use.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -11,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   science:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
