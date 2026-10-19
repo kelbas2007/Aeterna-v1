@@ -34,23 +34,27 @@ jobs:
           set -euo pipefail
           rustup toolchain install 1.99.0 --profile minimal
           rustup override set 1.99.0
-          git fetch --depth=1 origin 04be74ad500160673063be212cb2a43f3845b13c
+          git fetch --depth=1 origin 73004cf83239ed3bd0a276c00482efac29dabec4
           mkdir -p history-evidence
           git rev-parse HEAD > history-evidence/head.txt
       - uses: Swatinem/rust-cache@v2
-      - name: Reproduce original continuation failure without accepting build errors
+      - name: Reproduce exposed forced-credit failure with the historical test, not a compiler failure
         shell: bash
         run: |
           set -euo pipefail
-          path=src/construction/unified_port.rs
-          trap 'git checkout HEAD -- src/construction/unified_port.rs' EXIT
-          git show 04be74ad500160673063be212cb2a43f3845b13c:$path > "$path"
+          # Exact historical test asks U1 to execute a suffix after FORCED
+          # identification without agency-aware credit. Native code is current
+          # and the new option defaults OFF, preserving the old semantics.
+          path=tests/predictive_history_action_development.rs
+          trap 'git checkout HEAD -- tests/predictive_history_action_development.rs' EXIT
+          git show 73004cf83239ed3bd0a276c00482efac29dabec4:$path > "$path"
           set +e
           cargo test --locked --test predictive_history_action_development prepared_context -- --nocapture > history-evidence/baseline.log 2>&1
           status=$?
           set -e
           test "$status" -ne 0
           grep -q 'history remainder must' history-evidence/baseline.log
+          if grep -q 'error: could not compile' history-evidence/baseline.log; then exit 1; fi
           git checkout HEAD -- "$path"
           trap - EXIT
           git diff --exit-code
