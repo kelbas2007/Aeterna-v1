@@ -1,0 +1,47 @@
+name: T-SR2 one-use behavior-first qualification
+on:
+  pull_request:
+    paths:
+      - 'tests/t_sr2_one_use.rs'
+      - '.github/workflows/t-sr2-one-use.yml'
+permissions:
+  contents: read
+concurrency:
+  group: t-sr2-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  science:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Rust and exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify T-SR2 protocol was precommitted
+        run: test -s docs/T_SR2_BEHAVIORAL_GATE_PROTOCOL.md
+      - name: Execute one-use actual protected POST challenge
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p project-evidence
+          printf 'HEAD=%s\nRUN_ID=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" | tee project-evidence/provenance.txt
+          cargo test --locked --test t_sr2_one_use -- --ignored --nocapture --test-threads=1 2>&1 | tee project-evidence/t-sr2.log
+      - name: Preserve positive or negative scientific record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t-sr2-${{ github.sha }}-${{ github.run_id }}
+          path: project-evidence/
+          if-no-files-found: warn
+          retention-days: 30
