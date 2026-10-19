@@ -19,6 +19,9 @@ pub struct UnifiedPost {pub observation:Vec<i64>,pub cost:u64,pub reward:f32}
 pub struct UnifiedStep {
     pub action:usize,pub source:String,pub operations:Vec<String>,pub selected_fields:[f32;5],
     pub native_score:f32,pub factual_utility:f32,pub event:usize,pub computation_work:u64,
+    /// Diagnostic only; a proposed path is not a selected or executed path.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    pub certified_chain_proposed:bool,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedReport {
@@ -64,6 +67,13 @@ impl ScientificRuntime {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.freeze_controller{return Err(UError::Blocked)}
         u.current.learner.enable_self_directed_control()
+    }
+    /// Abatable research flag, persists in the SAME Learner checkpoint.
+    /// Never changes HumanProtection, actuator permissions or reward.
+    pub fn enable_constructing_certified_chains(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Blocked)}
+        u.current.learner.enable_certified_chains()
     }
     pub fn unified_report(&self)->Option<UnifiedReport>{
         let u=self.constructing.as_ref()?;
@@ -131,7 +141,7 @@ impl ScientificRuntime {
             // 4k/20k development runs retain their EXACT previous behavior.
             // All chain edges must be validated independently against actual
             // chronological holdouts, unlike exploratory imagined plans.
-            let chain_budget=if goal.is_some() && cfg.planning_work>=32_000 {
+            let chain_budget=if goal.is_some() && u.current.learner.certified_chains_enabled() && cfg.planning_work>=32_000 {
                 cfg.planning_work.saturating_sub(4_000)
             } else {0};
             let (chain,chain_work)=if let Some(g)=goal {
@@ -182,6 +192,7 @@ impl ScientificRuntime {
             // Ordinary U1 already owns uncertainty-driven action selection:
             // an unverified factual hypothesis must ABSTAIN, not override it.
         }
+        let certified_chain_proposed=options.iter().any(|o|o.source=="factual-chain");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {
             let mut candidates=options.clone();
@@ -247,7 +258,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;

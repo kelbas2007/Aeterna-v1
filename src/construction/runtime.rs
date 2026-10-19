@@ -89,6 +89,10 @@ pub struct Learner {
     /// Opt-in factual control; no extra teacher/model/independent checkpoint.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     self_directed: bool,
+    /// Separate, explicit research opt-in for certified multi-step edges.
+    /// An enabled factual Learner can thus be ablated against SAME checkpoint.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    certified_chains:bool,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -308,7 +312,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -616,6 +620,14 @@ impl Learner {
         Ok(())
     }
     pub fn self_directed_control_enabled(&self)->bool {self.self_directed}
+    pub fn certified_chains_enabled(&self)->bool {self.certified_chains}
+    /// The old factual branch remains an independently measurable control.
+    pub fn enable_certified_chains(&mut self)->Result<()> {
+        if !self.self_directed || self.certified_chains || self.pending || self.poisoned
+            || self.frozen_at.is_some() {return Err(Error::Busy)}
+        if self.config.planning_work<32_000 {return Err(Error::Capacity)}
+        self.certified_chains=true;Ok(())
+    }
     /// Returns both the factual choice and its metered reasoning cost. All
     /// loops stop as soon as the configured work budget is spent. The candidate
     /// is still only a U1 proposal, not authority to perform an action.
@@ -782,6 +794,9 @@ impl Learner {
         }
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
         if state.self_directed && (state.autonomy.is_none() || state.config.width>6 || state.config.actions>8) {
+            return Err(Error::InvalidData);
+        }
+        if state.certified_chains && (!state.self_directed || state.config.planning_work<32_000) {
             return Err(Error::InvalidData);
         }
         if let Some(policy)=&state.autonomy {
@@ -1265,6 +1280,7 @@ mod factual_control_integrity_tests {
         let mut learner=Learner::new(cfg,vec![0,0,0]).unwrap();
         learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
         learner.enable_self_directed_control().unwrap();
+        learner.enable_certified_chains().unwrap();
         let mut id=0_u64;
         for i in 0..48_usize {
             let (left,right)=[(0,0),(1,0),(0,1),(1,1)][i%4];

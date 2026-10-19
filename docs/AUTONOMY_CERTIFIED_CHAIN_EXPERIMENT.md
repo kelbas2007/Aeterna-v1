@@ -59,3 +59,22 @@ required observations, or that broad transfer occurs.
 
 No general-intelligence, independent goal creation, transfer or autonomous
 causal discovery claim is made from this experiment.
+
+## Three-arm post-review diagnostic (2026-10-19)
+
+Initial 2-arm protected-execution CI failed on **Linux and Windows**, but the
+failure was specifically scientific attribution: baseline U1 took 7 actions,
+factual-U1 took 3 actions, both reached the goal, while the newest
+`factual-chain` proposal won zero arbitration events. All three actions
+came from older `factual-experience`. This is not evidence of a new chain
+benefit and cannot be relabeled a success.
+
+Updated integration now compares THREE arms restored from one exact factual
+checkpoint: plain U1, factual-direct U1 without multi-step feature, and
+factual-direct U1 with separately enabled certified multi-step feature.
+It reports both *proposed chain* and *selected chain*. A mechanical safety
+integration regression (goal/permission/nonregression) is a CI failure.
+A zero chain selection remains a negative scientific result, explicitly
+reported, not an assertion that allows a claim of chain advantage.
+The research PR must stay DRAFT until a genuinely disjoint prospective
+qualification demonstrates marginal advantage over direct factual learning.
