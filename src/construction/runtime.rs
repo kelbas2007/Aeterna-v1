@@ -662,7 +662,14 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
-        if let Some(book)=&state.requirements{book.validate()?;if state.frozen_at.is_some()&&!book.report().frozen{return Err(Error::InvalidData)}}
+        if let Some(book)=&state.requirements {
+            book.validate()?;
+            let learned=book.report();
+            // LC1-only spent work is part of the all-mechanism Learner ledger.
+            if learned.work>state.construction_work{return Err(Error::InvalidData)}
+            // Both freeze directions must match, even after re-envelope.
+            if learned.frozen!=state.frozen_at.is_some(){return Err(Error::InvalidData)}
+        }
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
         if state.self_directed && (state.autonomy.is_none() || state.config.width>6 || state.config.actions>8) {
             return Err(Error::InvalidData);
