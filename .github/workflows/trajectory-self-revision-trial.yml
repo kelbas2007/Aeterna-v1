@@ -1,10 +1,8 @@
 name: T-SR1 one-use self-revision qualification
+# ARCHIVED: the only preregistered run was #39259810410.
+# A new run with changed code/seed is not independent T-SR1 qualification.
+# Source and trial remain available for reproduction, but the workflow is inert.
 on:
-  pull_request:
-    paths:
-      - 'src/unified_runtime.rs'
-      - 'tests/trajectory_self_revision_transfer.rs'
-      - '.github/workflows/trajectory-self-revision-trial.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   qualification:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
