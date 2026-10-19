@@ -42,3 +42,9 @@ This is evidence that a prospectively fitted VM scorer can change protected deci
 The engine still depends on a host to present disjoint virtual task cohorts and reset sandbox worlds. It does not yet autonomously construct those external challenge environments, discover unrestricted mental primitives, or prove advantage on real physical tasks. One fixed run cannot guarantee a future scorer will generalize.
 
 Do not optimize on this exposed cohort and claim a fresh qualification. A later trial requires a new registered protocol and distinct test families. PR #9 remains research-only DRAFT, main is untouched.
+
+## One-use trigger integrity note
+
+After the first preregistered run `39267209746` completed, a documentation-only PR update unexpectedly triggered another run `39267791928` before the workflow's inactive configuration took effect. This SECOND execution is **an invalid, post-exposure rerun**. Its results are excluded from all scientific tables and qualification claims, regardless of its status; they are not treated as new independent evidence.
+
+The T-SR2 one-use workflow was then explicitly disabled in commit `a50e0a98f5aba403b61c667feb2c2be1130e68a0` (`on: workflow_dispatch` plus a false job condition). Only the first frozen-source result, 39267209746, is reported above. Future independent tests require a new protocol and genuinely disjoint challenge.
