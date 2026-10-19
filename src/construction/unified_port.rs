@@ -238,6 +238,15 @@ impl Learner {
             quoted_cost:quoted[action].max_cost,
         }),meter.spent)
     }
+    /// TRUSTED EXTERNAL OBSERVATION: a virtual environment reset is not
+    /// an imagined POST, has no action permit, and never erases the journal.
+    /// The next real action must record a restart marker, preventing
+    /// causal/predecessor inference from crossing independent episodes.
+    pub(crate) fn carrier_observe_external_restart(
+        &mut self,observed:Vec<i64>
+    )->Result<()>{
+        self.record_external_restart(observed)
+    }
     pub(crate) fn carrier_config(&self)->&super::runtime::Config {&self.config}
     pub(crate) fn carrier_prepare(&mut self,a:usize)->Result<Commitment> {self.prepare(a)}
     pub(crate) fn carrier_cancel(&mut self,t:Commitment)->Result<()> {self.cancel(t)}

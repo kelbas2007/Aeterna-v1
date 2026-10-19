@@ -824,6 +824,28 @@ impl ScientificRuntime {
         if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
         if let Some(revision)=u.self_revision.as_mut(){revision.pending_steps.clear();revision.pending_goal=None;}self.organism.observe_initial_real(&usensory(&initial),false);self.record(LifetimeEventKind::ExternalObservation);Ok(())
     }
+    /// The WORLD, not U1, initiated a new episode. A trusted sensor
+    /// supplies its ACTUAL new observation. Existing causally learned facts,
+    /// native policy synapses, action costs and HumanProtection audit remain.
+    /// No actuator is invoked and no POST journal record is fabricated.
+    pub fn observe_constructing_external_restart(
+        &mut self,observed:Vec<i64>
+    )->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        u.current.learner.carrier_observe_external_restart(observed.clone())?;
+        u.current.pending_credit=None;
+        if let Some(revision)=u.self_revision.as_mut(){
+            revision.pending_steps.clear();
+            revision.pending_goal=None;
+        }
+        if let Some(c)=u.instrumental_credit.as_mut(){
+            c.pending=None;
+        }
+        self.organism.observe_initial_real(&usensory(&observed),false);
+        self.fresh_observation_required=false;
+        self.record(LifetimeEventKind::ExternalObservation);
+        Ok(())
+    }
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         u.current.learner.freeze_learning()?;
