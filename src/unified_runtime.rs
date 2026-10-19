@@ -78,6 +78,18 @@ struct MetaRevision {
     /// One-bit readout ablation for a frozen, otherwise identical organism.
     #[serde(default,skip_serializing_if="meta_false")]
     readout_ablated:bool,
+    /// Ordinary decisions must keep the old readout until causal action proof.
+    #[serde(default,skip_serializing_if="meta_false")]
+    behavior_guard_enabled:bool,
+    /// One-use: even a protected callback fault consumes the trial attempt.
+    #[serde(default,skip_serializing_if="meta_false")]
+    behavior_attempted:bool,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    behavioral_audit:Option<MetaBehaviorAudit>,
+    /// Only the evaluation sandbox can flip this; never serialized into a
+    /// deployable checkpoint or externally exposed as actuator authority.
+    #[serde(skip)]
+    sandbox_candidate_arm:bool,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct MetaRevisionReport {
@@ -86,6 +98,143 @@ pub struct MetaRevisionReport {
     pub unfinished_steps:usize,pub rollbacks:u32,pub active_program:Option<String>,
     #[serde(default)]
     pub readout_ablated:bool,
+    #[serde(default)]
+    pub behavior_guard_enabled:bool,
+    #[serde(default)]
+    pub behavior_attempted:bool,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub behavioral_outcome:Option<MetaBehaviorSummary>,
+}
+
+// T-SR2: an evaluator-only behavioral canary. All results below are collected
+// from actual protected POST callbacks in independent FROZEN sandbox siblings.
+// No post labels, scripted action sequence or unexecuted guessed outcome.
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct MetaBehaviorTask {
+    /// Used by the evaluator's non-regression check, NEVER forwarded to U1.
+    pub cohort:u16,
+    pub goal:Vec<Option<i64>>,
+    pub offers:Vec<UOffer>,
+    pub max_actions:u8,
+}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct MetaBehaviorStep {
+    pub action:usize,
+    pub post:Vec<i64>,
+    pub cost:u64,
+    pub selected_goal_score:f32,
+}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct MetaBehaviorArm {
+    pub steps:Vec<MetaBehaviorStep>,
+}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct MetaBehaviorCase {
+    pub task:MetaBehaviorTask,
+    /// [incumbent without new VM readout, candidate with VM readout].
+    pub arms:[MetaBehaviorArm;2],
+}
+#[derive(Debug,Clone,PartialEq,Eq,USerialize,UDeserialize)]
+pub struct MetaBehaviorSummary {
+    pub cases:usize,
+    pub incumbent_success:usize,pub candidate_success:usize,
+    pub incumbent_actions:usize,pub candidate_actions:usize,
+    pub incumbent_cost:u64,pub candidate_cost:u64,
+    pub changed_initial_actions:usize,pub changed_initial_scores:usize,
+    pub nonregressed_cohorts:bool,
+    pub qualified:bool,
+}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct MetaBehaviorAudit {
+    /// Diagnostic identity of the EXACT common checkpoint, not a signature.
+    pub checkpoint_fingerprint:u64,
+    pub initial_observation:Vec<i64>,
+    pub cases:Vec<MetaBehaviorCase>,
+    pub summary:MetaBehaviorSummary,
+}
+impl MetaBehaviorAudit {
+    fn compute_summary(&self)->UResult<MetaBehaviorSummary> {
+        if !(8..=64).contains(&self.cases.len()) ||
+            self.initial_observation.is_empty() || self.initial_observation.len()>6 {
+            return Err(UError::InvalidData)
+        }
+        let mut successes=[0usize;2];
+        let mut actions=[0usize;2];
+        let mut costs=[0u64;2];
+        let mut cohorts=std::collections::BTreeMap::<u16,[usize;3]>::new();
+        let mut changed_actions=0usize;
+        let mut changed_scores=0usize;
+        for trial in &self.cases{
+            let t=&trial.task;
+            if t.goal.len()!=self.initial_observation.len() ||
+                !t.goal.iter().any(Option::is_some) ||
+                udistance(&self.initial_observation,Some(&t.goal))==0.0 ||
+                !(1..=24).contains(&t.max_actions) ||
+                t.offers.is_empty() || t.offers.len()>8 ||
+                !t.offers.iter().any(|o|o.available) {
+                return Err(UError::InvalidData)
+            }
+            let entry=cohorts.entry(t.cohort).or_default();
+            entry[0]+=1;
+            for arm in 0..2 {
+                let list=&trial.arms[arm].steps;
+                if list.is_empty() || list.len()>t.max_actions as usize{
+                    return Err(UError::InvalidData)
+                }
+                let mut state=&self.initial_observation;
+                let mut reached=false;
+                let mut total=0u64;
+                for row in list {
+                    if reached || row.action>=t.offers.len() ||
+                        !t.offers[row.action].available ||
+                        row.cost>t.offers[row.action].max_cost ||
+                        row.post.len()!=self.initial_observation.len() ||
+                        !row.selected_goal_score.is_finite() ||
+                        !(0.0..=1.0).contains(&row.selected_goal_score){
+                        return Err(UError::InvalidData)
+                    }
+                    state=&row.post;
+                    total=total.checked_add(row.cost).ok_or(UError::Capacity)?;
+                    reached=udistance(state,Some(&t.goal))==0.0;
+                }
+                // Every failure must consume its entire declared horizon.
+                if !reached && list.len()!=t.max_actions as usize{
+                    return Err(UError::InvalidData)
+                }
+                successes[arm]+=usize::from(reached);
+                entry[arm+1]+=usize::from(reached);
+                actions[arm]+=list.len();
+                costs[arm]=costs[arm].checked_add(total).ok_or(UError::Capacity)?;
+            }
+            let baseline=&trial.arms[0].steps[0];
+            let challenger=&trial.arms[1].steps[0];
+            changed_actions+=usize::from(baseline.action!=challenger.action);
+            changed_scores+=usize::from(
+                (baseline.selected_goal_score-challenger.selected_goal_score).abs()>1e-6);
+        }
+        if cohorts.len()<2 || cohorts.values().any(|c|c[0]<4){
+            return Err(UError::InvalidData)
+        }
+        let nonregressed=cohorts.values().all(|c|c[2]>=c[1]);
+        let qualified=nonregressed && successes[1]>=successes[0] &&
+            actions[1].saturating_mul(10)<=actions[0].saturating_mul(9) &&
+            costs[1]<=costs[0] && changed_actions>0 && changed_scores>0;
+        Ok(MetaBehaviorSummary {
+            cases:self.cases.len(),
+            incumbent_success:successes[0],candidate_success:successes[1],
+            incumbent_actions:actions[0],candidate_actions:actions[1],
+            incumbent_cost:costs[0],candidate_cost:costs[1],
+            changed_initial_actions:changed_actions,
+            changed_initial_scores:changed_scores,
+            nonregressed_cohorts:nonregressed,qualified,
+        })
+    }
+    fn validate(&self)->UResult<()> {
+        if self.compute_summary()?!=self.summary {
+            return Err(UError::InvalidData)
+        }
+        Ok(())
+    }
 }
 fn meta_zero_u32(n:&u32)->bool{*n==0}
 fn meta_false(v:&bool)->bool{!*v}
@@ -110,7 +259,10 @@ impl MetaRevision {
             shadow:self.shadow.is_some(),computation_work:self.work,
             unfinished_steps:self.pending_steps.len(),rollbacks:self.rollbacks,
             active_program:self.active.as_ref().map(|p|format!("{p:?}")),
-            readout_ablated:self.readout_ablated}
+            readout_ablated:self.readout_ablated,
+            behavior_guard_enabled:self.behavior_guard_enabled,
+            behavior_attempted:self.behavior_attempted,
+            behavioral_outcome:self.behavioral_audit.as_ref().map(|a|a.summary.clone())}
     }
     fn features(f:[f32;5])->[i64;5] {
         f.map(|v|(v.clamp(0.0,1.0)*100.0).round() as i64)
@@ -133,7 +285,11 @@ impl MetaRevision {
         })
     }
     fn adjust(&self,fields:&mut [f32;5]){
-        if self.readout_ablated{return}
+        if self.readout_ablated ||
+           (self.behavior_guard_enabled && !self.sandbox_candidate_arm &&
+            !self.behavioral_audit.as_ref().is_some_and(|a|a.summary.qualified)) {
+            return
+        }
         if let Some(code)=self.active.as_ref(){
             if let Some(v)=Self::score(Some(code),&Self::features(*fields)){
                 fields[0]=v as f32/100.0
@@ -144,6 +300,9 @@ impl MetaRevision {
         if self.rows.len()>128 || self.pending_steps.len()>M_MAX_EPISODE ||
             self.receipts.len()>3 || self.attempts>12 || self.rejected>self.attempts ||
             (self.readout_ablated && self.active.is_none()) ||
+            (!self.behavior_guard_enabled && (self.behavior_attempted || self.behavioral_audit.is_some())) ||
+            (self.behavioral_audit.is_some() && !self.behavior_attempted) ||
+            self.behavioral_audit.as_ref().is_some_and(|a|a.validate().is_err()) ||
             self.rollbacks!=self.receipts.iter().filter(|p|p.revoked).count() as u32 ||
             self.pending_goal.is_none()!=self.pending_steps.is_empty() ||
             self.pending_goal.as_ref().is_some_and(|g|g.len()>32) ||
