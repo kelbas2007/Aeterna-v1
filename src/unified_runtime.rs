@@ -950,7 +950,10 @@ impl ScientificRuntime {
             }
             if native_credit_eligible {
                 self.organism.observe_phase_native_meta_utility(option.p.fields,value);
-            for (source,fields) in helpers {self.organism.observe_phase_native_meta_utility(fields,if source==option.source{value}else{0.0});}
+                for (source,fields) in helpers {
+                    self.organism.observe_phase_native_meta_utility(
+                        fields,if source==option.source{value}else{0.0});
+                }
                 if u.current.learner.promotions().len()>verdicts {
                     if let Some(fields)=u.current.pending_credit.take(){
                         let accepted=u.current.learner.promotions().last().is_some_and(|p|p.accepted);
@@ -1027,6 +1030,7 @@ impl ScientificRuntime {
         if new.current.name!=old.current.name || new.current.learner.checkpoint()?!=old.current.learner.checkpoint()?
             || serde_json::to_vec(&old.education).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.education).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.self_revision).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.self_revision).map_err(|_|UError::InvalidData)?
+            || serde_json::to_vec(&old.agency_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.agency_credit).map_err(|_|UError::InvalidData)?
             || new.nonce<old.nonce || new.computation_work<old.computation_work || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
         if candidate.emergency_latched(){let mut e=Self::absent_evidence();e.emergency_stop=true;self.protection.screen(0,e);}
         self.organism=candidate.organism;self.constructing=candidate.constructing.take();Ok(())
