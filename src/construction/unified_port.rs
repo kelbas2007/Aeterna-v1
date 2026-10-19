@@ -11,6 +11,14 @@ pub(crate) struct PortCertifiedChain {
     pub endpoint:Vec<i64>,
     pub depth:usize,
 }
+
+#[derive(Debug,Clone)]
+pub(crate) struct PortHistoryPlan{
+    pub first_action:usize,
+    pub first_consequence:Vec<i64>,
+    pub terminal:Vec<i64>,
+    pub depth:usize,
+}
 impl Learner {
     pub(crate) fn manage_from_carrier(&mut self) -> Result<()> {
         if !self.records.is_empty() || self.pending { return Err(Error::Busy); }
@@ -78,6 +86,69 @@ impl Learner {
                     if meter.charge(12+next.len() as u64).is_err(){break 'search}
                     if visited.insert(next.clone()){
                         frontier.push_back((next,Some(initial),depth+1));
+                    }
+                }
+            }
+        }
+        (None,meter.spent)
+    }
+
+    /// Small BFS over (visible observation, most recent executed motor).
+    /// Two visibly identical states are separated only after real
+    /// independently contrasted, chronologically validated outcomes.
+    /// A stable no-op may be a prerequisite, never a terminal claim.
+    pub(crate) fn carrier_predictive_history_plan_metered(
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+    )->(Option<PortHistoryPlan>,u64){
+        if !self.predictive_history_states || self.pending || self.poisoned ||
+            budget==0 || goal.len()!=self.config.width ||
+            allowed.len()!=self.config.actions ||
+            !goal.iter().any(Option::is_some) ||
+            goal_distance(&self.current,goal)==0{
+            return (None,0)
+        }
+        let mut meter=Meter::new(budget);
+        let predecessor=if self.restart_next{None}
+            else{self.records.last().map(|r|r.transition.action)};
+        let mut q=VecDeque::new();let mut visited=BTreeSet::new();
+        q.push_back((self.current.clone(),predecessor,
+            None::<(usize,Vec<i64>)>,0usize,false));
+        visited.insert((self.current.clone(),predecessor,false));
+        let mut expanded=0_usize;
+        'search:while let Some((state,previous,first,depth,used_history))=q.pop_front(){
+            if depth>=self.config.planning_depth||expanded>=48{continue}
+            for action in 0..self.config.actions{
+                if !allowed[action]{continue}
+                if meter.charge((state.len()+2) as u64).is_err(){break 'search}
+                expanded+=1;
+                let contextual=previous.and_then(|p|
+                    calibrated_history_effect(&self.records,&state,action,p,
+                        self.frozen_at,&mut meter));
+                if meter.remaining()==0{break 'search}
+                let (next,has_context)=if let Some(predicted)=contextual{
+                    (predicted,true)
+                }else{
+                    let p=calibrated_factual_prediction(&self.records,&state,
+                        action,self.frozen_at,&mut meter)
+                        .or_else(||certified_history_noop(&self.records,
+                            &state,action,self.frozen_at,&mut meter));
+                    if meter.remaining()==0{break 'search}
+                    let Some(p)=p else{continue};
+                    (p,false)
+                };
+                let depth=depth+1;
+                let used=used_history||has_context;
+                let first=first.clone().unwrap_or((action,next.clone()));
+                if used && depth>=2 && goal_distance(&next,goal)==0{
+                    return (Some(PortHistoryPlan{
+                        first_action:first.0,first_consequence:first.1,
+                        terminal:next,depth,
+                    }),meter.spent)
+                }
+                if visited.len()<96 && depth<self.config.planning_depth {
+                    if meter.charge((next.len()+12) as u64).is_err(){break 'search}
+                    if visited.insert((next.clone(),Some(action),used)){
+                        q.push_back((next,Some(action),Some(first),depth,used));
                     }
                 }
             }
