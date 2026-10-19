@@ -1,0 +1,42 @@
+name: History policy-credit diagnostic
+on:
+  pull_request:
+    paths:
+      - 'tests/history_policy_credit_development.rs'
+      - '.github/workflows/history-policy-credit-diagnostic.yml'
+permissions:
+  contents: read
+concurrency:
+  group: history-credit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Rust
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Execute disclosed policy-credit intervention, no weight editing
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p credit-evidence
+          git rev-parse HEAD > credit-evidence/source.txt
+          cargo test --locked --test history_policy_credit_development -- --nocapture --test-threads=1 2>&1 | tee credit-evidence/result.log
+          python scripts/project_audit.py > credit-evidence/source-audit.json
+      - name: Preserve all arm outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-policy-credit-${{ github.sha }}
+          path: credit-evidence/
+          retention-days: 7
+          if-no-files-found: warn
