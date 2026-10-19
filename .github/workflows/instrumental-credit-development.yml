@@ -1,0 +1,44 @@
+name: Instrumental versus epistemic utility development
+on:
+  pull_request:
+    paths:
+      - 'src/unified_runtime.rs'
+      - 'tests/instrumental_credit_development.rs'
+      - '.github/workflows/instrumental-credit-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: instrumental-credit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin exact Rust and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p instrumental-evidence
+          git rev-parse HEAD > instrumental-evidence/commit.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Execute factual/post and choice-credit invariants
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test instrumental_credit_development -- --nocapture --test-threads=1 2>&1 | tee instrumental-evidence/results.log
+          python scripts/project_audit.py | tee instrumental-evidence/audit.json
+      - name: Retain complete compact positive and negative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumental-credit-${{ github.sha }}
+          path: instrumental-evidence/
+          retention-days: 2
