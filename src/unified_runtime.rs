@@ -519,6 +519,157 @@ impl ScientificRuntime {
     pub fn trajectory_self_revision_report(&self)->Option<MetaRevisionReport>{
         Some(self.constructing.as_ref()?.self_revision.as_ref()?.report())
     }
+    /// Behavior-first self-revision requires the gate to be enabled BEFORE
+    /// collecting the first goal episode. All older opt-in paths retain their
+    /// historical prediction-only research semantics.
+    pub fn enable_constructing_behavioral_gate(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Blocked)}
+        let r=u.self_revision.as_mut().ok_or(UError::NoEvidence)?;
+        if r.behavior_guard_enabled||r.episodes!=0||r.active.is_some()||
+            r.shadow.is_some()||r.behavior_attempted{return Err(UError::Busy)}
+        r.behavior_guard_enabled=true;
+        Ok(())
+    }
+    /// Execute a one-use prospectively defined batch of VIRTUAL trial worlds.
+    ///
+    /// The caller owns independent world instances indexed by (case, arm),
+    /// initialized to the checkpoint's current *observed* state. It provides
+    /// fresh HAZARD evidence and the ACTUAL POST after each selected action.
+    /// The runtime chooses ALL actions; cohort tags are never inputs to U1.
+    /// Each arm has a distinct, frozen, restored protected authority.
+    ///
+    /// The candidate evaluator cannot enter ordinary U1 arbitration until
+    /// the bounded behavior gate passes. Even a callback error consumes the
+    /// trial attempt, preventing free peeking/repetition.
+    pub fn qualify_constructing_behavioral_gate<H,F>(
+        &mut self,tasks:&[MetaBehaviorTask],mut hazard:H,mut execute:F
+    )->UResult<MetaBehaviorAudit>
+    where H:FnMut(usize,usize,usize)->HumanProtectionEvidence,
+          F:FnMut(usize,usize,usize)->UResult<UnifiedPost> {
+        {
+            let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;
+            let r=u.self_revision.as_ref().ok_or(UError::NoEvidence)?;
+            let cfg=u.current.learner.carrier_config();
+            if u.freeze_controller || !r.behavior_guard_enabled ||
+                r.behavior_attempted || r.active.is_none() || r.shadow.is_some() ||
+                !r.pending_steps.is_empty() || r.readout_ablated {
+                return Err(UError::Busy)
+            }
+            if cfg.width>6 || cfg.actions>8 || cfg.planning_work>100_000 ||
+                !(8..=64).contains(&tasks.len()){
+                return Err(UError::Capacity)
+            }
+            let mut cohorts=std::collections::BTreeMap::<u16,usize>::new();
+            let current=u.current.learner.current();
+            let mut worst_case=0_u64;
+            for t in tasks {
+                if t.goal.len()!=current.len() || !t.goal.iter().any(Option::is_some)
+                    || udistance(current,Some(&t.goal))==0.0 ||
+                    t.offers.len()!=cfg.actions ||
+                    !(1..=24).contains(&t.max_actions) ||
+                    !t.offers.iter().any(|o|o.available) {
+                    return Err(UError::InvalidData)
+                }
+                *cohorts.entry(t.cohort).or_default()+=1;
+                let max=t.offers.iter().filter(|o|o.available)
+                    .map(|o|o.max_cost).max().unwrap_or(0);
+                worst_case=worst_case.checked_add(max.checked_mul(
+                    2*t.max_actions as u64).ok_or(UError::Capacity)?)
+                    .ok_or(UError::Capacity)?;
+            }
+            if cohorts.len()<2 || cohorts.values().any(|&v|v<4) {
+                return Err(UError::InvalidData)
+            }
+            if worst_case>u.max_external_cost.saturating_sub(u.total_external_cost){
+                return Err(UError::Budget)
+            }
+        }
+        // Snapshot both arms BEFORE any trials, but record the one-use
+        // attempt on the live organism BEFORE executing a single callback.
+        let bytes=self.checkpoint_constructing()?;
+        let initial=self.constructing.as_ref().ok_or(UError::NoEvidence)?
+            .current.learner.current().to_vec();
+        self.constructing.as_mut().ok_or(UError::NoEvidence)?
+            .self_revision.as_mut().ok_or(UError::NoEvidence)?
+            .behavior_attempted=true;
+        let mut charged_external=0_u64;
+        let mut charged_work=0_u64;
+        let attempted=(||->UResult<MetaBehaviorAudit>{
+            let mut cases=Vec::new();
+            for (index,task) in tasks.iter().enumerate() {
+                let mut arms=Vec::new();
+                for arm in 0..2 {
+                    let mut runner=Self::from_constructing_checkpoint(&bytes)?;
+                    runner.freeze_constructing()?;
+                    if arm==0{
+                        runner.ablate_frozen_trajectory_evaluator()?;
+                    }else{
+                        // An ephemeral canary may test the candidate, but
+                        // cannot serialize this authority into a checkpoint.
+                        runner.constructing.as_mut().ok_or(UError::NoEvidence)?
+                            .self_revision.as_mut().ok_or(UError::NoEvidence)?
+                            .sandbox_candidate_arm=true;
+                    }
+                    let before_work=runner.unified_report()
+                        .ok_or(UError::NoEvidence)?.computation_work;
+                    let mut steps=Vec::new();
+                    for _ in 0..task.max_actions {
+                        let mut factual_post=None::<UnifiedPost>;
+                        let outcome=runner.step_constructing(
+                            Some(&task.goal),&task.offers,
+                            |action|hazard(index,arm,action),
+                            |action|{
+                                let p=execute(index,arm,action)?;
+                                charged_external=charged_external.saturating_add(p.cost);
+                                factual_post=Some(p.clone());
+                                Ok(p)
+                            }
+                        )?;
+                        let post=factual_post.ok_or(UError::InvalidData)?;
+                        steps.push(MetaBehaviorStep {
+                            action:outcome.action,post:post.observation,
+                            cost:post.cost,
+                            selected_goal_score:outcome.selected_fields[0],
+                        });
+                        if udistance(&steps.last().ok_or(UError::InvalidData)?.post,
+                            Some(&task.goal))==0.0{break}
+                    }
+                    charged_work=charged_work.saturating_add(
+                        runner.unified_report().ok_or(UError::NoEvidence)?
+                            .computation_work.saturating_sub(before_work));
+                    arms.push(MetaBehaviorArm{steps});
+                }
+                let arms:[MetaBehaviorArm;2]=arms.try_into().map_err(|_|UError::InvalidData)?;
+                cases.push(MetaBehaviorCase{task:task.clone(),arms});
+            }
+            let mut result=MetaBehaviorAudit{
+                checkpoint_fingerprint:uhash(&bytes),
+                initial_observation:initial,
+                cases,
+                summary:MetaBehaviorSummary{
+                    cases:0,incumbent_success:0,candidate_success:0,
+                    incumbent_actions:0,candidate_actions:0,
+                    incumbent_cost:0,candidate_cost:0,
+                    changed_initial_actions:0,changed_initial_scores:0,
+                    nonregressed_cohorts:false,qualified:false,
+                },
+            };
+            result.summary=result.compute_summary()?;
+            result.validate()?;
+            Ok(result)
+        })();
+        // The primary organism pays the actually performed sandbox action
+        // costs regardless of success. Clones never hand back an actuator
+        // permit and cannot rewrite the primary cognition or its SNN weights.
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        u.total_external_cost=u.total_external_cost.saturating_add(charged_external);
+        u.computation_work=u.computation_work.saturating_add(charged_work);
+        let result=attempted?;
+        u.self_revision.as_mut().ok_or(UError::NoEvidence)?
+            .behavioral_audit=Some(result.clone());
+        Ok(result)
+    }
     /// Explicit research ablation: only switch off the VM scorer in a frozen
     /// replay. The certified program, journal, SNN weights, actions and
     /// HumanProtection remain unchanged. No way to use this to train.
