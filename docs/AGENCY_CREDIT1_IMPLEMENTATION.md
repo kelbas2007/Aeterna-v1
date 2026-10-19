@@ -24,3 +24,24 @@ The reason for this change is the EXPOSED 2x2 development ablation at 24 motor-r
 New engineering tests insist forced actions leave native meta-weight and observation counts unchanged, still fill factual journals, that freely selectable protected actions resume U1 learning, that checkpoints preserve agency counts, and that HumanProtection denial never mints evidence.
 
 **Remaining limitation:** these rules distinguish which action was genuinely selected, not which cognitive operation caused long-term success. The algorithm is still bounded to given goals, offered primitive motors and current numeric sensors. The mechanism is a conservative credit-assignment correction, not open-ended self-improvement. An independent disjoint multi-step world must show a real U1 action selection and performance advantage before science promotion.
+
+## Existing history-continuation regression
+
+The original exposed frozen prepared-context test at head 73004cf8 failed:
+native U1 picked a plan/distractor motor instead of the learned "use"
+motor, despite a prospectively certified history remainder. Its factual
+knowledge was NOT missing; the prior forced-identification actions had
+altered U1 weights without U1 having meaningful motor alternatives.
+
+The continuation test now deliberately enables the one-way endogenous
+agency-credit rule BEFORE the exact same executed identification schedule.
+The behavioral assertion is **unchanged**: native U1 must autonomously
+select the actual remaining history-qualified motor and the evaluator
+must observe the real goal reached. Other exposed old-credit cohort
+comparisons remain in their historical mode. This is a new developmental
+control, not an unseen-world test.
+
+The exact manual credit-suppression control is separately compared with
+automatic credit gating in the 24-motor-permutation engineering test.
+All action traces must agree; if they do not, the intervention changed
+more than agency provenance and must be rejected.
