@@ -18,7 +18,8 @@
     "rsp3_experiential_proposal_research": true,
     "lc1_learned_computation_requirements_opt_in": true,
     "unified_self_directed_factual_action_proposal_opt_in": true,
-    "trajectory_self_revision_opt_in_experimental": true
+    "trajectory_self_revision_opt_in_experimental": true,
+    "trajectory_behavioral_admission_opt_in_development": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -44,7 +45,8 @@
     "broad_unfamiliar_external_world_autonomy",
     "blind_independent_autonomous_advantage",
     "native_spiking_discovery_of_symbolic_inverse_operators",
-    "independently_qualified_autonomous_self_improvement"
+    "independently_qualified_autonomous_self_improvement",
+    "validated_behavioral_self_improvement_transfer"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -63,7 +65,8 @@
     "docs/LC1_PROTOCOL.md",
     "docs/LC1_INTEGRATION.md",
     "docs/AUTONOMY_UNIFIED_EXPERIMENT.md",
-    "docs/AUTONOMOUS_TRAJECTORY_SELF_REVISION.md"
+    "docs/AUTONOMOUS_TRAJECTORY_SELF_REVISION.md",
+    "docs/T_SR2_BEHAVIORAL_GATE_IMPLEMENTATION.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
