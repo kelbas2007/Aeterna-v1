@@ -18,6 +18,9 @@ pub(crate) struct PortHistoryPlan{
     pub first_consequence:Vec<i64>,
     pub terminal:Vec<i64>,
     pub depth:usize,
+    /// Depth of actual executed-history support for an accepted edge.
+    /// This is an evidence statistic, NOT motor authority.
+    pub history_suffix_depth:usize,
 }
 
 #[derive(Debug,Clone)]
@@ -157,7 +160,7 @@ impl Learner {
                 if used && goal_distance(&next,goal)==0{
                     return (Some(PortHistoryPlan{
                         first_action:first.0,first_consequence:first.1,
-                        terminal:next,depth,
+                        terminal:next,depth,history_suffix_depth:1,
                     }),meter.spent)
                 }
                 if visited.len()<96 && depth<self.config.planning_depth {
@@ -246,6 +249,99 @@ impl Learner {
         &mut self,observed:Vec<i64>
     )->Result<()>{
         self.record_external_restart(observed)
+    }
+
+    /// Optional deeper reconstruction within the SAME Learner. We do not
+    /// inject the hidden state or manually name a prerequisite: the suffix
+    /// length is selected because shorter histories cannot predict an
+    /// otherwise REAL, prospectively contrasted motor consequence.
+    pub(crate) fn carrier_adaptive_history_plan_metered(
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+    )->(Option<PortHistoryPlan>,u64){
+        if !self.adaptive_history_suffix || !self.predictive_history_states ||
+            self.pending || self.poisoned || budget==0 ||
+            goal.len()!=self.config.width ||
+            allowed.len()!=self.config.actions ||
+            !goal.iter().any(Option::is_some) ||
+            goal_distance(&self.current,goal)==0{
+            return (None,0)
+        }
+        let mut meter=Meter::new(budget);
+        let mut suffix=Vec::new();
+        if !self.restart_next{
+            if let Some(last)=self.records.last(){
+                suffix.push(last.transition.action);
+                if self.records.len()>=2 && !last.transition.restart{
+                    let before=&self.records[self.records.len()-2].transition;
+                    if before.id.checked_add(1)==Some(last.transition.id)
+                        && before.post==last.transition.pre{
+                        suffix.push(before.action)
+                    }
+                }
+            }
+        }
+        // The visible sensor is NOT itself a complete Markov state.
+        // Two execution histories may have identical PRE but different
+        // controllability, so the suffix belongs in the visited key.
+        let mut visited=BTreeSet::new();
+        visited.insert((self.current.clone(),suffix.clone(),0usize));
+        let mut q=VecDeque::new();
+        q.push_back((self.current.clone(),suffix,
+            None::<(usize,Vec<i64>)>,0usize,0usize));
+        let mut expanded=0usize;
+        'search:while let Some((state,previous,first,depth,used_history))=q.pop_front(){
+            if depth>=self.config.planning_depth||expanded>=96{continue}
+            for action in 0..self.config.actions{
+                if !allowed[action]{continue}
+                if meter.charge((state.len()+3) as u64).is_err(){break 'search}
+                expanded+=1;
+                // Prefer the shorter explanation whenever it is supported.
+                // Only an underexplained consequence justifies more memory.
+                let shallow=previous.first().and_then(|&p|
+                    calibrated_history_effect(&self.records,&state,action,p,
+                        self.frozen_at,&mut meter));
+                if meter.remaining()==0{break 'search}
+                let deeper=if shallow.is_none() && previous.len()>=2{
+                    calibrated_second_order_effect(&self.records,&state,action,
+                        [previous[0],previous[1]],self.frozen_at,&mut meter)
+                }else{None};
+                if meter.remaining()==0{break 'search}
+                let (next,validated_depth)=if let Some(output)=shallow{
+                    (output,1)
+                }else if let Some(output)=deeper{
+                    (output,2)
+                }else{
+                    // Same causal no-op safeguards as the old one-step lane.
+                    let next=calibrated_factual_prediction(&self.records,
+                        &state,action,self.frozen_at,&mut meter)
+                        .or_else(||certified_history_noop(
+                            &self.records,&state,action,self.frozen_at,&mut meter));
+                    if meter.remaining()==0{break 'search}
+                    let Some(next)=next else{continue};
+                    (next,0)
+                };
+                let history=used_history.max(validated_depth);
+                let first=first.clone().unwrap_or((action,next.clone()));
+                let depth=depth+1;
+                if history>0&&goal_distance(&next,goal)==0{
+                    return (Some(PortHistoryPlan{
+                        first_action:first.0,first_consequence:first.1,
+                        terminal:next,depth,
+                        history_suffix_depth:history
+                    }),meter.spent)
+                }
+                if visited.len()<128&&depth<self.config.planning_depth{
+                    if meter.charge((next.len()+14) as u64).is_err(){break 'search}
+                    let mut following=Vec::with_capacity(2);
+                    following.push(action);
+                    following.extend(previous.iter().take(1).copied());
+                    if visited.insert((next.clone(),following.clone(),history)){
+                        q.push_back((next,following,Some(first),depth,history));
+                    }
+                }
+            }
+        }
+        (None,meter.spent)
     }
     pub(crate) fn carrier_config(&self)->&super::runtime::Config {&self.config}
     pub(crate) fn carrier_prepare(&mut self,a:usize)->Result<Commitment> {self.prepare(a)}
