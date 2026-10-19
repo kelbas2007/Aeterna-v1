@@ -19,6 +19,64 @@ struct UnifiedConstruction {
     /// Physical PRE/action/POST learning is NEVER gated by this option.
     #[serde(default,skip_serializing_if="Option::is_none")]
     agency_credit:Option<AgencyCreditReport>,
+    /// Optional, separate causal information vs actual goal-control credit.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    instrumental_credit:Option<InstrumentalCredit>,
+}
+
+/// Opt-in grounded *instrumental* credit. A causal/world observation is never
+/// labelled a successful choice merely because a sensor reading was novel.
+/// The unfinished preparation is an eligibility trace, not trusted POST.
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+struct InstrumentalPending {
+    goal:Vec<Option<i64>>,expected_post:Vec<i64>,
+    fields:[f32;5],event:usize,
+}
+#[derive(Debug,Default,Clone,USerialize,UDeserialize)]
+struct InstrumentalCredit {
+    facts_without_progress:u64,
+    actual_progress_credited:u64,
+    validated_preparations_credited:u64,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pending:Option<InstrumentalPending>,
+}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct InstrumentalCreditReport {
+    pub facts_without_progress:u64,
+    pub actual_progress_credited:u64,
+    pub validated_preparations_credited:u64,
+    pub pending_preparation:bool,
+}
+impl InstrumentalCredit {
+    fn report(&self)->InstrumentalCreditReport {
+        InstrumentalCreditReport{
+            facts_without_progress:self.facts_without_progress,
+            actual_progress_credited:self.actual_progress_credited,
+            validated_preparations_credited:self.validated_preparations_credited,
+            pending_preparation:self.pending.is_some(),
+        }
+    }
+    fn validate(&self,current:&UnifiedDomain,archived:&[UnifiedDomain],
+                freeze:bool)->UResult<()> {
+        let recorded=archived.iter().chain(std::iter::once(current))
+            .map(|d|d.learner.records().len()).sum::<usize>();
+        if self.facts_without_progress
+            .checked_add(self.actual_progress_credited)
+            .is_none_or(|n|n>recorded as u64)
+            || self.validated_preparations_credited>self.actual_progress_credited {
+            return Err(UError::InvalidData)
+        }
+        if let Some(p)=&self.pending {
+            let cfg=current.learner.carrier_config();
+            if freeze || p.goal.len()!=cfg.width ||
+                p.expected_post.len()!=cfg.width ||
+                p.event!=current.learner.records().len() ||
+                p.fields.iter().any(|v|!v.is_finite()||!(0.0..=1.0).contains(v)){
+                return Err(UError::InvalidData)
+            }
+        }
+        Ok(())
+    }
 }
 /// Independent counters: outcome evidence and action-choice credit are not
 /// synonyms. No evaluator-supplied label, action role, or source ID.
@@ -52,6 +110,8 @@ pub struct UnifiedReport {
     pub self_revision:Option<MetaRevisionReport>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub agency_credit:Option<AgencyCreditReport>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub instrumental_credit:Option<InstrumentalCreditReport>,
 }
 #[derive(USerialize,UDeserialize)]
 #[serde(deny_unknown_fields)]
@@ -510,7 +570,7 @@ impl ScientificRuntime {
         evo.set_phase_native_meta_monotone_evidence(true);evo.observe_initial_real(&usensory(&initial),false);
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;
         rt.constructing=Some(UnifiedConstruction{current:UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None},
-            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,agency_credit:None});
+            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,agency_credit:None,instrumental_credit:None});
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
@@ -526,6 +586,17 @@ impl ScientificRuntime {
         u.agency_credit=Some(AgencyCreditReport{
             externally_forced_actions:0,self_selected_actions:0
         });
+        Ok(())
+    }
+    /// A U1 choice is credited for goal utility only after REAL progress.
+    /// Factual acquisition remains unconstrained and can be goal-free.
+    pub fn enable_constructing_instrumental_credit(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.instrumental_credit.is_some() ||
+            u.agency_credit.is_none() || !u.archived.is_empty() ||
+            !u.current.learner.records().is_empty() ||
+            u.total_external_cost!=0 {return Err(UError::Busy)}
+        u.instrumental_credit=Some(InstrumentalCredit::default());
         Ok(())
     }
     /// Opt the SAME construction Learner into factual, self-selected probing.
@@ -734,7 +805,8 @@ impl ScientificRuntime {
             native_meta_observations:self.organism.phase_native_meta_observations(),native_weights:self.organism.phase_native_meta_weights()?,operations:u.operations,
             computation_work:u.computation_work,total_external_cost:u.total_external_cost,controller_frozen:u.freeze_controller,
             self_revision:u.self_revision.as_ref().map(MetaRevision::report),
-            agency_credit:u.agency_credit.clone()})
+            agency_credit:u.agency_credit.clone(),
+            instrumental_credit:u.instrumental_credit.as_ref().map(InstrumentalCredit::report)})
     }
     // A new sensor contract does not reinterpret numeric variables as pixels.
     // U1 weights and complete old-domain cognitive checkpoints remain present.
@@ -748,11 +820,15 @@ impl ScientificRuntime {
         policy.max_external_cost=policy.max_external_cost.min(u.max_external_cost.saturating_sub(u.total_external_cost));
         let mut learner=ULearner::new(config,initial.clone())?;learner.enable_autonomy(policy)?;learner.manage_from_carrier()?;
         let old=std::mem::replace(&mut u.current,UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None});
-        u.archived.push(old);if let Some(revision)=u.self_revision.as_mut(){revision.pending_steps.clear();revision.pending_goal=None;}self.organism.observe_initial_real(&usensory(&initial),false);self.record(LifetimeEventKind::ExternalObservation);Ok(())
+        u.archived.push(old);
+        if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
+        if let Some(revision)=u.self_revision.as_mut(){revision.pending_steps.clear();revision.pending_goal=None;}self.organism.observe_initial_real(&usensory(&initial),false);self.record(LifetimeEventKind::ExternalObservation);Ok(())
     }
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
-        u.current.learner.freeze_learning()?;if let Some(s)=&mut u.education{s.freeze();}u.freeze_controller=true;self.organism.set_phase_native_meta_learning_enabled(false);Ok(())
+        u.current.learner.freeze_learning()?;
+        if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
+        if let Some(s)=&mut u.education{s.freeze();}u.freeze_controller=true;self.organism.set_phase_native_meta_learning_enabled(false);Ok(())
     }
     // Matched ablation: same experience, programs and budgets; only U1 zeroed.
     pub fn ablate_constructing_controller(&mut self)->UResult<()> {
@@ -929,9 +1005,12 @@ impl ScientificRuntime {
                     u.current.last_construction=u.current.learner.records().len();let before=u.current.learner.report().construction_work;
                     let result=u.current.learner.construct();u.computation_work=u.computation_work.saturating_add(u.current.learner.report().construction_work.saturating_sub(before));
                     if result.is_ok() && u.current.learner.report().shadow_pending {
-                        if native_credit_eligible {u.current.pending_credit=Some(chosen.p.fields);}
+                        if native_credit_eligible && u.instrumental_credit.is_none() {
+                            u.current.pending_credit=Some(chosen.p.fields);
+                        }
                     }
-                    else if !u.freeze_controller && native_credit_eligible {
+                    else if !u.freeze_controller && native_credit_eligible &&
+                        u.instrumental_credit.is_none() {
                         self.organism.observe_phase_native_meta_utility(chosen.p.fields,0.0);
                     }
                     if let Err(e)=result {if !matches!(e,UError::NoEvidence|UError::Budget|UError::Capacity){return Err(e);}}
@@ -956,11 +1035,29 @@ impl ScientificRuntime {
             .map(|c|c.p.fields).unwrap_or(option.p.fields);
         let token=u.current.learner.carrier_prepare(a)?;
         let decision=self.protection.screen(a,hazard(a));let record=decision.record().clone();
-        let Some(permit)=decision.into_permit() else {u.current.learner.carrier_cancel(token)?;self.record(LifetimeEventKind::Blocked(record));return Err(UError::Blocked);};
+        let Some(permit)=decision.into_permit() else {
+            if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
+            u.current.learner.carrier_cancel(token)?;
+            self.record(LifetimeEventKind::Blocked(record));
+            return Err(UError::Blocked)
+        };
         let permission=permit.sequence();
-        if self.protection.consume_permit(permit).is_err(){u.current.learner.carrier_fault(token,"permission fault".into());self.latch_fault("permission fault".into());return Err(UError::Blocked);}
-        let post=match execute(a) {Ok(p)=>p,Err(e)=>{u.current.learner.carrier_fault(token,e.to_string());self.latch_fault(e.to_string());return Err(e);}};
+        if self.protection.consume_permit(permit).is_err(){
+            if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
+            u.current.learner.carrier_fault(token,"permission fault".into());
+            self.latch_fault("permission fault".into());
+            return Err(UError::Blocked)
+        }
+        let post=match execute(a) {
+            Ok(p)=>p,Err(e)=>{
+                if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
+                u.current.learner.carrier_fault(token,e.to_string());
+                self.latch_fault(e.to_string());
+                return Err(e)
+            }
+        };
         if post.observation.len()!=cfg.width || !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[a].max_cost {
+            if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
             u.total_external_cost=u.total_external_cost.saturating_add(post.cost);u.current.learner.carrier_fault(token,"invalid external POST or cost".into());self.latch_fault("invalid external POST or cost".into());return Err(UError::InvalidData);
         }
         let before=udistance(u.current.learner.current(),goal);let after=udistance(&post.observation,goal);
@@ -980,7 +1077,7 @@ impl ScientificRuntime {
                         .checked_add(1).ok_or(UError::Capacity)?;
                 }
             }
-            if native_credit_eligible {
+            if native_credit_eligible && u.instrumental_credit.is_none() {
                 self.organism.observe_phase_native_meta_utility(option.p.fields,value);
                 for (source,fields) in helpers {
                     self.organism.observe_phase_native_meta_utility(
@@ -993,9 +1090,56 @@ impl ScientificRuntime {
                     }
                 }
             }else if u.current.learner.promotions().len()>verdicts{
-                // A candidate produced under a forced choice cannot become
-                // a belatedly attributed native-U1 action-choice success.
+                // An unqualified operation cannot become an invented U1
+                // motor-choice success even if a separate model improved.
                 u.current.pending_credit=None;
+            }
+            if let Some(c)=u.instrumental_credit.as_mut(){
+                let event=u.current.learner.records().len();
+                let mut valid_pending=None;
+                if let Some(prior)=c.pending.take(){
+                    if goal.is_some_and(|g|g==prior.goal.as_slice()) &&
+                        prior.expected_post==u.current.learner.records()
+                            .last().ok_or(UError::InvalidData)?.transition.pre &&
+                        prior.event.checked_add(1)==Some(event){
+                        valid_pending=Some(prior);
+                    }
+                }
+                // Only the actually observed reduction in distance to the
+                // current goal is native instrumental utility. New post
+                // states alone are factual evidence, not goal success.
+                if native_credit_eligible && goal.is_some() && after<before{
+                    c.actual_progress_credited=c.actual_progress_credited
+                        .checked_add(1).ok_or(UError::Capacity)?;
+                    if let Some(prior)=valid_pending{
+                        let half=0.5*progress;
+                        self.organism.observe_phase_native_meta_utility(
+                            prior.fields,half);
+                        self.organism.observe_phase_native_meta_utility(
+                            option.p.fields,half);
+                        c.validated_preparations_credited=
+                            c.validated_preparations_credited
+                                .checked_add(1).ok_or(UError::Capacity)?;
+                    }else{
+                        self.organism.observe_phase_native_meta_utility(
+                            option.p.fields,progress);
+                    }
+                }else{
+                    c.facts_without_progress=c.facts_without_progress
+                        .checked_add(1).ok_or(UError::Capacity)?;
+                }
+                if native_credit_eligible && goal.is_some() && !(after<before)
+                    && option.source=="predictive-history" &&
+                    option.output.as_ref()==Some(&post.observation) {
+                    // Proposed hidden-state preparation was actually
+                    // executed and the predicted immediate POST was observed.
+                    // It is NOT credited until a later REAL goal advance.
+                    c.pending=Some(InstrumentalPending{
+                        goal:goal.ok_or(UError::InvalidData)?.to_vec(),
+                        expected_post:post.observation.clone(),
+                        fields:option.p.fields,event,
+                    });
+                }
             }
         }
         if !u.freeze_controller{
@@ -1031,6 +1175,13 @@ impl ScientificRuntime {
         if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
         if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
         if let Some(revision)=&s.cognition.self_revision{revision.validate()?;}
+        if s.cognition.instrumental_credit.is_some()&&s.cognition.agency_credit.is_none(){
+            return Err(UError::InvalidData)
+        }
+        if let Some(c)=&s.cognition.instrumental_credit{
+            c.validate(&s.cognition.current,&s.cognition.archived,
+                s.cognition.freeze_controller)?;
+        }
         if let Some(agency)=&s.cognition.agency_credit {
             let recorded:usize = s.cognition.archived.iter()
                 .chain(std::iter::once(&s.cognition.current))
@@ -1063,6 +1214,7 @@ impl ScientificRuntime {
             || serde_json::to_vec(&old.education).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.education).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.self_revision).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.self_revision).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.agency_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.agency_credit).map_err(|_|UError::InvalidData)?
+            || serde_json::to_vec(&old.instrumental_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.instrumental_credit).map_err(|_|UError::InvalidData)?
             || new.nonce<old.nonce || new.computation_work<old.computation_work || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
         if candidate.emergency_latched(){let mut e=Self::absent_evidence();e.emergency_stop=true;self.protection.screen(0,e);}
         self.organism=candidate.organism;self.constructing=candidate.constructing.take();Ok(())
