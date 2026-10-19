@@ -21,6 +21,9 @@ pub(crate) struct PortHistoryPlan{
     /// Depth of actual executed-history support for an accepted edge.
     /// This is an evidence statistic, NOT motor authority.
     pub history_suffix_depth:usize,
+    /// A bounded, prospectively validated candidate OPTION selected only
+    /// by native U1. Never read as a fabricated executed journal.
+    pub route:Vec<(usize,Vec<i64>)>,
 }
 
 #[derive(Debug,Clone)]
@@ -161,6 +164,7 @@ impl Learner {
                     return (Some(PortHistoryPlan{
                         first_action:first.0,first_consequence:first.1,
                         terminal:next,depth,history_suffix_depth:1,
+                        route:Vec::new(),
                     }),meter.spent)
                 }
                 if visited.len()<96 && depth<self.config.planning_depth {
@@ -287,9 +291,10 @@ impl Learner {
         visited.insert((self.current.clone(),suffix.clone(),0usize));
         let mut q=VecDeque::new();
         q.push_back((self.current.clone(),suffix,
-            None::<(usize,Vec<i64>)>,0usize,0usize));
+            None::<(usize,Vec<i64>)>,0usize,0usize,
+            Vec::<(usize,Vec<i64>)>::new()));
         let mut expanded=0usize;
-        'search:while let Some((state,previous,first,depth,used_history))=q.pop_front(){
+        'search:while let Some((state,previous,first,depth,used_history,route))=q.pop_front(){
             if depth>=self.config.planning_depth||expanded>=96{continue}
             for action in 0..self.config.actions{
                 if !allowed[action]{continue}
@@ -323,11 +328,14 @@ impl Learner {
                 let history=used_history.max(validated_depth);
                 let first=first.clone().unwrap_or((action,next.clone()));
                 let depth=depth+1;
+                let mut path=route.clone();
+                path.push((action,next.clone()));
                 if history>0&&goal_distance(&next,goal)==0{
                     return (Some(PortHistoryPlan{
                         first_action:first.0,first_consequence:first.1,
                         terminal:next,depth,
-                        history_suffix_depth:history
+                        history_suffix_depth:history,
+                        route:path,
                     }),meter.spent)
                 }
                 if visited.len()<128&&depth<self.config.planning_depth{
@@ -336,7 +344,7 @@ impl Learner {
                     following.push(action);
                     following.extend(previous.iter().take(1).copied());
                     if visited.insert((next.clone(),following.clone(),history)){
-                        q.push_back((next,following,Some(first),depth,history));
+                        q.push_back((next,following,Some(first),depth,history,path));
                     }
                 }
             }
