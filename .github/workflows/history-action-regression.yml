@@ -5,6 +5,7 @@ on:
       - 'src/construction/**'
       - 'src/unified_runtime.rs'
       - 'tests/predictive_history*'
+      - 'tests/history_score_diagnosis.rs'
       - '.github/workflows/history-action-regression.yml'
 permissions:
   contents: read
@@ -57,7 +58,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cargo test --locked --test predictive_history_action_development --test predictive_history_state_development -- --nocapture --test-threads=1 2>&1 | tee history-evidence/fixed.log
+          cargo test --locked --test history_score_diagnosis --test predictive_history_action_development --test predictive_history_state_development -- --nocapture --test-threads=1 2>&1 | tee history-evidence/fixed.log
           python scripts/project_audit.py | tee history-evidence/source-binding.json
       - name: Preserve complete positive and negative development traces
         if: always()
