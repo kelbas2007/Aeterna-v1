@@ -17,7 +17,8 @@
     "recursive_search_rsp2": true,
     "rsp3_experiential_proposal_research": true,
     "lc1_learned_computation_requirements_opt_in": true,
-    "unified_self_directed_factual_action_proposal_opt_in": true
+    "unified_self_directed_factual_action_proposal_opt_in": true,
+    "trajectory_self_revision_opt_in_experimental": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -42,7 +43,8 @@
     "stable_cross_domain_lc1_advantage",
     "broad_unfamiliar_external_world_autonomy",
     "blind_independent_autonomous_advantage",
-    "native_spiking_discovery_of_symbolic_inverse_operators"
+    "native_spiking_discovery_of_symbolic_inverse_operators",
+    "independently_qualified_autonomous_self_improvement"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -60,7 +62,8 @@
     "docs/RSP3_EXPERIENCE_RESULTS.md",
     "docs/LC1_PROTOCOL.md",
     "docs/LC1_INTEGRATION.md",
-    "docs/AUTONOMY_UNIFIED_EXPERIMENT.md"
+    "docs/AUTONOMY_UNIFIED_EXPERIMENT.md",
+    "docs/AUTONOMOUS_TRAJECTORY_SELF_REVISION.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

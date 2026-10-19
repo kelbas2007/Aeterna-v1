@@ -28,7 +28,12 @@ if lc1:
   assert sha((r/'src/bin/aeterna-unified.rs').read_bytes())==lc1['jsonl_source_after_sha256'],'JSONL LC1 transport changed'
 if autonomous:
  assert autonomous['jsonl_before_sha256']==lc1['jsonl_source_after_sha256'],'unexpected pre-autonomy JSONL revision'
- assert sha((r/'src/bin/aeterna-unified.rs').read_bytes())==autonomous['jsonl_after_sha256'],'unreviewed autonomous JSONL mutation'
+ # Current autonomous JSONL edits are bound by their exact Git blob hash.
+ # Historical SHA256 binding remains accepted for older PR heads.
+ if autonomous.get('jsonl_after_git_blob'):
+  assert git_blob((r/'src/bin/aeterna-unified.rs').read_bytes())==autonomous['jsonl_after_git_blob'],'unreviewed autonomous JSONL mutation'
+ else:
+  assert sha((r/'src/bin/aeterna-unified.rs').read_bytes())==autonomous['jsonl_after_sha256'],'unreviewed autonomous JSONL mutation'
  for path,d in autonomous['modified'].items():
   raw=(r/path).read_bytes()
   if 'after_git_blob' in d:

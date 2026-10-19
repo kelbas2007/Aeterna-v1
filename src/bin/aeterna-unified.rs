@@ -79,6 +79,13 @@ pub(crate) fn main()->Result<()>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_self_directed_control()?;
                     Ok(json!({"type":"self_directed_enabled","action_authority":"protected_u1"}))
                 },
+                "enable_trajectory_self_revision"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_trajectory_self_revision()?;
+                    Ok(json!({"type":"trajectory_self_revision_enabled",
+                        "program_authority":"evaluation_only","action_authority":"human_protection"}))
+                },
+                "trajectory_self_revision_report"=>Ok(json!({"type":"trajectory_self_revision_report",
+                    "report":runtime.as_ref().ok_or("not loaded")?.trajectory_self_revision_report()})),
                 "enable_recursive_search"=>{
                     let config=serde_json::from_value(request["config"].clone())?;
                     runtime.as_mut().ok_or("not loaded")?.enable_recursive_search(config)?;
@@ -329,7 +336,10 @@ A learned checkpoint must be supplied explicitly; no pretrained state is invente
 RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
 solve_synthesis, recursive_search_report, checkpoint, quit.
 Self-directed factual control: init(width<=6), enable_self_directed_control,
-then step(goal,available). All actions still require the same protection gate.
+then step(goal,available). Optional own evaluator synthesis:
+enable_trajectory_self_revision, step(goal,available),
+trajectory_self_revision_report. The evaluator changes U1 valuation only,
+not the protected actuator boundary or task objectives.
 LC1: enable_missing_computation_learning, observe_executed_computations,
 complete_missing_computation, missing_computation_report; learned rules share
 one checkpoint. Both LC1 and RSP3 remain candidate-only without RSP2 adoption.
