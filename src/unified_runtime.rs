@@ -22,6 +22,77 @@ struct UnifiedConstruction {
     /// Optional, separate causal information vs actual goal-control credit.
     #[serde(default,skip_serializing_if="Option::is_none")]
     instrumental_credit:Option<InstrumentalCredit>,
+    /// Opt-in: a native-selected causal route may continue as one bounded
+    /// temporally extended choice, never a new physical action authority.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    temporal_options:Option<TemporalOptionLane>,
+}
+
+
+/// The carrier executed its OWN native-U1-selected high-level option, not
+/// an externally authored motor schedule. Every subordinate physical action
+/// remains subject to fresh HumanProtection authority and actual POST audit.
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+struct TemporalOptionStep {action:usize,expected_post:Vec<i64>}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+struct TemporalOption {
+    goal:Vec<Option<i64>>,
+    remaining:Vec<TemporalOptionStep>,
+    /// Last actual committed external sensor state. No imagined POSTs.
+    last_verified_post:Vec<i64>,
+    event:usize,
+    /// Initial U1-chosen higher-level option's native evidence fields.
+    initiating_fields:[f32;5],
+}
+#[derive(Debug,Default,Clone,USerialize,UDeserialize)]
+struct TemporalOptionLane {
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pending:Option<TemporalOption>,
+    started:u64,continued:u64,completed:u64,revoked:u64,
+}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
+pub struct TemporalOptionReport {
+    pub pending_steps:usize,
+    pub started:u64,pub continued:u64,
+    pub completed:u64,pub revoked:u64,
+}
+impl TemporalOptionLane {
+    fn report(&self)->TemporalOptionReport{
+        TemporalOptionReport{
+            pending_steps:self.pending.as_ref().map_or(0,|o|o.remaining.len()),
+            started:self.started,continued:self.continued,
+            completed:self.completed,revoked:self.revoked,
+        }
+    }
+    fn reject_pending(&mut self){
+        if self.pending.take().is_some(){
+            self.revoked=self.revoked.saturating_add(1);
+        }
+    }
+    fn validate(&self,u:&UnifiedConstruction)->UResult<()>{
+        let cfg=u.current.learner.carrier_config();
+        if !u.current.learner.adaptive_history_suffix_enabled() ||
+            self.completed.saturating_add(self.revoked)>self.started ||
+            self.continued>self.started.saturating_mul(cfg.planning_depth as u64){
+            return Err(UError::InvalidData)
+        }
+        if let Some(p)=self.pending.as_ref(){
+            if !(1..=4).contains(&p.remaining.len()) ||
+                p.remaining.len()>=cfg.planning_depth ||
+                p.goal.len()!=cfg.width ||!p.goal.iter().any(Option::is_some) ||
+                p.last_verified_post!=u.current.learner.current() ||
+                p.event!=u.current.learner.records().len() ||
+                p.initiating_fields.iter().any(|v|!v.is_finite()||
+                    !(0.0..=1.0).contains(v)) ||
+                p.remaining.iter().any(|r|r.action>=cfg.actions||
+                    r.expected_post.len()!=cfg.width) ||
+                p.remaining.last().is_none_or(|last|
+                    udistance(&last.expected_post,Some(&p.goal))!=0.0){
+                return Err(UError::InvalidData)
+            }
+        }
+        Ok(())
+    }
 }
 
 /// Opt-in grounded *instrumental* credit. A causal/world observation is never
@@ -115,6 +186,8 @@ pub struct UnifiedReport {
     pub agency_credit:Option<AgencyCreditReport>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub instrumental_credit:Option<InstrumentalCreditReport>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub temporal_options:Option<TemporalOptionReport>,
 }
 #[derive(USerialize,UDeserialize)]
 #[serde(deny_unknown_fields)]
@@ -573,7 +646,7 @@ impl ScientificRuntime {
         evo.set_phase_native_meta_monotone_evidence(true);evo.observe_initial_real(&usensory(&initial),false);
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;
         rt.constructing=Some(UnifiedConstruction{current:UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None},
-            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,agency_credit:None,instrumental_credit:None});
+            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,agency_credit:None,instrumental_credit:None,temporal_options:None});
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
@@ -630,6 +703,19 @@ impl ScientificRuntime {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.freeze_controller{return Err(UError::Blocked)}
         u.current.learner.enable_adaptive_history_suffix()
+    }
+    /// Install higher-level OPTION EXECUTION only for already learned,
+    /// prospectively certified causal routes. No plan may be host-supplied.
+    /// U1 must explicitly select the first primitive action itself.
+    pub fn enable_constructing_temporal_options(&mut self)->UResult<()>{
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller||u.temporal_options.is_some() ||
+            !u.current.learner.adaptive_history_suffix_enabled() ||
+            u.instrumental_credit.is_some(){
+            return Err(UError::Busy)
+        }
+        u.temporal_options=Some(TemporalOptionLane::default());
+        Ok(())
     }
     /// The same U1 may elect to test an underobserved action pair. No other
     /// action authority and no externally scheduled experiment steps.
@@ -816,7 +902,8 @@ impl ScientificRuntime {
             computation_work:u.computation_work,total_external_cost:u.total_external_cost,controller_frozen:u.freeze_controller,
             self_revision:u.self_revision.as_ref().map(MetaRevision::report),
             agency_credit:u.agency_credit.clone(),
-            instrumental_credit:u.instrumental_credit.as_ref().map(InstrumentalCredit::report)})
+            instrumental_credit:u.instrumental_credit.as_ref().map(InstrumentalCredit::report),
+            temporal_options:u.temporal_options.as_ref().map(TemporalOptionLane::report)})
     }
     // A new sensor contract does not reinterpret numeric variables as pixels.
     // U1 weights and complete old-domain cognitive checkpoints remain present.
@@ -832,6 +919,7 @@ impl ScientificRuntime {
         let old=std::mem::replace(&mut u.current,UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None});
         u.archived.push(old);
         if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
+        if let Some(opt)=u.temporal_options.as_mut(){opt.reject_pending();}
         if let Some(revision)=u.self_revision.as_mut(){revision.pending_steps.clear();revision.pending_goal=None;}self.organism.observe_initial_real(&usensory(&initial),false);self.record(LifetimeEventKind::ExternalObservation);Ok(())
     }
     /// The WORLD, not U1, initiated a new episode. A trusted sensor
@@ -851,6 +939,7 @@ impl ScientificRuntime {
         if let Some(c)=u.instrumental_credit.as_mut(){
             c.pending=None;
         }
+        if let Some(option)=u.temporal_options.as_mut(){option.reject_pending();}
         self.organism.observe_initial_real(&usensory(&observed),false);
         self.fresh_observation_required=false;
         self.record(LifetimeEventKind::ExternalObservation);
@@ -1217,6 +1306,9 @@ impl ScientificRuntime {
         if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
         if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
         if let Some(revision)=&s.cognition.self_revision{revision.validate()?;}
+        if let Some(options)=&s.cognition.temporal_options{
+            options.validate(&s.cognition)?;
+        }
         if s.cognition.instrumental_credit.is_some()&&s.cognition.agency_credit.is_none(){
             return Err(UError::InvalidData)
         }
@@ -1255,6 +1347,7 @@ impl ScientificRuntime {
         if new.current.name!=old.current.name || new.current.learner.checkpoint()?!=old.current.learner.checkpoint()?
             || serde_json::to_vec(&old.education).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.education).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.self_revision).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.self_revision).map_err(|_|UError::InvalidData)?
+            || serde_json::to_vec(&old.temporal_options).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.temporal_options).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.agency_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.agency_credit).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.instrumental_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.instrumental_credit).map_err(|_|UError::InvalidData)?
             || new.nonce<old.nonce || new.computation_work<old.computation_work || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
