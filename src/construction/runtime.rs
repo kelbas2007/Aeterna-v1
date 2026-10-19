@@ -99,6 +99,10 @@ pub struct Learner {
     /// using only actual PRE/action/POSTs. Never actuator authority.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     active_pair_probes:bool,
+    /// Depth 1 OR 2 is selected from observationally contrasted evidence,
+    /// not an authored hidden state. All older inference stays opt-in safe.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    adaptive_history_suffix:bool,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -371,6 +375,82 @@ fn calibrated_history_effect(records:&[Record],pre:&[i64],action:usize,
     let current=fitted_history_effect(&records[..end],pre,action,previous,meter)?;
     (trained==current).then_some(current)
 }
+
+/// A variable-length predictive state suffix from the ONE existing protected
+/// chronological journal. It never crosses physical episode restarts,
+/// id gaps or discontinuous PRE/POST readings.
+fn observed_action_suffix(records:&[Record],index:usize,len:usize)
+    ->Option<Vec<usize>>{
+    if !(1..=2).contains(&len){return None}
+    let mut i=index;
+    let mut suffix=Vec::with_capacity(len);
+    for _ in 0..len {
+        suffix.push(factual_predecessor(records,i)?);
+        i=i.checked_sub(1)?;
+    }
+    Some(suffix)
+}
+/// The comparison is conditional on the SAME immediately preceding motor
+/// and the SAME real PRE observation. The only differing variable may be
+/// the older predecessor: no motor label or key/charge meaning is supplied.
+fn fitted_second_order_effect(records:&[Record],pre:&[i64],action:usize,
+    suffix:[usize;2],meter:&mut Meter)->Option<Vec<i64>>{
+    let mut yes=Vec::new();let mut no=Vec::new();
+    for i in (0..records.len()).rev().take(192){
+        meter.charge((pre.len()+4) as u64).ok()?;
+        let row=&records[i].transition;
+        if row.action!=action || row.pre.len()!=pre.len(){continue}
+        let Some(s)=observed_action_suffix(records,i,2) else{continue};
+        if s[0]!=suffix[0]{continue}
+        if s[1]==suffix[1]{yes.push(row)}else{no.push(row)}
+    }
+    if yes.len()<4||no.len()<4 {return None}
+    let mut contrasts=0;
+    for a in &yes{
+        for b in &no{
+            meter.charge((pre.len()+1) as u64).ok()?;
+            if a.pre==b.pre && a.post!=b.post{
+                contrasts+=1;break
+            }
+        }
+    }
+    if contrasts<3{return None}
+    (0..pre.len()).map(|axis|
+        effect(&yes,axis,meter)?.apply(pre[axis])
+    ).collect()
+}
+/// Three LATER real transitions are withheld from induction and must all
+/// match the older conditional law. Prediction after refitting cannot drift.
+/// The frozen journal prefix is used for BOTH the fit and confidence test.
+fn calibrated_second_order_effect(records:&[Record],pre:&[i64],action:usize,
+    suffix:[usize;2],frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>>{
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?;
+    let mut latest=Vec::new();
+    for i in (0..end).rev().take(192){
+        meter.charge(2).ok()?;
+        if records[i].transition.action==action &&
+            observed_action_suffix(&records[..end],i,2).as_deref()
+                ==Some(suffix.as_slice()){
+            latest.push(i);
+        }
+    }
+    if latest.len()<7{return None}
+    let old=&records[..latest[2]];
+    let mut changed=false;
+    for &i in latest.iter().take(3){
+        let row=&records[i].transition;
+        if fitted_second_order_effect(old,&row.pre,action,suffix,meter)?
+            !=row.post{return None}
+        changed|=row.pre!=row.post;
+    }
+    if !changed{return None}
+    let older=fitted_second_order_effect(old,pre,action,suffix,meter)?;
+    let newer=fitted_second_order_effect(&records[..end],pre,action,suffix,meter)?;
+    (older==newer).then_some(newer)
+}
+
 /// Verified no-op only as a *preparatory* step in a full causal plan;
 /// never as a direct high-value U1 action or fabricated real POST.
 fn certified_history_noop(records:&[Record],pre:&[i64],action:usize,
@@ -406,7 +486,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -717,6 +797,15 @@ impl Learner {
     pub fn certified_chains_enabled(&self)->bool {self.certified_chains}
     pub fn predictive_history_states_enabled(&self)->bool{self.predictive_history_states}
     pub fn active_pair_probes_enabled(&self)->bool{self.active_pair_probes}
+    pub fn adaptive_history_suffix_enabled(&self)->bool{self.adaptive_history_suffix}
+    pub fn enable_adaptive_history_suffix(&mut self)->Result<()>{
+        if !self.predictive_history_states || self.adaptive_history_suffix ||
+            self.pending || self.poisoned || self.frozen_at.is_some() ||
+            self.config.planning_depth<3 || self.config.planning_work<32_000{
+            return Err(Error::Busy)
+        }
+        self.adaptive_history_suffix=true;Ok(())
+    }
     /// Native U1 owns the final choice; historical contrasts are the ONLY
     /// learning signal. The experiment is restricted to one-step suffixes.
     pub fn enable_active_pair_probes(&mut self)->Result<()>{
@@ -919,6 +1008,12 @@ impl Learner {
         }
         if state.active_pair_probes && (!state.predictive_history_states ||
             !state.self_directed || state.config.planning_work<32_000){
+            return Err(Error::InvalidData);
+        }
+        if state.adaptive_history_suffix &&
+            (!state.predictive_history_states ||
+             state.config.planning_depth<3 ||
+             state.config.planning_work<32_000){
             return Err(Error::InvalidData);
         }
         if let Some(policy)=&state.autonomy {
