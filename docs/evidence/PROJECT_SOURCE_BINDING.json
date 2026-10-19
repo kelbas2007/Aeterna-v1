@@ -62,21 +62,21 @@
     "modified": {
       "src/unified_runtime.rs": {
         "before_sha256": "8973cc39438c1450bf15c6dc0f48582ffdeb308418c32a7901fa8f414be1e098",
-        "after_git_blob": "e415ba92e6ea9b787bac59179f0137ede5880bff"
+        "after_git_blob": "c7e883251a9d4d8b46cb6a2ab9fcecfdda3a6c84"
       },
       "src/construction/unified_port.rs": {
         "before_sha256": "7ef8bf7ed14fae7122f608c5db8e7c49a792833a9ae12dabf70952fc88f28e73",
-        "after_git_blob": "b399ccc57c62d6b4eed0b1e73ca4b20a22ab7a80"
+        "after_git_blob": "7f4f10af8b94c6813d6236fca97cd3dfc7521d0b"
       },
       "src/construction/runtime.rs": {
         "before_sha256": "0974602c4b5f9e14a8827c3fd70f3c44cdfdda88309d4485750586875e5bcb7a",
-        "after_git_blob": "b33991608827e871819986ed8b08e2daaa565b84"
+        "after_git_blob": "e31215a759602e5c66f9e176a6c4df1ccdba400d"
       }
     },
     "jsonl_before_sha256": "f7517ba87387bbb8ea4f72cf22f6bae66f9a5efa5104681dac6e24505599e89d",
     "research_boundary": "Development-only 24 opaque role permutations (96 actions) and paired 32-step ablation; not an independent AGI qualification.",
-    "review_revision": "PR9 experimental extension: independently contrast two observed pre-action sensor guards before fitting a joint factual effect; reject correlated-only sensor co-occurrence; demand chronological real heldout consequences and abstain if the metered proof fails. All prior synthetic tests exposed; not evidence of blind generalization. Conjunction fitting is evaluated before single-guard scans and bounded by the existing 4k prospective U1 work meter. Certified goal-chain research: every planned edge must pass actual chronological heldout calibration; one total metered budget and conservative abstention; exact 4k/20k exposed controls preserve old arbitration. Three-arm controlled ablation separates direct acquired factual effects from marginal chain proposals; explicit same-checkpoint opt-in, telemetry is observation-only. Opt-in own delayed PRE/action/POST discrepancy -> typed executable expression search -> chronological real-episode shadow gate -> native U1 evidence valuation. Old RSP2 admission and HumanProtection stay unchanged. New JSONL enable/report operations use the same opt-in evaluator runtime and are Git-blob bound by project source audit. Post-admission real-episode contradictions can revoke accepted evaluator with replayable rollback witness; goal-less actions break pending episode. Post-freeze independent trial allows ablating only self-revised scorer readout from identical checked checkpoint. T-SR2: optional readout gate with bounded protected-action evidence and per-cohort non-regression, no credit for unexecuted counterfactuals. T-SR2 one-use sandbox siblings from one joint checkpoint execute real protected POST callbacks, evaluate action/goal outcomes and admit only after per-cohort and cost gates.",
-    "jsonl_after_git_blob": "11c6cf29072081bebdb7f5c76194a97131d6a5dc",
+    "review_revision": "PR9 experimental extension: independently contrast two observed pre-action sensor guards before fitting a joint factual effect; reject correlated-only sensor co-occurrence; demand chronological real heldout consequences and abstain if the metered proof fails. All prior synthetic tests exposed; not evidence of blind generalization. Conjunction fitting is evaluated before single-guard scans and bounded by the existing 4k prospective U1 work meter. Certified goal-chain research: every planned edge must pass actual chronological heldout calibration; one total metered budget and conservative abstention; exact 4k/20k exposed controls preserve old arbitration. Three-arm controlled ablation separates direct acquired factual effects from marginal chain proposals; explicit same-checkpoint opt-in, telemetry is observation-only. Opt-in own delayed PRE/action/POST discrepancy -> typed executable expression search -> chronological real-episode shadow gate -> native U1 evidence valuation. Old RSP2 admission and HumanProtection stay unchanged. New JSONL enable/report operations use the same opt-in evaluator runtime and are Git-blob bound by project source audit. Post-admission real-episode contradictions can revoke accepted evaluator with replayable rollback witness; goal-less actions break pending episode. Post-freeze independent trial allows ablating only self-revised scorer readout from identical checked checkpoint. T-SR2: optional readout gate with bounded protected-action evidence and per-cohort non-regression, no credit for unexecuted counterfactuals. T-SR2 one-use sandbox siblings from one joint checkpoint execute real protected POST callbacks, evaluate action/goal outcomes and admit only after per-cohort and cost gates. Predictive history-state research: same Learner's actual adjacent PRE/action/POST records establish one-step action-suffix predictive distinctions under matched PRE controls; three chronological future heldouts, bounded work, approved no-op preparation as interior causal plan only, U1 proposal and HumanProtection unchanged. NO unexposed scientific generalization claim.",
+    "jsonl_after_git_blob": "e8be4001e333a0a465fbf2a90fc38a131dcb37a0",
     "jsonl_prior_after_sha256": "1de34904c01de82d94d7ecab6763c9f724c9cd7a504d07fe644cd0cb30da7077"
   }
 }
