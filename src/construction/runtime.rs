@@ -93,6 +93,8 @@ pub struct Learner {
     /// An enabled factual Learner can thus be ablated against SAME checkpoint.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     certified_chains:bool,
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    predictive_history_states:bool,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -303,6 +305,94 @@ fn calibrated_factual_prediction(records:&[Record],pre:&[i64],action:usize,
     let predicted_from_all=factual_prediction(records,pre,action,frozen_at,meter)?;
     (predicted_from_training==predicted_from_all).then_some(predicted_from_all)
 }
+
+/// Predictive history-state learning from this organism's executed journal.
+/// Adjacent PRE/action/POST events must match, without crossing a restart.
+fn factual_predecessor(records:&[Record],i:usize)->Option<usize>{
+    if i==0 || records[i].transition.restart {return None}
+    let a=&records[i-1].transition;let b=&records[i].transition;
+    (a.id.checked_add(1)==Some(b.id) && a.post==b.pre).then_some(a.action)
+}
+/// One-step suffix state: same visible PRE and tested action, distinct
+/// predecessor actions and independently different real POST consequences.
+/// The model assigns no authored meanings to opaque motor IDs.
+fn fitted_history_effect(records:&[Record],pre:&[i64],action:usize,
+                         previous:usize,meter:&mut Meter)->Option<Vec<i64>>{
+    let mut yes=Vec::new();let mut no=Vec::new();
+    for i in (0..records.len()).rev().take(128){
+        meter.charge(pre.len() as u64+2).ok()?;
+        let t=&records[i].transition;
+        if t.action!=action || t.pre.len()!=pre.len(){continue}
+        let Some(p)=factual_predecessor(records,i) else {continue};
+        if p==previous{yes.push(t)}else{no.push(t)}
+    }
+    if yes.len()<4||no.len()<4{return None}
+    let mut contrasted=0;
+    for a in &yes {
+        for b in &no {
+            meter.charge(pre.len() as u64+1).ok()?;
+            if a.pre==b.pre&&a.post!=b.post{contrasted+=1;break}
+        }
+    }
+    if contrasted<3{return None}
+    (0..pre.len()).map(|axis|{
+        effect(&yes,axis,meter)?.apply(pre[axis])
+    }).collect()
+}
+/// Three chronological, actual later consequences in this predecessor
+/// context must be predictable using older experience, with a stable re-fit.
+fn calibrated_history_effect(records:&[Record],pre:&[i64],action:usize,
+    previous:usize,frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>>{
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?;
+    let mut seen=Vec::new();
+    for i in (0..end).rev().take(128) {
+        meter.charge(2).ok()?;
+        if records[i].transition.action==action &&
+            factual_predecessor(&records[..end],i)==Some(previous){seen.push(i)}
+    }
+    if seen.len()<7{return None}
+    let old=&records[..seen[2]];
+    let mut actual_change=false;
+    for &i in seen.iter().take(3) {
+        let row=&records[i].transition;
+        if fitted_history_effect(old,&row.pre,action,previous,meter)?!=row.post{
+            return None
+        }
+        actual_change|=row.pre!=row.post;
+    }
+    if !actual_change{return None}
+    let trained=fitted_history_effect(old,pre,action,previous,meter)?;
+    let current=fitted_history_effect(&records[..end],pre,action,previous,meter)?;
+    (trained==current).then_some(current)
+}
+/// Verified no-op only as a *preparatory* step in a full causal plan;
+/// never as a direct high-value U1 action or fabricated real POST.
+fn certified_history_noop(records:&[Record],pre:&[i64],action:usize,
+    frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>>{
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?;
+    let mut seen=Vec::new();
+    for i in (0..end).rev().take(96){
+        meter.charge(1).ok()?;
+        if records[i].transition.action==action {seen.push(i)}
+    }
+    if seen.len()<8{return None}
+    let old=&records[..seen[2]];
+    for &i in seen.iter().take(3){
+        let r=&records[i].transition;
+        if r.pre!=r.post ||
+            factual_prediction(old,&r.pre,action,None,meter)!=Some(r.post.clone()){
+            return None
+        }
+    }
+    let trained=factual_prediction(old,pre,action,None,meter)?;
+    let all=factual_prediction(&records[..end],pre,action,None,meter)?;
+    (trained==pre && trained==all).then_some(all)
+}
+
 fn goal_distance(state:&[i64],goal:&[Option<i64>])->u128{
     state.iter().zip(goal).filter_map(|(&x,g)|g.map(|v|(i128::from(x)-i128::from(v)).unsigned_abs())).sum()
 }
@@ -312,7 +402,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -621,6 +711,16 @@ impl Learner {
     }
     pub fn self_directed_control_enabled(&self)->bool {self.self_directed}
     pub fn certified_chains_enabled(&self)->bool {self.certified_chains}
+    pub fn predictive_history_states_enabled(&self)->bool{self.predictive_history_states}
+    /// Uses the same Learner PRE/action/POST and one joint checkpoint.
+    pub fn enable_predictive_history_states(&mut self)->Result<()>{
+        if !self.self_directed || self.predictive_history_states ||
+            self.pending || self.poisoned || self.frozen_at.is_some(){
+            return Err(Error::Busy)
+        }
+        if self.config.planning_work<32_000{return Err(Error::Capacity)}
+        self.predictive_history_states=true;Ok(())
+    }
     /// The old factual branch remains an independently measurable control.
     pub fn enable_certified_chains(&mut self)->Result<()> {
         if !self.self_directed || self.certified_chains || self.pending || self.poisoned
@@ -797,6 +897,10 @@ impl Learner {
             return Err(Error::InvalidData);
         }
         if state.certified_chains && (!state.self_directed || state.config.planning_work<32_000) {
+            return Err(Error::InvalidData);
+        }
+        if state.predictive_history_states &&
+            (!state.self_directed || state.config.planning_work<32_000){
             return Err(Error::InvalidData);
         }
         if let Some(policy)=&state.autonomy {
