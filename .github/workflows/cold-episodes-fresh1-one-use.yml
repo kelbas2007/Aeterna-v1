@@ -1,0 +1,69 @@
+name: COLD-EPISODES-FRESH1 one-use disjoint cold worlds
+on:
+  pull_request:
+    paths:
+      - 'tests/cold_episodes_fresh1_one_use.rs'
+      - '.github/workflows/cold-episodes-fresh1-one-use.yml'
+permissions:
+  contents: read
+concurrency:
+  group: cold-fresh1-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  first-and-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enforce one-use only on the commit ADDING this workflow
+        id: first
+        shell: bash
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          echo "run=false" >> "$GITHUB_OUTPUT"
+          git fetch --depth=2 origin "$HEAD_SHA"
+          if git show --format= --diff-filter=A --name-only "$HEAD_SHA" \
+            | grep -Fxq '.github/workflows/cold-episodes-fresh1-one-use.yml'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Pre-registered first source-locked trial; no post-result reruns"
+          else
+            echo "PREVIOUS TRIAL CONSUMED — no science evaluation on later commits"
+          fi
+      - name: Pin toolchain, source and protocol
+        if: steps.first.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -s docs/COLD_EPISODES_FRESH1_PROTOCOL.md
+          git diff --exit-code
+          mkdir -p cold-fresh-evidence
+          printf 'merge_sha=%s\nsource_head=%s\none_use_seed=%s\n' \
+            "$GITHUB_SHA" "${{ github.event.pull_request.head.sha }}" \
+            "$GITHUB_RUN_ID" | tee cold-fresh-evidence/provenance.txt
+      - uses: Swatinem/rust-cache@v2
+        if: steps.first.outputs.run == 'true'
+      - name: Execute single frozen protocol and record all real outcomes
+        if: steps.first.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test cold_episodes_fresh1_one_use \
+            -- --ignored --nocapture --test-threads=1 2>&1 | tee cold-fresh-evidence/science-stdout.log
+      - name: Preserve negative and positive traces equally
+        if: always() && steps.first.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cold-episodes-fresh1-${{ github.sha }}-${{ github.run_id }}
+          path: cold-fresh-evidence/
+          retention-days: 30
+          if-no-files-found: warn
