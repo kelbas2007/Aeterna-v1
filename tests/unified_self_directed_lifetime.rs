@@ -132,3 +132,46 @@ fn fixed_budget_ablation_reports_both_arms_without_relabeling() {
     assert_eq!(factual[1],0,"default U1 must not pretend to have used the new factual path");
     assert!(factual[0]>0);
 }
+
+#[test]
+fn partially_satisfied_goal_stops_direct_learner_and_protected_executor() {
+    use aeterna_v1::{EvoPhase,EvoConfig};
+    use aeterna_v1::construction::runtime::{Learner,ProtectedConstructionRuntime};
+    use aeterna_v1::construction::vm::Error;
+    let cfg=Config{width:3,actions:4,minimum_training:128,search_every:4096,
+        planning_work:100,..Default::default()};
+    let mut learner=Learner::new(cfg.clone(),vec![0,0,0]).unwrap();
+    learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
+    learner.enable_self_directed_control().unwrap();
+    assert!(matches!(learner.choose_masked(Some(&[Some(0),None,None])),Err(Error::NoEvidence)));
+    let organism=EvoPhase::new(EvoConfig{sensory_cells:3,motor_cells:4,..Default::default()});
+    let mut runtime=ProtectedConstructionRuntime::new(organism,cfg,vec![0;3]).unwrap();
+    runtime.enable_autonomy(AutonomyPolicy::default()).unwrap();
+    runtime.enable_self_directed_control().unwrap();
+    let denied=runtime.step_autonomous(Some(&[Some(0),None,None]),&offers(),safe,
+        |_|panic!("external action must not occur when masked goal is satisfied"));
+    assert!(matches!(denied,Err(Error::NoEvidence)));
+}
+
+#[test]
+fn jsonl_multi_domain_keeps_small_sensor_contract() {
+    use std::io::Write;
+    use std::process::{Command,Stdio};
+    let mut proc=Command::new(env!("CARGO_BIN_EXE_aeterna-v1"))
+        .arg("--jsonl").stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped())
+        .spawn().unwrap();
+    let input=concat!("{\"op\":\"init\",\"width\":3,\"observation\":[0,0,0]}\n",
+        "{\"op\":\"enter\",\"name\":\"other-sensor-world\",\"observation\":[0,0,0]}\n",
+        "{\"op\":\"quit\"}\n");
+    proc.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
+    let output=proc.wait_with_output().unwrap();
+    assert!(output.status.success(),"process error: {}",String::from_utf8_lossy(&output.stderr));
+    let responses=String::from_utf8(output.stdout).unwrap();
+    let rows=responses.lines().map(|x|serde_json::from_str::<serde_json::Value>(x).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(rows.len(),3);
+    assert_eq!(rows[0]["type"],"initialized");
+    assert_eq!(rows[1]["type"],"entered");
+    assert_eq!(rows[1]["report"]["domain"],"other-sensor-world");
+    assert_eq!(rows[2]["type"],"bye");
+}

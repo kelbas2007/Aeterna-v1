@@ -197,7 +197,12 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"loaded","report":runtime.as_ref().unwrap().unified_report()}))
                 },
                 "enter"=>{
-                    let (cfg,policy)=configuration();let initial=serde_json::from_value(request["observation"].clone())?;
+                    let (mut cfg,policy)=configuration();
+                    // Preserve the carrier's initialized sensor width; an
+                    // entered domain does not recreate the default 32 cells.
+                    let organism=runtime.as_ref().ok_or("not loaded")?;
+                    cfg.width=organism.construction_learner().ok_or("no constructing learner")?.current().len();
+                    let initial=serde_json::from_value(request["observation"].clone())?;
                     let name=request["name"].as_str().ok_or("missing sensor contract")?;
                     runtime.as_mut().ok_or("not loaded")?.enter_constructing_domain(name,cfg,policy,initial)?;
                     Ok(json!({"type":"entered","report":runtime.as_ref().unwrap().unified_report()}))

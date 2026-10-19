@@ -126,12 +126,18 @@ impl ScientificRuntime {
         // ProtectedConstructionRuntime. Here it is a *proposal*, never a
         // bypass around U1 or the human-protection permit.
         if u.current.learner.self_directed_control_enabled() {
-            let action=u.current.learner.choose_offered(goal,Some(offers))?;
+            let (action,chosen_work)=u.current.learner.choose_offered_metered(goal,Some(offers))?;
             if !allowed[action] {return Err(UError::Blocked)}
             let evidence=predictions.iter().find(|p|p.action==action).ok_or(UError::InvalidData)?;
-            let factual = u.current.learner.carrier_factual_action_consequence(action)
-                .unwrap_or_else(||evidence.output.clone());
-            let supported = u.current.learner.carrier_factual_action_consequence(action).is_some();
+            // Share one factual planning budget between goal/probe selection
+            // and verification of the proposed consequence. No double fitting.
+            let remaining=cfg.planning_work.saturating_sub(chosen_work);
+            let (factual_prediction,factual_work)=u.current.learner
+                .carrier_factual_action_consequence_metered(action,remaining);
+            u.computation_work=u.computation_work.checked_add(chosen_work.saturating_add(factual_work))
+                .ok_or(UError::Capacity)?;
+            let supported=factual_prediction.is_some();
+            let factual=factual_prediction.unwrap_or_else(||evidence.output.clone());
             // One common five-field contract: verified-goal proximity,
             // local novelty, epistemic disagreement, factual support,
             // and quoted action economy. No motor IDs or world role labels.

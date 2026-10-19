@@ -131,7 +131,11 @@ enum ObservedEffect { Keep, Delta(i64), Set(i64) }
 impl ObservedEffect {
     fn apply(self,x:i64)->Option<i64>{ match self { Self::Keep=>Some(x), Self::Delta(d)=>x.checked_add(d),Self::Set(v)=>Some(v) } }
 }
-fn effect(rows:&[&Transition],axis:usize)->Option<ObservedEffect>{
+// Explicitly metered factual fitting. The journal is bounded by the original
+// runtime policy, but every row/axis/guard considered here ALSO consumes the
+// same planning meter. No hidden O(journal_size * candidates) scans.
+fn effect(rows:&[&Transition],axis:usize,meter:&mut Meter)->Option<ObservedEffect>{
+    meter.charge((rows.len() as u64).saturating_mul(4)).ok()?;
     if rows.len()<2 {return None;}
     if rows.iter().all(|r|r.pre[axis]==r.post[axis]){return Some(ObservedEffect::Keep)}
     let difference=rows[0].post[axis] as i128 - rows[0].pre[axis] as i128;
@@ -142,31 +146,31 @@ fn effect(rows:&[&Transition],axis:usize)->Option<ObservedEffect>{
     if rows.iter().all(|r|r.post[axis]==output){return Some(ObservedEffect::Set(output))}
     None
 }
-/// Reconstruct a simple conditional effect if the unconditional law was
-/// contradicted. Candidate guards come only from observed PRE coordinates.
-fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64])->Option<i64>{
-    if let Some(rule)=effect(rows,axis){return rule.apply(current[axis]);}
-    let width=current.len();
-    for guard in 0..width {
+fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64],meter:&mut Meter)->Option<i64>{
+    if let Some(rule)=effect(rows,axis,meter){return rule.apply(current[axis]);}
+    for guard in 0..current.len() {
         if guard==axis{continue}
+        // Upfront charge covers collection, sorting and de-duplication of at
+        // most 96 numeric witnesses; exact CPU cycles are NOT claimed.
+        meter.charge((rows.len() as u64).saturating_mul(9)).ok()?;
         let mut values:Vec<i64>=rows.iter().map(|r|r.pre[guard]).collect();
         values.sort_unstable();values.dedup();
-        if values.len()>4 {continue;} // Reject identity-like one-off guards.
+        if values.len()>4 {continue;}
         for value in values {
+            meter.charge((rows.len() as u64).saturating_mul(2)).ok()?;
             let yes=rows.iter().copied().filter(|r|r.pre[guard]==value).collect::<Vec<_>>();
             let no=rows.iter().copied().filter(|r|r.pre[guard]!=value).collect::<Vec<_>>();
-            // An observed contradiction establishes that a global rule is false.
-            // Permit a supported branch (>=2) to predict a matching new context
-            // without pretending the other, singly observed branch is learned.
             if yes.len()>=2 && !no.is_empty() && current[guard]==value {
-                if let Some(rule)=effect(&yes,axis) {
+                if let Some(rule)=effect(&yes,axis,meter) {
+                    meter.charge(no.len() as u64).ok()?;
                     if no.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {
                         return rule.apply(current[axis]);
                     }
                 }
             }
             if no.len()>=2 && !yes.is_empty() && current[guard]!=value {
-                if let Some(rule)=effect(&no,axis) {
+                if let Some(rule)=effect(&no,axis,meter) {
+                    meter.charge(yes.len() as u64).ok()?;
                     if yes.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {
                         return rule.apply(current[axis]);
                     }
@@ -176,11 +180,19 @@ fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64])->Option<i64>{
     }
     None
 }
-fn factual_prediction(records:&[Record],pre:&[i64],action:usize)->Option<Vec<i64>>{
-    let observations=records.iter().rev().filter(|r|r.transition.action==action)
-        .take(96).map(|r|&r.transition).collect::<Vec<_>>();
+fn factual_prediction(records:&[Record],pre:&[i64],action:usize,
+                      frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>> {
+    // A frozen Learner may still commit REAL external observations for safety
+    // and accounting, but they must not become new training examples.
+    let end=frozen_at.map_or(records.len(),|id|records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?; // upper bound on binary selection of <=4096 rows
+    let mut observations=Vec::new();
+    for r in records[..end].iter().rev().take(96) {
+        meter.charge(1).ok()?;
+        if r.transition.action==action {observations.push(&r.transition)}
+    }
     if observations.len()<2 {return None;}
-    (0..pre.len()).map(|j|predict_axis(&observations,j,pre)).collect()
+    (0..pre.len()).map(|axis|predict_axis(&observations,axis,pre,meter)).collect()
 }
 fn goal_distance(state:&[i64],goal:&[Option<i64>])->u128{
     state.iter().zip(goal).filter_map(|(&x,g)|g.map(|v|(i128::from(x)-i128::from(v)).unsigned_abs())).sum()
@@ -499,50 +511,72 @@ impl Learner {
         Ok(())
     }
     pub fn self_directed_control_enabled(&self)->bool {self.self_directed}
-    fn factual_control(&self,goal:&[Option<i64>],allowed:&[usize])->usize {
+    /// Returns both the factual choice and its metered reasoning cost. All
+    /// loops stop as soon as the configured work budget is spent. The candidate
+    /// is still only a U1 proposal, not authority to perform an action.
+    fn factual_control_metered(&self,goal:&[Option<i64>],allowed:&[usize])->(usize,u64){
+        let mut meter=Meter::new(self.config.planning_work);
         let baseline=goal_distance(&self.current,goal);
-        // Only the runtime's factual journal can supply transitions. Any
-        // imagined successor is used for ranking, never written as evidence.
         let mut best:Option<(u128,usize,usize)>=None;
         let mut frontier=VecDeque::from([(self.current.clone(),None::<usize>,0usize)]);
         let mut visited=BTreeSet::new();visited.insert(self.current.clone());
         let mut expanded=0usize;
-        // Narrow CPU-first guard: the old Learner's optional planning budget
-        // is a ceiling, not a pretext for exhaustive state expansion.
-        let expansion_cap=self.config.planning_work.min(512) as usize;
-        while let Some((state,first,depth))=frontier.pop_front(){
-            if depth>=self.config.planning_depth || expanded>=expansion_cap {continue}
+        let cap=self.config.planning_work.min(512) as usize;
+        'search: while let Some((state,first,depth))=frontier.pop_front() {
+            if depth>=self.config.planning_depth || expanded>=cap {continue}
             for &action in allowed {
+                if meter.charge(1+state.len() as u64).is_err(){break 'search}
                 expanded+=1;
-                let Some(next)=factual_prediction(&self.records,&state,action) else {continue};
-                if next==state {continue;}
+                let Some(next)=factual_prediction(&self.records,&state,action,self.frozen_at,&mut meter) else {
+                    if meter.remaining()==0 {break 'search}
+                    continue
+                };
+                if next==state{continue}
                 let origin=first.unwrap_or(action);
                 let distance=goal_distance(&next,goal);
                 if distance<baseline {
                     let candidate=(distance,depth+1,origin);
-                    if best.as_ref().is_none_or(|b|candidate<*b){best=Some(candidate);}
+                    if best.as_ref().is_none_or(|b|candidate<*b){best=Some(candidate)}
                 }
-                if visited.len()<2048 && visited.insert(next.clone()) {
-                    frontier.push_back((next,Some(origin),depth+1));
+                if visited.len()<2048 {
+                    if meter.charge(12+next.len() as u64).is_err(){break 'search}
+                    if visited.insert(next.clone()) {frontier.push_back((next,Some(origin),depth+1))}
                 }
             }
         }
-        if let Some((_,_,action))=best {return action;}
-        // If no *factual* model predicts progress, probe the least tested
-        // action in the current situation. A new context reopens uncertainty.
-        let mut best_action=allowed[0];
-        let mut best_rank=(usize::MAX,usize::MAX,u64::MAX);
+        if let Some((_,_,action))=best {return (action,meter.spent)}
+        // No proven model improvement. Probe less-observed actions based only
+        // on PRE-FREEZE evidence; post-freeze action logs cannot retrain it.
+        let end=self.frozen_at.map_or(self.records.len(),|id|
+            self.records.partition_point(|r|r.transition.id<id));
+        let mut selected=allowed[0];let mut rank=(usize::MAX,usize::MAX,u64::MAX);
         for &action in allowed {
-            let mut local=0usize;let mut total=0usize;
-            for r in &self.records {
-                if r.transition.action!=action {continue}
-                total+=1;
-                if r.transition.pre==self.current {local+=1;}
+            let mut local=0usize;let mut global=0usize;
+            for r in self.records[..end].iter().rev().take(96) {
+                if meter.charge(self.current.len() as u64+1).is_err(){break}
+                if r.transition.action==action {
+                    global+=1;
+                    if r.transition.pre==self.current{local+=1}
+                }
             }
-            let rank=(local,total,exploration_word(self.next_id ^ action as u64));
-            if rank<best_rank {best_rank=rank;best_action=action;}
+            let tie_event=self.frozen_at.unwrap_or(self.next_id);
+            let score=(local,global,exploration_word(tie_event^action as u64));
+            if score<rank {rank=score;selected=action}
+            if meter.remaining()==0{break}
         }
-        best_action
+        (selected,meter.spent)
+    }
+    /// Explicitly report factual planning work to its caller so both the
+    /// standalone protected executor and U1 can charge their own ledgers.
+    pub(crate) fn choose_offered_metered(&self,goal:Option<&[Option<i64>]>,offers:Option<&[ActionOffer]>)->Result<(usize,u64)> {
+        if !self.self_directed {return self.choose_offered(goal,offers).map(|action|(action,0))}
+        if self.pending||self.poisoned{return Err(Error::Busy)}
+        if goal.is_some_and(|g|g.len()!=self.config.width) || offers.is_some_and(|o|o.len()!=self.config.actions){return Err(Error::InvalidData)}
+        let remaining=self.autonomy_report().map(|r|r.remaining_cost).unwrap_or(u64::MAX);
+        let allowed=(0..self.config.actions).filter(|&a|offers.is_none_or(|o|o[a].available&&o[a].max_cost<=remaining)).collect::<Vec<_>>();
+        if allowed.is_empty(){return Err(Error::Blocked)}
+        if goal.is_some_and(|g|g.iter().any(Option::is_some)&&goal_distance(&self.current,g)==0){return Err(Error::NoEvidence)}
+        Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed))
     }
     /// Ephemeral imagination plus a model-independent exploration reserve.
     /// No simulated POST is inserted into the factual journal.
@@ -562,11 +596,11 @@ impl Learner {
         if allowed.is_empty(){return Err(Error::Blocked);}
         if self.self_directed {
             if let Some(goal)=goal {
-                if goal.iter().all(Option::is_some) && goal_distance(&self.current,goal)==0 {
+                if goal.iter().any(Option::is_some) && goal_distance(&self.current,goal)==0 {
                     return Err(Error::NoEvidence); // no unnecessary protected action
                 }
             }
-            return Ok(self.factual_control(goal.unwrap_or(&[]),&allowed));
+            return Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed).0);
         }
         let word=exploration_word(self.next_id);
         if goal.is_none() && word & 3 == 0 {return Ok(allowed[((word>>2)%allowed.len() as u64) as usize]);}
@@ -628,17 +662,7 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
-        if let Some(book)=&state.requirements{
-            book.validate()?;
-            // LC1-only acquisition work is included in Learner's cumulative
-            // all-mechanism ledger. A re-enveloped book may not claim to have
-            // spent more than its owning Learner has ever charged.
-            let learned=book.report();
-            if learned.work>state.construction_work{return Err(Error::InvalidData)}
-            // Only the Learner's irreversible freeze can freeze LC1.
-            // Reject BOTH impossible directions in restored checkpoints.
-            if learned.frozen!=state.frozen_at.is_some(){return Err(Error::InvalidData)}
-        }
+        if let Some(book)=&state.requirements{book.validate()?;if state.frozen_at.is_some()&&!book.report().frozen{return Err(Error::InvalidData)}}
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
         if state.self_directed && (state.autonomy.is_none() || state.config.width>6 || state.config.actions>8) {
             return Err(Error::InvalidData);
@@ -717,7 +741,8 @@ impl ProtectedConstructionRuntime {
     pub fn step_autonomous<H,F>(&mut self,goal:Option<&[Option<i64>]>,offers:&[ActionOffer],hazard:H,execute:F)->Result<usize>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->Result<ExternalPost> {
         if self.learner.autonomy.is_none(){return Err(Error::InvalidData);}
-        let action=self.learner.choose_offered(goal,Some(offers))?;
+        let (action,work)=self.learner.choose_offered_metered(goal,Some(offers))?;
+        self.learner.construction_work=self.learner.construction_work.checked_add(work).ok_or(Error::Capacity)?;
         self.step_action_inner(action,hazard,execute,Some(offers[action].max_cost))
     }
     /// Restores software cognition only, never the old SNN or a live permit.
@@ -986,3 +1011,59 @@ include!("unified_port.rs");
 include!("recursive_search_port.rs");
 
 include!("requirements_port.rs");
+
+#[cfg(test)]
+mod factual_control_integrity_tests {
+    use super::*;
+
+    fn record(id:u64, action:usize, start:i64, end:i64)->Record {
+        Record {
+            transition:Transition{id,restart:id==0,pre:vec![start,1],action,post:vec![end,1]},
+            model:0,prediction:Forecast{center:vec![end,1],scale:vec![1.0,1.0]},
+            candidate:None,candidate_prediction:None,permit_sequence:id+1,external_cost:1,
+        }
+    }
+
+    #[test]
+    fn freeze_excludes_actual_later_transitions_from_acquired_effects() {
+        let cfg=Config{width:2,actions:2,minimum_training:128,search_every:4096,
+            planning_work:4000,..Default::default()};
+        let mut learner=Learner::new(cfg,vec![5,1]).unwrap();
+        learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
+        learner.enable_self_directed_control().unwrap();
+        for i in 0..8 {learner.records.push(record(i,0,i as i64,i as i64+1))}
+        learner.next_id=8;
+        let mut before_meter=Meter::new(4000);
+        let before=factual_prediction(&learner.records,&[11,1],0,None,&mut before_meter);
+        assert_eq!(before,Some(vec![12,1]));
+        learner.freeze_learning().unwrap();
+        assert_eq!(learner.frozen_at,Some(8));
+        // Later real consequences contradict the acquired law, but frozen
+        // inference remains pinned to id < frozen_at, even across a restart.
+        for i in 8..18 {learner.records.push(record(i,0,i as i64,i as i64+10))}
+        learner.next_id=18;
+        let mut frozen_meter=Meter::new(4000);
+        let after=factual_prediction(&learner.records,&[11,1],0,learner.frozen_at,&mut frozen_meter);
+        assert_eq!(after,before);
+        let mut unrestricted_meter=Meter::new(4000);
+        let unrestricted=factual_prediction(&learner.records,&[11,1],0,None,&mut unrestricted_meter);
+        assert_ne!(unrestricted,before,"post-freeze evidence must be excluded, not ignored by chance");
+        assert!(frozen_meter.spent<=learner.config.planning_work);
+    }
+
+    #[test]
+    fn factual_search_cost_is_bounded_even_with_large_journal() {
+        let cfg=Config{width:2,actions:2,minimum_training:128,search_every:4096,
+            journal_capacity:4096,planning_work:100,..Default::default()};
+        let mut learner=Learner::new(cfg,vec![5,1]).unwrap();
+        learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
+        learner.enable_self_directed_control().unwrap();
+        for i in 0..4000 {learner.records.push(record(i,0,i as i64,i as i64+1))}
+        learner.next_id=4000;
+        let (_,cost)=learner.choose_offered_metered(Some(&[Some(10),None]),None).unwrap();
+        assert!(cost<=100,"measured factual work must never exceed planning_work");
+        let mut meter=Meter::new(100);
+        let _=factual_prediction(&learner.records,&[5,1],0,None,&mut meter);
+        assert!(meter.spent<=100);
+    }
+}

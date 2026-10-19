@@ -12,9 +12,11 @@ impl Learner {
     pub(crate) fn carrier_is_managed(&self)->bool {self.carrier_managed}
     /// Read-only consequence derived from real PRE/action/POST journal rows.
     /// Imagined outcomes never enter the journal and cannot become authority.
-    pub(crate) fn carrier_factual_action_consequence(&self,action:usize)->Option<Vec<i64>> {
-        if action>=self.config.actions{return None}
-        super::runtime::factual_prediction(&self.records,&self.current,action)
+    pub(crate) fn carrier_factual_action_consequence_metered(&self,action:usize,budget:u64)->(Option<Vec<i64>>,u64) {
+        if action>=self.config.actions || budget==0{return (None,0)}
+        let mut meter=Meter::new(budget);
+        let result=super::runtime::factual_prediction(&self.records,&self.current,action,self.frozen_at,&mut meter);
+        (result,meter.spent)
     }
     pub(crate) fn carrier_config(&self)->&super::runtime::Config {&self.config}
     pub(crate) fn carrier_prepare(&mut self,a:usize)->Result<Commitment> {self.prepare(a)}
