@@ -38,6 +38,7 @@ JSONL-процесс. Консолидация не добавляет дисп�
 | Учебная память и композиция | [SG1](SEMANTIC_GROUNDING_RESULTS.md) |
 | Отношения величин | [REL1](RELATIONAL_CONTROL_RESULTS.md) |
 | Рекурсивный поиск и его допуск | [RSP2](RSP2_REPAIR.md) |
+| Приобретаемые требования к недостающим вычислениям | [LC1](LC1_INTEGRATION.md) |
 
 ## Последние изменения
 
@@ -86,3 +87,20 @@ tests fail on the former source and pass with these three entry guards.
 The RSP2 search algorithm and its admission rules remain byte-identical.
 Two already-consumed DC-2 installers now have read-only manual verification
 workflows; no current workflow applies those historical patches again.
+
+## Центральный контур приобретения вычислений LC1
+
+LC1 не самостоятельная ветвь интеллекта: он сохраняет выученные обратные
+требования непосредственно в том же Learner и общем checkpoint, что RSP2/U1.
+Публичный JSONL поддерживает enable_missing_computation_learning,
+observe_executed_computations, complete_missing_computation и
+missing_computation_report. Вычислительная цель и записи выполненных операций
+служат источником; скрытые probes не передаются решателю. Без параметра
+`sketch` система сама перебирает ограниченные гипотезы об отсутствующем
+промежуточном выражении. С параметром `sketch` она достраивает конкретный
+пробел. Любой предложенный ответ проверяется прямым исполнением VM.
+
+RSP3 приобретает стратегию направления поиска; LC1 приобретает ограничения
+для получения неизвестного фрагмента. Обе способности сосуществуют без
+обхода RSP2 producer/admission. Это ограниченный программный эксперимент,
+не доказанный автономный универсальный интеллект.

@@ -1,6 +1,6 @@
 {
   "base_revision": "02b4175f34bcc68b8c80197cca6dd79f38b85892",
-  "unchanged_cognitive_source_files": 80,
+  "unchanged_cognitive_source_files": 77,
   "aggregate_sha256": "2b19688cb615cd0a6581aa9018df0c32efd311b01fa64e8be0ea965a33e65dc3",
   "exclusions": [
     "src/main.rs",
@@ -30,5 +30,31 @@
     "module_after_sha256": "17da23bfb9fcaeb8d3f377ac4562702d84fa7f564fa58377682b16d392e03743",
     "added_line": "pub mod experiential;\n",
     "note": "Round-robin residual-feature grammar, validated cases before indexing, candidate-only RSP3; RSP2 remains byte-identical"
+  },
+  "reviewed_lc1_extension": {
+    "purpose": "Acquired inverse requirements central to same Learner and ScientificRuntime, opt-in only; 100% preservation of original RSP2 search-policy code and admissibility.",
+    "added": {
+      "src/construction/requirements.rs": "3b871a43665f7e569d0acf04ae286a8b20644ffde5f7e5a3cbe73ac6733df4e8",
+      "src/construction/requirements_port.rs": "928db7423d9946a5e31821cf8e8f8bfb661f0d6648d42261f881f4eb1a3d202e"
+    },
+    "modified": {
+      "src/construction/mod.rs": {
+        "before_sha256": "17da23bfb9fcaeb8d3f377ac4562702d84fa7f564fa58377682b16d392e03743",
+        "after_sha256": "051ad8a512a3f4f7c6b396252fb97313dc9f2717114c1d245ce508615bcd3ba1"
+      },
+      "src/construction/runtime.rs": {
+        "before_sha256": "8c588d5e00d32a0fe081cea1e2a8d724750f623df4c37fafd70ed00255395ea0",
+        "after_sha256": "0974602c4b5f9e14a8827c3fd70f3c44cdfdda88309d4485750586875e5bcb7a"
+      },
+      "src/recursive_search_runtime.rs": {
+        "before_sha256": "722552ff99cfa46d2f62b230c8e43fe47725a02895fb05a2c6fe29cdc83619e1",
+        "after_sha256": "d9dbc4c420738e4ffcbf4a1c74cc287a6957d65347b23f95e620cc713b0d55b4",
+        "review": "LC1 V7: depth/size-bounded sketch validation, tight fragment grammar, custom target-dir, metered failure work and common reservation settlement for RSP2 successful searches; RSP2 search_policy unchanged."
+      }
+    },
+    "jsonl_source_after_sha256": "f7517ba87387bbb8ea4f72cf22f6bae66f9a5efa5104681dac6e24505599e89d",
+    "review_v5": "LC1 source v5: sketch preflight respects final node cap; checkpoint validation replays canonical acquisition criteria, witness diversity and identifiability. RSP2/RSP3 untouched.",
+    "review_v6": "PR8 P2: generated sketches bounded, static references checked, acquired-rule replay work lower bound, mutually consistent LC1/Learner freeze, and LC1-only cost <= Learner total. Evidence via reproducible red/green Rust tests; original RSP2/RSP3 unchanged.",
+    "review_v7": "LC1 error-aware metered attempts: record actual or conservatively bounded delegated search work on Err, skip impossible searches, cap syntax before traversal, Cargo metadata target directory; unchanged RSP2 admission code and check points."
   }
 }

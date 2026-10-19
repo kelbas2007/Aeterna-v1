@@ -15,7 +15,8 @@
     "school_memory_and_composition_sg1": true,
     "quantity_relations_rel1": true,
     "recursive_search_rsp2": true,
-    "rsp3_experiential_proposal_research": true
+    "rsp3_experiential_proposal_research": true,
+    "lc1_learned_computation_requirements_opt_in": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -34,7 +35,10 @@
     "all_optional_neural_lanes_in_one_checkpoint",
     "arbitrary_language_understanding",
     "ARC_AGI_3_success",
-    "rsp3_policy_admitted_by_rsp2_producer_gate"
+    "rsp3_policy_admitted_by_rsp2_producer_gate",
+    "open_ended_missing_computation_discovery",
+    "learned_conditional_inverse_rules",
+    "stable_cross_domain_lc1_advantage"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -49,7 +53,9 @@
     "docs/PROJECT_OVERVIEW.md",
     "docs/RSP2_REPAIR.md",
     "docs/RSP2_REPAIR_RESULTS.md",
-    "docs/RSP3_EXPERIENCE_RESULTS.md"
+    "docs/RSP3_EXPERIENCE_RESULTS.md",
+    "docs/LC1_PROTOCOL.md",
+    "docs/LC1_INTEGRATION.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

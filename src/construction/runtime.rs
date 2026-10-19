@@ -83,6 +83,8 @@ pub struct Learner {
     frozen_at: Option<u64>,
     #[serde(default,skip_serializing_if="carrier_unmanaged")]
     carrier_managed: bool,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    requirements: Option<super::requirements::RequirementMemory>,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -122,7 +124,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -163,7 +165,7 @@ impl Learner {
     pub fn freeze_learning(&mut self)->Result<()> {
         if self.pending || self.poisoned {return Err(Error::Busy);}
         if self.frozen_at.is_none(){self.cancel_shadow();self.frozen_at=Some(self.next_id);}
-        self.freeze_recursive_search();Ok(())
+        self.freeze_recursive_search();if let Some(b)=&mut self.requirements{b.freeze();}Ok(())
     }
     pub fn program(&self) -> &Program { &self.active.program }
     pub fn library(&self) -> &Library { &self.library }
@@ -493,6 +495,17 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
+        if let Some(book)=&state.requirements{
+            book.validate()?;
+            // LC1-only acquisition work is included in Learner's cumulative
+            // all-mechanism ledger. A re-enveloped book may not claim to have
+            // spent more than its owning Learner has ever charged.
+            let learned=book.report();
+            if learned.work>state.construction_work{return Err(Error::InvalidData)}
+            // Only the Learner's irreversible freeze can freeze LC1.
+            // Reject BOTH impossible directions in restored checkpoints.
+            if learned.frozen!=state.frozen_at.is_some(){return Err(Error::InvalidData)}
+        }
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
         if let Some(policy)=&state.autonomy {
             policy.validate(&state.config)?;
@@ -829,3 +842,5 @@ fn carrier_unmanaged(v:&bool)->bool{!*v}
 include!("unified_port.rs");
 
 include!("recursive_search_port.rs");
+
+include!("requirements_port.rs");
