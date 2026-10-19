@@ -85,6 +85,12 @@ pub(crate) fn main()->Result<()>{
                         "credit_rule":"only_if_more_than_one_feasible_motor",
                         "causal_observations":"always_record_real_post"}))
                 },
+                "enable_instrumental_credit"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_instrumental_credit()?;
+                    Ok(json!({"type":"instrumental_credit_enabled",
+                        "credit":"actual_goal_progress_only",
+                        "epistemic_facts":"remain_in_real_journal"}))
+                },
                 "enable_predictive_history_states"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_predictive_history_states()?;
                     Ok(json!({"type":"predictive_history_states_enabled",
@@ -356,6 +362,9 @@ Self-directed factual control: init(width<=6), enable_self_directed_control,
 then step(goal,available). Optional opt-in credit:
 enable_agency_aware_credit BEFORE collecting experience; the organism
 still learns world effects from forced actions, not native choice weights.
+Optional instrument-only utility: enable_instrumental_credit (after agency,
+before first factual action); invisible history preparation gets credit
+only after later REAL POST shows goal progress.
 Optional predictive history states
 (planning_work>=32000): enable_predictive_history_states.
 Optional unforced causal pair experiments: enable_active_causal_probes.

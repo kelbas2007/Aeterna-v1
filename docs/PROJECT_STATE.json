@@ -22,7 +22,8 @@
     "trajectory_behavioral_admission_opt_in_development": true,
     "predictive_short_history_states_opt_in_experimental": true,
     "agency_aware_u1_credit_opt_in_experimental": true,
-    "self_selected_causal_pair_probes_opt_in_experimental": true
+    "self_selected_causal_pair_probes_opt_in_experimental": true,
+    "grounded_instrumental_credit_opt_in_development": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -54,7 +55,8 @@
     "blind_independent_hidden_state_transfer_advantage",
     "independently_qualified_agency_credit_policy_advantage",
     "autonomous_cold_causal_discovery_verified",
-    "independently_qualified_autonomous_curriculum"
+    "independently_qualified_autonomous_curriculum",
+    "independent_cold_instrumental_credit_advantage"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -78,7 +80,9 @@
     "docs/PREDICTIVE_HISTORY_STATES_EXPERIMENT.md",
     "docs/AGENCY_CREDIT1_PROTOCOL.md",
     "docs/AGENCY_CREDIT1_IMPLEMENTATION.md",
-    "docs/SELF_DIRECTED_CAUSAL_PROBES_DEVELOPMENT.md"
+    "docs/SELF_DIRECTED_CAUSAL_PROBES_DEVELOPMENT.md",
+    "docs/INSTRUMENTAL_CREDIT1_PROTOCOL.md",
+    "docs/SELF_DIRECTED_CAUSAL_PROBES_RESULT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
