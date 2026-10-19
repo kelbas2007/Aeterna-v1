@@ -1,9 +1,8 @@
 name: COLD-EPISODES-FRESH1 one-use disjoint cold worlds
+# The one-use source-locked examination was CONSUMED by run 39327061666.
+# Never automatically treat changed source/seeds as another unseen result.
 on:
-  pull_request:
-    paths:
-      - 'tests/cold_episodes_fresh1_one_use.rs'
-      - '.github/workflows/cold-episodes-fresh1-one-use.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -11,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   first-and-only:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
