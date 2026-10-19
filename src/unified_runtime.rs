@@ -136,18 +136,22 @@ impl ScientificRuntime {
                 .carrier_factual_action_consequence_metered(action,remaining);
             u.computation_work=u.computation_work.checked_add(chosen_work.saturating_add(factual_work))
                 .ok_or(UError::Capacity)?;
-            let supported=factual_prediction.is_some();
-            let factual=factual_prediction.unwrap_or_else(||evidence.output.clone());
+            // Only empirically calibrated consequences are allowed to compete.
+            // An unknown prediction is not secretly a high-novelty U1 option.
+            // Ordinary U1 handles observation and exploratory choice instead.
+            if let Some(factual)=factual_prediction {
             // One common five-field contract: verified-goal proximity,
             // local novelty, epistemic disagreement, factual support,
             // and quoted action economy. No motor IDs or world role labels.
-            let mut fields=ufields(&factual,goal,evidence.novelty,
-                if supported {evidence.disagreement}else{1.0},
-                if supported {0.8}else{0.0},offers[action].max_cost);
-            if !supported {fields[1]=fields[1].max(0.75)}
+            let fields=ufields(&factual,goal,evidence.novelty,
+                evidence.disagreement,0.8,offers[action].max_cost);
             options.push(UnifiedOption{p:PhaseCognitiveProposal{
                 proposal_id:0x400+action as u64,action,fields
             },kind:3,source:"factual-experience",output:Some(factual)});
+            }
+            // No separate high-novelty proposal without prospective support.
+            // Ordinary U1 already owns uncertainty-driven action selection:
+            // an unverified factual hypothesis must ABSTAIN, not override it.
         }
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {

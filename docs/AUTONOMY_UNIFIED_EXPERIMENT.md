@@ -1,5 +1,13 @@
 # U1 + factual Learner: one unscheduled goal / probe / action loop
 
+> **HISTORICAL / SUPERSEDED development arm (2026-10-19):** numbers
+> below (24/24; 22/24 vs 19/24) describe the EARLIER high-novelty
+> factual-probe candidate. They are **not** the current selective policy.
+> New policy abstains unless real observations prospectively validate a
+> predicted consequence. See [selective abstention and no-regression
+> results](AUTONOMY_EPISTEMIC_ABSTENTION_RESULTS.md), including the loss
+> of the earlier one-family advantage and the negative-transfer controls.
+
 Date: 2026-10-19. **DEVELOPMENT_PASS only**, not AGI or a blind independent benchmark.
 
 ## What changed

@@ -15,7 +15,7 @@ impl Learner {
     pub(crate) fn carrier_factual_action_consequence_metered(&self,action:usize,budget:u64)->(Option<Vec<i64>>,u64) {
         if action>=self.config.actions || budget==0{return (None,0)}
         let mut meter=Meter::new(budget);
-        let result=super::runtime::factual_prediction(&self.records,&self.current,action,self.frozen_at,&mut meter);
+        let result=super::runtime::calibrated_factual_prediction(&self.records,&self.current,action,self.frozen_at,&mut meter);
         (result,meter.spent)
     }
     pub(crate) fn carrier_config(&self)->&super::runtime::Config {&self.config}

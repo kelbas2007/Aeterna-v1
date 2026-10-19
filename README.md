@@ -72,3 +72,4 @@ PROJECT_MAP.md, STATUS.md и docs/README.md. Лицензии внешних д�
 в соответствующих исследовательских отчётах.
 
 Opt-in unscheduled factual-U1 loop: [design and limits](docs/AUTONOMY_UNIFIED_EXPERIMENT.md).
+Current conservative research (no confirmed generalization advantage): [abstention and comparative controls](docs/AUTONOMY_EPISTEMIC_ABSTENTION_RESULTS.md).

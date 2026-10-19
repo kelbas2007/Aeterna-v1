@@ -194,6 +194,45 @@ fn factual_prediction(records:&[Record],pre:&[i64],action:usize,
     if observations.len()<2 {return None;}
     (0..pre.len()).map(|axis|predict_axis(&observations,axis,pre,meter)).collect()
 }
+/// A conservative, prospective belief check inside the existing Learner.
+/// The latest three REAL transitions of an action are evidence held out from
+/// the older prefix used to infer the effect. A fact is offered to U1 only if
+/// all three consequences were predictable, at least one actually changed the
+/// environment, and the inferred rule did not change after those events.
+/// This is not proof of causality or a learned SNN rule: ambiguous/contextual
+/// effects are UNKNOWN, and U1 remains responsible for exploration.
+fn calibrated_factual_prediction(records:&[Record],pre:&[i64],action:usize,
+                                  frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>> {
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    // This partition and sample itself have bounded, charged cost; there is no
+    // post-freeze leakage into prediction or the confidence assessment.
+    meter.charge(16).ok()?;
+    let mut seen=Vec::new();
+    for (idx,r) in records[..end].iter().enumerate().rev().take(96) {
+        meter.charge(1).ok()?;
+        if r.transition.action==action {
+            seen.push(idx);
+            if seen.len()==32{break}
+        }
+    }
+    // Five+ earlier training instances, three chronological holdouts.
+    if seen.len()<8{return None}
+    let held=&seen[..3];
+    let cutoff=seen[2];
+    let training=&records[..cutoff];
+    let mut effect_seen=false;
+    for &idx in held {
+        let row=&records[idx].transition;
+        let predicted=factual_prediction(training,&row.pre,action,None,meter)?;
+        if predicted!=row.post {return None}
+        effect_seen|=row.pre!=row.post;
+    }
+    if !effect_seen{return None}
+    let predicted_from_training=factual_prediction(training,pre,action,None,meter)?;
+    let predicted_from_all=factual_prediction(records,pre,action,frozen_at,meter)?;
+    (predicted_from_training==predicted_from_all).then_some(predicted_from_all)
+}
 fn goal_distance(state:&[i64],goal:&[Option<i64>])->u128{
     state.iter().zip(goal).filter_map(|(&x,g)|g.map(|v|(i128::from(x)-i128::from(v)).unsigned_abs())).sum()
 }
@@ -1029,6 +1068,41 @@ mod factual_control_integrity_tests {
             model:0,prediction:Forecast{center:vec![end,1],scale:vec![1.0,1.0]},
             candidate:None,candidate_prediction:None,permit_sequence:id+1,external_cost:1,
         }
+    }
+
+    #[test]
+    fn prospective_factual_validation_uses_real_heldout_consequences() {
+        // Twelve true observations of the same affine effect, with THREE
+        // latest examples withheld from rule fitting, are enough to offer a
+        // prediction. We have never given the learner an authored action role.
+        let mut data=(0..12).map(|i|record(i,0,i as i64,i as i64+1)).collect::<Vec<_>>();
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,None,&mut meter),Some(vec![31,1]));
+        assert!(meter.spent>0 && meter.spent<=40_000);
+
+        // A once-consistent prediction that encounters three observed
+        // contradictions MUST become unknown rather than trusted, even if
+        // the original model would still confidently extrapolate.
+        for i in 12..15 {data.push(record(i,0,i as i64,i as i64+10))}
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,None,&mut meter),None);
+
+        // Freeze binds BOTH fitting and confidence to the same old prefix.
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,Some(12),&mut meter),Some(vec![31,1]));
+    }
+
+    #[test]
+    fn never_certify_uninformative_repetition_or_unmetered_guess() {
+        let data=(0..12).map(|i|record(i,0,0,0)).collect::<Vec<_>>();
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[10,1],0,None,&mut meter),None,
+            "many no-op repetitions must not certify a useful consequence");
+        let data=(0..12).map(|i|record(i,0,i as i64,i as i64+1)).collect::<Vec<_>>();
+        let mut meter=Meter::new(100);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,None,&mut meter),None,
+            "incomplete validation due to budget exhaustion must fail closed");
+        assert!(meter.spent<=100);
     }
 
     #[test]

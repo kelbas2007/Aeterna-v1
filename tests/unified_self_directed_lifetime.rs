@@ -38,7 +38,8 @@ fn unscheduled_probe_then_exploit_in_joint_u1_and_restore() {
     }
     eprintln!("U1_UNSCHEDULED world={world:?} events={} sources={sources:?}",rt.construction_learner().unwrap().records().len());
     assert!(world[0]>=3,"goal not reached without an action script");
-    assert!(sources.contains("factual-experience"),"joint carrier did not use its factual proposal");
+    assert!(!sources.contains("factual-probe"),
+        "unverified novelty must abstain instead of overriding U1");
     let checkpoint=rt.checkpoint_constructing().unwrap();
     let mut restored=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
     assert!(restored.construction_learner().unwrap().self_directed_control_enabled());
@@ -56,30 +57,50 @@ fn unscheduled_probe_then_exploit_in_joint_u1_and_restore() {
 }
 #[test]
 fn physical_roles_remain_opaque_under_joint_arbitration() {
+    // Paired experiment: a new factual option may ABSTAIN when unsupported.
+    // In that case enabling factual mode must not silently worsen physical
+    // action choice relative to the original U1 on the same opaque roles.
     let mut all=0;
-    let mut solved=0;
-    let mut experience_choices=0;
-    let mut actions_total=0;
+    let mut solved=[0usize;2];
+    let mut experience_choices=[0usize;2];
+    let mut actions_total=[0usize;2];
     for a in 0..4 {for b in 0..4 {for c in 0..4 {for d in 0..4 {
         let roles=[a,b,c,d];
         if roles.iter().copied().collect::<std::collections::BTreeSet<_>>().len()!=4 {continue}
-        let mut rt=make(true);
-        let mut world=[0i64;3];
-        let mut actions=0;
-        while actions<96 && world[0]<3 {
-            let step=rt.step_constructing(Some(&[Some(3),None,None]),&offers(),safe,|action|{
-                world_step(&mut world,action,roles);
-                Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
-            }).unwrap();
-            experience_choices+=usize::from(step.source=="factual-experience");
-            actions+=1;
+        all+=1;
+        for (arm,enabled) in [(0,true),(1,false)] {
+            let mut rt=make(enabled);
+            let mut world=[0i64;3];let mut actions=0;
+            while actions<96 && world[0]<3 {
+                let step=rt.step_constructing(Some(&[Some(3),None,None]),&offers(),safe,|action|{
+                    world_step(&mut world,action,roles);
+                    Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
+                }).unwrap();
+                experience_choices[arm]+=usize::from(step.source=="factual-experience"||step.source=="factual-probe");
+                actions+=1;
+            }
+            solved[arm]+=usize::from(world[0]>=3);actions_total[arm]+=actions;
         }
-        solved+=usize::from(world[0]>=3);actions_total+=actions;all+=1;
     }}}}
-    eprintln!("JOINT_UNSCHEDULED roles={all} solved={solved} chosen_factual={experience_choices} actions_total={actions_total}");
+    eprintln!("JOINT_OPAQUE_ROLE_PARITY roles={all} enabled={}/24 choices={} actions={} baseline={}/24 choices={} actions={}",
+        solved[0],experience_choices[0],actions_total[0],solved[1],experience_choices[1],actions_total[1]);
     assert_eq!(all,24);
-    assert_eq!(solved,24,"some opaque role assignments fail without prepared actions");
-    assert!(experience_choices>=24,"factual probe never participates in physical U1 selection");
+    assert_eq!(experience_choices,[0,0],"conjunction is not verified, so must abstain");
+    assert_eq!(solved[0],solved[1],"unsupported factual prediction cannot worsen goal reachability");
+    assert_eq!(actions_total[0],actions_total[1],"unsupported factual prediction cannot perturb U1 actions");
+}
+
+#[test]
+fn unknown_outcome_cannot_compete_with_real_u1_proposals() {
+    let mut rt=make(true);
+    let mut world=[0i64;3];
+    let step=rt.step_constructing(Some(&[Some(3),None,None]),&offers(),safe,|a|{
+        world_step(&mut world,a,[2,0,3,1]);
+        Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
+    }).unwrap();
+    assert_ne!(step.source,"factual-experience",
+        "an action with zero verified transitions must not masquerade as factual knowledge");
+    assert_eq!(rt.construction_learner().unwrap().records().len(),1);
 }
 
 #[test]
@@ -122,7 +143,7 @@ fn fixed_budget_ablation_reports_both_arms_without_relabeling() {
                     world_step(&mut world,action,roles);
                     Ok(UnifiedPost{observation:world.to_vec(),cost:1,reward:0.0})
                 }).unwrap();
-                factual[arm]+=usize::from(out.source=="factual-experience");
+                factual[arm]+=usize::from(out.source=="factual-experience"||out.source=="factual-probe");
                 count+=1;
             }
             counts[arm]+=usize::from(world[0]>=3);steps[arm]+=count;
@@ -130,7 +151,11 @@ fn fixed_budget_ablation_reports_both_arms_without_relabeling() {
     }}}}
     eprintln!("UNSCHEDULED_ABLATION_32 with={}/24 steps={} factual={} without={}/24 steps={} factual={}",counts[0],steps[0],factual[0],counts[1],steps[1],factual[1]);
     assert_eq!(factual[1],0,"default U1 must not pretend to have used the new factual path");
-    assert!(factual[0]>0);
+    // Without a validated factual rule, enabling factual inference must not
+    // change the physical choices made by the ordinary U1 controller.
+    assert_eq!(factual[0],0,"conjunctive effect is not prospectively validated");
+    assert_eq!(counts[0],counts[1],"abstaining cannot worsen U1 success");
+    assert_eq!(steps[0],steps[1],"abstaining cannot disturb baseline decisions");
 }
 
 #[test]
