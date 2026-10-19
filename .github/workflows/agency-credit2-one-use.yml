@@ -1,0 +1,72 @@
+name: AGENCY-CREDIT2 pre-registered one-use transfer
+on:
+  pull_request:
+    paths:
+      - 'tests/agency_credit2_one_use.rs'
+      - '.github/workflows/agency-credit2-one-use.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ac2-one-use-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  frozen-exam:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Gate SCIENCE to the workflow's ORIGINAL addition commit
+        id: once
+        shell: bash
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          echo "first=false" >> "$GITHUB_OUTPUT"
+          # A PR path filter may match ALL files in the whole PR, even after
+          # documentation-only sync. Only the commit that first ADDED THIS
+          # workflow may consume the scientific exam.
+          git fetch --depth=2 origin "$HEAD_SHA"
+          if git show --format= --diff-filter=A --name-only "$HEAD_SHA" \
+              | grep -Fxq '.github/workflows/agency-credit2-one-use.yml'; then
+            echo "first=true" >> "$GITHUB_OUTPUT"
+            echo 'One-use source-addition event verified'
+          else
+            echo 'Already consumed or source is changed: NO NEW SCIENCE RUN'
+          fi
+      - name: Pin exact source + preregistration
+        if: steps.once.outputs.first == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -s docs/AGENCY_CREDIT2_ONE_USE_PROTOCOL.md
+          git diff --exit-code
+      - uses: Swatinem/rust-cache@v2
+        if: steps.once.outputs.first == 'true'
+      - name: Evaluate new held-out worlds with real protected action POSTs
+        if: steps.once.outputs.first == 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p ac2-evidence
+          printf 'merge_sha=%s\nhead=%s\none_use_run_id=%s\n' \
+            "$GITHUB_SHA" "${{ github.event.pull_request.head.sha }}" "$GITHUB_RUN_ID" \
+            | tee ac2-evidence/provenance.txt
+          cargo test --locked --test agency_credit2_one_use -- --ignored \
+            --nocapture --test-threads=1 2>&1 | tee ac2-evidence/results.log
+      - name: Preserve full positive OR negative evidence
+        if: always() && steps.once.outputs.first == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agency-credit2-${{ github.sha }}-${{ github.run_id }}
+          path: ac2-evidence/
+          retention-days: 30
+          if-no-files-found: warn
