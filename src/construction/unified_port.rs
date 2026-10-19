@@ -139,7 +139,12 @@ impl Learner {
                 let depth=depth+1;
                 let used=used_history||has_context;
                 let first=first.clone().unwrap_or((action,next.clone()));
-                if used && depth>=2 && goal_distance(&next,goal)==0{
+                // Replanning starts AFTER the previous real action. A validated
+                // one-step suffix can be the remainder of a multi-step plan.
+                // Requiring depth>=2 here discards the terminal action and
+                // can repeatedly propose preparation. No confidence, evidence
+                // threshold, native U1 weights or safety boundary is changed.
+                if used && goal_distance(&next,goal)==0{
                     return (Some(PortHistoryPlan{
                         first_action:first.0,first_consequence:first.1,
                         terminal:next,depth,
