@@ -163,7 +163,8 @@ fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64],meter:&mut Meter)-
             if yes.len()>=2 && !no.is_empty() && current[guard]==value {
                 if let Some(rule)=effect(&yes,axis,meter) {
                     meter.charge(no.len() as u64).ok()?;
-                    if no.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {
+                    if no.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis]))
+                        && controlled_guard_contrast(&yes,&no,axis,guard,meter)? {
                         return rule.apply(current[axis]);
                     }
                 }
@@ -171,14 +172,76 @@ fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64],meter:&mut Meter)-
             if no.len()>=2 && !yes.is_empty() && current[guard]!=value {
                 if let Some(rule)=effect(&no,axis,meter) {
                     meter.charge(yes.len() as u64).ok()?;
-                    if yes.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {
+                    if yes.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis]))
+                        && controlled_guard_contrast(&no,&yes,axis,guard,meter)? {
                         return rule.apply(current[axis]);
                     }
                 }
             }
         }
     }
-    None
+
+    // A one-guard explanation is insufficient if the putative guard and a
+    // second observable always change together. Only witnessed controlled
+    // contrasts allow attributing a conditional consequence to this axis.
+    predict_conjunctive_axis(rows,axis,current,meter)
+}
+/// Find an observed contrast in which the candidate guard changes but all
+/// OTHER pre-action sensors (excluding the predicted output's own input)
+/// remain equal. This rejects simple co-varying-sensor confounding.
+/// Stop immediately if the existing computation budget is exhausted.
+fn controlled_guard_contrast(positive:&[&Transition],negative:&[&Transition],
+                             axis:usize,guard:usize,meter:&mut Meter)->Option<bool> {
+    for &a in positive {
+        for &b in negative {
+            meter.charge(a.pre.len() as u64+1).ok()?;
+            if a.pre.iter().zip(&b.pre).enumerate()
+                .all(|(i,(x,y))|i==axis||i==guard||x==y) {return Some(true)}
+        }
+    }
+    Some(false)
+}
+/// Discover a two-condition effect from real BEFORE/ACTION/AFTER samples.
+/// No caller supplies an action meaning, prerequisite indices, thresholds or
+/// a learned outcome. Both necessary conditions must have independent,
+/// controlled negative witnesses and the positive examples must agree.
+/// A rule learned from this prefix is *still untrusted* until the separate
+/// chronological prospective validator accepts later real transitions.
+fn predict_conjunctive_axis(rows:&[&Transition],axis:usize,current:&[i64],
+                            meter:&mut Meter)->Option<i64> {
+    let mut accepted:Option<i64>=None;
+    for left in 0..current.len(){
+        if left==axis{continue}
+        for right in (left+1)..current.len(){
+            if right==axis{continue}
+            meter.charge((rows.len() as u64).saturating_mul(4).saturating_add(8)).ok()?;
+            let mut both=Vec::new();
+            let mut without_left=Vec::new();
+            let mut without_right=Vec::new();
+            for &row in rows {
+                let l=row.pre[left]==current[left];
+                let r=row.pre[right]==current[right];
+                if l&&r {both.push(row)}
+                else if !l&&r {without_left.push(row)}
+                else if l&&!r {without_right.push(row)}
+            }
+            if both.len()<3||without_left.len()<2||without_right.len()<2 {continue}
+            let Some(rule)=effect(&both,axis,meter) else {
+                if meter.remaining()==0{return None}
+                continue
+            };
+            let Some(predicted)=rule.apply(current[axis]) else {continue};
+            if predicted==current[axis] {continue} // no uninformative no-op rule
+            meter.charge((without_left.len()+without_right.len()) as u64).ok()?;
+            if !without_left.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis]))
+                || !without_right.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {continue}
+            if !controlled_guard_contrast(&both,&without_left,axis,left,meter)?
+                || !controlled_guard_contrast(&both,&without_right,axis,right,meter)? {continue}
+            if accepted.is_some_and(|other|other!=predicted){return None}
+            accepted=Some(predicted);
+        }
+    }
+    accepted
 }
 fn factual_prediction(records:&[Record],pre:&[i64],action:usize,
                       frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>> {
@@ -1130,6 +1193,66 @@ mod factual_control_integrity_tests {
         let unrestricted=factual_prediction(&learner.records,&[11,1],0,None,&mut unrestricted_meter);
         assert_ne!(unrestricted,before,"post-freeze evidence must be excluded, not ignored by chance");
         assert!(frozen_meter.spent<=learner.config.planning_work);
+    }
+
+
+    fn joint_record(id:u64,left:i64,right:i64,effect:i64)->Record {
+        let x=id as i64*3;
+        let pre=vec![x,left,right];
+        let post=vec![x+effect,left,right];
+        Record {
+            transition:Transition{id,restart:id==0,pre,action:0,post:post.clone()},
+            model:0,prediction:Forecast{center:post,scale:vec![1.0;3]},
+            candidate:None,candidate_prediction:None,permit_sequence:id+1,external_cost:1,
+        }
+    }
+
+    #[test]
+    fn independently_contrasted_double_guard_survives_later_real_evidence() {
+        // Vary both opaque sensors independently. Neither alone explains
+        // progress; the conjunction is inferred from PRE/action/POST only.
+        let mut data=Vec::new();
+        for i in 0..28_u64 {
+            let (a,b)=[(0,0),(1,0),(0,1),(1,1)][i as usize%4];
+            data.push(joint_record(i,a,b,i64::from(a==1 && b==1)));
+        }
+        let prior=&data[..25];
+        let mut meter=Meter::new(100_000);
+        assert_eq!(factual_prediction(prior,&[99,1,1],0,None,&mut meter),Some(vec![100,1,1]));
+        let mut meter=Meter::new(100_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),
+            Some(vec![100,1,1]),"three subsequent real outcomes must validate the learned conjunction");
+        assert!(meter.spent<=100_000);
+
+        // Three newest contradictory real POSTs revoke the original effect,
+        // rather than treating the first acquired conjunction as immutable.
+        for i in 28..31_u64 {data.push(joint_record(i,1,1,10))}
+        let mut meter=Meter::new(100_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),None);
+    }
+
+    #[test]
+    fn correlated_sensors_cannot_fake_independent_causal_guards() {
+        // The same apparent joint effect without either unilateral contrast
+        // is ambiguous: guard A and guard B might be redundant/confounded.
+        let data=(0..28_u64).map(|i| {
+            let v=(i%2) as i64;
+            joint_record(i,v,v,v)
+        }).collect::<Vec<_>>();
+        let mut meter=Meter::new(100_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),None,
+            "do not certify a conditional cause from perfectly correlated sensors");
+    }
+
+    #[test]
+    fn double_guard_fails_closed_on_insufficient_meter() {
+        let data=(0..28_u64).map(|i|{
+            let (a,b)=[(0,0),(1,0),(0,1),(1,1)][i as usize%4];
+            joint_record(i,a,b,i64::from(a==1&&b==1))
+        }).collect::<Vec<_>>();
+        let mut meter=Meter::new(100);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),None);
+        assert!(meter.spent<=100);
     }
 
     #[test]
