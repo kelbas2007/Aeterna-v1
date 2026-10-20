@@ -1534,6 +1534,13 @@ impl ScientificRuntime {
             o.source=="autobiographical-option");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         let mut meta_helper_work=0_u64;
+        // STRICT shared helper budgeting is an opt-in feature of the new
+        // observable graph. For a LEGACY U1 WITHOUT that graph, retain the
+        // original unlimited HDC recall and independent capped planning
+        // search. Tightening either silently changes real motor choices
+        // even when there is no qualifying factual graph proposal.
+        let strict_graph_helper_budget=u.temporal_options.as_ref()
+            .is_some_and(|lane|lane.observable_graph_enabled);
         for round in 0..4 {
             if let Some(approved)=continuation.take(){
                 // Same native choice, bounded saved option, and no
@@ -1576,8 +1583,13 @@ impl ScientificRuntime {
                     if let Err(e)=result {if !matches!(e,UError::NoEvidence|UError::Budget|UError::Capacity){return Err(e);}}
                 },
                 1=>{
-                    let remaining=cfg.planning_work.saturating_sub(base_factual_work)
-                        .saturating_sub(meta_helper_work);
+                    let remaining=if strict_graph_helper_budget {
+                        cfg.planning_work.saturating_sub(base_factual_work)
+                            .saturating_sub(meta_helper_work)
+                    }else{
+                        // Preserve pre-PR12 behavior for 4k/20k legacy U1.
+                        cfg.planning_work
+                    };
                     let (plans,work)=u.current.learner.carrier_plans(
                         goal.ok_or(UError::InvalidData)?,&allowed,remaining)?;
                     if work>remaining{return Err(UError::Budget)}
@@ -1590,8 +1602,14 @@ impl ScientificRuntime {
                     }
                 },
                 2=>{
-                    let remaining=cfg.planning_work.saturating_sub(base_factual_work)
-                        .saturating_sub(meta_helper_work);
+                    let remaining=if strict_graph_helper_budget {
+                        cfg.planning_work.saturating_sub(base_factual_work)
+                            .saturating_sub(meta_helper_work)
+                    }else{
+                        // Former HDC recall processed up to 128 journal rows
+                        // regardless of the native goal planning budget.
+                        u64::MAX
+                    };
                     let (memories,work)=u.current.learner.carrier_recall(
                         &allowed,remaining)?;
                     if work>remaining{return Err(UError::Budget)}
@@ -1604,7 +1622,8 @@ impl ScientificRuntime {
         }
         // A helper runs after the initial meter; repeat the shared limit
         // check immediately BEFORE acquiring any physical motor permit.
-        if base_factual_work.saturating_add(meta_helper_work)>cfg.planning_work{
+        if strict_graph_helper_budget &&
+            base_factual_work.saturating_add(meta_helper_work)>cfg.planning_work{
             return Err(UError::Budget)
         }
         let (option,score)=selected.ok_or(UError::NoEvidence)?;let a=option.p.action;
