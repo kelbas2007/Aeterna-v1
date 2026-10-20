@@ -984,7 +984,12 @@ impl ScientificRuntime {
         {return Err(UError::NoEvidence)}
         let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
         let allowed:Vec<_>=offers.iter().map(|o|o.available&&o.max_cost<=remaining).collect();
-        if !allowed.iter().any(|&a|a){return Err(UError::Blocked);}
+        if !allowed.iter().any(|&a|a){
+            // A previously selected macro cannot retain actuator authority
+            // across a state in which no motor is currently permitted.
+            if let Some(lane)=u.temporal_options.as_mut(){lane.reject_pending()}
+            return Err(UError::Blocked)
+        }
         // This is the organism's observable opportunity to CHOOSE,
         // not the actor's goal, motor role, reward, or proposal source.
         let policy_has_choice=allowed.iter().filter(|&&v|v).count()>=2;

@@ -218,3 +218,78 @@ fn human_protection_veto_cannot_forge_suffix_training(){
     assert!(result.is_err());assert!(!called);
     assert_eq!(rt.construction_learner().unwrap().records().len(),n);
 }
+
+
+#[test]
+fn causal_option_survives_checkpoint_but_fresh_protection_veto_revokes_it(){
+    let (mut rt,mut w)=acquired(true);
+    enable(&mut rt,true);
+    rt.enable_constructing_temporal_options().unwrap();
+    let first=step(&mut rt,&mut w,None);
+    assert_eq!(first.source,"predictive-suffix");
+    let r=rt.unified_report().unwrap().temporal_options.unwrap();
+    assert_eq!((r.started,r.pending_steps),(1,2));
+    let bytes=rt.checkpoint_constructing().unwrap();
+    let mut restored=ScientificRuntime::from_constructing_checkpoint(&bytes).unwrap();
+    assert_eq!(restored.checkpoint_constructing().unwrap(),bytes);
+    let before=restored.construction_learner().unwrap().records().len();
+    let mut called=false;
+    let offers=[ActionOffer{available:true,max_cost:1};5];
+    let blocked=restored.step_constructing(
+        Some(&[Some(1)]),&offers,
+        |_|{let mut h=safe(0);h.emergency_stop=true;h},
+        |_motor|{
+            called=true;
+            Ok(UnifiedPost{observation:vec![9],cost:1,reward:0.0})
+        }
+    );
+    assert!(blocked.is_err());
+    assert!(!called,"every subordinate physical step needs fresh protection");
+    assert_eq!(restored.construction_learner().unwrap().records().len(),before);
+    let r=restored.unified_report().unwrap().temporal_options.unwrap();
+    assert_eq!((r.revoked,r.completed,r.pending_steps),(1,0,0));
+    let saved=restored.checkpoint_constructing().unwrap();
+    assert_eq!(ScientificRuntime::from_constructing_checkpoint(&saved)
+        .unwrap().checkpoint_constructing().unwrap(),saved);
+}
+#[test]
+fn real_unexpected_option_post_rejects_remaining_plan_without_forging_goal(){
+    let (mut rt,mut w)=acquired(true);
+    enable(&mut rt,true);rt.enable_constructing_temporal_options().unwrap();
+    let first=step(&mut rt,&mut w,None);
+    assert_eq!(first.source,"predictive-suffix");
+    let middle=step(&mut rt,&mut w,None);
+    assert_eq!((middle.action,middle.source.as_str()),(1,"temporal-option-continuation"));
+    w.broken=true; // Evaluator-only change; hidden from the organism
+    let last=step(&mut rt,&mut w,None);
+    assert_eq!((last.action,last.source.as_str()),(2,"temporal-option-continuation"));
+    assert_eq!(w.progress,0,"the physical world did NOT reach the goal");
+    let r=rt.unified_report().unwrap();
+    let lane=r.temporal_options.unwrap();
+    assert_eq!((lane.started,lane.continued,lane.completed,lane.revoked,lane.pending_steps),
+        (1,1,0,1,0));
+    let agency=r.agency_credit.unwrap();
+    assert_eq!((agency.self_selected_actions,agency.option_continuation_actions),(1,2));
+    assert_eq!(rt.construction_learner().unwrap().records().len(),180);
+    let saved=rt.checkpoint_constructing().unwrap();
+    let restored=ScientificRuntime::from_constructing_checkpoint(&saved).unwrap();
+    assert_eq!(restored.checkpoint_constructing().unwrap(),saved);
+}
+#[test]
+fn unavailable_option_motor_is_not_executed_and_cancels_macro(){
+    let (mut rt,mut w)=acquired(true);
+    enable(&mut rt,true);rt.enable_constructing_temporal_options().unwrap();
+    assert_eq!(step(&mut rt,&mut w,None).source,"predictive-suffix");
+    let before=rt.construction_learner().unwrap().records().len();
+    let mut actually_executed=false;
+    let offers=(0..5).map(|a|ActionOffer{available:a!=1,max_cost:1})
+        .collect::<Vec<_>>();
+    let denied=rt.step_constructing(Some(&[Some(1)]),&offers,safe,|_motor|{
+        actually_executed=true;
+        Ok(UnifiedPost{observation:vec![1],cost:1,reward:0.0})
+    });
+    assert!(denied.is_err());assert!(!actually_executed);
+    assert_eq!(rt.construction_learner().unwrap().records().len(),before);
+    let option=rt.unified_report().unwrap().temporal_options.unwrap();
+    assert_eq!((option.started,option.revoked,option.pending_steps),(1,1,0));
+}
