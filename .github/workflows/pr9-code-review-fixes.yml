@@ -1,0 +1,51 @@
+name: PR9 review fixes - protected regression
+on:
+  pull_request:
+    paths:
+      - 'src/unified_runtime.rs'
+      - 'src/bin/aeterna-unified.rs'
+      - 'tests/trajectory_behavior_gate.rs'
+      - 'tests/adaptive_history_suffix_development.rs'
+      - 'scripts/check_pr9_width.py'
+      - '.github/workflows/pr9-code-review-fixes.yml'
+permissions:
+  contents: read
+concurrency:
+  group: pr9-review-fix-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pinned toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Regress the exact four review defects
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --test trajectory_behavior_gate --test adaptive_history_suffix_development -- --nocapture --test-threads=1
+          cargo build --locked --bin aeterna-v1
+          binary="target/debug/aeterna-v1"
+          if test "$RUNNER_OS" = "Windows"; then binary="$binary.exe"; fi
+          python scripts/check_pr9_width.py --binary "$binary"
+          python scripts/project_audit.py
