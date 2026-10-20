@@ -105,6 +105,9 @@ pub struct Learner {
     adaptive_history_suffix:bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
     causal_memory:Option<super::causal_memory::CausalMemory>,
+    /// Encoding cache only; never changes legacy checkpoint bytes or state.
+    #[serde(skip)]
+    journal_encoding:Option<(usize,usize)>,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -488,7 +491,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false,causal_memory:None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false,causal_memory:None,journal_encoding:None })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -528,7 +531,7 @@ impl Learner {
     /// Irreversible freeze; facts and action costs continue, learning does not.
     pub fn freeze_learning(&mut self)->Result<()> {
         if self.pending || self.poisoned {return Err(Error::Busy);}
-        if self.frozen_at.is_none(){self.cancel_shadow();self.frozen_at=Some(self.next_id);}
+        if self.frozen_at.is_none(){self.cancel_shadow();if let Some(m)=&mut self.causal_memory{m.finish_learning();}self.frozen_at=Some(self.next_id);}
         self.freeze_recursive_search();if let Some(b)=&mut self.requirements{b.freeze();}Ok(())
     }
     pub fn program(&self) -> &Program { &self.active.program }
@@ -552,7 +555,9 @@ impl Learner {
         if self.causal_memory.is_some() && self.records.len()>=self.causal_journal_capacity() {
             self.compact_causal_journal()?;
         }
-        if self.records.len() >= self.config.journal_capacity || self.next_id == u64::MAX { return Err(Error::Capacity); }
+        let record_limit=if self.causal_memory.is_some(){self.config.journal_capacity}else{self.config.journal_capacity.min(4096)};
+        if self.records.len() >= record_limit || self.next_id == u64::MAX { return Err(Error::Capacity); }
+        if self.causal_memory.is_none(){self.ensure_legacy_journal_capacity()?;}
         if let (Some(risk),Some(shadow)) = (&self.epistemic,&self.shadow) {
             let bound = shadow.evidence.as_ref().ok_or(Error::Stale).and_then(|e|
                 e.binding(risk,&self.active.program,&shadow.model.program,&self.library,shadow.trace.job.target,shadow.start_id));
@@ -600,6 +605,12 @@ impl Learner {
         if let Some(memory)=&mut self.causal_memory {memory.observe(&transition,self.frozen_at.is_none());}
         self.records.push(Record { transition,model: token.model,prediction: token.prediction,candidate: token.candidate,candidate_prediction: token.candidate_prediction,permit_sequence,external_cost });
         self.current = post; self.next_id += 1; self.restart_next = false; self.pending = false;
+        if let Some((rows,bytes))=self.journal_encoding {
+            self.journal_encoding=if rows+1==self.records.len(){
+                serde_json::to_vec(self.records.last().unwrap()).ok()
+                    .map(|row|(rows+1,bytes+row.len()+usize::from(rows>0)))
+            }else{None};
+        }
         // A costly contract violation stays in history, never promotes a model.
         if self.poisoned {self.cancel_shadow();return Ok(());}
         if let Some(error) = evidence_error {

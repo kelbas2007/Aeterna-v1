@@ -65,7 +65,7 @@
 или вето защиты. Их код — [поведение](../tests/causal_continual_autonomy.rs),
 [контракт JSONL](../tests/causal_jsonl_contract.rs),
 [восстановление VM](../src/construction/causal_port.rs).
-[Полный Linux/Windows CI](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39463352732)
+[Полный Linux/Windows CI](https://github.com/kelbas2007/Aeterna-v1/pull/14/checks)
 отделён от этого сравнения и не повторяет израсходованные научные экзамены.
 
 ## Происхождение и границы

@@ -12,6 +12,13 @@ fn observable_graph_budget_ceiling(total:u64,autobiographical:u64)->u64{
 }
 #[derive(Debug,USerialize,UDeserialize)]
 struct UnifiedDomain {name:String,learner:ULearner,last_construction:usize,pending_credit:Option<[f32;5]>}
+impl UnifiedDomain {
+    fn clear_canceled_causal_credit(&mut self) {
+        if self.learner.causal_memory_enabled() && !self.learner.report().shadow_pending {
+            self.pending_credit=None;
+        }
+    }
+}
 #[derive(Debug,USerialize,UDeserialize)]
 struct UnifiedConstruction {
     current:UnifiedDomain,archived:Vec<UnifiedDomain>,nonce:u64,operations:[u64;4],
@@ -1182,6 +1189,11 @@ impl ScientificRuntime {
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         u.current.learner.freeze_learning()?;
+        u.current.clear_canceled_causal_credit();
+        let credits=u.current.learner.carrier_take_causal_credits();
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
         if let Some(s)=&mut u.education{s.freeze();}u.freeze_controller=true;self.organism.set_phase_native_meta_learning_enabled(false);Ok(())
     }
@@ -1207,6 +1219,7 @@ impl ScientificRuntime {
     }
     fn step_constructing_inner<H,F>(&mut self,u:&mut UnifiedConstruction,goal:Option<&[Option<i64>]>,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
+        u.current.clear_canceled_causal_credit();
         let mut cfg=u.current.learner.carrier_config().clone();
         if let Some(left)=remaining_actions{cfg.planning_depth=cfg.planning_depth.min(left)}
         if offers.len()!=cfg.actions || goal.is_some_and(|g|g.len()!=cfg.width){return Err(UError::InvalidData);}
@@ -1630,6 +1643,8 @@ impl ScientificRuntime {
                     if result.is_ok() && u.current.learner.report().shadow_pending {
                         if native_credit_eligible && u.instrumental_credit.is_none() {
                             u.current.pending_credit=Some(chosen.p.fields);
+                        }else if u.current.learner.causal_memory_enabled(){
+                            u.current.pending_credit=None;
                         }
                     }
                     else if !u.freeze_controller && native_credit_eligible &&
@@ -1694,7 +1709,9 @@ impl ScientificRuntime {
         let mut delayed_option_credit=None::<([f32;5],f32)>;
         let original_fields=options.iter().find(|c|c.p.proposal_id==option.p.proposal_id)
             .map(|c|c.p.fields).unwrap_or(option.p.fields);
-        let token=u.current.learner.carrier_prepare(a)?;
+        let prepared=u.current.learner.carrier_prepare(a);
+        u.current.clear_canceled_causal_credit();
+        let token=prepared?;
         let decision=self.protection.screen(a,hazard(a));let record=decision.record().clone();
         let Some(permit)=decision.into_permit() else {
             if is_option_continuation{
@@ -1902,6 +1919,7 @@ impl ScientificRuntime {
                 // motor-choice success even if a separate model improved.
                 u.current.pending_credit=None;
             }
+            u.current.clear_canceled_causal_credit();
             // Credited once to the ORIGINAL U1 option decision, after a
             // genuine physical terminal success or executed contradiction.
             // Continuation steps cannot independently receive this credit.
@@ -2129,5 +2147,65 @@ mod observable_graph_shared_budget_tests{
         }
         assert_eq!(observable_graph_budget_ceiling(32_000,20_000),8_000);
         assert_eq!(observable_graph_budget_ceiling(120_000,20_000),16_000);
+    }
+}
+
+#[cfg(test)]
+mod causal_continuity_credit_tests {
+    use super::*;
+    fn safe(_:usize)->HumanProtectionEvidence {
+        HumanProtectionEvidence{human_present:false,physical_effect_possible:false,
+            predicted_harm_probability:0.0,hazard_confidence:1.0,emergency_stop:false}
+    }
+    fn runtime()->ScientificRuntime {
+        let mut config=UConfig{journal_capacity:32,search_every:100_000,shadow_steps:2,..Default::default()};
+        config.search.deterministic=true;
+        let mut policy=UPolicy::default();policy.evidence=None;policy.ceiling.deterministic=true;
+        let mut rt=ScientificRuntime::new_constructing(config,policy,vec![0],"credit-lifecycle").unwrap();
+        rt.enable_constructing_self_directed_control().unwrap();
+        rt.enable_constructing_agency_aware_credit().unwrap();
+        rt.enable_constructing_causal_memory(crate::construction::causal_memory::CausalConfig::default()).unwrap();
+        rt
+    }
+    fn step(rt:&mut ScientificRuntime,physical:&mut i64,choice:bool){
+        rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:choice,max_cost:1}],safe,|_|{
+            *physical+=1;Ok(UnifiedPost{observation:vec![*physical],reward:0.0,cost:1})
+        }).unwrap();
+    }
+    #[test]
+    fn canceled_construction_credit_cannot_pass_to_a_later_trial(){
+        let mut rt=runtime();let mut physical=0;
+        for _ in 0..32 {step(&mut rt,&mut physical,false);}
+        {
+            let domain=&mut rt.constructing.as_mut().unwrap().current;
+            domain.learner.construct().unwrap();assert!(domain.learner.report().shadow_pending);
+            domain.pending_credit=Some([0.73,0.11,0.31,0.29,0.83]);
+        }
+        step(&mut rt,&mut physical,false); // Compaction cancels this real trial.
+        let domain=&rt.constructing.as_ref().unwrap().current;
+        assert!(!domain.learner.report().shadow_pending);
+        assert!(domain.pending_credit.is_none());
+        rt=ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
+        rt.observe_constructing_external_restart(vec![physical]).unwrap();
+        for _ in 0..8 {step(&mut rt,&mut physical,false);}
+        rt.constructing.as_mut().unwrap().current.learner.construct().unwrap();
+        assert!(rt.constructing.as_ref().unwrap().current.learner.report().shadow_pending);
+        for _ in 0..2 {step(&mut rt,&mut physical,true);}
+        let domain=&rt.constructing.as_ref().unwrap().current;
+        assert!(domain.learner.promotions().iter().any(|p|p.accepted));
+        assert!(domain.pending_credit.is_none());
+    }
+    #[test]
+    fn freezing_delivers_final_failure_credit_before_disabling_native_learning(){
+        let mut rt=runtime();
+        rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+            Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+        let before=rt.organism.phase_native_meta_observations();
+        rt.freeze_constructing().unwrap();
+        assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+        assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().failed_goal_episodes,1);
+        let frozen=rt.checkpoint_constructing().unwrap();
+        rt.freeze_constructing().unwrap();
+        assert_eq!(rt.checkpoint_constructing().unwrap(),frozen);
     }
 }

@@ -115,7 +115,7 @@
       },
       "src/construction/runtime.rs": {
         "before_sha256": "fa2dd322bf982d3dec19d920da195d9ecd1b503bae514b6e7287c4865b3b2007",
-        "after_sha256": "7a14de09c9a49276fc621de106c28c81e1c688507b2d1c90f29b9570d61156ae"
+        "after_sha256": "acd6c2533895ad7035ce2eaea3759e01dc166333bb18b6672b7bd870e7df4a23"
       },
       "src/construction/synthesis.rs": {
         "before_sha256": "2f4eb3af5c9a6775a9863f8f4057f7154ae69b83a45f2334ee9551fe0d57b768",
@@ -123,12 +123,12 @@
       },
       "src/unified_runtime.rs": {
         "before_sha256": "659c57e0623151a7ebd05f7c7dd0defd7915f55f04cf9e2eae1ec995304cb605",
-        "after_sha256": "a555fa731192caaa57d9a881a20a09ae6e0c2d39d73b15077e519641f483b6a6"
+        "after_sha256": "bb7c1d7ab533c2369ad2fcd145c0a1187795cda761f51a271379e60de7f7b38e"
       }
     },
     "added": {
-      "src/construction/causal_memory.rs": "2977ad6dc20f421aecb5432496e6758b7406b093674ab6e30ed0492ac509d908",
-      "src/construction/causal_port.rs": "73f320e8b4112604da8895038cb35b621b7ff72f1d297e8699836b178cde99b3"
+      "src/construction/causal_memory.rs": "faef049a83c20d42cb4ba92bcc34013d972eb06a713e7d137b48e0de618d2fd2",
+      "src/construction/causal_port.rs": "a74478bf5541ae7ecb020bc0e44ea518efa54be41d71155831e690b0d61f395f"
     }
   }
 }

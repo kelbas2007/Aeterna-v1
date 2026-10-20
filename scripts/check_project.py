@@ -70,6 +70,7 @@ def main():
  run('cargo','check',*common,'--all-targets')
  flags=common+(['--release'] if a.release else [])
  run('cargo','test',*flags,'--lib','construction::')
+ run('cargo','test',*flags,'--lib','causal_continuity_credit_tests')
  # Automatically synthesized trajectory evaluator, including prospective gates.
  run('cargo','test',*flags,'--lib','autonomous_temporal_revision_tests')
  names=['causal_continual_autonomy','causal_jsonl_contract','project_entrypoint','recursive_search_policy','recursive_search_repair','experiential','learned_requirements','lc1_execution_contract','quantity_relations','word_problems','education_runtime','semantic_grounding','unified_runtime','unified_restore_guards','unified_self_directed_lifetime','trajectory_self_revision_protected','trajectory_self_revision_transfer','trajectory_behavior_gate','agency_choice_credit_development','cold_episodic_autonomy_development','instrumental_credit_development','agency_credit_manual_equivalence_development','cold_pair_probe_development','cold_autobiographical_option_development','cold_variable_depth_option_development','complexity_necessity_development','adaptive_history_suffix_development','predictive_history_action_development','predictive_history_state_development','certified_chain_protected_development','factual_transfer_development','factual_selective_holdout','human_protection','u1_meta_control']+[p.stem for p in sorted((ROOT/'tests').glob('directed_construction*.rs'))]

@@ -25,6 +25,14 @@ fn causal_goal_credit_and_proposals_do_not_use_numeric_closeness_of_opaque_codes
     );
     assert_eq!(long["held_goals"], 1);
     assert!(sensor["held_goals"].as_u64().unwrap() >= 48);
+    for life in [&long, &sensor] {
+        let report = &life["causal_report"];
+        assert_eq!(
+            report["completed_goal_episodes"].as_u64().unwrap()
+                + report["failed_goal_episodes"].as_u64().unwrap(),
+            life["training_episodes"].as_u64().unwrap()
+        );
+    }
 }
 
 fn safe(_: usize) -> HumanProtectionEvidence {

@@ -72,6 +72,29 @@ impl Learner {
             .journal_capacity
             .min(4 * 1024 * 1024 / (1024 + 160 * self.config.width))
     }
+    fn ensure_legacy_journal_capacity(&mut self) -> Result<()> {
+        if self
+            .journal_encoding
+            .is_none_or(|(rows, _)| rows != self.records.len())
+        {
+            self.journal_encoding = Some((
+                self.records.len(),
+                serde_json::to_vec(&self.records)
+                    .map_err(|_| Error::InvalidData)?
+                    .len(),
+            ));
+        }
+        let reserve = 1024 + 160 * self.config.width;
+        if self.journal_encoding.unwrap().1.saturating_add(reserve) > 3 * 1024 * 1024 {
+            return Err(Error::Capacity);
+        }
+        Ok(())
+    }
+    pub(crate) fn carrier_take_causal_credits(&mut self) -> Vec<([f32; 5], f64)> {
+        self.causal_memory
+            .as_mut()
+            .map_or_else(Vec::new, |m| m.take_credits())
+    }
     fn compact_causal_prefix(&mut self, remove: usize) -> Result<()> {
         if self.pending || self.poisoned || self.causal_memory.is_none() {
             return Err(Error::Busy);
@@ -232,6 +255,41 @@ fn calibrate_causal_window(
 #[cfg(test)]
 mod causal_checkpoint_tests {
     use super::*;
+    #[test]
+    fn legacy_large_capacity_stops_before_losing_checkpointability() {
+        let observation = vec![i64::MIN; 32];
+        let mut learner = Learner::new(
+            Config {
+                width: 32,
+                journal_capacity: 65_536,
+                search_every: 100_000,
+                ..Default::default()
+            },
+            observation.clone(),
+        )
+        .unwrap();
+        for id in 0..4097 {
+            let token = match learner.prepare(0) {
+                Ok(token) => token,
+                Err(Error::Capacity) => break,
+                Err(error) => panic!("unexpected failure: {error}"),
+            };
+            learner
+                .commit(token, observation.clone(), id + 1, 1)
+                .unwrap();
+        }
+        assert!(learner.records.len() > 100 && learner.records.len() <= 4096);
+        assert!(matches!(learner.prepare(0), Err(Error::Capacity)));
+        let bytes = learner.checkpoint().unwrap();
+        assert!(bytes.len() < 4 * 1024 * 1024);
+        let mut restored = Learner::from_checkpoint(&bytes).unwrap();
+        assert_eq!(
+            restored.checkpoint().unwrap(),
+            bytes,
+            "encoding cache is not persistent state"
+        );
+        assert!(matches!(restored.prepare(0), Err(Error::Capacity)));
+    }
     #[test]
     fn wide_large_capacity_journal_remains_checkpointable_and_reports_lifetime_debt() {
         let observation = (0..32)

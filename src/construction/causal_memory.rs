@@ -276,6 +276,13 @@ impl CausalMemory {
         self.goal = None;
         self.episode_cost = 0;
     }
+    pub(crate) fn finish_learning(&mut self) {
+        // Close the final factual training episode before its decisions are
+        // frozen. Preserve predictive context for subsequent frozen actions.
+        self.finish_episode(false);
+        self.goal = None;
+        self.episode_cost = 0;
+    }
     fn finish_episode(&mut self, success: bool) {
         if self.goal.is_some() {
             if success {
@@ -936,6 +943,24 @@ impl CausalMemory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn freezing_finalizes_failure_once_without_erasing_predictive_context() {
+        let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();
+        fact(&mut m, 0, 0, 1, true);
+        let context = m.context.clone();
+        let learned = m.report().learned_fingerprint;
+        let fields = [0.5; 5];
+        m.feedback(Some(&[Some(9)]), &[1], 1, Some(fields), true);
+        m.finish_learning();
+        assert_eq!(m.report().failed_goal_episodes, 1);
+        assert_eq!(m.take_credits(), vec![(fields, 0.0)]);
+        assert_eq!(m.context, context);
+        assert_eq!(m.report().learned_fingerprint, learned);
+        m.finish_learning();
+        m.reset(false);
+        assert_eq!(m.report().failed_goal_episodes, 1);
+        assert!(m.take_credits().is_empty());
+    }
     #[test]
     fn heterogeneous_quotes_preserve_cheap_routes_without_exceeding_path_budget() {
         let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();
