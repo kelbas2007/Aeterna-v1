@@ -10,6 +10,49 @@ const CAPACITY: usize = 2048;
 const MODEL_BYTES: usize = 4 * 1024 * 1024;
 const EPISODE: usize = 512;
 const GAMMA: f64 = 0.95;
+const FAILURE_WIDTH: usize = 2048;
+const FAILURE_DEPTH: usize = 4;
+
+fn zero(value: &f64) -> bool {
+    *value == 0.0
+}
+
+/// Bounded count-min summary of failures lost from the exact rate table.
+/// Collisions can overestimate failure mass, never manufacture successes.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct RetiredFailures {
+    buckets: Vec<f64>,
+}
+impl Default for RetiredFailures {
+    fn default() -> Self {
+        Self {
+            buckets: vec![0.0; FAILURE_WIDTH * FAILURE_DEPTH],
+        }
+    }
+}
+impl RetiredFailures {
+    fn indices(key: &str) -> [usize; FAILURE_DEPTH] {
+        std::array::from_fn(|row| {
+            let seed = 0xcbf29ce484222325_u64 ^ (row as u64).wrapping_mul(0x9e3779b97f4a7c15);
+            let hash = key
+                .as_bytes()
+                .iter()
+                .fold(seed, |h, b| (h ^ u64::from(*b)).wrapping_mul(0x100000001b3));
+            row * FAILURE_WIDTH + hash as usize % FAILURE_WIDTH
+        })
+    }
+    fn add(&mut self, key: &str, failures: f64) {
+        for index in Self::indices(key) {
+            self.buckets[index] += failures;
+        }
+    }
+    fn estimate(&self, key: &str) -> f64 {
+        Self::indices(key)
+            .into_iter()
+            .map(|i| self.buckets[i])
+            .fold(f64::INFINITY, f64::min)
+    }
+}
 
 fn fingerprint<T: Serialize>(value: &T) -> u64 {
     serde_json::to_vec(value)
@@ -81,6 +124,8 @@ struct RewardRate {
     count: u64,
     sum: f64,
     last: u64,
+    #[serde(default, skip_serializing_if = "zero")]
+    retired_failures: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -239,6 +284,8 @@ pub(crate) struct ExternalMemory {
     pending: Vec<Pending>,
     recent: Vec<Visit>,
     reward_rates: BTreeMap<String, RewardRate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    retired_failures: Option<RetiredFailures>,
     strategy: RecursiveStrategy,
     events: u64,
     learned: u64,
@@ -281,6 +328,7 @@ impl ExternalMemory {
             pending: Vec::new(),
             recent: Vec::new(),
             reward_rates: BTreeMap::new(),
+            retired_failures: None,
             strategy: RecursiveStrategy::default(),
             events: 0,
             learned: 0,
@@ -290,22 +338,32 @@ impl ExternalMemory {
         }
     }
     pub fn report(&self) -> ExternalRewardReport {
+        let previous_fingerprint = fingerprint(&(
+            &self.rows,
+            &self.metrics,
+            &self.strategy,
+            &self.reward_rates,
+            self.enabled,
+            self.adaptive,
+        ));
         ExternalRewardReport {
             enabled: self.enabled,
             factual_events: self.events,
             learned_events: self.learned,
-            learned_fingerprint: fingerprint(&(
-                &self.rows,
-                &self.metrics,
-                &self.strategy,
-                &self.reward_rates,
-                self.enabled,
-                self.adaptive,
-            )),
+            learned_fingerprint: self
+                .retired_failures
+                .as_ref()
+                .map_or(previous_fingerprint, |failures| {
+                    fingerprint(&(previous_fingerprint, failures))
+                }),
             retained_cases: self.rows.len(),
             model_bytes: self.bytes
                 + serde_json::to_vec(&self.metrics).map_or(0, |b| b.len())
-                + serde_json::to_vec(&self.reward_rates).map_or(0, |b| b.len()),
+                + serde_json::to_vec(&self.reward_rates).map_or(0, |b| b.len())
+                + self
+                    .retired_failures
+                    .as_ref()
+                    .map_or(0, |s| s.buckets.len() * std::mem::size_of::<f64>()),
             evictions: self.evictions,
             pending_actions: self.pending.len(),
             working_transitions: self.recent.len(),
@@ -426,8 +484,8 @@ impl ExternalMemory {
             }
         }
         // An unmeasured or aliased state can have contradictory outcomes.
-        // Exact factual frequencies override a fortunate nearest prototype;
-        // repeated failed guesses must reduce expected reward.
+        // Exact retained frequencies override a fortunate nearest prototype.
+        // After eviction, a conservative failure prior prevents 1/1 resets.
         if omit.is_none() {
             for a in 0..actions {
                 if meter.charge(64).is_err() {
@@ -435,7 +493,7 @@ impl ExternalMemory {
                 }
                 let key = serde_json::to_string(&(state, a)).unwrap_or_default();
                 if let Some(rate) = self.reward_rates.get(&key) {
-                    values[a] = rate.sum / rate.count as f64;
+                    values[a] = rate.sum / (rate.count as f64 + rate.retired_failures);
                     support[a] = rate.count;
                 }
             }
@@ -634,19 +692,25 @@ impl ExternalMemory {
                 .min_by_key(|(_, r)| (r.count, r.last))
                 .map(|(k, _)| k.clone())
             {
-                self.reward_rates.remove(&old);
+                let rate = self.reward_rates.remove(&old).unwrap();
+                // Only retire newly observed mass. The prior already lives in
+                // the sketch and must not be counted again on the next eviction.
+                self.retired_failures
+                    .get_or_insert_with(RetiredFailures::default)
+                    .add(&old, (rate.count as f64 - rate.sum).max(0.0));
             }
         }
+        let prior = self
+            .retired_failures
+            .as_ref()
+            .map_or(0.0, |s| s.estimate(&key));
         let rate = self.reward_rates.entry(key).or_insert(RewardRate {
             count: 0,
             sum: 0.0,
             last: self.events,
+            retired_failures: prior,
         });
-        if rate.count >= 512 {
-            rate.count /= 2;
-            rate.sum *= 0.5;
-        }
-        rate.count += 1;
+        rate.count = rate.count.saturating_add(1);
         rate.sum += reward.max(0.0);
         rate.last = self.events;
         for state in [&pre, &post] {
@@ -791,16 +855,30 @@ impl ExternalMemory {
                     || self.learned != 0
                     || !self.metrics.is_empty()))
             || (!self.enabled && !self.reward_rates.is_empty())
+            || (!self.enabled && self.retired_failures.is_some())
+            || self.retired_failures.as_ref().is_some_and(|s| {
+                s.buckets.len() != FAILURE_WIDTH * FAILURE_DEPTH
+                    || s.buckets
+                        .iter()
+                        .any(|v| !v.is_finite() || *v < 0.0 || *v > events as f64 + 1e-9)
+            })
             || self.reward_rates.len() > 1024
             || self.reward_rates.iter().any(|(key, r)| {
                 let parsed = serde_json::from_str::<(Vec<i64>, usize)>(key);
                 key.len() > 1024
                     || r.count == 0
-                    || r.count > 512
+                    || r.count > events
                     || r.last > events
                     || !r.sum.is_finite()
                     || r.sum < 0.0
                     || r.sum > r.count as f64 + 1e-9
+                    || !r.retired_failures.is_finite()
+                    || r.retired_failures < 0.0
+                    || r.retired_failures > events as f64 + 1e-9
+                    || (r.retired_failures > 0.0 && self.retired_failures.is_none())
+                    || self.retired_failures.as_ref().is_some_and(|s| {
+                        r.retired_failures > s.estimate(key) + 1e-9
+                    })
                     || parsed.is_err()
                     || parsed.is_ok_and(|(s, a)| !valid_state(&s) || a >= actions)
             })
@@ -1013,5 +1091,73 @@ mod tests {
         assert_eq!(q[0], 0.5);
         assert_eq!(n[0], 250);
         m.validate(2, 2500, false).unwrap();
+    }
+    #[test]
+    fn evicted_rate_retains_failure_evidence_across_restore_and_reentry() {
+        let mut m = ExternalMemory::new(true, false);
+        let original = state(1, 0);
+        m.observe(original.clone(), 0, original.clone(), 0.0, 1, None, true);
+        m.finish();
+        for i in 1..=1024 {
+            let pre = state(1, i);
+            m.observe(pre.clone(), 0, pre, 1.0, 1, None, true);
+        }
+        let key = serde_json::to_string(&(&original, 0_usize)).unwrap();
+        assert!(!m.reward_rates.contains_key(&key));
+        let saved = serde_json::to_string(&m).unwrap();
+        let mut restored: ExternalMemory = serde_json::from_str(&saved).unwrap();
+        restored.validate(2, 1025, false).unwrap();
+        assert_eq!(
+            m.report().learned_fingerprint,
+            restored.report().learned_fingerprint
+        );
+        restored.observe(original.clone(), 0, original.clone(), 1.0, 1, None, true);
+        let (values, _) = restored.immediate(
+            &original,
+            2,
+            &Strategy::default(),
+            &mut Meter::new(1_000_000),
+        );
+        assert!(values[0] > 0.0 && values[0] <= 0.5);
+        restored.validate(2, 1026, false).unwrap();
+        for i in 2000..3024 {
+            let pre = state(1, i);
+            restored.observe(pre.clone(), 0, pre, 1.0, 1, None, true);
+        }
+        assert!(!restored.reward_rates.contains_key(&key));
+        // Re-eviction must not add the same retired failure prior twice.
+        assert_eq!(
+            restored.retired_failures.as_ref().unwrap().estimate(&key),
+            1.0
+        );
+        restored.observe(original.clone(), 0, original.clone(), 1.0, 1, None, true);
+        restored.validate(2, 2051, false).unwrap();
+        let hash = restored.report().learned_fingerprint;
+        restored.observe(original.clone(), 0, original, 0.0, 1, None, false);
+        assert_eq!(hash, restored.report().learned_fingerprint);
+        restored.retired_failures.as_mut().unwrap().buckets.pop();
+        assert!(restored.validate(2, 2052, false).is_err());
+    }
+    #[test]
+    fn long_retained_rates_do_not_halve_away_old_failures() {
+        let mut m = ExternalMemory::new(true, false);
+        let pre = state(1, 0);
+        for i in 0..600 {
+            m.observe(
+                pre.clone(),
+                0,
+                pre.clone(),
+                f64::from(i % 4 == 0),
+                1,
+                None,
+                true,
+            );
+            m.finish();
+        }
+        let (values, support) =
+            m.immediate(&pre, 2, &Strategy::default(), &mut Meter::new(1_000_000));
+        assert_eq!(values[0], 0.25);
+        assert_eq!(support[0], 600);
+        m.validate(2, 600, false).unwrap();
     }
 }

@@ -1,0 +1,156 @@
+{
+  "status": "PASS",
+  "audit_kind": "post_hoc_read_only_provenance",
+  "utc_after_completed_evaluation": "2026-10-20T23:12:37.275143+00:00",
+  "evaluated_source_commit": "2569bf54b2be7e6894694725bc57a417f09576e6",
+  "evaluated_binary_sha256": "349b719c8db8661c39520ca409c78756bc46be5b7f1fe101dc07a78d3aad4536",
+  "verified_input_files": 24,
+  "verified_data_files": {
+    "train-images-idx3-ubyte.gz": {
+      "bytes": 26421880,
+      "sha256": "3aede38d61863908ad78613f6a32ed271626dd12800ba2636569512369268a84"
+    },
+    "train-labels-idx1-ubyte.gz": {
+      "bytes": 29515,
+      "sha256": "a04f17134ac03560a47e3764e11b92fc97de4d1bfaf8ba1a3aa29af54cc90845"
+    },
+    "t10k-images-idx3-ubyte.gz": {
+      "bytes": 4422102,
+      "sha256": "346e55b948d973a97e58d2351dde16a484bd415d4595297633bb08f03db6a073"
+    },
+    "t10k-labels-idx1-ubyte.gz": {
+      "bytes": 5148,
+      "sha256": "67da17c76eaffca5446c3361aaab5c3cd6d1c2608764d35dfb1850b086bf8dd5"
+    },
+    "uci-har.zip": {
+      "bytes": 32964019,
+      "sha256": "ba235c5da70bc5de792aab7b0207326cb29eaf0941c3a44f1589c2ad023c752e"
+    }
+  },
+  "trace_files": 20,
+  "actual_actions": 158879,
+  "graded_windows": 45000,
+  "traces": [
+    {
+      "path": "traces/sensor-study/sensors/fixed/continuous-training.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 18270,
+      "graded_windows": 6000
+    },
+    {
+      "path": "traces/sensor-study/sensors/fixed/fashion-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/fixed/fashion-before-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/fixed/har-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2334,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/continuous-training.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 18887,
+      "graded_windows": 6000
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/fashion-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/fashion-before-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/har-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2426,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/continuous-training.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 31497,
+      "graded_windows": 6000
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/fashion-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/fashion-before-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/har-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 1006,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/continuous-training.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 17652,
+      "graded_windows": 6000
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/fashion-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/fashion-before-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/har-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 1000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/continuous-training.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 43645,
+      "graded_windows": 6000
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/fashion-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/fashion-before-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2000,
+      "graded_windows": 1000
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/har-after-har.jsonl.gz",
+      "status": "PASS",
+      "actual_actions": 2162,
+      "graded_windows": 1000
+    }
+  ],
+  "scope": "All logged sensory observations, acquired masks, motor offers and factual reward labels match the verified original corpus. No agent or new exam was run."
+}

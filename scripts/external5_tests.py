@@ -1,10 +1,13 @@
 """Format and observation-boundary regressions using tiny generated fixtures."""
 import gzip,struct,tempfile,unittest,zipfile,json,hashlib
+from unittest.mock import patch
 from pathlib import Path
 import numpy as np
 from external5_sensors import load_fashion,load_har,SENSOR_NAMES,MatchedKNN
 from external5_arc import targets
-from run_external_continual5 import verify_data_files
+from run_external_continual5 import verify_data_files,dependency_versions,PINNED_VERSIONS
+from audit_external5_data import audit
+import prepare_external5_data as prepare
 
 class ExternalInputs(unittest.TestCase):
     def test_idx_headers_never_become_pixels_or_feedback_labels(self):
@@ -34,6 +37,41 @@ class ExternalInputs(unittest.TestCase):
             verify_data_files(root,{'sample.bin'})
             path.write_bytes(b'corrupt!')
             with self.assertRaisesRegex(ValueError,'SHA256 mismatch'):verify_data_files(root,{'sample.bin'})
+    def test_har_requires_one_valid_subject_for_every_requested_window(self):
+        for subjects in ['1\n','31\n2\n','1.5\n2\n']:
+            with self.subTest(subjects=subjects),tempfile.TemporaryDirectory() as folder:
+                with zipfile.ZipFile(Path(folder)/'uci-har.zip','w') as archive:
+                    for name in SENSOR_NAMES:
+                        archive.writestr(f'UCI HAR Dataset/train/Inertial Signals/{name}_train.txt',(' '.join(['0']*128)+'\n')*2)
+                    archive.writestr('UCI HAR Dataset/train/y_train.txt','1\n6\n')
+                    archive.writestr('UCI HAR Dataset/train/subject_train.txt',subjects)
+                with self.assertRaises(ValueError):load_har(folder,'train',0,2)
+    def test_cached_har_cannot_mint_a_trusted_manifest_for_changed_content(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);path=root/'uci-har.zip';raw=b'1\n'
+            expected={'train/y_train.txt':{'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}}
+            with zipfile.ZipFile(path,'w') as archive:archive.writestr('UCI HAR Dataset/train/y_train.txt',raw)
+            self.assertEqual(prepare.verify_har_archive(path,expected),1)
+            with zipfile.ZipFile(path,'w') as archive:archive.writestr('UCI HAR Dataset/train/y_train.txt',b'2\n')
+            with patch.object(prepare,'FASHION',{}),patch.object(prepare,'pinned_har_files',return_value=expected),patch('sys.argv',['prepare','--output',folder,'--har-mirrors']):
+                with self.assertRaisesRegex(ValueError,'pinned HAR content mismatch'):prepare.main()
+            self.assertFalse((root/'manifest.json').exists())
+    def test_scoring_rejects_dependency_drift_while_development_records_it(self):
+        with patch('run_external_continual5.importlib.metadata.version',side_effect=PINNED_VERSIONS.__getitem__):
+            self.assertEqual(dependency_versions(True),PINNED_VERSIONS)
+        changed={**PINNED_VERSIONS,'minigrid':'0.0.0'}
+        with patch('run_external_continual5.importlib.metadata.version',side_effect=changed.__getitem__):
+            with self.assertRaisesRegex(RuntimeError,'dependency versions differ'):dependency_versions(True)
+            self.assertEqual(dependency_versions(False),changed)
+    def test_mixed_frozen_source_evidence_is_rejected_before_corpus_access(self):
+        for field in ['source_commit','binary_sha256']:
+            with self.subTest(field=field),tempfile.TemporaryDirectory() as folder:
+                root=Path(folder);(root/'sensor-study').mkdir()
+                frozen={'source_commit':'a'*40,'binary_sha256':'b'*64};other={**frozen,field:'c'*len(frozen[field])}
+                (root/'source-freeze.json').write_text(json.dumps(frozen));(root/'sensor-study/commitment.json').write_text(json.dumps(other))
+                with patch('audit_external5_data.verify_data_files') as verify:
+                    with self.assertRaisesRegex(ValueError,'identity mismatch'):audit(root,root)
+                    verify.assert_not_called()
     def test_matched_control_cannot_use_unmeasured_training_axes(self):
         model=MatchedKNN();unknown={'kind':'signals','namespace':2,'channels':[None]*9}
         observed={'kind':'signals','namespace':2,'channels':[[1.0,2.0,3.0]]+[None]*8}

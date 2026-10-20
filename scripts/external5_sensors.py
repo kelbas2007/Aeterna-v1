@@ -27,10 +27,11 @@ def load_har(root,part,offset,count):
         for sensor in SENSOR_NAMES:
             with archive.open(prefix+f'Inertial Signals/{sensor}_{part}.txt') as f:
                 channels.append(np.loadtxt(f,max_rows=offset+count,ndmin=2)[offset:offset+count])
-        with archive.open(prefix+f'y_{part}.txt') as f:y=np.loadtxt(f,dtype=int,max_rows=offset+count,ndmin=1)[offset:offset+count]-1
-        with archive.open(prefix+f'subject_{part}.txt') as f:subjects=np.loadtxt(f,dtype=int,max_rows=offset+count,ndmin=1)[offset:offset+count]
+        with archive.open(prefix+f'y_{part}.txt') as f:y=np.loadtxt(f,dtype=int,converters=int,max_rows=offset+count,ndmin=1)[offset:offset+count]-1
+        with archive.open(prefix+f'subject_{part}.txt') as f:subjects=np.loadtxt(f,dtype=int,converters=int,max_rows=offset+count,ndmin=1)[offset:offset+count]
     x=np.stack(channels,axis=1)
-    if x.shape!=(count,9,128) or y.shape!=(count,) or not np.isfinite(x).all() or np.any((y<0)|(y>=6)):
+    if (x.shape!=(count,9,128) or y.shape!=(count,) or subjects.shape!=(count,)
+        or not np.isfinite(x).all() or np.any((y<0)|(y>=6)) or np.any((subjects<1)|(subjects>30))):
         raise ValueError('invalid UCI HAR raw partition')
     return x,y,subjects
 

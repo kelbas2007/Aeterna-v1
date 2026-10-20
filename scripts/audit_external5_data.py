@@ -11,9 +11,22 @@ from run_external_continual5 import verify_data_files
 
 
 def audit(data, evidence):
-    verified = verify_data_files(data)
     frozen = json.loads((evidence / 'source-freeze.json').read_text())
     commitment = json.loads((evidence / 'sensor-study/commitment.json').read_text())
+    if any(frozen[field] != commitment[field] for field in ['source_commit', 'binary_sha256']):
+        raise ValueError('source freeze and evaluated commitment identity mismatch')
+    manifest = json.loads((evidence / 'manifest.json').read_text())
+    records = [r for r in manifest['files'] if 'path' in r]
+    pins = {r['path']: r for r in records}
+    if len(pins) != len(records):
+        raise ValueError('duplicate published evidence entry')
+    inputs = ['source-freeze.json', 'sensor-study/commitment.json', 'data-manifest.json', 'har-mirror-manifest.json']
+    inputs += [str(p.relative_to(evidence)) for p in (evidence / 'traces/sensor-study/sensors').rglob('*.jsonl.gz')]
+    for name in inputs:
+        raw = (evidence / name).read_bytes(); pin = pins[name]
+        if len(raw) != pin['bytes'] or hashlib.sha256(raw).hexdigest() != pin['sha256']:
+            raise ValueError('published evidence bytes differ from manifest: ' + name)
+    verified = verify_data_files(data)
     manifest_bytes = (data / 'manifest.json').read_bytes()
     if hashlib.sha256(manifest_bytes).hexdigest() != commitment['data_manifest_sha256']:
         raise ValueError('current dataset manifest differs from the evaluated commitment')
@@ -102,6 +115,8 @@ def audit(data, evidence):
     return {'status': 'PASS', 'audit_kind': 'post_hoc_read_only_provenance',
             'utc_after_completed_evaluation': datetime.now(timezone.utc).isoformat(),
             'evaluated_source_commit': frozen['source_commit'],
+            'evaluated_binary_sha256': frozen['binary_sha256'],
+            'verified_input_files': len(inputs),
             'verified_data_files': verified, 'trace_files': len(reports),
             'actual_actions': sum(r['actual_actions'] for r in reports),
             'graded_windows': sum(r['graded_windows'] for r in reports), 'traces': reports,

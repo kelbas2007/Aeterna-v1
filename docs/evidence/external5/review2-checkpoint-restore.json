@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "artifact": "docs/evidence/external5/one-continuing-learner.json.gz",
+  "new_memory_source_sha256": "1232df3022836992e23f8180fb0df373c557138dd59f2ab66650681743ab270c",
+  "checkpoint_bytes": 1021302,
+  "facts": 18887,
+  "recursive_candidates": 18,
+  "accepted": 5,
+  "actions_executed": 0,
+  "learned_fingerprint_matches_published_summary": true,
+  "scope": "Compatibility/restore only; no new external accuracy measurement."
+}

@@ -16,6 +16,29 @@ HAR_MIRRORS = [
     ('schakraborty369/UCI-HAR-Dataset','af2d3fbe51b5c317e34701225d5420d0d884d5ce','data/'),
     ('babarbashir/UCI-HAR-Dataset','9f4dca7e33c616fe78e8a51f371c2d2e33d48b4b','UCI-HAR-Dataset/'),
 ]
+HAR_PIN_MANIFEST_SHA256 = '2557b0f39e716457d3ffa4d9722c19d1cb45d80e656309cf7d73ebb11fe90ffc'
+
+def pinned_har_files():
+    """Byte pins cross-checked against both immutable source trees, not the cache."""
+    path=Path(__file__).resolve().parents[1]/'docs/evidence/external5/har-mirror-manifest.json'
+    raw=path.read_bytes()
+    if hashlib.sha256(raw).hexdigest()!=HAR_PIN_MANIFEST_SHA256:
+        raise ValueError('pinned HAR source manifest changed')
+    return {r['path']:r for r in json.loads(raw)['files']}
+
+def verify_har_archive(path,expected=None):
+    expected=pinned_har_files() if expected is None else expected
+    with zipfile.ZipFile(path) as archive:
+        names=archive.namelist()
+        for name,pin in expected.items():
+            member='UCI HAR Dataset/'+name
+            if names.count(member)!=1:raise ValueError('missing or duplicate pinned HAR member: '+name)
+            digest=hashlib.sha256();size=0
+            with archive.open(member) as stream:
+                while block:=stream.read(1024*1024):digest.update(block);size+=len(block)
+            if size!=pin['bytes'] or digest.hexdigest()!=pin['sha256']:
+                raise ValueError('pinned HAR content mismatch: '+name)
+    return len(expected)
 
 def request(url):return urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'AETERNA-external-data/5'}),timeout=120)
 
@@ -72,6 +95,7 @@ def main():
             temporary.replace(path)
         raw=path.read_bytes();md5=hashlib.md5(raw).hexdigest()
         if expected_md5 and md5!=expected_md5:raise ValueError(f'official checksum mismatch: {name}')
+        if name=='uci-har.zip':verify_har_archive(path)
         row={'name':name,'url':url,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest(),
              'official_md5':expected_md5,'md5_verified':bool(expected_md5)}
         if name=='uci-har.zip' and (root/'har-mirror-manifest.json').exists():

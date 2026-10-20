@@ -5,11 +5,12 @@ from pathlib import Path
 import numpy as np
 from external5_transport import Native,RandomReference,new_agent
 from external5_sensors import load_fashion,load_har,blank,run_windows,MatchedKNN
-from prepare_external5_data import FASHION
+from prepare_external5_data import FASHION,verify_har_archive
 
 VARIANTS=['legacy','random','one_step','fixed','full']
 GAMES=['MiniGrid-DoorKey-8x8-v0','MiniGrid-MultiRoom-N2-S4-v0','MiniGrid-Unlock-v0']
 ROOT=Path(__file__).resolve().parents[1]
+PINNED_VERSIONS={'minigrid':'3.1.0','gymnasium':'1.2.0','arc-agi':'0.9.9','arcengine':'0.9.3','numpy':'2.3.5'}
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def save(path,value):Path(path).write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
 def variants(args):return VARIANTS if args.score else args.dev_variants
@@ -30,8 +31,15 @@ def verify_data_files(root,expected_names=None):
             while block:=f.read(1024*1024):digest.update(block);md5.update(block)
         if digest.hexdigest()!=row['sha256']:raise ValueError('dataset SHA256 mismatch: '+name)
         if name in FASHION and md5.hexdigest()!=FASHION[name]:raise ValueError('official dataset checksum mismatch: '+name)
+        if name=='uci-har.zip':verify_har_archive(path)
         verified[name]={'bytes':path.stat().st_size,'sha256':digest.hexdigest()}
     return verified
+
+def dependency_versions(scoring):
+    actual={name:importlib.metadata.version(name) for name in PINNED_VERSIONS}
+    if scoring and actual!=PINNED_VERSIONS:
+        raise RuntimeError('scoring dependency versions differ from pinned study environment: '+json.dumps(actual,sort_keys=True))
+    return actual
 
 def motors(kind):
     rng=random.Random({'fashion':202610201,'har':202610202}[kind]);mapping=rng.sample(range(16),16)
@@ -41,13 +49,14 @@ def motors(kind):
 def commitment(args,out):
     dirty=subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True)
     if args.score and dirty:raise RuntimeError('scoring requires a clean, committed source tree')
+    dependencies=dependency_versions(args.score)
     verified=verify_data_files(args.data)
     state={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         'development':not args.score,'working_tree_dirty':bool(dirty),'binary_sha256':sha(args.binary),
         'protocol_sha256':sha(ROOT/'docs/EXTERNAL_CONTINUAL5_PROTOCOL.md'),
         'data_manifest_sha256':sha(Path(args.data)/'manifest.json'),
         'verified_data_files':verified,
-        'dependencies':{name:importlib.metadata.version(name) for name in ['minigrid','gymnasium','arc-agi','arcengine','numpy']},
+        'dependencies':dependencies,
         'variants':variants(args),'suites':args.suites,'motor_maps':{kind:motors(kind) for kind in ['fashion','har']}}
     save(out/'commitment.json',state);return state
 
