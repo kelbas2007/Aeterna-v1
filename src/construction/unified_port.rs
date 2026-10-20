@@ -245,6 +245,92 @@ impl Learner {
             quoted_cost:quoted[action].max_cost,
         }),meter.spent)
     }
+    /// An epistemic action, NOT an imagined result. The learner itself
+    /// measures which opaque motor extension of the most recent actually
+    /// executed no-visible-effect sequence is least physically observed.
+    /// All historical comparisons are PRE-matched, restart-safe and
+    /// charged against the existing finite causal-probe work budget.
+    pub(crate) fn carrier_contextual_experiment_metered(
+        &self,allowed:&[bool],quoted:&[super::autonomy::ActionOffer],
+        budget:u64
+    )->(Option<PortCausalProbe>,u64){
+        if !self.active_pair_probes||self.pending||self.poisoned||
+            self.frozen_at.is_some()||budget==0||
+            allowed.len()!=self.config.actions||
+            quoted.len()!=self.config.actions||self.restart_next {
+            return (None,0)
+        }
+        let end=self.records.len();
+        let max_history=self.config.planning_depth.min(5).saturating_sub(1);
+        if end==0||max_history==0{return (None,0)}
+        // Most recent connected no-visible-effect sequence. The physical
+        // history itself supplies motor IDs; neither hidden state nor
+        // evaluator role labels are accessible here.
+        let mut suffix=Vec::with_capacity(max_history);
+        let mut next_id=self.next_id;
+        for index in (0..end).rev().take(max_history){
+            let row=&self.records[index].transition;
+            if row.id.checked_add(1)!=Some(next_id) ||
+                row.pre!=self.current||row.post!=self.current{break}
+            suffix.push(row.action);
+            next_id=row.id;
+            if row.restart{break}
+        }
+        if suffix.is_empty(){return (None,0)}
+        suffix.reverse();
+        let depth=suffix.len();
+        let mut meter=Meter::new(budget);
+        let mut within=vec![0usize;self.config.actions];
+        let mut global=vec![0usize;self.config.actions];
+        // No partial scan is evidence of being "least tested": return
+        // NONE if the caller cannot pay for all relevant rows.
+        for index in (0..end).rev().take(256){
+            if meter.charge((self.current.len()+depth+4) as u64).is_err(){
+                return (None,meter.spent)
+            }
+            let row=&self.records[index].transition;
+            if !allowed[row.action]{continue}
+            global[row.action]+=1;
+            if row.pre!=self.current || row.restart || index<depth{
+                continue
+            }
+            let mut matched=true;
+            let mut expected_id=row.id;
+            for prior in (index-depth..index).rev().zip(suffix.iter().rev()){
+                let (prior_index,expected_action)=prior;
+                let p=&self.records[prior_index].transition;
+                if p.id.checked_add(1)!=Some(expected_id) ||
+                    p.action!=*expected_action ||
+                    p.pre!=self.current||p.post!=self.current{
+                    matched=false;break
+                }
+                expected_id=p.id;
+                if p.restart && prior_index+1<index-depth+depth{
+                    // Restart may mark the FIRST action in the suffix,
+                    // never one of its interior causal links.
+                    if prior_index!=index-depth{matched=false;break}
+                }
+            }
+            if matched{within[row.action]+=1}
+        }
+        let mut best=None::<(usize,usize,u64,usize)>;
+        for action in 0..self.config.actions{
+            if !allowed[action]{continue}
+            let tie=exploration_word(self.next_id ^
+                ((action as u64).wrapping_mul(0x9e3779b97f4a7c15)));
+            let score=(within[action],global[action],tie,action);
+            if best.is_none_or(|b|score<b){best=Some(score)}
+        }
+        let Some((count,total,_,action))=best else{
+            return (None,meter.spent)
+        };
+        (Some(PortCausalProbe{
+            action,novelty:1.0/(1.0+count as f32),
+            disagreement:1.0/(1.0+total as f32),
+            quoted_cost:quoted[action].max_cost
+        }),meter.spent)
+    }
+
     /// TRUSTED EXTERNAL OBSERVATION: a virtual environment reset is not
     /// an imagined POST, has no action permit, and never erases the journal.
     /// The next real action must record a restart marker, preventing

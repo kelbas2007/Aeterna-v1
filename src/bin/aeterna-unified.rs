@@ -136,6 +136,14 @@ pub(crate) fn main()->Result<()>{
                         "admission":"incremental_prediction_gain_exceeds_action_complexity_tax",
                         "authority":"same_U1_fresh_HumanProtection"}))
                 },
+                "enable_contextual_experiments"=>{
+                    runtime.as_mut().ok_or("not loaded")?
+                        .enable_constructing_contextual_experiments()?;
+                    Ok(json!({"type":"contextual_experiments_enabled",
+                        "source":"connected_real_PRE_action_POST_history",
+                        "decision":"only_when_complexity_need_investigate",
+                        "authority":"native_U1_fresh_HumanProtection_each_motor"}))
+                },
                 "enable_active_causal_probes"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
                     Ok(json!({"type":"active_causal_probes_enabled",
