@@ -279,9 +279,11 @@ fn native_u1_chooses_causal_context_experiments_from_cold_real_outcomes(){
         serde_json::to_vec_pretty(&json!({"summary":summary,"worlds":raw}))
         .unwrap()).unwrap();
     eprintln!("ACTIVE_HISTORY_EXPERIMENT1 {}",summary);
-    // Proposal ≠ action. Record negative if U1 refuses the suggested probe.
-    assert_eq!(contextual_chosen.iter().sum::<usize>(),
-        contextual_chosen.iter().sum::<usize>());
+    // A proposed experiment is NOT evidence that U1 chose that motor.
+    assert_eq!(raw.len(),36);
+    for family in 0..4{
+        assert!(contextual_chosen[family]<=contextual_offered[family]);
+    }
 }
 #[test]
 fn history_probe_requires_cold_gate_and_cannot_inject_hidden_knowledge(){
