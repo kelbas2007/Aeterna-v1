@@ -647,7 +647,7 @@ impl Learner {
         }
         let data = self.data();
         let requested = if let Some(c) = &mut self.curriculum {
-            let mut meter = Meter::new(2_000_000);
+            let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(data.len(),1)}else{2_000_000});
             let discovery = (|| -> Result<_> {
                 let (predictions,_) = replay(&self.active.program,&data,&self.library,&mut meter)?;
                 let mut errors = vec![0.0; self.config.width];
@@ -677,7 +677,7 @@ impl Learner {
             self.registry.cancel_trial(controls)?; return Ok(());
         }
         let program = controls.program().clone();
-        let mut meter = Meter::new(1000000);
+        let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(data.len(),2)}else{1000000});
         let calibration = (|| -> Result<_> {
             let (state,scale)=if let Some(m)=&self.causal_memory {
                 calibrate_causal_window(&program,&data,&self.library,&mut meter,causal_candidate_seed(m,&self.active.program,&program))?
@@ -706,7 +706,7 @@ impl Learner {
     fn finish_shadow(&mut self) -> Result<()> {
         let shadow = self.shadow.as_ref().ok_or(Error::NoEvidence)?;
         let data = self.data(); let training = &data[..shadow.training_len];
-        let mut meter = Meter::new(2000000);
+        let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(training.len(),2)}else{2000000});
         let (old,_)=if let Some(m)=&self.causal_memory {
             replay_causal_window(&self.active.program,training,&self.library,&mut meter,m.seed_state.clone())?
         }else{replay(&self.active.program,training,&self.library,&mut meter)?};

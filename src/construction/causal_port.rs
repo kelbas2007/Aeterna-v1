@@ -229,7 +229,7 @@ impl Learner {
 fn causal_replay_work(rows: usize, passes: u64) -> u64 {
     (rows as u64)
         .saturating_mul(passes)
-        .saturating_mul(100_001)
+        .saturating_mul(100_128)
         .saturating_add(1_000_000)
 }
 
@@ -288,6 +288,61 @@ fn calibrate_causal_window(
 #[cfg(test)]
 mod causal_checkpoint_tests {
     use super::*;
+    #[test]
+    fn a_large_stateful_window_can_start_and_complete_new_construction() {
+        let mut cfg = Config {
+            journal_capacity: 512,
+            search_every: 100_000,
+            shadow_steps: 2,
+            ..Default::default()
+        };
+        // The original paired synthesizer keeps its own finite reservations;
+        // leave enough search work to reach the calibration being exercised.
+        cfg.search.work = 64_000_000;
+        cfg.search.deterministic = true;
+        let mut policy = super::super::autonomy::AutonomyPolicy::default();
+        policy.ceiling.work = 64_000_000;
+        policy.ceiling.deterministic = true;
+        policy.evidence = None;
+        let mut learner = Learner::new(cfg, vec![5]).unwrap();
+        learner.enable_autonomy(policy).unwrap();
+        learner.manage_from_carrier().unwrap();
+        learner.enable_self_directed_control().unwrap();
+        learner
+            .active
+            .program
+            .cells
+            .push(super::super::vm::StateCell {
+                initial: 7,
+                update: Expr::Fold {
+                    count: Box::new(Expr::integer(4096)),
+                    seed: Box::new(Expr::State(0)),
+                    body: Box::new(Expr::bin(Op::Add, Expr::Arg(0), Expr::integer(0))),
+                },
+            });
+        learner.active.program.outputs[0] = Expr::State(0);
+        learner.active.state = vec![7];
+        learner
+            .enable_causal_memory(super::super::causal_memory::CausalConfig::default())
+            .unwrap();
+        for id in 0..192 {
+            let token = learner.prepare(0).unwrap();
+            learner.commit(token, vec![5], id + 1, 1).unwrap();
+        }
+        learner.construct().unwrap();
+        assert!(learner.shadow.is_some(),"trace={:?}, error={:?}",learner.last_trace,learner.last_error);
+        for id in 192..194 {
+            let token = learner.prepare(0).unwrap();
+            learner.commit(token, vec![5], id + 1, 1).unwrap();
+        }
+        assert!(learner
+            .promotions()
+            .iter()
+            .any(|promotion| promotion.accepted));
+        let learner = Learner::from_checkpoint(&learner.checkpoint().unwrap()).unwrap();
+        assert_eq!(learner.active.state, vec![7]);
+        assert_eq!(learner.factual_event_count(), 194);
+    }
     #[test]
     fn expensive_valid_state_programs_compact_restore_and_rollback() {
         let mut l = Learner::new(

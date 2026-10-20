@@ -64,6 +64,16 @@ impl Counts {
             .iter()
             .fold(self.other, |n, o| n.saturating_add(o.count))
     }
+    fn age(&mut self) {
+        // Effective recent evidence, with rare counterexamples retained.
+        // Lifetime factual/learning counters remain absolute and separate.
+        if self.total() >= 512 {
+            self.other = self.other.div_ceil(2);
+            for outcome in &mut self.outcomes {
+                outcome.count = outcome.count.div_ceil(2);
+            }
+        }
+    }
     fn bytes(&self) -> usize {
         // Account conservatively for RAM and JSON: signed i64 values need
         // up to twenty digits, not eight bytes, in persistent checkpoints.
@@ -377,7 +387,7 @@ impl CausalMemory {
             })
             .collect::<Vec<_>>();
         for (score, p) in self.scores.iter_mut().zip(probabilities) {
-            *score = (*score + p.max(1e-12).ln()).max(-1e9)
+            *score = (0.995 * *score + p.max(1e-12).ln()).max(-1e9)
         }
         let high = self
             .scores
@@ -395,6 +405,7 @@ impl CausalMemory {
                 last: t.id,
                 depth,
             });
+            c.age();
             if let Some(o) = c.outcomes.iter_mut().find(|o| o.post == t.post) {
                 o.count = o.count.saturating_add(1)
             } else if c.outcomes.len() < self.config.outcomes_per_entry {
@@ -403,7 +414,20 @@ impl CausalMemory {
                     count: 1,
                 })
             } else {
-                c.other = c.other.saturating_add(1)
+                // Bounded frequent-items admission. Demoted observations stay
+                // as unknown mass; a recurring new outcome can gain a slot.
+                c.other = c.other.saturating_add(c.outcomes.len() as u64 + 1);
+                for outcome in &mut c.outcomes {
+                    outcome.count -= 1;
+                }
+                c.outcomes.retain(|outcome| outcome.count > 0);
+                if c.outcomes.len() < self.config.outcomes_per_entry {
+                    c.other -= 1;
+                    c.outcomes.push(Outcome {
+                        post: t.post.clone(),
+                        count: 1,
+                    });
+                }
             }
             c.last = t.id;
         }
@@ -431,16 +455,54 @@ impl CausalMemory {
                     * (c.total() as f64).sqrt()
                     * (1.0 + (c.outcomes.len() as f64).ln())
                     / (2 * k.len() + c.bytes()).max(1) as f64
+                    / (1.0 + t.id.saturating_sub(c.last) as f64 / 256.0)
             };
+            // Reserve probation capacity for new evidence. Otherwise every
+            // count-one insertion loses immediately to an established cache
+            // and can never become a recurring learned law.
+            let mut probation_count = 0usize;
+            let mut probation_bytes = 0usize;
+            let mut largest = 0usize;
+            let probation = |c: &Counts| {
+                c.total() < 4
+                    || t.id.saturating_sub(c.last) as f64
+                        > 64.0 * (1.0 + (c.total().min(512) as f64).sqrt())
+            };
+            for (k, c) in &self.counts {
+                if probation(c) {
+                    let bytes = 2 * k.len() + c.bytes();
+                    probation_count += 1;
+                    probation_bytes += bytes;
+                    largest = largest.max(bytes);
+                }
+            }
+            let byte_quota = (self.config.model_bytes / 4)
+                .max(largest.saturating_mul(2))
+                .min(self.config.model_bytes);
+            let trim_probation =
+                probation_count > self.config.model_entries / 4 || probation_bytes > byte_quota;
             let victim = self
                 .counts
                 .iter()
+                .filter(|(_, c)| probation(c) == trim_probation)
                 .min_by(|(ka, a), (kb, b)| {
-                    value(ka, a)
-                        .total_cmp(&value(kb, b))
-                        .then_with(|| a.last.cmp(&b.last))
+                    if trim_probation {
+                        a.last
+                            .cmp(&b.last)
+                            .then_with(|| value(ka, a).total_cmp(&value(kb, b)))
+                    } else {
+                        value(ka, a)
+                            .total_cmp(&value(kb, b))
+                            .then_with(|| a.last.cmp(&b.last))
+                    }
                 })
-                .map(|(k, _)| k.clone());
+                .map(|(k, _)| k.clone())
+                .or_else(|| {
+                    self.counts
+                        .iter()
+                        .min_by_key(|(_, c)| c.last)
+                        .map(|(k, _)| k.clone())
+                });
             let Some(k) = victim else { break };
             if let Some(c) = self.counts.remove(&k) {
                 self.bytes = self.bytes.saturating_sub(2 * k.len() + c.bytes());
@@ -943,6 +1005,100 @@ impl CausalMemory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn a_full_outcome_set_can_learn_a_new_stable_law_and_later_drift() {
+        let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();
+        for outcome in 0..16 {
+            fact(&mut m, 0, 0, outcome, true);
+        }
+        for outcome in [99, 1234] {
+            for _ in 0..2000 {
+                fact(&mut m, 0, 0, outcome, true);
+            }
+            let beliefs = m
+                .beliefs(
+                    &[0],
+                    &[ActionOffer {
+                        available: true,
+                        max_cost: 1,
+                    }],
+                    Some(&[Some(outcome)]),
+                    100_000,
+                )
+                .unwrap()
+                .0;
+            let probability = beliefs[0]
+                .outcomes
+                .iter()
+                .find(|(post, _)| post == &[outcome])
+                .unwrap()
+                .1;
+            assert!(
+                probability > 0.95,
+                "the current repeated successor must become usable"
+            );
+            assert!(
+                beliefs[0].unknown_probability > 0.0,
+                "forgotten contradictions remain unknown mass"
+            );
+        }
+        assert_eq!(m.report().learned_transitions, 4016);
+    }
+    #[test]
+    fn full_entry_and_byte_caches_admit_a_new_recurring_domain() {
+        for (entries, bytes) in [(32, 2 * 1024 * 1024), (1024, 16384)] {
+            let mut m = CausalMemory::new(
+                CausalConfig {
+                    history_depth: 1,
+                    model_entries: entries,
+                    model_bytes: bytes,
+                    ..Default::default()
+                },
+                0,
+                vec![],
+            )
+            .unwrap();
+            if entries == 32 {
+                for _ in 0..16 {
+                    for pre in 0..32 {
+                        fact(&mut m, pre, 0, pre + 1, true);
+                    }
+                }
+            } else {
+                for pre in 0..128 {
+                    for _ in 0..16 {
+                        fact(&mut m, pre, 0, pre + 1, true);
+                    }
+                }
+            }
+            // The new working set is larger than the probation reserve.
+            // Stale protected entries must eventually yield, too.
+            for round in 0..1200 {
+                let pre = 1000 + round % 20;
+                fact(&mut m, pre, 0, pre + 1, true);
+            }
+            for pre in 1000..1020 {
+                let b = m
+                    .beliefs(
+                        &[pre],
+                        &[ActionOffer {
+                            available: true,
+                            max_cost: 1,
+                        }],
+                        None,
+                        100_000,
+                    )
+                    .unwrap()
+                    .0;
+                assert!(
+                    b[0].support >= 4,
+                    "recurring context {pre} must accumulate confirmations"
+                );
+                assert!(b[0].outcomes.iter().any(|(post, _)| post == &[pre + 1]));
+            }
+            assert!(m.report().retained_entries <= entries && m.report().model_bytes <= bytes);
+        }
+    }
     #[test]
     fn freezing_finalizes_failure_once_without_erasing_predictive_context() {
         let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();

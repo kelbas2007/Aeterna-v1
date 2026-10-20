@@ -1182,6 +1182,10 @@ impl ScientificRuntime {
     )->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         u.current.learner.carrier_observe_external_restart(observed.clone())?;
+        let credits=u.current.learner.carrier_take_causal_credits();
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         u.current.pending_credit=None;
         if let Some(revision)=u.self_revision.as_mut(){
             revision.pending_steps.clear();
@@ -2204,6 +2208,22 @@ mod causal_continuity_credit_tests {
         rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:choice,max_cost:1}],safe,|_|{
             *physical+=1;Ok(UnifiedPost{observation:vec![*physical],reward:0.0,cost:1})
         }).unwrap();
+    }
+    #[test]
+    fn restart_failure_credit_is_delivered_before_new_actions_or_domains(){
+        let mut rt=runtime();
+        rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+            Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+        let before=rt.organism.phase_native_meta_observations();
+        rt.observe_constructing_external_restart(vec![0]).unwrap();
+        assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+        assert_eq!(rt.construction_learner().unwrap().factual_event_count(),0);
+        assert!(rt.constructing.as_mut().unwrap().current.learner.carrier_take_causal_credits().is_empty());
+        let config=rt.construction_learner().unwrap().configuration().clone();
+        let policy=rt.construction_learner().unwrap().autonomy_policy().unwrap().clone();
+        rt.enter_constructing_domain("next-domain",config,policy,vec![0]).unwrap();
+        assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+        assert_eq!(rt.constructing.as_ref().unwrap().archived[0].learner.causal_report().unwrap().failed_goal_episodes,1);
     }
     #[test]
     fn instrumental_preparation_keeps_its_event_identity_across_compaction(){
