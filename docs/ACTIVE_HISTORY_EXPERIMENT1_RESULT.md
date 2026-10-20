@@ -9,12 +9,14 @@ or hidden benchmark was consumed.
 ## Actual protected action evidence
 
 [GitHub Actions first development run 39401289588](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39401289588).
-Linux completed PASS (2/2 tests), source audit PASS and 81 original
-cognitive files still bound, 75 untouched, RSP2 policy unchanged.
+**Linux AND Windows PASS, 2/2 tests each, identical outcome metrics.**
+Source audit PASS on both systems: 81 original cognitive files bound,
+75 untouched, RSP2 policy unchanged.
 Linux [raw evidence artifact](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39401289588/artifacts/12254469113)
 contains 6.4 MB of uncompressed genuine episode and physical-action
-traces. Windows verification is a separate required check; do not
-interpret a running Windows job as passed.
+traces. The exact pre-report source, test and physical-action traces are pinned
+to the cross-platform workflow. Only disclosed engineering evidence,
+not independently qualified scientific transfer.
 
 Same 36 **developer-visible, deterministic synthetic worlds**,
 24 episodes per world, 18 real protected actions max each. Each
