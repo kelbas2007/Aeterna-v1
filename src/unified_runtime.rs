@@ -43,18 +43,34 @@ struct TemporalOption {
     event:usize,
     /// Initial U1-chosen higher-level option's native evidence fields.
     initiating_fields:[f32;5],
+    /// Native utility belongs to the selected *entire* causal route,
+    /// not to its first potentially invisible preparation.
+    #[serde(default)]
+    credit_eligible:bool,
+    #[serde(default)]
+    realized_cost:u64,
+    #[serde(default)]
+    executed_steps:usize,
 }
 #[derive(Debug,Default,Clone,USerialize,UDeserialize)]
 struct TemporalOptionLane {
     #[serde(default,skip_serializing_if="Option::is_none")]
     pending:Option<TemporalOption>,
     started:u64,continued:u64,completed:u64,revoked:u64,
+    #[serde(default)]
+    terminal_credits:u64,
+    #[serde(default)]
+    contradictory_credits:u64,
+    #[serde(default)]
+    completed_real_cost:u64,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct TemporalOptionReport {
     pub pending_steps:usize,
     pub started:u64,pub continued:u64,
     pub completed:u64,pub revoked:u64,
+    pub terminal_credits:u64,pub contradictory_credits:u64,
+    pub completed_real_cost:u64,
 }
 impl TemporalOptionLane {
     fn report(&self)->TemporalOptionReport{
@@ -62,6 +78,9 @@ impl TemporalOptionLane {
             pending_steps:self.pending.as_ref().map_or(0,|o|o.remaining.len()),
             started:self.started,continued:self.continued,
             completed:self.completed,revoked:self.revoked,
+            terminal_credits:self.terminal_credits,
+            contradictory_credits:self.contradictory_credits,
+            completed_real_cost:self.completed_real_cost,
         }
     }
     fn reject_pending(&mut self){
@@ -73,6 +92,9 @@ impl TemporalOptionLane {
         let cfg=u.current.learner.carrier_config();
         if !u.current.learner.adaptive_history_suffix_enabled() ||
             self.completed.saturating_add(self.revoked)>self.started ||
+            self.terminal_credits>self.completed ||
+            self.contradictory_credits>self.revoked ||
+            self.completed_real_cost>u.total_external_cost ||
             self.continued>self.started.saturating_mul(cfg.planning_depth as u64){
             return Err(UError::InvalidData)
         }
@@ -80,6 +102,9 @@ impl TemporalOptionLane {
             if !(1..=4).contains(&p.remaining.len()) ||
                 p.remaining.len()>=cfg.planning_depth ||
                 p.goal.len()!=cfg.width ||!p.goal.iter().any(Option::is_some) ||
+                p.realized_cost>u.total_external_cost ||
+                p.executed_steps.saturating_add(p.remaining.len())>cfg.planning_depth ||
+                (p.credit_eligible && p.executed_steps==0) ||
                 p.last_verified_post!=u.current.learner.current() ||
                 p.event!=u.current.learner.records().len() ||
                 p.initiating_fields.iter().any(|v|!v.is_finite()||
@@ -203,6 +228,12 @@ fn uword(mut n:u64)->u64 {n=n.wrapping_add(0x9e3779b97f4a7c15);n=(n^(n>>30)).wra
 fn usensory(x:&[i64])->Vec<f32>{x.iter().map(|&v| (0.5+0.5*(v as f64)/(1.0+(v as f64).abs())) as f32).collect()}
 fn udistance(x:&[i64],goal:Option<&[Option<i64>]>)->f64 {
     goal.map(|g| x.iter().zip(g).filter_map(|(&v,t)|t.map(|a|(v as i128-a as i128).abs() as f64)).sum()).unwrap_or(0.0)
+}
+/// A bounded, authored terminal reward: only a REAL reached goal earns
+/// positive U1 credit, discounted by the sum of actual protected action costs.
+/// This is NOT a self-invented utility formula or evidence of cold transfer.
+fn temporal_realized_goal_utility(actual_cost:u64)->f32 {
+    (1.0/(1.0+0.10*(actual_cost as f32).ln_1p())).clamp(0.0,1.0)
 }
 fn ufields(p:&[i64],goal:Option<&[Option<i64>]>,novelty:f32,disagreement:f32,confidence:f32,cost:u64)->[f32;5] {
     [if goal.is_some(){(1.0/(1.0+udistance(p,goal))) as f32}else{0.0},novelty.clamp(0.0,1.0),disagreement.clamp(0.0,1.0),confidence.clamp(0.0,1.0),1.0/(1.0+(cost as f32).ln_1p())]
@@ -1215,6 +1246,11 @@ impl ScientificRuntime {
             }
         }
         let (option,score)=selected.ok_or(UError::NoEvidence)?;let a=option.p.action;
+        // A selected option is one native decision. No intrinsic/novelty
+        // success may be assigned before its real terminal consequence.
+        let selected_temporal_route=option.source=="predictive-suffix" &&
+            native_route.is_some() && u.temporal_options.is_some();
+        let mut delayed_option_credit=None::<([f32;5],f32)>;
         let original_fields=options.iter().find(|c|c.p.proposal_id==option.p.proposal_id)
             .map(|c|c.p.fields).unwrap_or(option.p.fields);
         let token=u.current.learner.carrier_prepare(a)?;
@@ -1266,22 +1302,51 @@ impl ScientificRuntime {
         if is_option_continuation{
             let lane=u.temporal_options.as_mut().ok_or(UError::InvalidData)?;
             if option.output.as_ref()!=Some(&post.observation){
-                // Contradicted by REAL physical evidence. Preserve the
-                // journal but never execute the remaining imagined route.
+                // One executed contradiction is a real FAILED option,
+                // not a fresh motor vote. External veto/restart is NOT failure.
+                let prior=lane.pending.as_ref().ok_or(UError::InvalidData)?;
+                if prior.credit_eligible && !u.freeze_controller{
+                    delayed_option_credit=Some((prior.initiating_fields,0.0));
+                    lane.contradictory_credits=lane.contradictory_credits
+                        .checked_add(1).ok_or(UError::Capacity)?;
+                }
                 lane.reject_pending();
             }else{
                 let pending=lane.pending.as_mut().ok_or(UError::InvalidData)?;
                 pending.remaining.remove(0);
                 pending.last_verified_post=post.observation.clone();
                 pending.event=u.current.learner.records().len();
-                lane.continued=lane.continued.checked_add(1).ok_or(UError::Capacity)?;
-                if lane.pending.as_ref().is_some_and(|p|p.remaining.is_empty()){
-                    if after==0.0{
-                        lane.pending=None;
-                        lane.completed=lane.completed.checked_add(1)
+                pending.realized_cost=pending.realized_cost.checked_add(post.cost)
+                    .ok_or(UError::Capacity)?;
+                pending.executed_steps=pending.executed_steps.checked_add(1)
+                    .ok_or(UError::Capacity)?;
+                lane.continued=lane.continued.checked_add(1)
+                    .ok_or(UError::Capacity)?;
+                let route_finished=lane.pending.as_ref()
+                    .is_some_and(|p|p.remaining.is_empty());
+                if after==0.0{
+                    // Only the observed terminal physical goal completes it.
+                    let finished=lane.pending.take().ok_or(UError::InvalidData)?;
+                    lane.completed=lane.completed.checked_add(1)
+                        .ok_or(UError::Capacity)?;
+                    lane.completed_real_cost=lane.completed_real_cost
+                        .checked_add(finished.realized_cost).ok_or(UError::Capacity)?;
+                    if finished.credit_eligible && !u.freeze_controller{
+                        delayed_option_credit=Some((finished.initiating_fields,
+                            temporal_realized_goal_utility(finished.realized_cost)));
+                        lane.terminal_credits=lane.terminal_credits.checked_add(1)
                             .ok_or(UError::Capacity)?;
-                    }else{lane.reject_pending()}
-                }else if after==0.0{lane.reject_pending()}
+                    }
+                }else if route_finished{
+                    // Matching an imagined partial route never forges success.
+                    let prior=lane.pending.as_ref().ok_or(UError::InvalidData)?;
+                    if prior.credit_eligible && !u.freeze_controller{
+                        delayed_option_credit=Some((prior.initiating_fields,0.0));
+                        lane.contradictory_credits=lane.contradictory_credits
+                            .checked_add(1).ok_or(UError::Capacity)?;
+                    }
+                    lane.reject_pending();
+                }
             }
         }else if option.source=="predictive-suffix"{
             if let (Some(lane),Some(route),Some(g))=
@@ -1289,7 +1354,7 @@ impl ScientificRuntime {
                 // Only a genuine native-selected FIRST action and a
                 // matching factual POST may activate an option.
                 if route.len()>1 && route[0].0==a &&
-                    route[0].1==post.observation &&
+                    route[0].1==post.observation && after!=0.0 &&
                     route.last().is_some_and(|x|
                         udistance(&x.1,Some(g))==0.0){
                     let remaining=route.into_iter().skip(1)
@@ -1304,10 +1369,21 @@ impl ScientificRuntime {
                             goal:g.to_vec(),remaining,
                             last_verified_post:post.observation.clone(),
                             event:u.current.learner.records().len(),
-                            initiating_fields:option.p.fields
+                            initiating_fields:option.p.fields,
+                            credit_eligible:policy_has_choice && !u.freeze_controller,
+                            realized_cost:post.cost,executed_steps:1
                         });
                     }
                 }
+            }
+            if selected_temporal_route &&
+                u.temporal_options.as_ref().is_some_and(|l|l.pending.is_none()) &&
+                policy_has_choice && !u.freeze_controller{
+                // A failed initial prediction is known only AFTER real POST.
+                // A lucky immediate real goal is still genuine, not imagined.
+                delayed_option_credit=Some((option.p.fields,
+                    if after==0.0{temporal_realized_goal_utility(post.cost)}
+                    else{0.0}));
             }
         }
         if !u.freeze_controller {
@@ -1324,10 +1400,12 @@ impl ScientificRuntime {
                 }
             }
             if native_credit_eligible && u.instrumental_credit.is_none() {
-                self.organism.observe_phase_native_meta_utility(option.p.fields,value);
-                for (source,fields) in helpers {
-                    self.organism.observe_phase_native_meta_utility(
-                        fields,if source==option.source{value}else{0.0});
+                if !selected_temporal_route {
+                    self.organism.observe_phase_native_meta_utility(option.p.fields,value);
+                    for (source,fields) in helpers {
+                        self.organism.observe_phase_native_meta_utility(
+                            fields,if source==option.source{value}else{0.0});
+                    }
                 }
                 if u.current.learner.promotions().len()>verdicts {
                     if let Some(fields)=u.current.pending_credit.take(){
@@ -1339,6 +1417,12 @@ impl ScientificRuntime {
                 // An unqualified operation cannot become an invented U1
                 // motor-choice success even if a separate model improved.
                 u.current.pending_credit=None;
+            }
+            // Credited once to the ORIGINAL U1 option decision, after a
+            // genuine physical terminal success or executed contradiction.
+            // Continuation steps cannot independently receive this credit.
+            if let Some((fields,utility))=delayed_option_credit{
+                self.organism.observe_phase_native_meta_utility(fields,utility);
             }
             if let Some(c)=u.instrumental_credit.as_mut(){
                 let event=u.current.learner.records().len();

@@ -157,6 +157,39 @@ fn native_u1_attempts_the_full_unforced_hidden_preparation_chain(){
 }
 
 #[test]
+fn a_self_selected_macro_learns_from_the_entire_executed_trajectory(){
+    let (mut rt,mut world)=acquired(true);
+    enable(&mut rt,true);
+    rt.enable_constructing_temporal_options().unwrap();
+    let first=step(&mut rt,&mut world,None);
+    assert_eq!(first.source,"predictive-suffix");
+    let first_report=rt.unified_report().unwrap();
+    assert_eq!(first_report.temporal_options.as_ref().unwrap().terminal_credits,0,
+        "the first invisible preparation is not a successful whole route");
+    let meta_after_first=first_report.native_meta_observations;
+    let checkpoint=rt.checkpoint_constructing().unwrap();
+    let mut resumed=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+    assert_eq!(resumed.checkpoint_constructing().unwrap(),checkpoint);
+    let middle=step(&mut resumed,&mut world,None);
+    assert_eq!(middle.source,"temporal-option-continuation");
+    assert_eq!(resumed.unified_report().unwrap().native_meta_observations,
+        meta_after_first,"the middle no-op cannot mint positive U1 utility");
+    let last=step(&mut resumed,&mut world,None);
+    assert_eq!(last.source,"temporal-option-continuation");
+    assert_eq!(world.progress,1,"only the real final physical POST is success");
+    let report=resumed.unified_report().unwrap();
+    assert_eq!(report.native_meta_observations,meta_after_first+1,
+        "one U1 decision gets one terminal outcome, not three action votes");
+    let lane=report.temporal_options.unwrap();
+    assert_eq!((lane.started,lane.completed,lane.terminal_credits,
+        lane.contradictory_credits,lane.completed_real_cost,lane.pending_steps),
+        (1,1,1,0,3,0));
+    let saved=resumed.checkpoint_constructing().unwrap();
+    assert_eq!(ScientificRuntime::from_constructing_checkpoint(&saved).unwrap()
+        .checkpoint_constructing().unwrap(),saved);
+}
+
+#[test]
 fn no_hidden_history_effect_cannot_produce_spurious_suffix_goal_plan(){
     let (mut rt,mut w)=acquired(false);enable(&mut rt,true);
     let chosen=step(&mut rt,&mut w,None);
@@ -261,6 +294,7 @@ fn real_unexpected_option_post_rejects_remaining_plan_without_forging_goal(){
     let middle=step(&mut rt,&mut w,None);
     assert_eq!((middle.action,middle.source.as_str()),(1,"temporal-option-continuation"));
     w.broken=true; // Evaluator-only change; hidden from the organism
+    let meta_before_last=rt.unified_report().unwrap().native_meta_observations;
     let last=step(&mut rt,&mut w,None);
     assert_eq!((last.action,last.source.as_str()),(2,"temporal-option-continuation"));
     assert_eq!(w.progress,0,"the physical world did NOT reach the goal");
@@ -268,6 +302,10 @@ fn real_unexpected_option_post_rejects_remaining_plan_without_forging_goal(){
     let lane=r.temporal_options.unwrap();
     assert_eq!((lane.started,lane.continued,lane.completed,lane.revoked,lane.pending_steps),
         (1,1,0,1,0));
+    assert_eq!((lane.terminal_credits,lane.contradictory_credits,lane.completed_real_cost),
+        (0,1,0),"failed real POST must be credited as failure, not goal");
+    assert_eq!(r.native_meta_observations,meta_before_last+1,
+        "only the original U1 macro choice receives the observed failure");
     let agency=r.agency_credit.unwrap();
     assert_eq!((agency.self_selected_actions,agency.option_continuation_actions),(1,2));
     assert_eq!(rt.construction_learner().unwrap().records().len(),180);
