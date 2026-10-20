@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 from external5_transport import Native,RandomReference,new_agent
 from external5_sensors import load_fashion,load_har,blank,run_windows,MatchedKNN
+from prepare_external5_data import FASHION
 
 VARIANTS=['legacy','random','one_step','fixed','full']
 GAMES=['MiniGrid-DoorKey-8x8-v0','MiniGrid-MultiRoom-N2-S4-v0','MiniGrid-Unlock-v0']
@@ -12,6 +13,25 @@ ROOT=Path(__file__).resolve().parents[1]
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def save(path,value):Path(path).write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
 def variants(args):return VARIANTS if args.score else args.dev_variants
+
+def verify_data_files(root,expected_names=None):
+    root=Path(root);manifest=json.loads((root/'manifest.json').read_text())
+    expected=set(FASHION)|{'uci-har.zip'} if expected_names is None else set(expected_names)
+    records=manifest['files'];names=[r['name'] for r in records]
+    if len(names)!=len(set(names)) or set(names)!=expected:raise ValueError('dataset manifest membership mismatch')
+    verified={}
+    for row in records:
+        name=row['name']
+        if Path(name).name!=name:raise ValueError('dataset name must be a local basename')
+        path=root/name
+        if not path.is_file() or path.stat().st_size!=row['bytes']:raise ValueError('dataset size mismatch: '+name)
+        digest=hashlib.sha256();md5=hashlib.md5()
+        with path.open('rb') as f:
+            while block:=f.read(1024*1024):digest.update(block);md5.update(block)
+        if digest.hexdigest()!=row['sha256']:raise ValueError('dataset SHA256 mismatch: '+name)
+        if name in FASHION and md5.hexdigest()!=FASHION[name]:raise ValueError('official dataset checksum mismatch: '+name)
+        verified[name]={'bytes':path.stat().st_size,'sha256':digest.hexdigest()}
+    return verified
 
 def motors(kind):
     rng=random.Random({'fashion':202610201,'har':202610202}[kind]);mapping=rng.sample(range(16),16)
@@ -21,10 +41,12 @@ def motors(kind):
 def commitment(args,out):
     dirty=subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True)
     if args.score and dirty:raise RuntimeError('scoring requires a clean, committed source tree')
+    verified=verify_data_files(args.data)
     state={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         'development':not args.score,'working_tree_dirty':bool(dirty),'binary_sha256':sha(args.binary),
         'protocol_sha256':sha(ROOT/'docs/EXTERNAL_CONTINUAL5_PROTOCOL.md'),
         'data_manifest_sha256':sha(Path(args.data)/'manifest.json'),
+        'verified_data_files':verified,
         'dependencies':{name:importlib.metadata.version(name) for name in ['minigrid','gymnasium','arc-agi','arcengine','numpy']},
         'variants':variants(args),'suites':args.suites,'motor_maps':{kind:motors(kind) for kind in ['fashion','har']}}
     save(out/'commitment.json',state);return state
@@ -81,10 +103,13 @@ def sensors(args,out):
         finally:
             agent.close();save(folder/'summary.json',result)
         results[variant]=result;save(out/'summary.json',results)
-    full=results['full'];before=full['fashion_before_har']['accuracy'];after=full['fashion_after_har']['accuracy']
-    gates={'fashion_accuracy':before>=0.65,'har_balanced_accuracy':full['har_after_har']['balanced_accuracy']>=0.65,
-           'fashion_retention':after>=before*0.9}
-    return {'results':results,'gates':gates,'all_targets_met':all(gates.values()),'evaluation_partition':part,
+    full=results.get('full')
+    gates={'fashion_accuracy':None,'har_balanced_accuracy':None,'fashion_retention':None}
+    if full is not None:
+        before=full['fashion_before_har']['accuracy'];after=full['fashion_after_har']['accuracy']
+        gates={'fashion_accuracy':before>=0.65,'har_balanced_accuracy':full['har_after_har']['balanced_accuracy']>=0.65,
+               'fashion_retention':after>=before*0.9}
+    return {'results':results,'gates':gates,'all_targets_met':None if full is None else all(gates.values()),'evaluation_partition':part,
             'note':'Matched 3NN receives the same actually acquired measurements and successful training-answer facts.'}
 
 def scene(observation,namespace):
@@ -145,9 +170,9 @@ def grids(args,out):
             finally:agent.close();save(current/'summary.json',entry)
             result[game][variant]=entry;save(out/'summary.json',result)
     scores={variant:sum(result[g][variant]['evaluation']['successes'] for g in games) for variant in variants(args)}
-    total=sum(result[g]['full']['evaluation']['episodes'] for g in games)
+    total=len(eval_seeds)*len(games)
     return {'results':result,'scores':scores,'episodes_per_variant':total,
-            'target_met':scores['full']/total>=0.25 and scores['full']>max(scores['legacy'],scores['random']) if set(scores)==set(VARIANTS) else None}
+            'target_met':scores['full']/total>=0.25 and scores['full']>max(scores['legacy'],scores['random']) if {'full','legacy','random'}<=scores.keys() else None}
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--binary',required=True);ap.add_argument('--data',required=True)

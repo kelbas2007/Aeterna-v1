@@ -1,9 +1,10 @@
 """Format and observation-boundary regressions using tiny generated fixtures."""
-import gzip,struct,tempfile,unittest,zipfile
+import gzip,struct,tempfile,unittest,zipfile,json,hashlib
 from pathlib import Path
 import numpy as np
 from external5_sensors import load_fashion,load_har,SENSOR_NAMES,MatchedKNN
 from external5_arc import targets
+from run_external_continual5 import verify_data_files
 
 class ExternalInputs(unittest.TestCase):
     def test_idx_headers_never_become_pixels_or_feedback_labels(self):
@@ -24,6 +25,15 @@ class ExternalInputs(unittest.TestCase):
             x,y,subjects=load_har(folder,'train',1,1)
             self.assertEqual(x.shape,(1,9,128));self.assertEqual(float(x[0,8,0]),9)
             self.assertEqual(y.tolist(),[5]);self.assertEqual(subjects.tolist(),[15])
+            first,labels,people=load_har(folder,'train',0,1)
+            self.assertEqual(first.shape,(1,9,128));self.assertEqual(labels.tolist(),[0]);self.assertEqual(people.tolist(),[3])
+    def test_changed_archive_is_rejected_despite_an_unchanged_manifest(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);raw=b'original';path=root/'sample.bin';path.write_bytes(raw)
+            (root/'manifest.json').write_text(json.dumps({'files':[{'name':path.name,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}]}))
+            verify_data_files(root,{'sample.bin'})
+            path.write_bytes(b'corrupt!')
+            with self.assertRaisesRegex(ValueError,'SHA256 mismatch'):verify_data_files(root,{'sample.bin'})
     def test_matched_control_cannot_use_unmeasured_training_axes(self):
         model=MatchedKNN();unknown={'kind':'signals','namespace':2,'channels':[None]*9}
         observed={'kind':'signals','namespace':2,'channels':[[1.0,2.0,3.0]]+[None]*8}

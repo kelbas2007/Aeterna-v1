@@ -114,6 +114,6 @@ def run_arc(args,out):
             result[game][variant]=entry
     scores={v:sum(result[g][v]['evaluation']['completed_levels'] for g in games) for v in variants(args)}
     answer={'status':'COMPLETED','results':result,'completed_levels':scores,
-        'target_met':scores['full']>=1 and scores['full']>scores['random'],
+        'target_met':scores['full']>=1 and scores['full']>scores['random'] if {'full','random'}<=scores.keys() else None,
         'click_interface':'six ordinary actions plus at most ten visible component points'}
     save(out/'summary.json',answer);return answer
