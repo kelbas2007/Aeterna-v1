@@ -1,0 +1,13 @@
+{
+  "source_revision": "0ef1a733ec6d45f8ee0e478b08bc43517e80b2ec",
+  "binary_sha256": "45e3987ddd3a936446d268aaceb4a5b870f5cf6fe2c8d408cbf454195b4d79b7",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "started_at": "2026-10-20T17:13:20.351822+00:00",
+  "seeds": [
+    240000,
+    240031
+  ],
+  "workers": 4,
+  "process_isolation": "one seed per process, fresh runtime per arm/family",
+  "independent_external_qualification": false
+}
