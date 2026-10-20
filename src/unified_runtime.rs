@@ -63,6 +63,12 @@ struct TemporalOptionLane {
     contradictory_credits:u64,
     #[serde(default)]
     completed_real_cost:u64,
+    /// Opt-in source of tentative routes from the organism's own successful
+    /// physical experience; the existing native U1 remains the ONLY voter.
+    #[serde(default)]
+    autobiographical_enabled:bool,
+    #[serde(default)]
+    autobiographical_started:u64,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct TemporalOptionReport {
@@ -71,6 +77,7 @@ pub struct TemporalOptionReport {
     pub completed:u64,pub revoked:u64,
     pub terminal_credits:u64,pub contradictory_credits:u64,
     pub completed_real_cost:u64,
+    pub autobiographical_enabled:bool,pub autobiographical_started:u64,
 }
 impl TemporalOptionLane {
     fn report(&self)->TemporalOptionReport{
@@ -81,6 +88,8 @@ impl TemporalOptionLane {
             terminal_credits:self.terminal_credits,
             contradictory_credits:self.contradictory_credits,
             completed_real_cost:self.completed_real_cost,
+            autobiographical_enabled:self.autobiographical_enabled,
+            autobiographical_started:self.autobiographical_started,
         }
     }
     fn reject_pending(&mut self){
@@ -93,6 +102,8 @@ impl TemporalOptionLane {
         if !u.current.learner.adaptive_history_suffix_enabled() ||
             self.completed.saturating_add(self.revoked)>self.started ||
             self.terminal_credits>self.completed ||
+            self.autobiographical_started>self.started ||
+            (self.autobiographical_started>0 && !self.autobiographical_enabled) ||
             self.contradictory_credits>self.revoked ||
             self.completed_real_cost>u.total_external_cost ||
             self.continued>self.started.saturating_mul(cfg.planning_depth as u64){
@@ -204,6 +215,9 @@ pub struct UnifiedStep {
     /// Explicitly a proposal based on a TWO-action latent history suffix.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub adaptive_suffix_plan_proposed:bool,
+    /// Tentative three-motor option found from the organism's OWN real POSTs.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    pub autobiographical_option_proposed:bool,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedReport {
@@ -755,6 +769,23 @@ impl ScientificRuntime {
         u.temporal_options=Some(TemporalOptionLane::default());
         Ok(())
     }
+    /// Discover short executable action hypotheses from this organism's OWN
+    /// unscheduled successful physical histories, then leave selection to U1.
+    /// This optional stage is ablatable without rewriting the Learner or U1.
+    pub fn enable_constructing_autobiographical_options(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.instrumental_credit.is_some() ||
+            !u.current.learner.self_directed_control_enabled() ||
+            !u.current.learner.adaptive_history_suffix_enabled(){
+            return Err(UError::Busy)
+        }
+        let lane=u.temporal_options.as_mut().ok_or(UError::NoEvidence)?;
+        if lane.autobiographical_enabled || lane.pending.is_some(){
+            return Err(UError::Busy)
+        }
+        lane.autobiographical_enabled=true;
+        Ok(())
+    }
     /// The same U1 may elect to test an underobserved action pair. No other
     /// action authority and no externally scheduled experiment steps.
     pub fn enable_constructing_active_causal_probes(&mut self)->UResult<()>{
@@ -1064,6 +1095,7 @@ impl ScientificRuntime {
         // ProtectedConstructionRuntime. Here it is a *proposal*, never a
         // bypass around U1 or the human-protection permit.
         let mut native_route=None::<Vec<(usize,Vec<i64>)>>;
+        let mut autobiographical_route=None::<Vec<(usize,Vec<i64>)>>;
         if u.current.learner.self_directed_control_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
@@ -1073,10 +1105,14 @@ impl ScientificRuntime {
             // chronological holdouts, unlike exploratory imagined plans.
             // One shared finite factual-computation budget. The new
             // experiment remains opt-in; existing 4k/20k runs are identical.
+            let memory_budget=if goal.is_some() && cfg.planning_work>=32_000 &&
+                u.temporal_options.as_ref().is_some_and(|o|o.autobiographical_enabled){
+                5_000_u64
+            }else{0};
             let history_budget=if goal.is_some() &&
                 u.current.learner.predictive_history_states_enabled() &&
                 cfg.planning_work>=32_000 {
-                cfg.planning_work.saturating_sub(4_000)
+                cfg.planning_work.saturating_sub(4_000).saturating_sub(memory_budget)
             } else {0};
             let (history,history_work)=if let Some(g)=goal {
                 if u.current.learner.adaptive_history_suffix_enabled(){
@@ -1087,21 +1123,25 @@ impl ScientificRuntime {
                         g,&allowed,history_budget)
                 }
             } else {(None,0)};
+            let (autobiographical,memory_work)=if let Some(g)=goal{
+                u.current.learner.carrier_autobiographical_option_metered(
+                    g,&allowed,memory_budget)
+            }else{(None,0)};
             let probe_budget=if u.current.learner.active_pair_probes_enabled()
                 && !u.freeze_controller && cfg.planning_work>=32_000 {
                 cfg.planning_work.saturating_sub(history_work)
-                    .saturating_sub(4_000).min(6_000)
+                    .saturating_sub(memory_work).saturating_sub(4_000).min(6_000)
             }else{0};
             let (probe,probe_work)=u.current.learner
                 .carrier_active_causal_probe_metered(&allowed,offers,probe_budget);
             let chain_budget=if goal.is_some() && u.current.learner.certified_chains_enabled() && cfg.planning_work>=32_000 {
-                cfg.planning_work.saturating_sub(history_work).saturating_sub(probe_work).saturating_sub(4_000)
+                cfg.planning_work.saturating_sub(history_work).saturating_sub(memory_work).saturating_sub(probe_work).saturating_sub(4_000)
             } else {0};
             let (chain,chain_work)=if let Some(g)=goal {
                 u.current.learner.carrier_certified_goal_chain_metered(g,&allowed,chain_budget)
             } else {(None,0)};
             let residual=cfg.planning_work.saturating_sub(history_work)
-                .saturating_sub(probe_work).saturating_sub(chain_work);
+                .saturating_sub(memory_work).saturating_sub(probe_work).saturating_sub(chain_work);
             let (action,chosen_work)=u.current.learner
                 .choose_offered_metered_budget(goal,Some(offers),residual)?;
             if !allowed[action] {return Err(UError::Blocked)}
@@ -1112,7 +1152,7 @@ impl ScientificRuntime {
             let (factual_prediction,factual_work)=u.current.learner
                 .carrier_factual_action_consequence_metered(action,remaining);
             u.computation_work=u.computation_work.checked_add(
-                history_work.saturating_add(probe_work)
+                history_work.saturating_add(memory_work).saturating_add(probe_work)
                     .saturating_add(chain_work).saturating_add(chosen_work)
                     .saturating_add(factual_work))
                 .ok_or(UError::Capacity)?;
@@ -1126,6 +1166,24 @@ impl ScientificRuntime {
                     proposal_id:0x700+probe.action as u64,
                     action:probe.action,fields
                 },kind:3,source:"causal-pair-probe",output:None});
+            }
+            if let Some(memory)=autobiographical{
+                // The physical success and the contrasting last-motor
+                // failure came from UNSCHEDULED, executed, protected POSTs.
+                // Candidate is tentative until a new real replay succeeds.
+                let observed=predictions.iter().find(|p|
+                    p.action==memory.first_action).ok_or(UError::InvalidData)?;
+                let mut fields=ufields(&memory.terminal,goal,observed.novelty,
+                    observed.disagreement,0.6,
+                    offers[memory.first_action].max_cost
+                        .saturating_mul(memory.depth as u64));
+                fields[0]/=1.0+0.10*(memory.depth.saturating_sub(1) as f32);
+                autobiographical_route=Some(memory.route.clone());
+                options.push(UnifiedOption{p:PhaseCognitiveProposal{
+                    proposal_id:0x900+memory.first_action as u64,
+                    action:memory.first_action,fields},
+                    kind:3,source:"autobiographical-option",
+                    output:Some(memory.first_consequence)});
             }
             native_route=history.as_ref()
                 .filter(|plan|plan.history_suffix_depth>=2 &&
@@ -1188,6 +1246,8 @@ impl ScientificRuntime {
         let adaptive_suffix_plan_proposed=options.iter().any(|o|
             o.source=="predictive-suffix");
         let active_pair_probe_proposed=options.iter().any(|o|o.source=="causal-pair-probe");
+        let autobiographical_option_proposed=options.iter().any(|o|
+            o.source=="autobiographical-option");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {
             if let Some(approved)=continuation.take(){
@@ -1248,8 +1308,10 @@ impl ScientificRuntime {
         let (option,score)=selected.ok_or(UError::NoEvidence)?;let a=option.p.action;
         // A selected option is one native decision. No intrinsic/novelty
         // success may be assigned before its real terminal consequence.
-        let selected_temporal_route=option.source=="predictive-suffix" &&
-            native_route.is_some() && u.temporal_options.is_some();
+        let selected_temporal_route=u.temporal_options.is_some() &&
+            ((option.source=="predictive-suffix" && native_route.is_some()) ||
+             (option.source=="autobiographical-option" &&
+                autobiographical_route.is_some()));
         let mut delayed_option_credit=None::<([f32;5],f32)>;
         let original_fields=options.iter().find(|c|c.p.proposal_id==option.p.proposal_id)
             .map(|c|c.p.fields).unwrap_or(option.p.fields);
@@ -1348,9 +1410,13 @@ impl ScientificRuntime {
                     lane.reject_pending();
                 }
             }
-        }else if option.source=="predictive-suffix"{
+        }else if selected_temporal_route{
+            // Both prospectively inferred causal chains and firsthand
+            // autobiographical hypotheses are chosen BY the same native U1.
+            let selected_memory=option.source=="autobiographical-option";
+            let route=if selected_memory{autobiographical_route}else{native_route};
             if let (Some(lane),Some(route),Some(g))=
-                (u.temporal_options.as_mut(),native_route,goal){
+                (u.temporal_options.as_mut(),route,goal){
                 // Only a genuine native-selected FIRST action and a
                 // matching factual POST may activate an option.
                 if route.len()>1 && route[0].0==a &&
@@ -1365,6 +1431,10 @@ impl ScientificRuntime {
                         remaining.len()<cfg.planning_depth{
                         lane.started=lane.started.checked_add(1)
                             .ok_or(UError::Capacity)?;
+                        if selected_memory{
+                            lane.autobiographical_started=lane.autobiographical_started
+                                .checked_add(1).ok_or(UError::Capacity)?;
+                        }
                         lane.pending=Some(TemporalOption{
                             goal:g.to_vec(),remaining,
                             last_verified_post:post.observation.clone(),
@@ -1488,7 +1558,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,adaptive_suffix_plan_proposed})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;

@@ -255,6 +255,87 @@ impl Learner {
         self.record_external_restart(observed)
     }
 
+    /// A tentative executable memory, inferred ONLY from the organism's own
+    /// actual chronological protected motor outcomes. The goal is externally
+    /// stated, but the three motor IDs and their order are never supplied.
+    /// It must have a real success, a contrasting real failure for the last
+    /// motor at the SAME visible PRE, and no contradictory repeat of the
+    /// complete candidate. This is evidence for a test, NOT causal proof.
+    pub(crate) fn carrier_autobiographical_option_metered(
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+    )->(Option<PortHistoryPlan>,u64){
+        if self.pending || self.poisoned || budget==0 ||
+            self.config.planning_depth<3 ||
+            allowed.len()!=self.config.actions || goal.len()!=self.config.width ||
+            !goal.iter().any(Option::is_some) ||
+            goal_distance(&self.current,goal)==0 {return (None,0)}
+        let end=self.frozen_at.map_or(self.records.len(),|id|
+            self.records.partition_point(|r|r.transition.id<id));
+        if end<3{return (None,0)}
+        let mut meter=Meter::new(budget);
+        let start=end.saturating_sub(512);
+        let mut negative_last=std::collections::BTreeSet::new();
+        // A direct-effect motor is not evidence of a hidden prerequisite.
+        for row in &self.records[start..end] {
+            if meter.charge((self.current.len()+2) as u64).is_err(){
+                return (None,meter.spent)
+            }
+            let t=&row.transition;
+            if t.pre==self.current && goal_distance(&t.post,goal)!=0{
+                negative_last.insert(t.action);
+            }
+        }
+        // Opaque executable triples: all transitions connected, two genuinely
+        // invisible preparations, REAL final effect. No episode crossing.
+        let mut observed=std::collections::BTreeMap::<[usize;3],(usize,usize,Vec<i64>)>::new();
+        for index in (start+2)..end {
+            if meter.charge((3*self.current.len()+9) as u64).is_err(){
+                return (None,meter.spent)
+            }
+            let a=&self.records[index-2].transition;
+            let b=&self.records[index-1].transition;
+            let c=&self.records[index].transition;
+            if b.restart || c.restart ||
+                a.id.checked_add(1)!=Some(b.id) ||
+                b.id.checked_add(1)!=Some(c.id) ||
+                a.post!=b.pre || b.post!=c.pre ||
+                a.pre!=self.current || a.post!=a.pre || b.post!=b.pre ||
+                !allowed[a.action] || !allowed[b.action] || !allowed[c.action]{
+                continue
+            }
+            let entry=observed.entry([a.action,b.action,c.action])
+                .or_insert((0,0,Vec::new()));
+            if goal_distance(&c.post,goal)==0{
+                entry.0=entry.0.saturating_add(1);
+                entry.2=c.post.clone();
+            }else{
+                entry.1=entry.1.saturating_add(1);
+            }
+        }
+        let mut best=None::<(usize,[usize;3],Vec<i64>)>;
+        for (seq,(wins,failures,terminal)) in observed {
+            if wins==0 || failures!=0 || !negative_last.contains(&seq[2]) {
+                continue
+            }
+            // Prefer repeatedly verified actual successes. No motor roles,
+            // target action IDs, or source-disclosed evaluator states.
+            if best.as_ref().is_none_or(|(n,old,_)|
+                wins>*n || (wins==*n && seq<*old)){
+                best=Some((wins,seq,terminal));
+            }
+        }
+        let Some((_,sequence,terminal))=best else{return (None,meter.spent)};
+        let route=vec![
+            (sequence[0],self.current.clone()),
+            (sequence[1],self.current.clone()),
+            (sequence[2],terminal.clone()),
+        ];
+        (Some(PortHistoryPlan{
+            first_action:sequence[0],first_consequence:self.current.clone(),
+            terminal,depth:3,history_suffix_depth:0,route
+        }),meter.spent)
+    }
+
     /// Optional deeper reconstruction within the SAME Learner. We do not
     /// inject the hidden state or manually name a prerequisite: the suffix
     /// length is selected because shorter histories cannot predict an

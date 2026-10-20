@@ -108,6 +108,14 @@ pub(crate) fn main()->Result<()>{
                         "authority":"one_native_U1_choice_then_bounded_continuation",
                         "every_physical_step":"fresh_HumanProtection_and_real_POST"}))
                 },
+                "enable_autobiographical_options"=>{
+                    runtime.as_mut().ok_or("not loaded")?
+                        .enable_constructing_autobiographical_options()?;
+                    Ok(json!({"type":"autobiographical_options_enabled",
+                        "memory":"own_chronological_protected_POST_only",
+                        "authority":"one_native_U1_choice_then_freshly_protected_steps",
+                        "confidence":"tentative_until_real_replay"}))
+                },
                 "enable_active_causal_probes"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
                     Ok(json!({"type":"active_causal_probes_enabled",

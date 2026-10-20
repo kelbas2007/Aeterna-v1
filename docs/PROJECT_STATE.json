@@ -26,7 +26,8 @@
     "grounded_instrumental_credit_opt_in_development": true,
     "truthful_external_episode_restart_development": true,
     "adaptive_two_action_predictive_history_opt_in_experimental": true,
-    "native_selected_temporally_extended_option_opt_in_development": true
+    "native_selected_temporally_extended_option_opt_in_development": true,
+    "self_originated_autobiographical_three_step_option_opt_in_development": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -65,7 +66,8 @@
     "independent_adaptive_history_length_generalization",
     "self_invented_history_grammar",
     "blind_cold_multi_prerequisite_transfer",
-    "autonomously_created_action_hierarchy"
+    "autonomously_created_action_hierarchy",
+    "independently_qualified_cold_discovery_of_autobiographical_options"
   ],
   "historical_only": {
     "rsp2_local_exam": {
