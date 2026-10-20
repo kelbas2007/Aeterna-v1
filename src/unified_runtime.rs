@@ -1162,6 +1162,10 @@ impl ScientificRuntime {
         if let Some(e)=&mut policy.evidence{e.total_alpha=e.total_alpha.min(0.01/(k*(k+1)) as f64);}
         policy.max_external_cost=policy.max_external_cost.min(u.max_external_cost.saturating_sub(u.total_external_cost));
         let mut learner=ULearner::new(config,initial.clone())?;learner.enable_autonomy(policy)?;learner.manage_from_carrier()?;
+        let credits=u.current.learner.carrier_finish_causal_episode();
+        for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }
         let old=std::mem::replace(&mut u.current,UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None});
         u.archived.push(old);
         if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
@@ -1249,12 +1253,17 @@ impl ScientificRuntime {
         if u.current.learner.causal_memory_enabled() && goal.is_some_and(|g|!g.iter().any(Option::is_some)) {
             return Err(UError::InvalidData);
         }
+        let already_satisfied=goal.is_some_and(|g|g.iter().any(Option::is_some)
+            && udistance(u.current.learner.current(),Some(g))==0.0);
+        let credits=u.current.learner.carrier_prepare_causal_goal(if already_satisfied{None}else{goal});
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         // Once all *specified* goal coordinates already match the last
         // factual observation, do not issue an unneeded protected action.
         // Masked goals may intentionally leave unrelated state unconstrained.
         if u.current.learner.self_directed_control_enabled()
-            && goal.is_some_and(|g|g.iter().any(Option::is_some)
-                && udistance(u.current.learner.current(),Some(g))==0.0)
+            && already_satisfied
         {return Err(UError::NoEvidence)}
         let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
         let allowed:Vec<_>=offers.iter().map(|o|o.available&&o.max_cost<=remaining).collect();
@@ -2208,6 +2217,45 @@ mod causal_continuity_credit_tests {
         rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:choice,max_cost:1}],safe,|_|{
             *physical+=1;Ok(UnifiedPost{observation:vec![*physical],reward:0.0,cost:1})
         }).unwrap();
+    }
+    #[test]
+    fn changing_goals_closes_old_credit_even_when_no_new_action_is_possible(){
+        for (goal,available) in [(0,true),(8,false)] {
+            let mut rt=runtime();
+            rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+                Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+            let before=rt.organism.phase_native_meta_observations();
+            let result=rt.step_constructing(Some(&[Some(goal)]),&[UOffer{available,max_cost:1};2],safe,
+                |_|panic!("no physical action for this goal transition"));
+            assert!(matches!(result,Err(UError::NoEvidence|UError::Blocked)));
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+            assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().failed_goal_episodes,1);
+            rt.freeze_constructing().unwrap();
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+            assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().failed_goal_episodes,1);
+        }
+    }
+    #[test]
+    fn entering_a_domain_delivers_old_goal_credit_before_archival(){
+        for unknown_post in [false,true] {
+            let mut rt=runtime();
+            rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+                Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+            let before=rt.organism.phase_native_meta_observations();
+            if unknown_post {
+                let result=rt.step_constructing(Some(&[Some(9)]),&[UOffer{available:true,max_cost:1};2],safe,
+                    |_|Err(UError::Execution("POST unavailable after possible execution".into())));
+                assert!(result.is_err());assert!(rt.emergency_latched());
+            }
+            let config=rt.construction_learner().unwrap().configuration().clone();
+            let policy=rt.construction_learner().unwrap().autonomy_policy().unwrap().clone();
+            rt.enter_constructing_domain("direct-next-domain",config,policy,vec![0]).unwrap();
+            let learned=usize::from(!unknown_post) as u64;
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+learned);
+            let old=&mut rt.constructing.as_mut().unwrap().archived[0].learner;
+            assert_eq!(old.causal_report().unwrap().failed_goal_episodes,learned);
+            assert!(old.carrier_take_causal_credits().is_empty());
+        }
     }
     #[test]
     fn restart_failure_credit_is_delivered_before_new_actions_or_domains(){

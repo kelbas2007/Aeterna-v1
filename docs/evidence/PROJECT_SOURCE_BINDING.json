@@ -123,12 +123,12 @@
       },
       "src/unified_runtime.rs": {
         "before_sha256": "659c57e0623151a7ebd05f7c7dd0defd7915f55f04cf9e2eae1ec995304cb605",
-        "after_sha256": "052ea654ce024337a3c3770521698c11d8775c59ddd9cc552f3149b2ed9c0559"
+        "after_sha256": "a525c89bbfc88eeb28b7319a4617fd3990079e1e7242b190b077fb2d8a6213e2"
       }
     },
     "added": {
-      "src/construction/causal_memory.rs": "8fd24c11215b7f8ce4360f312cdb0f98652ca6cc661496791ee57cc7ec6e69f4",
-      "src/construction/causal_port.rs": "75d3b118cc1b4795e1326abbb03fbe2bdc3e37f1f20577645fabe06dd14805de"
+      "src/construction/causal_memory.rs": "8ccdcec37b05c94c72e3dded747d93ddaf108416f530d10ffcd7190f91b19f72",
+      "src/construction/causal_port.rs": "a2088a5111d061ba1d9df69f80e524827786945c5c90deea0f6eccfa4a369a72"
     }
   }
 }

@@ -293,6 +293,14 @@ impl CausalMemory {
         self.goal = None;
         self.episode_cost = 0;
     }
+    pub(crate) fn prepare_goal(&mut self, goal: Option<&[Option<i64>]>) {
+        if self.goal.as_deref() != goal {
+            // Close the old mission now. The next mission is opened only
+            // after a real POST, so blocked/already-satisfied requests do not
+            // invent an attempted episode.
+            self.finish_learning();
+        }
+    }
     fn finish_episode(&mut self, success: bool) {
         if self.goal.is_some() {
             if success {

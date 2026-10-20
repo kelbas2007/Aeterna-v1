@@ -98,6 +98,27 @@ impl Learner {
             .as_mut()
             .map_or_else(Vec::new, |m| m.take_credits())
     }
+    pub(crate) fn carrier_prepare_causal_goal(
+        &mut self,
+        goal: Option<&[Option<i64>]>,
+    ) -> Vec<([f32; 5], f64)> {
+        if self.frozen_at.is_some() || self.poisoned {
+            return Vec::new();
+        }
+        if let Some(memory) = self.causal_memory.as_mut() {
+            memory.prepare_goal(goal);
+        }
+        self.carrier_take_causal_credits()
+    }
+    pub(crate) fn carrier_finish_causal_episode(&mut self) -> Vec<([f32; 5], f64)> {
+        if self.frozen_at.is_some() || self.poisoned {
+            return Vec::new();
+        }
+        if let Some(memory) = self.causal_memory.as_mut() {
+            memory.finish_learning();
+        }
+        self.carrier_take_causal_credits()
+    }
     fn compact_causal_prefix(&mut self, remove: usize) -> Result<()> {
         if self.pending || self.poisoned || self.causal_memory.is_none() {
             return Err(Error::Busy);
@@ -330,7 +351,12 @@ mod causal_checkpoint_tests {
             learner.commit(token, vec![5], id + 1, 1).unwrap();
         }
         learner.construct().unwrap();
-        assert!(learner.shadow.is_some(),"trace={:?}, error={:?}",learner.last_trace,learner.last_error);
+        assert!(
+            learner.shadow.is_some(),
+            "trace={:?}, error={:?}",
+            learner.last_trace,
+            learner.last_error
+        );
         for id in 192..194 {
             let token = learner.prepare(0).unwrap();
             learner.commit(token, vec![5], id + 1, 1).unwrap();
