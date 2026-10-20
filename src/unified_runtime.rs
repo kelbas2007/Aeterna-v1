@@ -4,6 +4,12 @@ use crate::construction::autonomy::{ActionOffer as UOffer,AutonomyPolicy as UPol
 use crate::construction::vm::{Error as UError,Result as UResult,fingerprint as uhash};
 use crate::carrier::{PhaseNativeConfig,PhaseMetaControlConfig};
 use serde::{Serialize as USerialize,Deserialize as UDeserialize};
+/// Reserve a graph ceiling only after accounting for the other planner's
+/// reservation. A later query takes the MIN with actual remaining work.
+fn observable_graph_budget_ceiling(total:u64,autobiographical:u64)->u64{
+    16_000_u64.min(total.saturating_sub(autobiographical)
+        .saturating_sub(4_000))
+}
 #[derive(Debug,USerialize,UDeserialize)]
 struct UnifiedDomain {name:String,learner:ULearner,last_construction:usize,pending_credit:Option<[f32;5]>}
 #[derive(Debug,USerialize,UDeserialize)]
@@ -1272,8 +1278,7 @@ impl ScientificRuntime {
             // jointly affordable ceiling, leaving 4k for native U1.
             let graph_reserve=if goal.is_some() && cfg.planning_work>=32_000 &&
                 u.temporal_options.as_ref().is_some_and(|o|o.observable_graph_enabled){
-                16_000_u64.min(cfg.planning_work
-                    .saturating_sub(memory_budget).saturating_sub(4_000))
+                observable_graph_budget_ceiling(cfg.planning_work,memory_budget)
             }else{0};
             let history_budget=if goal.is_some() &&
                 u.current.learner.predictive_history_states_enabled() &&
@@ -1998,5 +2003,22 @@ mod autonomous_temporal_revision_tests {
         m.observe([0.0,0.5,0.0,0.0,0.0],&[Some(4)],&[1],&[2]);
         assert_eq!(m.pending_steps.len(),1);assert_eq!(m.episodes,0);
         assert!(m.rows.is_empty());m.validate().unwrap();
+    }
+}
+
+#[cfg(test)]
+mod observable_graph_shared_budget_tests{
+    use super::observable_graph_budget_ceiling;
+    #[test]
+    fn no_double_reservation_at_minimum_or_larger_planning_limits(){
+        for total in [32_000_u64,36_000,48_000,120_000,1_000_000]{
+            for memory in [0_u64,5_000,20_000]{
+                let ceiling=observable_graph_budget_ceiling(total,memory);
+                assert!(ceiling<=16_000);
+                assert!(ceiling.saturating_add(memory).saturating_add(4_000)<=total);
+            }
+        }
+        assert_eq!(observable_graph_budget_ceiling(32_000,20_000),8_000);
+        assert_eq!(observable_graph_budget_ceiling(120_000,20_000),16_000);
     }
 }
