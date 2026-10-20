@@ -1,0 +1,50 @@
+name: Existing certified-chain observability factorial
+on:
+  pull_request:
+    paths:
+      - 'tests/observability_limit2_chains_development.rs'
+      - '.github/workflows/observability-limit2-chains-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: observability-chains-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Rust toolchain and exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p observability-chain-evidence
+          git rev-parse HEAD > observability-chain-evidence/source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Exact matched original U1 four-arm cold factorial
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test observability_limit2_chains_development -- --nocapture --test-threads=1 2>&1 | tee observability-chain-evidence/test.log
+          python scripts/project_audit.py | tee observability-chain-evidence/source-audit.json
+      - name: Preserve all real negative/positive physical trajectories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-chains-${{ runner.os }}-${{ github.sha }}
+          path: observability-chain-evidence/
+          retention-days: 7
+          if-no-files-found: warn
