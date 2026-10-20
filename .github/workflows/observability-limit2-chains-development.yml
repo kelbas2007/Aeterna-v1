@@ -37,7 +37,7 @@ jobs:
       - name: Exact matched original U1 four-arm cold factorial
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           cargo test --locked --test observability_limit2_chains_development -- --nocapture --test-threads=1 2>&1 | tee observability-chain-evidence/test.log
           python scripts/project_audit.py | tee observability-chain-evidence/source-audit.json
       - name: Preserve all real negative/positive physical trajectories
