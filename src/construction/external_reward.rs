@@ -453,6 +453,7 @@ impl ExternalMemory {
         let mut meter = Meter::new(budget);
         let policy = &self.strategy.active;
         let (immediate, support) = self.immediate(pre, offers.len(), policy, &mut meter);
+        let future_quote = offers.iter().map(|o| o.max_cost).max().unwrap_or(0);
         let noops = (0..offers.len())
             .map(|action| {
                 self.recent
@@ -506,7 +507,10 @@ impl ExternalMemory {
                     // A ten-action return cannot satisfy a one-action deadline.
                     if row.distance > 1
                         && row.distance <= horizon
-                        && offer.max_cost.saturating_mul(row.distance as u64) <= remaining_cost
+                        && future_quote
+                            .checked_mul(row.distance.saturating_sub(1) as u64)
+                            .and_then(|tail| offer.max_cost.checked_add(tail))
+                            .is_some_and(|quote| quote <= remaining_cost)
                         && row.value * coverage > value
                     {
                         value = row.value * coverage;
@@ -517,8 +521,8 @@ impl ExternalMemory {
                         && row.post != row.pre
                         && offer
                             .max_cost
-                            .saturating_add(offers.iter().map(|o| o.max_cost).max().unwrap_or(0))
-                            <= remaining_cost
+                            .checked_add(future_quote)
+                            .is_some_and(|quote| quote <= remaining_cost)
                     {
                         let (future, _) =
                             self.immediate(&row.post, offers.len(), policy, &mut meter);
@@ -955,6 +959,38 @@ mod tests {
         assert_eq!(m.propose(&pre, &offers, 1, 1, 100_000).0.unwrap().action, 1);
         assert_eq!(hash, m.report().learned_fingerprint);
         m.validate(2, 1, true).unwrap();
+    }
+    #[test]
+    fn delayed_returns_do_not_treat_expensive_future_motors_as_cheap() {
+        let mut m = ExternalMemory::new(true, false);
+        m.observe(state(1, 0), 0, state(1, 1000), 0.0, 1, None, true);
+        m.observe(state(1, 1000), 1, state(1, 2000), 1.0, 100, None, true);
+        let offers = vec![
+            ActionOffer {
+                available: true,
+                max_cost: 1,
+            },
+            ActionOffer {
+                available: true,
+                max_cost: 100,
+            },
+        ];
+        let p = m.propose(&state(1, 0), &offers, 2, 2, 1_000_000).0.unwrap();
+        assert_eq!(p.action, 0);
+        assert_eq!(p.value, 0.0);
+        assert!(p.expected.is_none());
+        let overflow = vec![
+            ActionOffer {
+                available: true,
+                max_cost: u64::MAX
+            };
+            2
+        ];
+        let p = m
+            .propose(&state(1, 0), &overflow, 2, u64::MAX, 1_000_000)
+            .0
+            .unwrap();
+        assert!(p.expected.is_none());
     }
     #[test]
     fn prototype_eviction_does_not_turn_failed_guesses_into_likely_rewards() {

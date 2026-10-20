@@ -159,7 +159,7 @@
     },
     "added": {
       "src/construction/external_port.rs": "c150a9679d91bd8447c1c482fabdf6bc16a8611bb6bfdeeb6c6e5bd659c06c61",
-      "src/construction/external_reward.rs": "3e41aa93f5db2e1f491ec6b253e17718904487b15d49b65d45168ef94770009f",
+      "src/construction/external_reward.rs": "456d972fbc27662cb9b0a5f626afc9b36bf809db587df3e223b011341e46a02e",
       "src/construction/sensors.rs": "69180aa9ce6583907abae8dd2329356a00014984510c426efd6d686dd6baf202"
     },
     "status": "implemented; external scoring is separate from historical CAUSAL-CONTINUAL-4C evidence"
