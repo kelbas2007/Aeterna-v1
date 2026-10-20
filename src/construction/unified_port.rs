@@ -50,6 +50,89 @@ impl Learner {
         (result,meter.spent)
     }
 
+    /// Bounded factual observed-state graph; a proposed route is TENTATIVE.
+    /// Edges are only actually executed PRE/motor/POST tuples. Contradicting
+    /// transitions from the exact same visible PRE and motor are withheld.
+    /// No externally supplied world topology, hidden role or fabricated POST.
+    pub(crate) fn carrier_observable_goal_route_metered(
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+    )->(Option<PortHistoryPlan>,u64){
+        if self.pending||self.poisoned||!self.self_directed||budget==0 ||
+            allowed.len()!=self.config.actions ||
+            goal.len()!=self.config.width ||
+            !goal.iter().any(Option::is_some) ||
+            goal_distance(&self.current,goal)==0 {
+            return (None,0)
+        }
+        let end=self.frozen_at.map_or(self.records.len(),|id|
+            self.records.partition_point(|r|r.transition.id<id));
+        if end<2{return (None,0)}
+        let mut meter=Meter::new(budget);
+        let mut transitions=std::collections::BTreeMap::<
+            (Vec<i64>,usize),Option<(Vec<i64>,usize)>>::new();
+        for row in &self.records[end.saturating_sub(1024)..end]{
+            if meter.charge((self.config.width*2+6) as u64).is_err(){
+                // An unfinished scan may hide a physical contradiction:
+                // never promote a partial journal to a causal option.
+                return (None,meter.spent)
+            }
+            let t=&row.transition;
+            let key=(t.pre.clone(),t.action);
+            match transitions.entry(key){
+                std::collections::btree_map::Entry::Vacant(v)=>{
+                    v.insert(Some((t.post.clone(),1)));
+                },
+                std::collections::btree_map::Entry::Occupied(mut o)=>{
+                    if let Some((old,count))=o.get_mut(){
+                        if old==&t.post {
+                            *count=count.saturating_add(1);
+                        }else{
+                            // One true conflicting POST invalidates
+                            // the exact-state edge for THIS source scan.
+                            *o.get_mut()=None;
+                        }
+                    }
+                }
+            }
+        }
+        let depth_cap=self.config.planning_depth.min(5);
+        if depth_cap<2{return (None,meter.spent)}
+        let mut visited=std::collections::BTreeSet::new();
+        visited.insert(self.current.clone());
+        let mut frontier=std::collections::VecDeque::new();
+        frontier.push_back((self.current.clone(),Vec::<(usize,Vec<i64>)>::new()));
+        while let Some((state,route))=frontier.pop_front(){
+            if route.len()>=depth_cap{continue}
+            for action in 0..self.config.actions{
+                if !allowed[action]{continue}
+                if meter.charge((state.len()+4) as u64).is_err(){
+                    return (None,meter.spent)
+                }
+                let Some(Some((post,_count)))=
+                    transitions.get(&(state.clone(),action))
+                else{continue};
+                // A physical no-op cannot supply the useful observable
+                // intermediate state whose absence caused the regression.
+                if post==&state {continue}
+                let mut next=route.clone();
+                next.push((action,post.clone()));
+                if next.len()>=2 && goal_distance(post,goal)==0 {
+                    return (Some(PortHistoryPlan{
+                        first_action:next[0].0,
+                        first_consequence:next[0].1.clone(),
+                        terminal:post.clone(),
+                        depth:next.len(),history_suffix_depth:0,route:next
+                    }),meter.spent)
+                }
+                if next.len()<depth_cap && visited.len()<128 &&
+                    visited.insert(post.clone()){
+                    frontier.push_back((post.clone(),next));
+                }
+            }
+        }
+        (None,meter.spent)
+    }
+
     /// Search a bounded multi-step path only through consequences that passed
     /// an older-prefix / three-new-real-POST prospective validation.
     /// Unlike the legacy exploratory planner, an unverified imagined edge

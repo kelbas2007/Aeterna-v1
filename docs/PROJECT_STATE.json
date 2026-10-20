@@ -32,7 +32,8 @@
     "variable_length_autobiographical_option_2_to_5_opt_in_development": true,
     "evidence_based_complexity_necessity_gate_opt_in_development": true,
     "complexity_necessity1_engineering_regression_pass_36_worlds": true,
-    "active_history_contextual_experiment_opt_in_development": true
+    "active_history_contextual_experiment_opt_in_development": true,
+    "observable_empirical_factual_graph_option_opt_in_development": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -78,7 +79,8 @@
     "independent_qualified_complexity_need_architecture_growth",
     "general_need_driven_structural_complexification",
     "reliable_cold_five_action_skill_learning",
-    "independently_qualified_5_step_autonomous_experiment_advantage"
+    "independently_qualified_5_step_autonomous_experiment_advantage",
+    "qualified_real_observable_state_graph_transfer"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -119,7 +121,8 @@
     "docs/VARIABLE_LENGTH_CAUSAL_OPTIONS_DEVELOPMENT.md",
     "docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_PROTOCOL.md",
     "docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_RESULT.md",
-    "docs/ACTIVE_HISTORY_EXPERIMENT1_PROTOCOL.md"
+    "docs/ACTIVE_HISTORY_EXPERIMENT1_PROTOCOL.md",
+    "docs/OBSERVABLE_GRAPH1_PROTOCOL.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
