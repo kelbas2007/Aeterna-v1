@@ -116,6 +116,14 @@ pub(crate) fn main()->Result<()>{
                         "authority":"one_native_U1_choice_then_freshly_protected_steps",
                         "confidence":"tentative_until_real_replay"}))
                 },
+                "enable_variable_depth_options"=>{
+                    runtime.as_mut().ok_or("not loaded")?
+                        .enable_constructing_variable_depth_options()?;
+                    Ok(json!({"type":"variable_depth_options_enabled",
+                        "memory":"minimum_observed_contrast_supported_suffix",
+                        "depth_bound":"2_to_planning_depth_max_5",
+                        "authority":"native_U1_and_fresh_HumanProtection"}))
+                },
                 "enable_active_causal_probes"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
                     Ok(json!({"type":"active_causal_probes_enabled",

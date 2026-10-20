@@ -28,7 +28,8 @@
     "adaptive_two_action_predictive_history_opt_in_experimental": true,
     "native_selected_temporally_extended_option_opt_in_development": true,
     "self_originated_autobiographical_three_step_option_opt_in_development": true,
-    "qualified_synthetic_self_originated_cold_options_2026_10_20": true
+    "qualified_synthetic_self_originated_cold_options_2026_10_20": true,
+    "variable_length_autobiographical_option_2_to_5_opt_in_development": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -68,7 +69,9 @@
     "self_invented_history_grammar",
     "blind_cold_multi_prerequisite_transfer",
     "autonomously_created_action_hierarchy",
-    "third_party_external_world_cold_self_originated_option_transfer"
+    "third_party_external_world_cold_self_originated_option_transfer",
+    "independent_cold_variable_depth_skill_generalization",
+    "autonomously_invented_unbounded_action_grammar"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -102,7 +105,8 @@
     "docs/SELF_ORIGINATED_OPTION0_DEVELOPMENT_PROTOCOL.md",
     "docs/SELF_ORIGINATED_OPTION0_DEVELOPMENT_RESULT.md",
     "docs/SELF_ORIGINATED_OPTION1_ONE_USE_PROTOCOL.md",
-    "docs/SELF_ORIGINATED_OPTION1_ONE_USE_RESULT.md"
+    "docs/SELF_ORIGINATED_OPTION1_ONE_USE_RESULT.md",
+    "docs/VARIABLE_LENGTH_CAUSAL_OPTIONS_DEVELOPMENT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

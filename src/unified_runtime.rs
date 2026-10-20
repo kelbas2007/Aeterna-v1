@@ -51,6 +51,9 @@ struct TemporalOption {
     realized_cost:u64,
     #[serde(default)]
     executed_steps:usize,
+    /// 0 for historical causal-suffix options; 2..5 for self-learned routes.
+    #[serde(default)]
+    learned_depth:usize,
 }
 #[derive(Debug,Default,Clone,USerialize,UDeserialize)]
 struct TemporalOptionLane {
@@ -69,6 +72,12 @@ struct TemporalOptionLane {
     autobiographical_enabled:bool,
     #[serde(default)]
     autobiographical_started:u64,
+    #[serde(default)]
+    variable_depth_enabled:bool,
+    #[serde(default)]
+    learned_depth_selected:[u64;6],
+    #[serde(default)]
+    learned_depth_completed:[u64;6],
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct TemporalOptionReport {
@@ -78,6 +87,9 @@ pub struct TemporalOptionReport {
     pub terminal_credits:u64,pub contradictory_credits:u64,
     pub completed_real_cost:u64,
     pub autobiographical_enabled:bool,pub autobiographical_started:u64,
+    pub variable_depth_enabled:bool,
+    pub learned_depth_selected:[u64;6],
+    pub learned_depth_completed:[u64;6],
 }
 impl TemporalOptionLane {
     fn report(&self)->TemporalOptionReport{
@@ -90,6 +102,9 @@ impl TemporalOptionLane {
             completed_real_cost:self.completed_real_cost,
             autobiographical_enabled:self.autobiographical_enabled,
             autobiographical_started:self.autobiographical_started,
+            variable_depth_enabled:self.variable_depth_enabled,
+            learned_depth_selected:self.learned_depth_selected,
+            learned_depth_completed:self.learned_depth_completed,
         }
     }
     fn reject_pending(&mut self){
@@ -104,6 +119,13 @@ impl TemporalOptionLane {
             self.terminal_credits>self.completed ||
             self.autobiographical_started>self.started ||
             (self.autobiographical_started>0 && !self.autobiographical_enabled) ||
+            (self.variable_depth_enabled && !self.autobiographical_enabled) ||
+            self.learned_depth_selected[..2].iter().any(|&n|n>0) ||
+            self.learned_depth_completed[..2].iter().any(|&n|n>0) ||
+            self.learned_depth_completed.iter().sum::<u64>()>self.completed ||
+            self.learned_depth_selected.iter().sum::<u64>()>self.autobiographical_started ||
+            self.learned_depth_completed.iter().zip(self.learned_depth_selected)
+                .any(|(done,chosen)|*done>chosen) ||
             self.contradictory_credits>self.revoked ||
             self.completed_real_cost>u.total_external_cost ||
             self.continued>self.started.saturating_mul(cfg.planning_depth as u64){
@@ -116,6 +138,9 @@ impl TemporalOptionLane {
                 p.realized_cost>u.total_external_cost ||
                 p.executed_steps.saturating_add(p.remaining.len())>cfg.planning_depth ||
                 (p.credit_eligible && p.executed_steps==0) ||
+                (p.learned_depth!=0 &&
+                    (!(2..=5).contains(&p.learned_depth) ||
+                     p.executed_steps.saturating_add(p.remaining.len())!=p.learned_depth)) ||
                 p.last_verified_post!=u.current.learner.current() ||
                 p.event!=u.current.learner.records().len() ||
                 p.initiating_fields.iter().any(|v|!v.is_finite()||
@@ -786,6 +811,24 @@ impl ScientificRuntime {
         lane.autobiographical_enabled=true;
         Ok(())
     }
+    /// Learning the required action-history length from real contradictions
+    /// is a separate PRE-EXPERIENCE opt-in. It never alters primitive U1 or
+    /// the protection boundary and cannot be enabled after peeking at outcomes.
+    pub fn enable_constructing_variable_depth_options(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.instrumental_credit.is_some() ||
+            u.total_external_cost!=0 ||
+            !u.current.learner.records().is_empty(){
+            return Err(UError::Busy)
+        }
+        let lane=u.temporal_options.as_mut().ok_or(UError::NoEvidence)?;
+        if !lane.autobiographical_enabled || lane.variable_depth_enabled ||
+            lane.pending.is_some(){
+            return Err(UError::Busy)
+        }
+        lane.variable_depth_enabled=true;
+        Ok(())
+    }
     /// The same U1 may elect to test an underobserved action pair. No other
     /// action authority and no externally scheduled experiment steps.
     pub fn enable_constructing_active_causal_probes(&mut self)->UResult<()>{
@@ -1105,9 +1148,11 @@ impl ScientificRuntime {
             // chronological holdouts, unlike exploratory imagined plans.
             // One shared finite factual-computation budget. The new
             // experiment remains opt-in; existing 4k/20k runs are identical.
+            let variable_depth=u.temporal_options.as_ref()
+                .is_some_and(|o|o.variable_depth_enabled);
             let memory_budget=if goal.is_some() && cfg.planning_work>=32_000 &&
                 u.temporal_options.as_ref().is_some_and(|o|o.autobiographical_enabled){
-                5_000_u64
+                if variable_depth{20_000_u64}else{5_000_u64}
             }else{0};
             let history_budget=if goal.is_some() &&
                 u.current.learner.predictive_history_states_enabled() &&
@@ -1124,8 +1169,13 @@ impl ScientificRuntime {
                 }
             } else {(None,0)};
             let (autobiographical,memory_work)=if let Some(g)=goal{
-                u.current.learner.carrier_autobiographical_option_metered(
-                    g,&allowed,memory_budget)
+                if variable_depth{
+                    u.current.learner.carrier_variable_depth_option_metered(
+                        g,&allowed,memory_budget)
+                }else{
+                    u.current.learner.carrier_autobiographical_option_metered(
+                        g,&allowed,memory_budget)
+                }
             }else{(None,0)};
             let probe_budget=if u.current.learner.active_pair_probes_enabled()
                 && !u.freeze_controller && cfg.planning_work>=32_000 {
@@ -1393,6 +1443,11 @@ impl ScientificRuntime {
                         .ok_or(UError::Capacity)?;
                     lane.completed_real_cost=lane.completed_real_cost
                         .checked_add(finished.realized_cost).ok_or(UError::Capacity)?;
+                    if (2..=5).contains(&finished.learned_depth){
+                        let depth=finished.learned_depth;
+                        lane.learned_depth_completed[depth]=lane.learned_depth_completed[depth]
+                            .checked_add(1).ok_or(UError::Capacity)?;
+                    }
                     if finished.credit_eligible && !u.freeze_controller{
                         delayed_option_credit=Some((finished.initiating_fields,
                             temporal_realized_goal_utility(finished.realized_cost)));
@@ -1423,6 +1478,7 @@ impl ScientificRuntime {
                     route[0].1==post.observation && after!=0.0 &&
                     route.last().is_some_and(|x|
                         udistance(&x.1,Some(g))==0.0){
+                    let learned_depth=if selected_memory{route.len()}else{0};
                     let remaining=route.into_iter().skip(1)
                         .map(|(action,expected_post)|
                             TemporalOptionStep{action,expected_post})
@@ -1434,6 +1490,12 @@ impl ScientificRuntime {
                         if selected_memory{
                             lane.autobiographical_started=lane.autobiographical_started
                                 .checked_add(1).ok_or(UError::Capacity)?;
+                            if !(2..=5).contains(&learned_depth){
+                                return Err(UError::InvalidData)
+                            }
+                            lane.learned_depth_selected[learned_depth]=
+                                lane.learned_depth_selected[learned_depth]
+                                    .checked_add(1).ok_or(UError::Capacity)?;
                         }
                         lane.pending=Some(TemporalOption{
                             goal:g.to_vec(),remaining,
@@ -1441,7 +1503,8 @@ impl ScientificRuntime {
                             event:u.current.learner.records().len(),
                             initiating_fields:option.p.fields,
                             credit_eligible:policy_has_choice && !u.freeze_controller,
-                            realized_cost:post.cost,executed_steps:1
+                            realized_cost:post.cost,executed_steps:1,
+                            learned_depth
                         });
                     }
                 }

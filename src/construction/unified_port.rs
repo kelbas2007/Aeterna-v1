@@ -336,6 +336,122 @@ impl Learner {
         }),meter.spent)
     }
 
+    /// Experimental DATA-SELECTED causal memory depth. This is a bounded
+    /// algorithm authored by developers, NOT a discovered abstract VM grammar.
+    /// An observed failure of an otherwise matching shorter suffix motivates
+    /// recruiting ONE more preceding action into the causal hypothesis.
+    /// Any real contradicting execution of the full sequence withdraws it.
+    pub(crate) fn carrier_variable_depth_option_metered(
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+    )->(Option<PortHistoryPlan>,u64){
+        if self.pending || self.poisoned || budget==0 ||
+            self.config.planning_depth<2 ||
+            allowed.len()!=self.config.actions ||
+            goal.len()!=self.config.width ||!goal.iter().any(Option::is_some)||
+            goal_distance(&self.current,goal)==0{
+            return (None,0)
+        }
+        let end=self.frozen_at.map_or(self.records.len(),|id|
+            self.records.partition_point(|r|r.transition.id<id));
+        if end<2{return (None,0)}
+        // The bounded search never reads outside the organism's genuine
+        // physical journal or crosses its independently observed restarts.
+        let start=end.saturating_sub(512);
+        let max_depth=self.config.planning_depth.min(5).min(end-start);
+        let mut meter=Meter::new(budget);
+        let mut failed_last=std::collections::BTreeSet::new();
+        let mut observed=std::collections::BTreeMap::<Vec<usize>,
+            (usize,usize,Vec<i64>)>::new();
+        for index in start..end{
+            let t=&self.records[index].transition;
+            if meter.charge((t.pre.len()+2) as u64).is_err(){
+                return (None,meter.spent)
+            }
+            if t.pre==self.current && goal_distance(&t.post,goal)!=0{
+                failed_last.insert(t.action);
+            }
+            for depth in 2..=max_depth{
+                if index+1<start+depth{continue}
+                if meter.charge((depth+self.current.len()+3) as u64).is_err(){
+                    // Partial corpus scans can hide actual contradictory
+                    // evidence. Never promote on an underfunded scan.
+                    return (None,meter.spent)
+                }
+                let first=index+1-depth;
+                let rows=&self.records[first..=index];
+                let beginning=&rows[0].transition;
+                if beginning.pre!=self.current{continue}
+                let mut valid=true;
+                for (position,row) in rows.iter().enumerate(){
+                    let actual=&row.transition;
+                    if !allowed[actual.action] ||
+                        (position>0 && actual.restart) ||
+                        (position<depth-1 &&
+                            (actual.pre!=self.current ||
+                             actual.post!=self.current)){
+                        valid=false;break
+                    }
+                }
+                if !valid{continue}
+                for two in rows.windows(2){
+                    let a=&two[0].transition;
+                    let b=&two[1].transition;
+                    if a.id.checked_add(1)!=Some(b.id) || a.post!=b.pre{
+                        valid=false;break
+                    }
+                }
+                if !valid{continue}
+                let motors=rows.iter().map(|r|r.transition.action)
+                    .collect::<Vec<_>>();
+                let evidence=observed.entry(motors)
+                    .or_insert((0,0,Vec::new()));
+                if goal_distance(&t.post,goal)==0{
+                    evidence.0=evidence.0.saturating_add(1);
+                    evidence.2=t.post.clone();
+                }else{
+                    evidence.1=evidence.1.saturating_add(1);
+                }
+            }
+        }
+        let mut best=None::<(usize,Vec<usize>,Vec<i64>)>;
+        for (motors,(successes,failures,terminal)) in &observed{
+            if *successes==0 || *failures>0 ||
+                !failed_last.contains(motors.last().expect("nonempty")){
+                continue
+            }
+            // A longer memory is justified only if that EXACT shorter
+            // suffix has previously been executed and FAILED with the same
+            // observable PRE. Hence length is supported by contrast, not
+            // by an arbitrary user-specified 3-action pattern.
+            if motors.len()>2 &&
+                !observed.get(&motors[1..])
+                    .is_some_and(|old|old.1>0){
+                continue
+            }
+            let better=best.as_ref().is_none_or(|(n,old,_)|
+                successes>n ||
+                (successes==n &&
+                    (motors.len()<old.len() ||
+                     (motors.len()==old.len() && motors<old))));
+            if better{
+                best=Some((*successes,motors.clone(),terminal.clone()));
+            }
+        }
+        let Some((_,motors,terminal))=best else{
+            return (None,meter.spent)
+        };
+        let len=motors.len();
+        let route=motors.into_iter().enumerate().map(|(index,motor)|
+            (motor,if index+1==len{
+                terminal.clone()
+            }else{self.current.clone()})).collect::<Vec<_>>();
+        let first_action=route[0].0;
+        (Some(PortHistoryPlan{
+            first_action,first_consequence:self.current.clone(),
+            terminal,depth:len,history_suffix_depth:0,route
+        }),meter.spent)
+    }
+
     /// Optional deeper reconstruction within the SAME Learner. We do not
     /// inject the hidden state or manually name a prerequisite: the suffix
     /// length is selected because shorter histories cannot predict an
