@@ -13,6 +13,16 @@ fn observable_graph_budget_ceiling(total:u64,autobiographical:u64)->u64{
 #[derive(Debug,USerialize,UDeserialize)]
 struct UnifiedDomain {name:String,learner:ULearner,last_construction:usize,pending_credit:Option<[f32;5]>}
 impl UnifiedDomain {
+    fn try_construct(&mut self)->(UResult<()>,u64) {
+        let event=self.learner.factual_event_count();
+        let before=self.learner.report().construction_work;
+        let result=self.learner.construct();
+        if !self.learner.causal_memory_enabled() || result!=Err(UError::NoEvidence) {
+            self.last_construction=event;
+        }
+        let work=self.learner.report().construction_work.saturating_sub(before);
+        (result,work)
+    }
     fn clear_canceled_causal_credit(&mut self) {
         if self.learner.causal_memory_enabled() && !self.learner.report().shadow_pending {
             self.pending_credit=None;
@@ -249,7 +259,7 @@ impl InstrumentalCredit {
             let cfg=current.learner.carrier_config();
             if freeze || p.goal.len()!=cfg.width ||
                 p.expected_post.len()!=cfg.width ||
-                p.event!=current.learner.records().len() ||
+                p.event!=current.learner.factual_event_count() ||
                 p.fields.iter().any(|v|!v.is_finite()||!(0.0..=1.0).contains(v)){
                 return Err(UError::InvalidData)
             }
@@ -1215,7 +1225,16 @@ impl ScientificRuntime {
         if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
         if remaining_actions==Some(0){return Err(UError::Capacity)}
         let mut u=self.constructing.take().ok_or(UError::NoEvidence)?;
-        let result=self.step_constructing_inner(&mut u,goal,offers,remaining_actions,hazard,execute);self.constructing=Some(u);result
+        let configured_depth=u.current.learner.carrier_config().planning_depth;
+        if let Some(left)=remaining_actions {
+            u.current.learner.carrier_swap_planning_depth(configured_depth.min(left));
+            if let Some(lane)=u.temporal_options.as_mut() {
+                if lane.pending.as_ref().is_some_and(|p|p.remaining.len()>left){lane.reject_pending();}
+            }
+        }
+        let result=self.step_constructing_inner(&mut u,goal,offers,remaining_actions,hazard,execute);
+        u.current.learner.carrier_swap_planning_depth(configured_depth);
+        self.constructing=Some(u);result
     }
     fn step_constructing_inner<H,F>(&mut self,u:&mut UnifiedConstruction,goal:Option<&[Option<i64>]>,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
@@ -1638,8 +1657,8 @@ impl ScientificRuntime {
             tried[chosen.kind as usize]=true;
             match chosen.kind {
                 0=>{
-                    u.current.last_construction=u.current.learner.factual_event_count();let before=u.current.learner.report().construction_work;
-                    let result=u.current.learner.construct();u.computation_work=u.computation_work.saturating_add(u.current.learner.report().construction_work.saturating_sub(before));
+                    let (result,work)=u.current.try_construct();
+                    u.computation_work=u.computation_work.saturating_add(work);
                     if result.is_ok() && u.current.learner.report().shadow_pending {
                         if native_credit_eligible && u.instrumental_credit.is_none() {
                             u.current.pending_credit=Some(chosen.p.fields);
@@ -1764,7 +1783,9 @@ impl ScientificRuntime {
             option.source.starts_with("causal-belief-") &&
             (option.source=="causal-belief-experiment" ||
                 option.p.fields[0]>causal_immediate_goals[a] as f32+0.03);
-        let probe=if native_credit_eligible && delayed_causal_decision {Some(option.p.fields)}else{None};
+        // An explicit reward settles this choice now; do not subsequently
+        // replace it with zero merely because a different goal was unfinished.
+        let probe=if native_credit_eligible && delayed_causal_decision && post.reward==0.0 {Some(option.p.fields)}else{None};
         let credits=u.current.learner.carrier_causal_feedback(goal,&post.observation,post.cost,probe,policy_has_choice);
         if !u.freeze_controller {for (fields,utility) in credits {
             self.organism.observe_phase_native_meta_utility(fields,utility as f32);
@@ -1888,6 +1909,13 @@ impl ScientificRuntime {
             }
         }
         if !u.freeze_controller {
+            // A real environment reward is already factual. Only predicted
+            // future goal utility waits for a delayed causal/option outcome.
+            if native_credit_eligible && u.current.learner.causal_memory_enabled()
+                && post.reward!=0.0 && (delayed_causal_decision || selected_temporal_route
+                    || u.instrumental_credit.is_some()) {
+                self.organism.observe_phase_native_meta_utility(option.p.fields,post.reward.clamp(0.0,1.0));
+            }
             if let Some(ledger)=u.agency_credit.as_mut() {
                 if is_option_continuation{
                     ledger.option_continuation_actions=ledger.option_continuation_actions
@@ -1927,7 +1955,7 @@ impl ScientificRuntime {
                 self.organism.observe_phase_native_meta_utility(fields,utility);
             }
             if let Some(c)=u.instrumental_credit.as_mut(){
-                let event=u.current.learner.records().len();
+                let event=u.current.learner.factual_event_count();
                 let mut valid_pending=None;
                 if let Some(prior)=c.pending.take(){
                     if goal.is_some_and(|g|g==prior.goal.as_slice()) &&
@@ -2160,19 +2188,121 @@ mod causal_continuity_credit_tests {
             predicted_harm_probability:0.0,hazard_confidence:1.0,emergency_stop:false}
     }
     fn runtime()->ScientificRuntime {
+        runtime_for(true)
+    }
+    fn runtime_for(causal:bool)->ScientificRuntime {
         let mut config=UConfig{journal_capacity:32,search_every:100_000,shadow_steps:2,..Default::default()};
         config.search.deterministic=true;
         let mut policy=UPolicy::default();policy.evidence=None;policy.ceiling.deterministic=true;
         let mut rt=ScientificRuntime::new_constructing(config,policy,vec![0],"credit-lifecycle").unwrap();
         rt.enable_constructing_self_directed_control().unwrap();
         rt.enable_constructing_agency_aware_credit().unwrap();
-        rt.enable_constructing_causal_memory(crate::construction::causal_memory::CausalConfig::default()).unwrap();
+        if causal {rt.enable_constructing_causal_memory(crate::construction::causal_memory::CausalConfig::default()).unwrap();}
         rt
     }
     fn step(rt:&mut ScientificRuntime,physical:&mut i64,choice:bool){
         rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:choice,max_cost:1}],safe,|_|{
             *physical+=1;Ok(UnifiedPost{observation:vec![*physical],reward:0.0,cost:1})
         }).unwrap();
+    }
+    #[test]
+    fn instrumental_preparation_keeps_its_event_identity_across_compaction(){
+        let mut rt=runtime();rt.enable_constructing_instrumental_credit().unwrap();
+        let mut physical=0;
+        for _ in 0..32 {step(&mut rt,&mut physical,false);}
+        rt.constructing.as_mut().unwrap().instrumental_credit.as_mut().unwrap().pending=Some(
+            InstrumentalPending{goal:vec![Some(33)],expected_post:vec![32],
+                fields:[0.5;5],event:32});
+        rt.step_constructing(Some(&[Some(33)]),&[UOffer{available:true,max_cost:1};2],safe,
+            |_|Ok(UnifiedPost{observation:vec![33],reward:0.0,cost:1})).unwrap();
+        let report=rt.unified_report().unwrap().instrumental_credit.unwrap();
+        assert_eq!(report.validated_preparations_credited,1);
+        assert!(rt.construction_learner().unwrap().causal_report().unwrap().compactions>0);
+        ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
+    }
+    #[test]
+    fn a_missing_restart_does_not_consume_the_next_construction_opportunity(){
+        let mut rt=runtime();
+        let domain=&mut rt.constructing.as_mut().unwrap().current;
+        for id in 0..33 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![id as i64+1],id+1,1).unwrap();
+        }
+        assert_eq!(domain.try_construct().0,Err(UError::NoEvidence));
+        assert_eq!(domain.last_construction,0);
+        domain.learner.record_external_restart(vec![33]).unwrap();
+        for id in 33..41 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![id as i64+1],id+1,1).unwrap();
+        }
+        assert!(domain.learner.carrier_can_construct());
+        domain.try_construct().0.unwrap();
+        assert!(domain.learner.report().shadow_pending);
+        assert_eq!(domain.last_construction,41);
+    }
+    #[test]
+    fn the_action_deadline_limits_legacy_vm_plans_and_restores_configuration(){
+        let mut rt=runtime_for(false);let mut physical=0;
+        for _ in 0..8 {step(&mut rt,&mut physical,false);}
+        rt.constructing.as_mut().unwrap().current.try_construct().0.unwrap();
+        for _ in 0..2 {step(&mut rt,&mut physical,false);}
+        assert!(rt.construction_learner().unwrap().promotions().iter().any(|p|p.accepted));
+        let depth=rt.construction_learner().unwrap().configuration().planning_depth;
+        let goal=[Some(physical+2)];
+        let full=rt.construction_learner().unwrap().carrier_plans(&goal,&[true,true],20_000).unwrap().0;
+        assert!(full.iter().any(|(_,p,d)|*d>=2 && p==&[physical+2]));
+        let checkpoint=rt.checkpoint_constructing().unwrap();
+        let mut observed_plan=false;
+        for nonce in 0..64 {
+            let mut trial=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+            trial.constructing.as_mut().unwrap().nonce=nonce;
+            let result=trial.step_constructing_with_action_limit(Some(&goal),
+                &[UOffer{available:true,max_cost:1};2],Some(1),safe,|_|{
+                    Ok(UnifiedPost{observation:vec![physical+1],reward:0.0,cost:1})
+                }).unwrap();
+            assert_eq!(trial.construction_learner().unwrap().configuration().planning_depth,depth);
+            if result.source=="plan" {
+                observed_plan=true;
+                assert!(result.selected_fields[0]<=0.5,"a two-step goal cannot be promised within one action");
+            }
+        }
+        assert!(observed_plan);
+        let blocked=rt.step_constructing_with_action_limit(Some(&goal),
+            &[UOffer{available:false,max_cost:1};2],Some(1),safe,|_|panic!("no physical action"));
+        assert!(matches!(blocked,Err(UError::Blocked)));
+        assert_eq!(rt.construction_learner().unwrap().configuration().planning_depth,depth);
+    }
+    #[test]
+    fn real_rewards_reach_native_learning_even_for_delayed_causal_experiments(){
+        for goal in [None,Some([Some(999)])] {
+            let mut rt=runtime();
+            for _ in 0..2 {for context in 0..2 {
+                rt.observe_constructing_external_restart(vec![5]).unwrap();
+                let only=|action|[UOffer{available:action==0,max_cost:1},UOffer{available:action==1,max_cost:1}];
+                rt.step_constructing(None,&only(context),safe,|_|Ok(UnifiedPost{observation:vec![0],reward:0.0,cost:1})).unwrap();
+                rt.step_constructing(None,&only(1),safe,|_|Ok(UnifiedPost{observation:vec![if context==0{7}else{9}],reward:0.0,cost:1})).unwrap();
+            }}
+            rt.observe_constructing_external_restart(vec![5]).unwrap();
+            rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:false,max_cost:1}],safe,
+                |_|Ok(UnifiedPost{observation:vec![0],reward:0.0,cost:1})).unwrap();
+            let checkpoint=rt.checkpoint_constructing().unwrap();let mut found=false;
+            for nonce in 0..64 {
+                let mut trial=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+                trial.constructing.as_mut().unwrap().nonce=nonce;
+                let before=trial.organism.phase_native_meta_observations();
+                let result=trial.step_constructing(goal.as_ref().map(|g|g.as_slice()),&[UOffer{available:true,max_cost:1};2],safe,
+                    |action|Ok(UnifiedPost{observation:vec![if action==1{7}else{0}],reward:1.0,cost:1})).unwrap();
+                if result.source=="causal-belief-experiment" {
+                    assert_eq!(result.factual_utility,1.0);
+                    assert_eq!(trial.organism.phase_native_meta_observations(),before+1);
+                    trial.freeze_constructing().unwrap();
+                    assert_eq!(trial.organism.phase_native_meta_observations(),before+1,
+                        "freezing an unfinished goal cannot undo an already observed reward");
+                    found=true;break;
+                }
+            }
+            assert!(found,"native U1 must actually select the informative proposal in this control");
+        }
     }
     #[test]
     fn valid_domain_checkpoints_cannot_create_an_unrestorable_combined_checkpoint(){

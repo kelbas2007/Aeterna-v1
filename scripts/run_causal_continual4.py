@@ -23,10 +23,13 @@ def main():
     parser.add_argument('--binary', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--workers', type=int, default=4)
+    parser.add_argument('--first', type=int, default=240000,
+        help='First of exactly 32 worlds; consumed cohorts are not fresh evidence')
     args = parser.parse_args()
     binary = args.binary.resolve()
     output = args.output.resolve()
     assert 1 <= args.workers <= 8
+    assert 0 <= args.first <= (1 << 63) - 32
     if output.exists():
         raise SystemExit('Refusing to overwrite existing evaluation evidence')
     if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip():
@@ -37,7 +40,7 @@ def main():
         'binary_sha256': digest(binary),
         'platform': platform.platform(),
         'started_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        'seeds': [240000, 240031],
+        'seeds': [args.first, args.first + 31],
         'workers': args.workers,
         'process_isolation': 'one seed per process, fresh runtime per arm/family',
         'independent_external_qualification': False,
@@ -62,7 +65,7 @@ def main():
 
     exits = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool, gzip.open(trace_path, 'wt') as traces:
-        futures = [pool.submit(worker, seed) for seed in range(240000, 240032)]
+        futures = [pool.submit(worker, seed) for seed in range(args.first, args.first + 32)]
         while len(exits) < 32:
             kind, payload = messages.get()
             if kind == 'error':
@@ -92,7 +95,7 @@ def main():
         for future in futures:
             future.result()
     assert exits == [0] * 32, f'evaluator exits {exits}; partial traces retained'
-    expected = {(seed, family, arm) for seed in range(240000, 240032)
+    expected = {(seed, family, arm) for seed in range(args.first, args.first + 32)
         for family in ['ten_step', 'noisy_sensor', 'uninformative_sensor', 'direct_goal']
         for arm in ['legacy', 'causal', 'horizon_one']}
     assert seen == expected and all(v['worlds'] == 32 for v in groups.values())

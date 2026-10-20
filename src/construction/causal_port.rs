@@ -39,6 +39,9 @@ impl Learner {
     pub fn factual_event_count(&self) -> usize {
         usize::try_from(self.next_id).unwrap_or(usize::MAX)
     }
+    pub(crate) fn carrier_swap_planning_depth(&mut self, depth: usize) -> usize {
+        std::mem::replace(&mut self.config.planning_depth, depth)
+    }
     pub fn causal_action_beliefs(
         &self,
         offers: &[super::autonomy::ActionOffer],
@@ -109,37 +112,48 @@ impl Learner {
         }
         let memory = self.causal_memory.as_ref().ok_or(Error::NoEvidence)?;
         let mut seed = memory.seed_state.clone();
-        let mut meter = Meter::new(10_000_000);
-        for row in &self.records[..remove] {
-            let t = &row.transition;
-            if t.restart {
-                seed = self.active.program.initial_state()
+        let mut meter = Meter::new(causal_replay_work(remove, 1));
+        let replay = (|| -> Result<()> {
+            for row in &self.records[..remove] {
+                let t = &row.transition;
+                if t.restart {
+                    seed = self.active.program.initial_state()
+                }
+                seed = self
+                    .active
+                    .program
+                    .step(&t.pre, t.action, &seed, &self.library, &mut meter)?
+                    .1;
             }
-            seed = self
-                .active
-                .program
-                .step(&t.pre, t.action, &seed, &self.library, &mut meter)?
-                .1;
+            Ok(())
+        })();
+        if let Err(error) = replay {
+            self.construction_work = self.construction_work.saturating_add(meter.spent);
+            return Err(error);
         }
+        let mut prior_meter = Meter::new(causal_replay_work(remove, 1));
+        let mut prior_error = None;
         let previous =
             if let (Some(program), Some((hash, prior))) = (&self.previous, &memory.previous_seed) {
                 if *hash != program.fingerprint() {
                     return Err(Error::Stale);
                 }
-                Some((
-                    *hash,
-                    replay_causal_window(
-                        program,
-                        &self.records[..remove]
-                            .iter()
-                            .map(|r| r.transition.clone())
-                            .collect::<Vec<_>>(),
-                        &self.library,
-                        &mut meter,
-                        prior.clone(),
-                    )?
-                    .1,
-                ))
+                match replay_causal_window(
+                    program,
+                    &self.records[..remove]
+                        .iter()
+                        .map(|r| r.transition.clone())
+                        .collect::<Vec<_>>(),
+                    &self.library,
+                    &mut prior_meter,
+                    prior.clone(),
+                ) {
+                    Ok((_, state)) => Some((*hash, state)),
+                    Err(error) => {
+                        prior_error = Some(error);
+                        None
+                    }
+                }
             } else {
                 None
             };
@@ -158,8 +172,17 @@ impl Learner {
             digest,
         );
         self.causal_memory.as_mut().unwrap().previous_seed = previous;
+        if let Some(error) = prior_error {
+            self.previous = None;
+            self.last_error = Some(format!(
+                "rollback unavailable after causal compaction: {error}"
+            ));
+        }
         self.records.drain(..remove);
-        self.construction_work = self.construction_work.saturating_add(meter.spent);
+        self.construction_work = self
+            .construction_work
+            .saturating_add(meter.spent)
+            .saturating_add(prior_meter.spent);
         Ok(())
     }
     pub(crate) fn carrier_causal_proposal(
@@ -198,6 +221,16 @@ impl Learner {
         memory.feedback(goal, post, cost, experiment, self.frozen_at.is_none());
         memory.take_credits()
     }
+}
+
+// Each real VM execution already has a 100,000-unit ceiling. Replaying a
+// bounded journal needs that allowance PER row and per executable, rather
+// than one fixed lifetime-independent meter. Include replay bookkeeping.
+fn causal_replay_work(rows: usize, passes: u64) -> u64 {
+    (rows as u64)
+        .saturating_mul(passes)
+        .saturating_mul(100_001)
+        .saturating_add(1_000_000)
 }
 
 fn replay_causal_window(
@@ -255,6 +288,104 @@ fn calibrate_causal_window(
 #[cfg(test)]
 mod causal_checkpoint_tests {
     use super::*;
+    #[test]
+    fn expensive_valid_state_programs_compact_restore_and_rollback() {
+        let mut l = Learner::new(
+            Config {
+                journal_capacity: 512,
+                search_every: 100_000,
+                ..Default::default()
+            },
+            vec![1],
+        )
+        .unwrap();
+        l.enable_autonomy(super::super::autonomy::AutonomyPolicy::default())
+            .unwrap();
+        l.manage_from_carrier().unwrap();
+        l.enable_self_directed_control().unwrap();
+        let mut body = Expr::Arg(0);
+        for _ in 0..7 {
+            body = Expr::bin(Op::Add, body, Expr::integer(0));
+        }
+        l.active.program.cells.push(super::super::vm::StateCell {
+            initial: 7,
+            update: Expr::Fold {
+                count: Box::new(Expr::integer(4096)),
+                seed: Box::new(Expr::State(0)),
+                body: Box::new(body),
+            },
+        });
+        l.active.state = vec![7];
+        l.enable_causal_memory(super::super::causal_memory::CausalConfig::default())
+            .unwrap();
+        let mut previous = l.active.program.clone();
+        previous.cells[0].initial = 3;
+        l.causal_memory.as_mut().unwrap().previous_seed = Some((previous.fingerprint(), vec![3]));
+        l.previous = Some(previous);
+        for id in 0..513 {
+            let token = l.prepare(0).unwrap();
+            l.commit(token, vec![1], id + 1, 1).unwrap();
+        }
+        assert!(l.causal_report().unwrap().compactions > 0);
+        assert!(l.construction_work > 10_000_000);
+        let mut l = Learner::from_checkpoint(&l.checkpoint().unwrap()).unwrap();
+        assert_eq!(l.active.state, vec![7]);
+        l.rollback().unwrap();
+        assert_eq!(l.active.state, vec![3]);
+        let token = l.prepare(0).unwrap();
+        l.commit(token, vec![1], 514, 1).unwrap();
+        assert_eq!(l.factual_event_count(), 514);
+    }
+    #[test]
+    fn an_inexecutable_old_rollback_model_does_not_stop_current_learning() {
+        let mut l = Learner::new(
+            Config {
+                journal_capacity: 32,
+                search_every: 100_000,
+                ..Default::default()
+            },
+            vec![1],
+        )
+        .unwrap();
+        l.enable_autonomy(super::super::autonomy::AutonomyPolicy::default())
+            .unwrap();
+        l.manage_from_carrier().unwrap();
+        l.enable_self_directed_control().unwrap();
+        l.enable_causal_memory(super::super::causal_memory::CausalConfig::default())
+            .unwrap();
+        let fold = |body: Expr| Expr::Fold {
+            count: Box::new(Expr::integer(4096)),
+            seed: Box::new(Expr::integer(0)),
+            body: Box::new(body),
+        };
+        let previous = Program {
+            cells: vec![],
+            outputs: vec![Expr::If(
+                Box::new(Expr::bin(Op::Eq, Expr::Input(0), Expr::integer(0))),
+                Box::new(Expr::integer(0)),
+                Box::new(fold(fold(Expr::Arg(0)))),
+            )],
+        };
+        previous.validate(1, &l.library).unwrap();
+        l.causal_memory.as_mut().unwrap().previous_seed = Some((previous.fingerprint(), vec![]));
+        l.previous = Some(previous);
+        for id in 0..34 {
+            let token = l.prepare(0).unwrap();
+            l.commit(token, vec![1], id + 1, 1).unwrap();
+        }
+        assert!(l.previous.is_none());
+        assert!(l
+            .last_error
+            .as_deref()
+            .unwrap()
+            .contains("rollback unavailable"));
+        assert_eq!(
+            Learner::from_checkpoint(&l.checkpoint().unwrap())
+                .unwrap()
+                .factual_event_count(),
+            34
+        );
+    }
     #[test]
     fn legacy_large_capacity_stops_before_losing_checkpointability() {
         let observation = vec![i64::MIN; 32];

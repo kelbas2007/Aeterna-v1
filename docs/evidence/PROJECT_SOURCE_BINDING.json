@@ -115,7 +115,7 @@
       },
       "src/construction/runtime.rs": {
         "before_sha256": "fa2dd322bf982d3dec19d920da195d9ecd1b503bae514b6e7287c4865b3b2007",
-        "after_sha256": "7238179c2c67f7678588567434da90309cdee55496c92c8f4c3a1fb28acbbf6b"
+        "after_sha256": "fd93bc3d65a9552470969dc5501fc2cbf16d8a072c8dddd1fcd35465b3c1535b"
       },
       "src/construction/synthesis.rs": {
         "before_sha256": "2f4eb3af5c9a6775a9863f8f4057f7154ae69b83a45f2334ee9551fe0d57b768",
@@ -123,12 +123,12 @@
       },
       "src/unified_runtime.rs": {
         "before_sha256": "659c57e0623151a7ebd05f7c7dd0defd7915f55f04cf9e2eae1ec995304cb605",
-        "after_sha256": "3616dd2ac990931515abaaea508efc4c689432941fe431850d19a98436dfa339"
+        "after_sha256": "0ee6dcebbeebbc21f4730ee7e0545c1a383c2ea0d4354472fdb7e812fd377e26"
       }
     },
     "added": {
       "src/construction/causal_memory.rs": "faef049a83c20d42cb4ba92bcc34013d972eb06a713e7d137b48e0de618d2fd2",
-      "src/construction/causal_port.rs": "a74478bf5541ae7ecb020bc0e44ea518efa54be41d71155831e690b0d61f395f"
+      "src/construction/causal_port.rs": "e73c8b685bfbf5d713533e35a43a9cbadfad9b614c5b50cd170c5f92f480980c"
     }
   }
 }

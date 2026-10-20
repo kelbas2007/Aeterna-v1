@@ -806,7 +806,7 @@ impl Learner {
     pub fn rollback(&mut self) -> Result<()> {
         if self.frozen_at.is_some() || self.pending || self.poisoned { return Err(Error::Busy); }
         let program = self.previous.clone().ok_or(Error::NoEvidence)?;
-        let mut meter = Meter::new(2000000);
+        let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(self.records.len(),1)}else{2000000});
         let seed=if let Some(m)=&self.causal_memory {
             Some(m.previous_seed.as_ref().filter(|(hash,_)|*hash==program.fingerprint()).ok_or(Error::Stale)?.1.clone())
         }else{None};
@@ -1087,7 +1087,7 @@ impl Learner {
         }
         state.active.program.validate(state.config.width,&state.library)?;
         if let Some(p) = &state.previous { p.validate(state.config.width,&state.library)?; }
-        let mut meter = Meter::new(10000000);
+        let mut meter = Meter::new(if state.causal_memory.is_some(){causal_replay_work(state.records.len(),4)}else{10000000});
         if !state.records.is_empty() {
             if state.causal_memory.is_some() {
                 validate_contiguous_data(&state.data(),state.config.width,state.config.actions)?;
