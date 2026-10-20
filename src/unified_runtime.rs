@@ -151,8 +151,8 @@ impl InstrumentalCredit {
 }
 /// Independent counters: outcome evidence and action-choice credit are not
 /// synonyms. No evaluator-supplied label, action role, or source ID.
-#[derive(Debug,Clone,USerialize,UDeserialize)]
 fn agency_no_count(value:&u64)->bool{*value==0}
+#[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct AgencyCreditReport {
     pub externally_forced_actions:u64,
     pub self_selected_actions:u64,
