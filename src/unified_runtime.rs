@@ -1256,6 +1256,7 @@ impl ScientificRuntime {
         let mut observable_graph_route=None::<Vec<(usize,Vec<i64>)>>;
         let mut complexity_need_decision=None::<String>;
         let mut contextual_probe_source=false;
+        let mut base_factual_work=0_u64;
         if u.current.learner.self_directed_control_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
@@ -1392,6 +1393,7 @@ impl ScientificRuntime {
             // a physical motor. Future search extensions must share this
             // invariant instead of claiming separate implicit allowances.
             if actual_metered_work>cfg.planning_work{return Err(UError::Budget)}
+            base_factual_work=actual_metered_work;
             u.computation_work=u.computation_work.checked_add(actual_metered_work)
                 .ok_or(UError::Capacity)?;
             if let Some(probe)=probe{
@@ -1531,6 +1533,7 @@ impl ScientificRuntime {
         let autobiographical_option_proposed=options.iter().any(|o|
             o.source=="autobiographical-option");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
+        let mut meta_helper_work=0_u64;
         for round in 0..4 {
             if let Some(approved)=continuation.take(){
                 // Same native choice, bounded saved option, and no
@@ -1573,19 +1576,36 @@ impl ScientificRuntime {
                     if let Err(e)=result {if !matches!(e,UError::NoEvidence|UError::Budget|UError::Capacity){return Err(e);}}
                 },
                 1=>{
-                    let (plans,work)=u.current.learner.carrier_plans(goal.ok_or(UError::InvalidData)?,&allowed)?;
-                    u.computation_work=u.computation_work.saturating_add(work);helpers.push(("plan",chosen.p.fields));
+                    let remaining=cfg.planning_work.saturating_sub(base_factual_work)
+                        .saturating_sub(meta_helper_work);
+                    let (plans,work)=u.current.learner.carrier_plans(
+                        goal.ok_or(UError::InvalidData)?,&allowed,remaining)?;
+                    if work>remaining{return Err(UError::Budget)}
+                    meta_helper_work=meta_helper_work.checked_add(work).ok_or(UError::Capacity)?;
+                    u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
+                    helpers.push(("plan",chosen.p.fields));
                     for (a,p,depth) in plans {
                         let confidence=predictions.iter().find(|x|x.action==a).map(|x|x.confidence).unwrap_or(0.0);
                         options.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0x200+a as u64,action:a,fields:ufields(&p,goal,0.0,pressure,confidence,depth as u64)},kind:3,source:"plan",output:Some(p)});
                     }
                 },
                 2=>{
-                    let (memories,work)=u.current.learner.carrier_recall(&allowed)?;
-                    u.computation_work=u.computation_work.saturating_add(work);helpers.push(("recall",chosen.p.fields));
+                    let remaining=cfg.planning_work.saturating_sub(base_factual_work)
+                        .saturating_sub(meta_helper_work);
+                    let (memories,work)=u.current.learner.carrier_recall(
+                        &allowed,remaining)?;
+                    if work>remaining{return Err(UError::Budget)}
+                    meta_helper_work=meta_helper_work.checked_add(work).ok_or(UError::Capacity)?;
+                    u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
+                    helpers.push(("recall",chosen.p.fields));
                     for (a,p,similarity) in memories {options.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0x300+a as u64,action:a,fields:ufields(&p,goal,0.0,pressure,similarity,1)},kind:3,source:"recall",output:Some(p)});}
                 },_=>return Err(UError::InvalidData)
             }
+        }
+        // A helper runs after the initial meter; repeat the shared limit
+        // check immediately BEFORE acquiring any physical motor permit.
+        if base_factual_work.saturating_add(meta_helper_work)>cfg.planning_work{
+            return Err(UError::Budget)
         }
         let (option,score)=selected.ok_or(UError::NoEvidence)?;let a=option.p.action;
         // A selected option is one native decision. No intrinsic/novelty
