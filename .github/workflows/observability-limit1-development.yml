@@ -37,7 +37,7 @@ jobs:
       - name: Same-U1 blind vs physically truthful sensor
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           cargo test --locked --test observability_limit1_development -- --nocapture --test-threads=1 2>&1 | tee observability-evidence/test.log
           python scripts/project_audit.py | tee observability-evidence/source-audit.json
       - name: Preserve genuine real PRE-action-POST episodes including failures
