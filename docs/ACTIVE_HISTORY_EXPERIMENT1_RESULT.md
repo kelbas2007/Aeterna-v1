@@ -1,6 +1,44 @@
 # ACTIVE-HISTORY-EXPERIMENT1 — disclosed cold development result
 
 2026-10-20. **DEVELOPMENT POSITIVE, NOT independent scientific transfer.**
+
+## CURRENT result AFTER both Codex P1 repairs — do not cite 492 for fixed code
+
+Source [`15eea46d`](https://github.com/kelbas2007/Aeterna-v1/commit/15eea46ddefee138cccf0bd64ec46966a852bcfe),
+[exact Linux AND Windows rerun 39405889718](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39405889718).
+Both operating systems **PASS 2/2 restart-boundary unit tests and 3/3
+cold developmental tests** with IDENTICAL actual results.
+Project source audit PASS on both OS; 81 original cognitive files
+preserved, RSP2 policy unchanged.
+
+| Family | Need-gate baseline goal successes | Corrected context-experiment successes | Need-gate physical actions | Corrected physical actions | Actually selected contextual experiments |
+|---|---:|---:|---:|---:|---:|
+| Four-action hidden prerequisites (12 worlds) | 181/288 | **195/288** | 2,845 | **2,645** | 179 |
+| Five-action repeated prerequisites (12 worlds) | 7/288 | **8/288** | 5,123 | 5,125 | 553 |
+| Retained three-action skills (6 worlds) | 140/144 | 140/144 | 576 | 576 | 9 |
+| Direct-goal negative control (6 worlds) | 144/144 | 144/144 | 290 | **275** | 53 |
+| **Total** | **472/864** | **487/864** | **8,834** | **8,621** | **794** |
+
+Corrected benefit: **+15 real solved episodes**, **−213 actual motor
+actions** (~2.41% reduction), 0 regressed worlds; actual completed
+four-action options 170→184 and five-action options **1→2**. No
+teacher-scheduled actions. The cold first-six successes were 101 in
+both arms, last-six 130→132. This does **not** establish reliable
+five-action learning (just 8/288 episodes) or self-invented hypotheses.
+This is the NEW factual source-bound developmental verdict.
+
+The **original PRE-REPAIR** test below is retained as an immutable
+historical observation for scientific provenance, not as current
+post-review performance. The earlier five additional successes
+(492→487), 61 extra actions (8,560→8,621), and changed proposal counts
+are a measured consequence of rejecting invalid cross-episode
+history links.
+
+---
+
+## Historical PRE-Codex P1 fix result (NOT current source outcome)
+
+
 The [protocol](ACTIVE_HISTORY_EXPERIMENT1_PROTOCOL.md) was committed
 `ea28d5cec031422a77dea8daa6a34bb043e6e36c` BEFORE both algorithm
 `22171fc3` and evaluator `a283c63d`. No new one-use science seed
