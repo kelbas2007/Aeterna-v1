@@ -1,0 +1,50 @@
+name: Observability limit - cold true-sensor ablation
+on:
+  pull_request:
+    paths:
+      - 'tests/observability_limit1_development.rs'
+      - '.github/workflows/observability-limit1-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: observability-limit-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Rust source and compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p observability-evidence
+          git rev-parse HEAD > observability-evidence/exact_source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Same-U1 blind vs physically truthful sensor
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test observability_limit1_development -- --nocapture --test-threads=1 2>&1 | tee observability-evidence/test.log
+          python scripts/project_audit.py | tee observability-evidence/source-audit.json
+      - name: Preserve genuine real PRE-action-POST episodes including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-limit-${{ runner.os }}-${{ github.sha }}
+          path: observability-evidence/
+          retention-days: 7
+          if-no-files-found: warn
