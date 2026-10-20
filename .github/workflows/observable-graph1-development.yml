@@ -38,7 +38,7 @@ jobs:
       - name: Paired real protected cold observable graph trials
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           cargo test --locked --test observable_graph1_development -- --nocapture --test-threads=1 2>&1 | tee observable-graph-evidence/test.log
           python scripts/project_audit.py | tee observable-graph-evidence/source-audit.json
       - name: Archive physical effects and adverse as well as successful outcomes
