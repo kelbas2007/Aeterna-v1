@@ -760,3 +760,8 @@ frozen, not rerun as fresh science.
   32/32 vs 0/32; noisy sensing 1874/2048 vs 1005/2048; direct-goal 2048/2048.
   Noisy sensing used more actual actions; useless noise queries remain.
   Authored engineering controls, no new independent external qualification.
+
+## 2026-10-20 — corrected causal continual autonomy, cohort C
+
+- [CAUSAL4C ENGINEERING_PASS](docs/CAUSAL_CONTINUAL4C_RESULT.md): source `a9588ec6fe5edadf8eff76503631fa81a1a89c69`, seeds 250000..250031, all 384 lives retained. Ten-step 32/32 vs 0/32; noisy sensing 1877/2048 vs 1140/2048; direct 2048/2048. All planners share deadline handling; actual costs remain disclosed.
+- Twenty-one findings from six review rounds addressed; 119 focused tests and [full Linux/Windows CI](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724394) passed. PR14 merged to main. This is engineering evidence on known authored families; earlier negative results and B provenance remain unchanged.

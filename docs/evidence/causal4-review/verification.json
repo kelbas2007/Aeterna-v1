@@ -1,0 +1,243 @@
+{
+  "corrected_source": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+  "historical_comparison_source": "0ef1a733ec6d45f8ee0e478b08bc43517e80b2ec",
+  "local": {
+    "autonomy4-review6-approved-unit.log": {
+      "sha256": "e90d7c69293d5f5a3aa4d396fd6b123d6154154459f8af6289b36e294c1d3061",
+      "archive": "docs/evidence/causal4-review/autonomy4-review6-approved-unit.log.gz",
+      "archive_sha256": "2284bcd2fb557e0ae9d670caa55de21fd548ce3503fd03bfb33ae428bcb8526e",
+      "results": [
+        "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.07s",
+        "test result: ok. 99 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 28.73s"
+      ]
+    },
+    "autonomy4-review6-approved-lifecycle.log": {
+      "sha256": "f9612e7e99457d59fd68391f0b5bc786d2af5e0cf222e391c89d0090bb3c87cd",
+      "archive": "docs/evidence/causal4-review/autonomy4-review6-approved-lifecycle.log.gz",
+      "archive_sha256": "c3a7decdd853e1aa01d82bf28a7ad930a845643e8b72e18de76042d902459606",
+      "results": [
+        "    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.21s",
+        "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 121 filtered out; finished in 16.15s"
+      ]
+    },
+    "autonomy4-review6-approved-behavior.log": {
+      "sha256": "170c11081a54680741a99e62c49d19fb969a8ed9fa14d8b3aacb15cbeec640bf",
+      "archive": "docs/evidence/causal4-review/autonomy4-review6-approved-behavior.log.gz",
+      "archive_sha256": "a3232acd74829037900f93c3f0127a35882b764f5a18a275bb3a6368d5b40a35",
+      "results": [
+        "    Finished `test` profile [unoptimized + debuginfo] target(s) in 30.85s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 148.09s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s"
+      ]
+    },
+    "autonomy4-review6-approved-check.log": {
+      "sha256": "b30220a88475d09b6f9f4b72fb6cc9034c083f68009754f4159744c5d0e35e51",
+      "archive": "docs/evidence/causal4-review/autonomy4-review6-approved-check.log.gz",
+      "archive_sha256": "f8452649d7e42940461bb50e1b3ce10eb97822ffff8a0bbd133e13f7ebb032a9",
+      "results": [
+        "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 26.56s"
+      ]
+    }
+  },
+  "trace_verifications": [
+    {
+      "archive": "causal4-negative",
+      "verified_lives": 110,
+      "factual_actions": 124341,
+      "max_model_accounted_bytes": 437408,
+      "sha256_verified": true,
+      "pre_post_continuity": true
+    },
+    {
+      "archive": "causal4b",
+      "verified_lives": 384,
+      "factual_actions": 414034,
+      "max_model_accounted_bytes": 424693,
+      "sha256_verified": true,
+      "pre_post_continuity": true
+    },
+    {
+      "archive": "causal4c",
+      "verified_lives": 384,
+      "factual_actions": 415037,
+      "max_model_accounted_bytes": 964874,
+      "sha256_verified": true,
+      "pre_post_continuity": true,
+      "learned_and_factual_counts": true,
+      "full_group_reaggregation": true,
+      "source_revision": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "traces_sha256": "b13e86603f1c9231a20f74264b047312d145c2ad8944d57e1817a70b53ca1547"
+    }
+  ],
+  "verified_at": "2026-10-20T20:33:47.207080+00:00",
+  "pull_request": "https://github.com/kelbas2007/Aeterna-v1/pull/14",
+  "full_ci_run": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724394",
+  "ci_workflows": [
+    {
+      "id": 39488724190,
+      "name": "Cold unforced causal pair development",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724190"
+    },
+    {
+      "id": 39488724493,
+      "name": "Cold self-originated option development",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724493"
+    },
+    {
+      "id": 39488724363,
+      "name": "Cold episodic autonomy development",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724363"
+    },
+    {
+      "id": 39488724206,
+      "name": "Variable depth causal option cold development",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724206"
+    },
+    {
+      "id": 39488724191,
+      "name": "PR9 review fixes - protected regression",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724191"
+    },
+    {
+      "id": 39488724307,
+      "name": "Adaptive history suffix developmental integrity",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724307"
+    },
+    {
+      "id": 39488724216,
+      "name": "History action execution regression",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724216"
+    },
+    {
+      "id": 39488724254,
+      "name": "Empirical observable-state graph cold development",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724254"
+    },
+    {
+      "id": 39488724281,
+      "name": "PR12 original U1 role parity and graph work compatibility",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724281"
+    },
+    {
+      "id": 39488724394,
+      "name": "AETERNA project checks",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724394"
+    },
+    {
+      "id": 39488724233,
+      "name": "Contextual causal experimentation development",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724233"
+    },
+    {
+      "id": 39488724169,
+      "name": "Complexity necessity - cold empirical arbitration",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724169"
+    },
+    {
+      "id": 39488724237,
+      "name": "Instrumental versus epistemic utility development",
+      "head_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724237"
+    }
+  ],
+  "full_ci_jobs": [
+    {
+      "id": 118856488764,
+      "name": "verify (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-20T20:04:52Z",
+      "completed_at": "2026-10-20T20:23:44Z",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724394/job/118856488764"
+    },
+    {
+      "id": 118856489312,
+      "name": "verify (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-20T20:04:52Z",
+      "completed_at": "2026-10-20T20:33:29Z",
+      "html_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724394/job/118856489312"
+    }
+  ],
+  "comparison_scope": "C evaluates the corrected source on previously unused permutations of known authored families. B remains archived at source 0ef1a73 with its disclosed deadline confound. Neither comparison is independent external intelligence qualification.",
+  "automatic_review": {
+    "code_review": {
+      "commit_sha": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+      "has_any_findings": false,
+      "has_unresolved_findings": false,
+      "status": "completed"
+    },
+    "security_review": {
+      "commit_sha": null,
+      "has_any_findings": null,
+      "has_unresolved_findings": null,
+      "status": null
+    },
+    "observed_at": "2026-10-20T20:09:06.338817+00:00"
+  },
+  "corrected_comparison": {
+    "source_revision": "a9588ec6fe5edadf8eff76503631fa81a1a89c69",
+    "summary": "docs/evidence/causal4c/summary.json",
+    "verdict": "ENGINEERING_PASS",
+    "gates": {
+      "ten_step_at_least_24_of_32": true,
+      "ten_step_better_than_horizon_one": true,
+      "noisy_sensor_at_least_75_percent": true,
+      "noisy_sensor_at_least_10_points_over_legacy": true,
+      "direct_goal_nonregression_2_points": true
+    }
+  },
+  "merged_main_revision_before_evidence": "8895171b4495ba5502917980522dcfac21cbaab7"
+}
