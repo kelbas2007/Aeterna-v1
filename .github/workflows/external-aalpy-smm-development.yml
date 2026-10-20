@@ -1,0 +1,60 @@
+name: External stochastic AALpy black-box trial
+on:
+  push:
+    branches:
+      - 'research/external-aalpy-stochastic-*'
+  pull_request:
+    paths:
+      - 'tests/external_aalpy_smm_development.rs'
+      - 'scripts/aalpy_blackbox_sul.py'
+      - '.github/workflows/external-aalpy-smm-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: external-aalpy-smm-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  disclosed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pin AALpy's external SUL EXACT upstream source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p external-smm-evidence
+          git rev-parse HEAD > external-smm-evidence/aeterna_source.txt
+          git clone --quiet https://github.com/DES-Lab/AALpy.git aalpy-upstream
+          git -C aalpy-upstream checkout --quiet 335c50a1b4b5a830d788f86b7c30a8cb6c73ecc0
+          upstream=$(git -C aalpy-upstream rev-parse HEAD)
+          test "$upstream" = 335c50a1b4b5a830d788f86b7c30a8cb6c73ecc0
+          echo "$upstream" > external-smm-evidence/aalpy_pinned_source.txt
+          python -m pip install --disable-pip-version-check ./aalpy-upstream
+          python -c "from aalpy.utils.BenchmarkSULs import get_faulty_coffee_machine_SMM; from aalpy.SULs import AutomatonSUL; assert AutomatonSUL(get_faulty_coffee_machine_SMM())"
+      - uses: Swatinem/rust-cache@v2
+      - name: Protected Rust U1 acts in TRUE third-party stochastic SUL
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --test external_aalpy_smm_development -- --nocapture --test-threads=1 2>&1 | tee external-smm-evidence/test.log
+          python scripts/project_audit.py | tee external-smm-evidence/source-audit.json
+      - name: Archive REAL external outcomes even if transfer FAILS
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-aalpy-smm-${{ github.sha }}
+          path: external-smm-evidence/
+          retention-days: 7
+          if-no-files-found: warn
