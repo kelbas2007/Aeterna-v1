@@ -1379,10 +1379,15 @@ impl ScientificRuntime {
             let remaining=residual.saturating_sub(chosen_work);
             let (factual_prediction,factual_work)=u.current.learner
                 .carrier_factual_action_consequence_metered(action,remaining);
-            u.computation_work=u.computation_work.checked_add(
-                history_work.saturating_add(memory_work).saturating_add(graph_work)
-                    .saturating_add(probe_work).saturating_add(chain_work).saturating_add(chosen_work)
-                    .saturating_add(factual_work))
+            let actual_metered_work=history_work.saturating_add(memory_work)
+                .saturating_add(graph_work).saturating_add(probe_work)
+                .saturating_add(chain_work).saturating_add(chosen_work)
+                .saturating_add(factual_work);
+            // Reject an over-budget planner BEFORE preparing or permitting
+            // a physical motor. Future search extensions must share this
+            // invariant instead of claiming separate implicit allowances.
+            if actual_metered_work>cfg.planning_work{return Err(UError::Budget)}
+            u.computation_work=u.computation_work.checked_add(actual_metered_work)
                 .ok_or(UError::Capacity)?;
             if let Some(probe)=probe{
                 if !allowed[probe.action] {return Err(UError::Blocked)}
