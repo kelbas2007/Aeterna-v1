@@ -113,9 +113,12 @@ fn native_u1_attempts_the_full_unforced_hidden_preparation_chain(){
     let mut all=Vec::new();
     let mut candidate_reached=false;
     let mut candidate_suffix_actions=0usize;
+    let mut continued=0usize;
+    let mut completed=0u64;
     for adaptive in [false,true]{
         let mut rt=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
         enable(&mut rt,adaptive);
+        if adaptive{rt.enable_constructing_temporal_options().unwrap();}
         let mut w=initial_world.clone();
         let mut trace=Vec::new();
         for _ in 0..12{
@@ -131,6 +134,10 @@ fn native_u1_attempts_the_full_unforced_hidden_preparation_chain(){
             candidate_reached=w.progress>=1;
             candidate_suffix_actions=trace.iter()
                 .filter(|t|t["source"]=="predictive-suffix").count();
+            continued=trace.iter()
+                .filter(|t|t["source"]=="temporal-option-continuation").count();
+            completed=rt.unified_report().unwrap().temporal_options
+                .expect("option lane must report").completed;
         }
         all.push(json!({"adaptive":adaptive,"solved":w.progress>=1,
             "actions":trace.len(),"trace":trace}));
@@ -143,6 +150,10 @@ fn native_u1_attempts_the_full_unforced_hidden_preparation_chain(){
         "the native controller must actually SELECT a depth-two plan");
     assert!(candidate_reached,
         "the native controller must finish its self-selected multi-step plan with an actual external goal POST");
+    assert_eq!(continued,2,
+        "native-U1 option has two physical continuations, not new primitive votes");
+    assert_eq!(completed,1,
+        "macro completes only after a real terminal protected POST");
 }
 
 #[test]

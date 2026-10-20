@@ -62,7 +62,7 @@
     "modified": {
       "src/unified_runtime.rs": {
         "before_sha256": "8973cc39438c1450bf15c6dc0f48582ffdeb308418c32a7901fa8f414be1e098",
-        "after_git_blob": "dd8b25b4ead78697bdf47fb0799b5e89f5524a8f"
+        "after_git_blob": "98e6105c303f8843879dcf8299223b417c957db0"
       },
       "src/construction/unified_port.rs": {
         "before_sha256": "7ef8bf7ed14fae7122f608c5db8e7c49a792833a9ae12dabf70952fc88f28e73",
@@ -82,6 +82,7 @@
     "agency_credit_review": "AGENCY-CREDIT1: optional native U1 action-choice credit only if >=2 actually feasible primitive motors, while all protected factual PRE/action/POST evidence remains; pre-experience one-way enabling, checkpoint invariant, no safety/RSP2 changes; exposed test only.",
     "instrumental_credit_review": "Instrumental-credit research opt-in: real PRE/POST goal advances train native U1; hidden preparation gets one-step temporal eligibility only after later genuine goal progress; fact-only probes never mint goal utility; all default legacy behavior remains; JSONL source binding corrected.",
     "adaptive_suffix_review": "ADAPTIVE-HISTORY-SUFFIX1 (developer-authored opt-in): same Learner real adjacent PRE/action/POST differentiates 1- and 2-motor predecessor suffixes only with PRE-matched earlier controls, three chronological later real heldouts and pre-freeze invariance. Bounded BFS/readout is ONLY native U1 proposal; no actuator or HumanProtection change. Previously consumed COLD-FRESH1 outcome is negative; new synthetic unit tests are disclosed and not scientific evidence.",
-    "option_execution_compile_repair": "Fix Rust E0774 misplaced derive on agency_no_count; give AgencyCreditReport Debug Clone Serialize Deserialize; bind full causal-option runtime including latest option continuation credit provenance. No changes to score thresholds, HumanProtection, VM or motor arbitration."
+    "option_execution_compile_repair": "Fix Rust E0774 misplaced derive on agency_no_count; give AgencyCreditReport Debug Clone Serialize Deserialize; bind full causal-option runtime including latest option continuation credit provenance. No changes to score thresholds, HumanProtection, VM or motor arbitration.",
+    "native_option_execution_review": "Previously native-U1 chosen depth-two causal plan now carries a persisted small bounded option across real protected steps. Only actual matching physical POST permits progress; motor quote/goal changes, callback fault, HumanProtection veto and contradictory POST revoke. Macro continuation does not earn new U1 primitive-choice credit; development test requires two executed continuations and true goal success."
   }
 }

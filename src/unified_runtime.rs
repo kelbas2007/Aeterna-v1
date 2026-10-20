@@ -675,7 +675,8 @@ impl ScientificRuntime {
     pub fn enable_constructing_instrumental_credit(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.freeze_controller || u.instrumental_credit.is_some() ||
-            u.agency_credit.is_none() || !u.archived.is_empty() ||
+            u.agency_credit.is_none() || u.temporal_options.is_some() ||
+            !u.archived.is_empty() ||
             !u.current.learner.records().is_empty() ||
             u.total_external_cost!=0 {return Err(UError::Busy)}
         u.instrumental_credit=Some(InstrumentalCredit::default());
@@ -987,7 +988,36 @@ impl ScientificRuntime {
         // This is the organism's observable opportunity to CHOOSE,
         // not the actor's goal, motor role, reward, or proposal source.
         let policy_has_choice=allowed.iter().filter(|&&v|v).count()>=2;
-        let native_credit_eligible=u.agency_credit.is_none() || policy_has_choice;
+        // A previous native U1 decision may have selected an entire learned
+        // option. Its next primitive action is not a NEW U1 choice. Only
+        // actual, matching protected POSTs allow continuation.
+        let mut continuation=None::<UnifiedOption>;
+        if let Some(p)=u.temporal_options.as_ref()
+            .and_then(|lane|lane.pending.as_ref()).cloned(){
+            let same=goal.is_some_and(|g|g==p.goal.as_slice()) &&
+                p.last_verified_post==u.current.learner.current() &&
+                p.event==u.current.learner.records().len();
+            let next=p.remaining.first();
+            if same && next.is_some_and(|step|
+                step.action<allowed.len() && allowed[step.action]){
+                let next=next.ok_or(UError::InvalidData)?;
+                continuation=Some(UnifiedOption{
+                    p:PhaseCognitiveProposal{
+                        proposal_id:0x800+next.action as u64,
+                        action:next.action,fields:p.initiating_fields
+                    },
+                    kind:3,source:"temporal-option-continuation",
+                    output:Some(next.expected_post.clone())
+                });
+            }else{
+                u.temporal_options.as_mut()
+                    .ok_or(UError::NoEvidence)?.reject_pending();
+                if same{return Err(UError::Blocked)}
+            }
+        }
+        let is_option_continuation=continuation.is_some();
+        let native_credit_eligible=(u.agency_credit.is_none() ||
+            policy_has_choice) && !is_option_continuation;
         let (predictions,overhead)=u.current.learner.carrier_predictions(&allowed)?;u.computation_work=u.computation_work.saturating_add(overhead);
         let pressure=u.current.learner.carrier_pressure();
         let mut options:Vec<UnifiedOption>=predictions.iter().map(|p|UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0x100+p.action as u64,action:p.action,
@@ -997,7 +1027,9 @@ impl ScientificRuntime {
         // transitions. Previously it was reachable only in the separate
         // ProtectedConstructionRuntime. Here it is a *proposal*, never a
         // bypass around U1 or the human-protection permit.
-        if u.current.learner.self_directed_control_enabled() {
+        let mut native_route=None::<Vec<(usize,Vec<i64>)>>;
+        if u.current.learner.self_directed_control_enabled() &&
+            !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
             // explicitly allocates a larger bounded work budget. The published
             // 4k/20k development runs retain their EXACT previous behavior.
@@ -1059,6 +1091,10 @@ impl ScientificRuntime {
                     action:probe.action,fields
                 },kind:3,source:"causal-pair-probe",output:None});
             }
+            native_route=history.as_ref()
+                .filter(|plan|plan.history_suffix_depth>=2 &&
+                    u.temporal_options.is_some() && plan.route.len()>1)
+                .map(|plan|plan.route.clone());
             if let Some(plan)=history {
                 if !allowed[plan.first_action]{return Err(UError::Blocked)}
                 let observed=predictions.iter().find(|p|p.action==plan.first_action)
@@ -1118,6 +1154,12 @@ impl ScientificRuntime {
         let active_pair_probe_proposed=options.iter().any(|o|o.source=="causal-pair-probe");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
         for round in 0..4 {
+            if let Some(approved)=continuation.take(){
+                // Same native choice, bounded saved option, and no
+                // second U1 primitive arbitration. Safety still screens.
+                operations.push("persisted-native-option".into());
+                selected=Some((approved,0.0));break
+            }
             let mut candidates=options.clone();
             let can_construct=u.current.learner.carrier_can_construct() && u.current.learner.records().len().saturating_sub(u.current.last_construction)>=cfg.search_every;
             if round<3 {
@@ -1173,6 +1215,9 @@ impl ScientificRuntime {
         let token=u.current.learner.carrier_prepare(a)?;
         let decision=self.protection.screen(a,hazard(a));let record=decision.record().clone();
         let Some(permit)=decision.into_permit() else {
+            if is_option_continuation{
+                if let Some(l)=u.temporal_options.as_mut(){l.reject_pending()}
+            }
             if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
             u.current.learner.carrier_cancel(token)?;
             self.record(LifetimeEventKind::Blocked(record));
@@ -1180,6 +1225,9 @@ impl ScientificRuntime {
         };
         let permission=permit.sequence();
         if self.protection.consume_permit(permit).is_err(){
+            if is_option_continuation{
+                if let Some(l)=u.temporal_options.as_mut(){l.reject_pending()}
+            }
             if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
             u.current.learner.carrier_fault(token,"permission fault".into());
             self.latch_fault("permission fault".into());
@@ -1187,6 +1235,9 @@ impl ScientificRuntime {
         }
         let post=match execute(a) {
             Ok(p)=>p,Err(e)=>{
+                if is_option_continuation{
+                    if let Some(l)=u.temporal_options.as_mut(){l.reject_pending()}
+                }
                 if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
                 u.current.learner.carrier_fault(token,e.to_string());
                 self.latch_fault(e.to_string());
@@ -1194,6 +1245,9 @@ impl ScientificRuntime {
             }
         };
         if post.observation.len()!=cfg.width || !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[a].max_cost {
+            if is_option_continuation{
+                if let Some(l)=u.temporal_options.as_mut(){l.reject_pending()}
+            }
             if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
             u.total_external_cost=u.total_external_cost.saturating_add(post.cost);u.current.learner.carrier_fault(token,"invalid external POST or cost".into());self.latch_fault("invalid external POST or cost".into());return Err(UError::InvalidData);
         }
@@ -1204,9 +1258,59 @@ impl ScientificRuntime {
         let verdicts=u.current.learner.promotions().len();u.total_external_cost=u.total_external_cost.saturating_add(post.cost);
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
         self.organism.observe_initial_real(&usensory(&post.observation),false);
+        if is_option_continuation{
+            let lane=u.temporal_options.as_mut().ok_or(UError::InvalidData)?;
+            if option.output.as_ref()!=Some(&post.observation){
+                // Contradicted by REAL physical evidence. Preserve the
+                // journal but never execute the remaining imagined route.
+                lane.reject_pending();
+            }else{
+                let pending=lane.pending.as_mut().ok_or(UError::InvalidData)?;
+                pending.remaining.remove(0);
+                pending.last_verified_post=post.observation.clone();
+                pending.event=u.current.learner.records().len();
+                lane.continued=lane.continued.checked_add(1).ok_or(UError::Capacity)?;
+                if lane.pending.as_ref().is_some_and(|p|p.remaining.is_empty()){
+                    if after==0.0{
+                        lane.pending=None;
+                        lane.completed=lane.completed.checked_add(1)
+                            .ok_or(UError::Capacity)?;
+                    }else{lane.reject_pending()}
+                }else if after==0.0{lane.reject_pending()}
+            }
+        }else if option.source=="predictive-suffix"{
+            if let (Some(lane),Some(route),Some(g))=
+                (u.temporal_options.as_mut(),native_route,goal){
+                // Only a genuine native-selected FIRST action and a
+                // matching factual POST may activate an option.
+                if route.len()>1 && route[0].0==a &&
+                    route[0].1==post.observation &&
+                    route.last().is_some_and(|x|
+                        udistance(&x.1,Some(g))==0.0){
+                    let remaining=route.into_iter().skip(1)
+                        .map(|(action,expected_post)|
+                            TemporalOptionStep{action,expected_post})
+                        .collect::<Vec<_>>();
+                    if !remaining.is_empty() &&
+                        remaining.len()<cfg.planning_depth{
+                        lane.started=lane.started.checked_add(1)
+                            .ok_or(UError::Capacity)?;
+                        lane.pending=Some(TemporalOption{
+                            goal:g.to_vec(),remaining,
+                            last_verified_post:post.observation.clone(),
+                            event:u.current.learner.records().len(),
+                            initiating_fields:option.p.fields
+                        });
+                    }
+                }
+            }
+        }
         if !u.freeze_controller {
             if let Some(ledger)=u.agency_credit.as_mut() {
-                if policy_has_choice {
+                if is_option_continuation{
+                    ledger.option_continuation_actions=ledger.option_continuation_actions
+                        .checked_add(1).ok_or(UError::Capacity)?;
+                }else if policy_has_choice {
                     ledger.self_selected_actions=ledger.self_selected_actions
                         .checked_add(1).ok_or(UError::Capacity)?;
                 } else {
