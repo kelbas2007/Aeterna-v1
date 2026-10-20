@@ -938,3 +938,97 @@ mod observable_graph_scan_budget_tests{
         assert_eq!(observable_graph_scan_rows(6,4096,0),0);
     }
 }
+
+
+#[cfg(test)]
+mod observed_goal_route_and_helper_budget_tests{
+    use super::*;
+    use crate::HumanProtectionEvidence;
+    use crate::scientific_runtime::{ScientificRuntime,UnifiedPost};
+    use crate::construction::autonomy::{ActionOffer,AutonomyPolicy};
+
+    fn safe(_:usize)->HumanProtectionEvidence{
+        HumanProtectionEvidence{
+            human_present:false,physical_effect_possible:false,
+            predicted_harm_probability:0.0,hazard_confidence:1.0,
+            emergency_stop:false
+        }
+    }
+    fn organism()->ScientificRuntime{
+        let cfg=Config{
+            width:2,actions:2,planning_depth:5,
+            planning_work:120_000,minimum_training:128,
+            search_every:4096,..Default::default()
+        };
+        let mut rt=ScientificRuntime::new_constructing(
+            cfg,AutonomyPolicy::default(),vec![0,0],"goal-route-boundary"
+        ).unwrap();
+        rt.enable_constructing_self_directed_control().unwrap();
+        rt
+    }
+    fn action(rt:&mut ScientificRuntime,motor:usize,actual:Vec<i64>){
+        let offers=(0..2).map(|a|ActionOffer{
+            available:a==motor,max_cost:1
+        }).collect::<Vec<_>>();
+        rt.step_constructing(None,&offers,safe,move |a|{
+            assert_eq!(a,motor);
+            Ok(UnifiedPost{observation:actual,cost:1,reward:0.0})
+        }).unwrap();
+    }
+    #[test]
+    fn one_step_goal_is_never_promoted_into_a_false_two_step_route(){
+        let mut rt=organism();
+        action(&mut rt,0,vec![1,0]);
+        // This is a TRUE later transition recorded under NO goal;
+        // both its ends already satisfy the current masked goal.
+        action(&mut rt,1,vec![1,1]);
+        rt.observe_constructing_external_restart(vec![0,0]).unwrap();
+        let learner=rt.construction_learner().unwrap();
+        let (plan,work)=learner.carrier_observable_goal_route_metered(
+            &[Some(1),None],&[true,true],16000
+        );
+        assert!(work<=16000);
+        assert!(plan.is_none(),
+            "a direct goal action must not be disguised as a causal option");
+        assert_eq!(learner.records().len(),2);
+    }
+    #[test]
+    fn two_distinct_real_successive_postconditions_form_a_valid_option(){
+        let mut rt=organism();
+        action(&mut rt,0,vec![0,1]);
+        action(&mut rt,1,vec![1,2]);
+        rt.observe_constructing_external_restart(vec![0,0]).unwrap();
+        let learner=rt.construction_learner().unwrap();
+        let (plan,work)=learner.carrier_observable_goal_route_metered(
+            &[Some(1),None],&[true,true],16000
+        );
+        assert!(work<=16000);
+        let p=plan.expect("two genuine physical transitions should be found");
+        assert_eq!(p.depth,2);
+        assert_eq!(p.route,vec![(0,vec![0,1]),(1,vec![1,2])]);
+    }
+    #[test]
+    fn plan_and_recall_share_an_explicit_remaining_work_ceiling(){
+        let mut rt=organism();
+        action(&mut rt,0,vec![0,1]);
+        action(&mut rt,1,vec![1,2]);
+        let learner=rt.construction_learner().unwrap();
+        for budget in [0_u64,1,64,256,4096,120000]{
+            let (plans,plan_work)=learner.carrier_plans(
+                &[Some(1),None],&[true,true],budget
+            ).unwrap();
+            let (recalled,recall_work)=learner.carrier_recall(
+                &[true,true],budget
+            ).unwrap();
+            assert!(plan_work<=budget);
+            assert!(recall_work<=budget);
+            if budget==0{
+                assert!(plans.is_empty());
+                assert!(recalled.is_empty());
+            }
+        }
+        let cp=rt.checkpoint_constructing().unwrap();
+        assert_eq!(cp,ScientificRuntime::from_constructing_checkpoint(&cp)
+            .unwrap().checkpoint_constructing().unwrap());
+    }
+}
