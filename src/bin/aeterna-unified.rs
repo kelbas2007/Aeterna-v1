@@ -69,6 +69,9 @@ pub(crate) fn main()->Result<()>{
                     if let Some(w)=request.get("width") {
                         cfg.width=usize::try_from(w.as_u64().ok_or("width must be an integer")?)?;
                     }
+                    // Validate width BEFORE allocating a default observation.
+                    // Untrusted u64::MAX must produce Capacity, not OOM/abort.
+                    cfg.validate()?;
                     let initial=if let Some(v)=request.get("observation"){
                         serde_json::from_value::<Vec<i64>>(v.clone())?
                     }else{vec![0;cfg.width]};

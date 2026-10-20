@@ -386,3 +386,61 @@ fn unavailable_option_motor_is_not_executed_and_cancels_macro(){
     let option=rt.unified_report().unwrap().temporal_options.unwrap();
     assert_eq!((option.started,option.revoked,option.pending_steps),(1,1,0));
 }
+
+
+#[test]
+fn domain_switch_drops_incompatible_option_lane_before_serializing(){
+    let (mut rt,mut world)=acquired(true);
+    enable(&mut rt,true);
+    rt.enable_constructing_temporal_options().unwrap();
+    let first=step(&mut rt,&mut world,None);
+    assert_eq!(first.source,"predictive-suffix");
+    assert_eq!(rt.unified_report().unwrap()
+        .temporal_options.as_ref().unwrap().pending_steps,2);
+    let cfg=Config{width:1,actions:5,minimum_training:128,
+        search_every:4096,planning_work:120_000,
+        planning_depth:4,journal_capacity:1024,
+        ..Default::default()};
+    rt.enter_constructing_domain(
+        "fresh-domain-with-no-opt-ins",cfg,AutonomyPolicy::default(),vec![0])
+        .unwrap();
+    assert_eq!(rt.unified_report().unwrap().archived_domains.len(),1);
+    assert!(rt.unified_report().unwrap().temporal_options.is_none(),
+        "a new learner cannot retain history flags or pending motor authority from the old domain");
+    let saved=rt.checkpoint_constructing().unwrap();
+    let restored=ScientificRuntime::from_constructing_checkpoint(&saved)
+        .expect("switching domains must not create unloadable checkpoint");
+    assert_eq!(saved,restored.checkpoint_constructing().unwrap());
+}
+
+#[test]
+fn entire_autobiographical_route_quote_must_be_affordable(){
+    let (mut rt,w)=acquired(true);
+    enable(&mut rt,true);
+    rt.enable_constructing_temporal_options().unwrap();
+    rt.enable_constructing_autobiographical_options().unwrap();
+    let checkpoint=rt.checkpoint_constructing().unwrap();
+    let mut ordinary=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+    let mut expensive=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+    let mut normal_world=w.clone();
+    let normal=step(&mut ordinary,&mut normal_world,None);
+    assert!(normal.autobiographical_option_proposed,
+        "the previously experienced 3-action success must generate a real option proposal");
+    let spent=expensive.unified_report().unwrap().total_external_cost;
+    let budget=AutonomyPolicy::default().max_external_cost-spent;
+    assert!(budget>4);
+    let mut offers=[ActionOffer{available:true,max_cost:1};5];
+    offers[2].max_cost=budget;
+    // Every motor quote is individually affordable, but the full
+    // acquired route [0,1,2] costs at least 1+1+remaining.
+    let mut costly_world=w.clone();
+    let outcome=expensive.step_constructing(Some(&[Some(1)]),
+        &offers,safe,|motor|{
+            costly_world.execute(motor);
+            Ok(UnifiedPost{observation:vec![costly_world.progress],
+                cost:1,reward:0.0})
+        }).unwrap();
+    assert!(!outcome.autobiographical_option_proposed,
+        "a cheap first motor must not conceal an unaffordable later motor");
+    assert_eq!(expensive.construction_learner().unwrap().records().len(),178);
+}

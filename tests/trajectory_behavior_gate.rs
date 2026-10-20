@@ -111,10 +111,13 @@ fn safety_denial_consumes_canary_and_cannot_turn_into_fabricated_evidence(){
     let original=acquire();
     let cp=original.checkpoint_constructing().unwrap();
     let mut rt=ScientificRuntime::from_constructing_checkpoint(&cp).unwrap();
+    let work_before=rt.unified_report().unwrap().computation_work;
     let result=rt.qualify_constructing_behavioral_gate(&tasks(),
         |_,_,action|blocked(action),
         |_,_,_|panic!("never call actual POST after emergency veto"));
     assert!(result.is_err());
+    assert!(rt.unified_report().unwrap().computation_work>work_before,
+        "failed behavioral-gate sandbox must charge work already spent before veto");
     let report=rt.trajectory_self_revision_report().unwrap();
     assert!(report.behavior_attempted);
     assert!(report.behavioral_outcome.is_none());

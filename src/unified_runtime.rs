@@ -962,12 +962,15 @@ impl ScientificRuntime {
                             .self_revision.as_mut().ok_or(UError::NoEvidence)?
                             .sandbox_candidate_arm=true;
                     }
-                    let before_work=runner.unified_report()
+                    let mut before_work=runner.unified_report()
                         .ok_or(UError::NoEvidence)?.computation_work;
                     let mut steps=Vec::new();
                     for _ in 0..task.max_actions {
                         let mut factual_post=None::<UnifiedPost>;
-                        let outcome=runner.step_constructing(
+                        // Capture work *even when this individual protected
+                        // step fails*: '?' otherwise exits before the final
+                        // arm accounting. No failed sandbox gets free compute.
+                        let attempted_step=runner.step_constructing(
                             Some(&task.goal),&task.offers,
                             |action|hazard(index,arm,action),
                             |action|{
@@ -976,7 +979,13 @@ impl ScientificRuntime {
                                 factual_post=Some(p.clone());
                                 Ok(p)
                             }
-                        )?;
+                        );
+                        let after_work=runner.unified_report()
+                            .ok_or(UError::NoEvidence)?.computation_work;
+                        charged_work=charged_work.saturating_add(
+                            after_work.saturating_sub(before_work));
+                        before_work=after_work;
+                        let outcome=attempted_step?;
                         let post=factual_post.ok_or(UError::InvalidData)?;
                         steps.push(MetaBehaviorStep {
                             action:outcome.action,post:post.observation,
@@ -986,9 +995,6 @@ impl ScientificRuntime {
                         if udistance(&steps.last().ok_or(UError::InvalidData)?.post,
                             Some(&task.goal))==0.0{break}
                     }
-                    charged_work=charged_work.saturating_add(
-                        runner.unified_report().ok_or(UError::NoEvidence)?
-                            .computation_work.saturating_sub(before_work));
                     arms.push(MetaBehaviorArm{steps});
                 }
                 let arms:[MetaBehaviorArm;2]=arms.try_into().map_err(|_|UError::InvalidData)?;
@@ -1056,7 +1062,12 @@ impl ScientificRuntime {
         let old=std::mem::replace(&mut u.current,UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None});
         u.archived.push(old);
         if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
+        // A new Learner has NONE of the history opt-ins required by
+        // TemporalOptionLane::validate. Keeping the old lane makes the new
+        // joint checkpoint unloadable. Revoke any pending macro and remove
+        // its old-domain-only option configuration before the transition.
         if let Some(opt)=u.temporal_options.as_mut(){opt.reject_pending();}
+        u.temporal_options=None;
         if let Some(revision)=u.self_revision.as_mut(){revision.pending_steps.clear();revision.pending_goal=None;}self.organism.observe_initial_real(&usensory(&initial),false);self.record(LifetimeEventKind::ExternalObservation);Ok(())
     }
     /// The WORLD, not U1, initiated a new episode. A trusted sensor
@@ -1272,22 +1283,30 @@ impl ScientificRuntime {
                 },kind:3,source:"causal-pair-probe",output:None});
             }
             if let Some(memory)=autobiographical{
-                // The physical success and the contrasting last-motor
-                // failure came from UNSCHEDULED, executed, protected POSTs.
-                // Candidate is tentative until a new real replay succeeds.
-                let observed=predictions.iter().find(|p|
-                    p.action==memory.first_action).ok_or(UError::InvalidData)?;
-                let mut fields=ufields(&memory.terminal,goal,observed.novelty,
-                    observed.disagreement,0.6,
-                    offers[memory.first_action].max_cost
-                        .saturating_mul(memory.depth as u64));
-                fields[0]/=1.0+0.10*(memory.depth.saturating_sub(1) as f32);
-                autobiographical_route=Some(memory.route.clone());
-                options.push(UnifiedOption{p:PhaseCognitiveProposal{
-                    proposal_id:0x900+memory.first_action as u64,
-                    action:memory.first_action,fields},
-                    kind:3,source:"autobiographical-option",
-                    output:Some(memory.first_consequence)});
+                // Quote EVERY physical motor, including repeats. The first
+                // primitive may be cheap while later ones are costly.
+                // Do not offer a multi-action plan if its whole quoted
+                // cost exceeds the remaining actual external budget.
+                let route_quote=memory.route.iter().try_fold(0_u64,
+                    |sum,(action,_)|offers.get(*action)
+                        .and_then(|offer|sum.checked_add(offer.max_cost)));
+                if let Some(quoted_cost)=route_quote.filter(|&total|
+                    total<=u.max_external_cost.saturating_sub(u.total_external_cost)){
+                    // The physical success and the contrasting last-motor
+                    // failure came from UNSCHEDULED, executed, protected POSTs.
+                    // Candidate is tentative until a new real replay succeeds.
+                    let observed=predictions.iter().find(|p|
+                        p.action==memory.first_action).ok_or(UError::InvalidData)?;
+                    let mut fields=ufields(&memory.terminal,goal,observed.novelty,
+                        observed.disagreement,0.6,quoted_cost);
+                    fields[0]/=1.0+0.10*(memory.depth.saturating_sub(1) as f32);
+                    autobiographical_route=Some(memory.route.clone());
+                    options.push(UnifiedOption{p:PhaseCognitiveProposal{
+                        proposal_id:0x900+memory.first_action as u64,
+                        action:memory.first_action,fields},
+                        kind:3,source:"autobiographical-option",
+                        output:Some(memory.first_consequence)});
+                }
             }
             native_route=history.as_ref()
                 .filter(|plan|plan.history_suffix_depth>=2 &&
