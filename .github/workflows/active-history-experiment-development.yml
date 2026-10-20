@@ -1,0 +1,52 @@
+name: Contextual causal experimentation development
+on:
+  pull_request:
+    paths:
+      - 'src/construction/unified_port.rs'
+      - 'src/unified_runtime.rs'
+      - 'tests/active_history_experiment_development.rs'
+      - '.github/workflows/active-history-experiment-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: active-history-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cold:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin compiler and tested source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p context-experiment-evidence
+          git rev-parse HEAD > context-experiment-evidence/source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Compare cold actual U1 actions vs same-world gate
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --lib active_context_restart_boundary_tests -- --nocapture --test-threads=1 2>&1 | tee context-experiment-evidence/restart-boundary.log
+          cargo test --locked --test active_history_experiment_development -- --nocapture --test-threads=1 2>&1 | tee context-experiment-evidence/results.log
+          python scripts/project_audit.py | tee context-experiment-evidence/source-audit.json
+      - name: Preserve positive AND negative real outcome traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contextual-causal-${{ runner.os }}-${{ github.sha }}
+          path: context-experiment-evidence/
+          retention-days: 7
+          if-no-files-found: warn

@@ -78,6 +78,16 @@ struct TemporalOptionLane {
     /// no longer supported and real matched controls justify extension.
     #[serde(default)]
     complexity_need_gate_enabled:bool,
+    // These fields DID NOT EXIST in version-1 PR10 checkpoints. Omit
+    // absent/default values when reserializing BEFORE integrity hashing.
+    // Deserialization still supplies zeros; a historical checkpoint stays
+    // byte-identical in the cognition field under the original V1 hash.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    contextual_experiments_enabled:bool,
+    #[serde(default,skip_serializing_if="agency_no_count")]
+    contextual_experiment_proposed:u64,
+    #[serde(default,skip_serializing_if="agency_no_count")]
+    contextual_experiment_selected:u64,
     #[serde(default)]
     learned_depth_selected:[u64;6],
     #[serde(default)]
@@ -93,6 +103,9 @@ pub struct TemporalOptionReport {
     pub autobiographical_enabled:bool,pub autobiographical_started:u64,
     pub variable_depth_enabled:bool,
     pub complexity_need_gate_enabled:bool,
+    pub contextual_experiments_enabled:bool,
+    pub contextual_experiment_proposed:u64,
+    pub contextual_experiment_selected:u64,
     pub learned_depth_selected:[u64;6],
     pub learned_depth_completed:[u64;6],
 }
@@ -109,6 +122,9 @@ impl TemporalOptionLane {
             autobiographical_started:self.autobiographical_started,
             variable_depth_enabled:self.variable_depth_enabled,
             complexity_need_gate_enabled:self.complexity_need_gate_enabled,
+            contextual_experiments_enabled:self.contextual_experiments_enabled,
+            contextual_experiment_proposed:self.contextual_experiment_proposed,
+            contextual_experiment_selected:self.contextual_experiment_selected,
             learned_depth_selected:self.learned_depth_selected,
             learned_depth_completed:self.learned_depth_completed,
         }
@@ -127,6 +143,9 @@ impl TemporalOptionLane {
             (self.autobiographical_started>0 && !self.autobiographical_enabled) ||
             (self.variable_depth_enabled && !self.autobiographical_enabled) ||
             (self.complexity_need_gate_enabled && !self.variable_depth_enabled) ||
+            (self.contextual_experiments_enabled && !self.complexity_need_gate_enabled) ||
+            (self.contextual_experiment_proposed>0 && !self.contextual_experiments_enabled) ||
+            (self.contextual_experiment_selected>self.contextual_experiment_proposed) ||
             self.learned_depth_selected[..2].iter().any(|&n|n>0) ||
             self.learned_depth_completed[..2].iter().any(|&n|n>0) ||
             self.learned_depth_completed.iter().sum::<u64>()>self.completed ||
@@ -244,6 +263,10 @@ pub struct UnifiedStep {
     /// Proposal availability is NOT the same as executed curiosity.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub active_pair_probe_proposed:bool,
+    /// Novel action-context coverage is evidence-gathering, never a
+    /// fabricated prediction of the terminal goal.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    pub contextual_experiment_proposed:bool,
     /// Explicitly a proposal based on a TWO-action latent history suffix.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub adaptive_suffix_plan_proposed:bool,
@@ -854,6 +877,25 @@ impl ScientificRuntime {
         lane.complexity_need_gate_enabled=true;
         Ok(())
     }
+    /// Opt-in to active context-coverage proposals ONLY while existing
+    /// simplicity-first control declares insufficient evidence. No
+    /// pre-scripted actor or unauthorized motor sequence is introduced.
+    pub fn enable_constructing_contextual_experiments(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.instrumental_credit.is_some() ||
+            u.total_external_cost!=0 ||
+            !u.current.learner.records().is_empty() ||
+            !u.current.learner.active_pair_probes_enabled(){
+            return Err(UError::Busy)
+        }
+        let lane=u.temporal_options.as_mut().ok_or(UError::NoEvidence)?;
+        if !lane.complexity_need_gate_enabled ||
+            lane.contextual_experiments_enabled || lane.pending.is_some(){
+            return Err(UError::Busy)
+        }
+        lane.contextual_experiments_enabled=true;
+        Ok(())
+    }
     /// The same U1 may elect to test an underobserved action pair. No other
     /// action authority and no externally scheduled experiment steps.
     pub fn enable_constructing_active_causal_probes(&mut self)->UResult<()>{
@@ -1176,6 +1218,7 @@ impl ScientificRuntime {
         let mut native_route=None::<Vec<(usize,Vec<i64>)>>;
         let mut autobiographical_route=None::<Vec<(usize,Vec<i64>)>>;
         let mut complexity_need_decision=None::<String>;
+        let mut contextual_probe_source=false;
         if u.current.learner.self_directed_control_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
@@ -1247,8 +1290,27 @@ impl ScientificRuntime {
                 cfg.planning_work.saturating_sub(history_work)
                     .saturating_sub(memory_work).saturating_sub(4_000).min(6_000)
             }else{0};
-            let (probe,probe_work)=u.current.learner
-                .carrier_active_causal_probe_metered(&allowed,offers,probe_budget);
+            let allow_contextual=u.temporal_options.as_ref()
+                .is_some_and(|l|l.contextual_experiments_enabled) &&
+                complexity_need_decision.as_deref()==
+                    Some("investigate_insufficient_evidence");
+            let (probe,probe_work)=if allow_contextual{
+                let (plan,work)=u.current.learner
+                    .carrier_contextual_experiment_metered(
+                        &allowed,offers,probe_budget);
+                if plan.is_some(){
+                    contextual_probe_source=true;
+                    (plan,work)
+                }else{
+                    let (fallback,extra)=u.current.learner
+                        .carrier_active_causal_probe_metered(&allowed,offers,
+                            probe_budget.saturating_sub(work));
+                    (fallback,work.saturating_add(extra))
+                }
+            }else{
+                u.current.learner.carrier_active_causal_probe_metered(
+                    &allowed,offers,probe_budget)
+            };
             let chain_budget=if goal.is_some() && u.current.learner.certified_chains_enabled() && cfg.planning_work>=32_000 {
                 cfg.planning_work.saturating_sub(history_work).saturating_sub(memory_work).saturating_sub(probe_work).saturating_sub(4_000)
             } else {0};
@@ -1280,7 +1342,11 @@ impl ScientificRuntime {
                 options.push(UnifiedOption{p:PhaseCognitiveProposal{
                     proposal_id:0x700+probe.action as u64,
                     action:probe.action,fields
-                },kind:3,source:"causal-pair-probe",output:None});
+                },kind:3,source:if contextual_probe_source{
+                    "contextual-causal-experiment"
+                }else{
+                    "causal-pair-probe"
+                },output:None});
             }
             if let Some(memory)=autobiographical{
                 // Quote EVERY physical motor, including repeats. The first
@@ -1369,6 +1435,14 @@ impl ScientificRuntime {
         let adaptive_suffix_plan_proposed=options.iter().any(|o|
             o.source=="predictive-suffix");
         let active_pair_probe_proposed=options.iter().any(|o|o.source=="causal-pair-probe");
+        let contextual_experiment_proposed=options.iter()
+            .any(|o|o.source=="contextual-causal-experiment");
+        if contextual_experiment_proposed {
+            if let Some(l)=u.temporal_options.as_mut(){
+                l.contextual_experiment_proposed=l.contextual_experiment_proposed
+                    .checked_add(1).ok_or(UError::Capacity)?;
+            }
+        }
         let autobiographical_option_proposed=options.iter().any(|o|
             o.source=="autobiographical-option");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
@@ -1483,6 +1557,12 @@ impl ScientificRuntime {
         let value=(0.8*post.reward.max(progress).max(0.0)+0.2*(if novel {1.0}else{0.0})).clamp(0.0,1.0);
         let verdicts=u.current.learner.promotions().len();u.total_external_cost=u.total_external_cost.saturating_add(post.cost);
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
+        if option.source=="contextual-causal-experiment" {
+            if let Some(l)=u.temporal_options.as_mut(){
+                l.contextual_experiment_selected=l.contextual_experiment_selected
+                    .checked_add(1).ok_or(UError::Capacity)?;
+            }
+        }
         self.organism.observe_initial_real(&usensory(&post.observation),false);
         if is_option_continuation{
             let lane=u.temporal_options.as_mut().ok_or(UError::InvalidData)?;
@@ -1694,7 +1774,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,contextual_experiment_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;

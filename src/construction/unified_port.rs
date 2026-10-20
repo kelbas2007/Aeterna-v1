@@ -245,6 +245,95 @@ impl Learner {
             quoted_cost:quoted[action].max_cost,
         }),meter.spent)
     }
+    /// An epistemic action, NOT an imagined result. The learner itself
+    /// measures which opaque motor extension of the most recent actually
+    /// executed no-visible-effect sequence is least physically observed.
+    /// All historical comparisons are PRE-matched, restart-safe and
+    /// charged against the existing finite causal-probe work budget.
+    pub(crate) fn carrier_contextual_experiment_metered(
+        &self,allowed:&[bool],quoted:&[super::autonomy::ActionOffer],
+        budget:u64
+    )->(Option<PortCausalProbe>,u64){
+        if !self.active_pair_probes||self.pending||self.poisoned||
+            self.frozen_at.is_some()||budget==0||
+            allowed.len()!=self.config.actions||
+            quoted.len()!=self.config.actions||self.restart_next {
+            return (None,0)
+        }
+        let end=self.records.len();
+        let max_history=self.config.planning_depth.min(5).saturating_sub(1);
+        if end==0||max_history==0{return (None,0)}
+        // Most recent connected no-visible-effect sequence. The physical
+        // history itself supplies motor IDs; neither hidden state nor
+        // evaluator role labels are accessible here.
+        let mut suffix=Vec::with_capacity(max_history);
+        let mut next_id=self.next_id;
+        for index in (0..end).rev().take(max_history){
+            let row=&self.records[index].transition;
+            if row.id.checked_add(1)!=Some(next_id) ||
+                row.pre!=self.current||row.post!=self.current{break}
+            suffix.push(row.action);
+            next_id=row.id;
+            if row.restart{break}
+        }
+        if suffix.is_empty(){return (None,0)}
+        suffix.reverse();
+        let depth=suffix.len();
+        let mut meter=Meter::new(budget);
+        let mut within=vec![0usize;self.config.actions];
+        let mut global=vec![0usize;self.config.actions];
+        // No partial scan is evidence of being "least tested": return
+        // NONE if the caller cannot pay for all relevant rows.
+        for index in (0..end).rev().take(256){
+            if meter.charge((self.current.len()+depth+4) as u64).is_err(){
+                return (None,meter.spent)
+            }
+            let row=&self.records[index].transition;
+            if !allowed[row.action]{continue}
+            global[row.action]+=1;
+            if row.pre!=self.current || row.restart || index<depth{
+                continue
+            }
+            let mut matched=true;
+            let mut expected_id=row.id;
+            for prior in (index-depth..index).rev().zip(suffix.iter().rev()){
+                let (prior_index,expected_action)=prior;
+                let p=&self.records[prior_index].transition;
+                if p.id.checked_add(1)!=Some(expected_id) ||
+                    p.action!=*expected_action ||
+                    p.pre!=self.current||p.post!=self.current{
+                    matched=false;break
+                }
+                expected_id=p.id;
+                // An external restart marks the FIRST physical motor in
+                // its episode. A restart on ANY interior suffix motor
+                // invalidates the candidate even if IDs/observations match.
+                // The old prior_index+1<index check inadvertently allowed
+                // a restart at the final predecessor (index-1).
+                if p.restart && prior_index!=index-depth{
+                    matched=false;break
+                }
+            }
+            if matched{within[row.action]+=1}
+        }
+        let mut best=None::<(usize,usize,u64,usize)>;
+        for action in 0..self.config.actions{
+            if !allowed[action]{continue}
+            let tie=exploration_word(self.next_id ^
+                ((action as u64).wrapping_mul(0x9e3779b97f4a7c15)));
+            let score=(within[action],global[action],tie,action);
+            if best.is_none_or(|b|score<b){best=Some(score)}
+        }
+        let Some((count,total,_,action))=best else{
+            return (None,meter.spent)
+        };
+        (Some(PortCausalProbe{
+            action,novelty:1.0/(1.0+count as f32),
+            disagreement:1.0/(1.0+total as f32),
+            quoted_cost:quoted[action].max_cost
+        }),meter.spent)
+    }
+
     /// TRUSTED EXTERNAL OBSERVATION: a virtual environment reset is not
     /// an imagined POST, has no action permit, and never erases the journal.
     /// The next real action must record a restart marker, preventing
@@ -643,5 +732,82 @@ impl Learner {
             if best.get(&r.transition.action).is_none_or(|(s,_)|similarity>*s) {best.insert(r.transition.action,(similarity,r.transition.post.clone()));}
         }
         Ok((best.into_iter().map(|(a,(s,p))|(a,p,s)).collect(),work))
+    }
+}
+
+
+#[cfg(test)]
+mod active_context_restart_boundary_tests{
+    use super::*;
+    use crate::HumanProtectionEvidence;
+    use crate::scientific_runtime::{ScientificRuntime,UnifiedPost};
+    use crate::construction::autonomy::{ActionOffer,AutonomyPolicy};
+
+    fn safe(_:usize)->HumanProtectionEvidence{
+        HumanProtectionEvidence{
+            human_present:false,physical_effect_possible:false,
+            predicted_harm_probability:0.0,hazard_confidence:1.0,
+            emergency_stop:false
+        }
+    }
+    fn step(rt:&mut ScientificRuntime,motor:usize){
+        let offers=(0..3).map(|a|ActionOffer{
+            available:a==motor,max_cost:1
+        }).collect::<Vec<_>>();
+        rt.step_constructing(None,&offers,safe,|executed|{
+            assert_eq!(executed,motor);
+            Ok(UnifiedPost{observation:vec![0],cost:1,reward:0.0})
+        }).unwrap();
+    }
+    fn run(with_interior_restart:bool)->f32{
+        let cfg=Config{
+            width:1,actions:3,planning_depth:5,planning_work:100_000,
+            minimum_training:128,search_every:4096,
+            ..Default::default()
+        };
+        let mut rt=ScientificRuntime::new_constructing(cfg,
+            AutonomyPolicy::default(),vec![0],"restarts").unwrap();
+        rt.enable_constructing_self_directed_control().unwrap();
+        rt.enable_constructing_predictive_history_states().unwrap();
+        rt.enable_constructing_active_causal_probes().unwrap();
+        step(&mut rt,0);
+        if with_interior_restart {
+            rt.observe_constructing_external_restart(vec![0]).unwrap();
+        }
+        step(&mut rt,1);
+        step(&mut rt,2);
+        // Current after-reset history is a real 0,1 pair, ready to
+        // investigate action 2. Both worlds have the SAME visible PRE.
+        rt.observe_constructing_external_restart(vec![0]).unwrap();
+        step(&mut rt,0);
+        step(&mut rt,1);
+        let history=rt.construction_learner().unwrap();
+        let t=history.records();
+        assert_eq!(t.len(),5);
+        assert_eq!(t[1].transition.restart,with_interior_restart);
+        assert!(t[3].transition.restart);
+        assert!(!t[4].transition.restart);
+        let allowed=[false,false,true];
+        let quoted=[ActionOffer{available:true,max_cost:1};3];
+        let (probe,work)=history.carrier_contextual_experiment_metered(
+            &allowed,&quoted,6000);
+        assert!(work>0 && work<=6000);
+        let candidate=probe.expect("actual connected suffix can nominate offered next motor");
+        assert_eq!(candidate.action,2);
+        // No simulation or inserted journal entries: this is purely
+        // an inspection of real protected steps.
+        assert_eq!(history.records().len(),5);
+        candidate.novelty
+    }
+
+    #[test]
+    fn restart_inside_suffix_cannot_be_credited_as_observed_pair(){
+        assert_eq!(run(true),1.0,
+            "failed old logic counted real actions across two separate episodes");
+    }
+    #[test]
+    fn actual_connected_pair_is_still_counted(){
+        assert_eq!(run(false),0.5,
+            "fix must retain valid same-episode evidence from full real POSTs");
     }
 }

@@ -1,0 +1,141 @@
+# ACTIVE-HISTORY-EXPERIMENT1 — disclosed cold development result
+
+2026-10-20. **DEVELOPMENT POSITIVE, NOT independent scientific transfer.**
+
+## CURRENT result AFTER both Codex P1 repairs — do not cite 492 for fixed code
+
+Source [`15eea46d`](https://github.com/kelbas2007/Aeterna-v1/commit/15eea46ddefee138cccf0bd64ec46966a852bcfe),
+[exact Linux AND Windows rerun 39405889718](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39405889718).
+Both operating systems **PASS 2/2 restart-boundary unit tests and 3/3
+cold developmental tests** with IDENTICAL actual results.
+Project source audit PASS on both OS; 81 original cognitive files
+preserved, RSP2 policy unchanged.
+
+| Family | Need-gate baseline goal successes | Corrected context-experiment successes | Need-gate physical actions | Corrected physical actions | Actually selected contextual experiments |
+|---|---:|---:|---:|---:|---:|
+| Four-action hidden prerequisites (12 worlds) | 181/288 | **195/288** | 2,845 | **2,645** | 179 |
+| Five-action repeated prerequisites (12 worlds) | 7/288 | **8/288** | 5,123 | 5,125 | 553 |
+| Retained three-action skills (6 worlds) | 140/144 | 140/144 | 576 | 576 | 9 |
+| Direct-goal negative control (6 worlds) | 144/144 | 144/144 | 290 | **275** | 53 |
+| **Total** | **472/864** | **487/864** | **8,834** | **8,621** | **794** |
+
+Corrected benefit: **+15 real solved episodes**, **−213 actual motor
+actions** (~2.41% reduction), 0 regressed worlds; actual completed
+four-action options 170→184 and five-action options **1→2**. No
+teacher-scheduled actions. The cold first-six successes were 101 in
+both arms, last-six 130→132. This does **not** establish reliable
+five-action learning (just 8/288 episodes) or self-invented hypotheses.
+This is the NEW factual source-bound developmental verdict.
+
+The **original PRE-REPAIR** test below is retained as an immutable
+historical observation for scientific provenance, not as current
+post-review performance. The earlier five additional successes
+(492→487), 61 extra actions (8,560→8,621), and changed proposal counts
+are a measured consequence of rejecting invalid cross-episode
+history links.
+
+---
+
+## Historical PRE-Codex P1 fix result (NOT current source outcome)
+
+
+The [protocol](ACTIVE_HISTORY_EXPERIMENT1_PROTOCOL.md) was committed
+`ea28d5cec031422a77dea8daa6a34bb043e6e36c` BEFORE both algorithm
+`22171fc3` and evaluator `a283c63d`. No new one-use science seed
+or hidden benchmark was consumed.
+
+## Actual protected action evidence
+
+[GitHub Actions first development run 39401289588](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39401289588).
+**Linux AND Windows PASS, 2/2 tests each, identical outcome metrics.**
+Source audit PASS on both systems: 81 original cognitive files bound,
+75 untouched, RSP2 policy unchanged.
+Linux [raw evidence artifact](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39401289588/artifacts/12254469113)
+contains 6.4 MB of uncompressed genuine episode and physical-action
+traces. The exact pre-report source, test and physical-action traces are pinned
+to the cross-platform workflow. Only disclosed engineering evidence,
+not independently qualified scientific transfer.
+
+Same 36 **developer-visible, deterministic synthetic worlds**,
+24 episodes per world, 18 real protected actions max each. Each
+arm has a cold native U1 with the same original Complexity Necessity
+Gate, all four opaque motors available at every step. Only the new
+candidate has the opt-in contextual action-history experiment. No
+training motors or hidden motor roles were supplied to cognition.
+
+| Family | Baseline goals | With context experiments | Baseline real actions | With context | Native context actions genuinely selected |
+|---|---:|---:|---:|---:|---:|
+| Four-step hidden prerequisites (12 worlds) | 181/288 | **200/288** | 2,845 | **2,584** | 172 |
+| Five-step repeated prerequisites (12 worlds) | 7/288 | **8/288** | 5,123 | 5,125 | 557 |
+| Retained three-step skills (6 worlds) | 140/144 | 140/144 | 576 | 576 | 9 |
+| Direct-goal negative control (6 worlds) | 144/144 | 144/144 | 290 | 275 | 53 |
+| **Total** | **472/864** | **492/864** | **8,834** | **8,560** | **791** |
+
+Net **+20 successful goal episodes**, **−274 actual physical actions**
+(3.10% reduction). Of the 36 paired worlds, 5 improved in successes,
+31 tied and 0 regressed; the three-step and direct-task families kept
+exactly the same success rates. Actual option completions of depth 4
+rose 170→188; depth 5 rose **only 1→2**.
+
+The native U1 genuinely selected 791 single-step epistemic actions
+based on observed motor-history coverage; they were not merely
+proposed by the Learner. In five-step worlds, 557 contextual probes
+were chosen and executed. The program NEVER claims a goal from a
+probe without a real physical POST; the contextual proposal's
+predicted progress field is zero.
+
+## Why this is not the sought breakthrough
+
+The five-step family improved by just **one** extra episode out of
+288. This exposes an important remaining limit: selecting under-sampled
+action-history extensions does NOT identify which motor sequence
+discriminates rival latent causal hypotheses efficiently enough.
+Coverage over action n-grams becomes combinatorial. Even an
+epistemically motivated choice can waste actions without a predictive
+model of *which information matters*.
+
+The strategy is authored software, and the known simple deterministic
+worlds were used repeatedly for development. This does NOT establish
+AGI, external-world generalization, self-generated latent variables,
+autonomous program-operator invention or reliable long-horizon skills.
+The earlier positive SELF-ORIGINATED-OPTION1 remains limited to its
+original source-frozen 3-action setting. Older scientific negatives
+remain unchanged.
+
+Next necessary falsifiable challenge: learn an explicit set of
+competing hidden-state explanations FROM the organism's real journal
+and choose a discriminating physical experiment by expected information
+gain conditioned on the actual goal and action cost, rather than
+uniform history-coverage novelty. Validate independently against
+this contextual coverage control and preserved simpler skills.
+
+This result is experimental. Do NOT merge it as a proven scientific
+advance until all platform/safety regressions finish, and do not
+represent its disclosed source as independent qualification.
+
+## Codex code-review P1 repairs (2026-10-20)
+
+Automated Codex code review of PR11 head `4df4c2b` found two real
+**P1** defects; see inline review comments:
+- `src/unified_runtime.rs` : new contextual option fields were
+  serialized even when default. The version-1 joint checkpoint
+  integrity hash uses reserialized cognition; previously created
+  checkpoint hashes with a TemporalOptionLane could mismatch.
+  **Repair:** skip serializing zero/false newly added fields; test
+  asserts V1-compatible absent fields and checkpoint roundtrip.
+- `src/construction/unified_port.rs`: a same-visible-sensor
+  history suffix could incorrectly span an externally observed
+  restart when it occurred at the LAST predecessor. Its old
+  `prior_index+1<index` clause falsely ignored that boundary.
+  **Repair:** only permit the restart flag on the FIRST physical
+  motor of the candidate suffix. Two unit controls use actual
+  protected PRE/action/POST steps; crossing a restart must have
+  novelty 1.0, a connected same-episode pair novelty 0.5.
+
+The developer-visible outcome `472→492/864` was measured on the
+PRE-REVIEW source. The restart fix may alter experiments. It MUST be
+recomputed as an OPEN new development run, never silently retain
+`492` as validated for fixed code; the original result remains
+the preserved historical observation. Do not merge until old checkpoint
+compatibility, new episode-boundary controls and paired Linux/Windows
+behavioral regressions all pass.
