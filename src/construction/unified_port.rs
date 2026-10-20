@@ -1,4 +1,12 @@
 // Crate-private port, included by runtime.rs: never external authority.
+/// Compute a COMPLETE recent scan window within the available finite meter.
+/// Reserve finite computation for BFS after the read. Never trust a
+/// partially scanned candidate that might hide a contradictory real POST.
+fn observable_graph_scan_rows(width:usize,end:usize,budget:u64)->usize{
+    let unit=(width as u64).saturating_mul(2).saturating_add(6);
+    let reserve=budget.min(2048);
+    end.min(1024).min((budget.saturating_sub(reserve)/unit) as usize)
+}
 #[derive(Debug, Clone)]
 pub(crate) struct PortPrediction {
     pub action: usize, pub output: Vec<i64>, pub confidence: f32,
@@ -67,10 +75,14 @@ impl Learner {
         let end=self.frozen_at.map_or(self.records.len(),|id|
             self.records.partition_point(|r|r.transition.id<id));
         if end<2{return (None,0)}
+        let scan_rows=observable_graph_scan_rows(self.config.width,end,budget);
+        if scan_rows<2{return (None,0)}
         let mut meter=Meter::new(budget);
         let mut transitions=std::collections::BTreeMap::<
             (Vec<i64>,usize),Option<(Vec<i64>,usize)>>::new();
-        for row in &self.records[end.saturating_sub(1024)..end]{
+        // For wider sensors reduce the COMPLETELY checked recent window
+        // instead of exhausting the allowance on row 889 of 1024.
+        for row in &self.records[end-scan_rows..end]{
             if meter.charge((self.config.width*2+6) as u64).is_err(){
                 // An unfinished scan may hide a physical contradiction:
                 // never promote a partial journal to a causal option.
@@ -892,5 +904,26 @@ mod active_context_restart_boundary_tests{
     fn actual_connected_pair_is_still_counted(){
         assert_eq!(run(false),0.5,
             "fix must retain valid same-episode evidence from full real POSTs");
+    }
+}
+
+#[cfg(test)]
+mod observable_graph_scan_budget_tests{
+    use super::observable_graph_scan_rows;
+    #[test]
+    fn complete_recent_windows_fit_valid_self_directed_widths(){
+        for width in 1..=6{
+            for budget in [4000_u64,8000,12000,16000]{
+                let n=observable_graph_scan_rows(width,4096,budget);
+                let unit=width as u64*2+6;
+                assert!(n>=2 && n<=1024);
+                assert!(n as u64*unit<=budget-budget.min(2048));
+                assert_eq!(n,observable_graph_scan_rows(width,n,budget));
+            }
+        }
+        assert_eq!(observable_graph_scan_rows(2,4096,16000),1024);
+        assert!(observable_graph_scan_rows(6,4096,16000)>700);
+        assert!(observable_graph_scan_rows(6,4096,16000)<1024);
+        assert_eq!(observable_graph_scan_rows(6,4096,0),0);
     }
 }
