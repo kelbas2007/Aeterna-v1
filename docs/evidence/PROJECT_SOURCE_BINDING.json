@@ -62,11 +62,11 @@
     "modified": {
       "src/unified_runtime.rs": {
         "before_sha256": "8973cc39438c1450bf15c6dc0f48582ffdeb308418c32a7901fa8f414be1e098",
-        "after_git_blob": "98068b899e3613d96e4aa42093581258125bca4f"
+        "after_git_blob": "755af48c2f2c529bcaa3636e9fb3c032635ecc73"
       },
       "src/construction/unified_port.rs": {
         "before_sha256": "7ef8bf7ed14fae7122f608c5db8e7c49a792833a9ae12dabf70952fc88f28e73",
-        "after_git_blob": "fb9f0e6e037a246fa3ba74456eecec453cd095df"
+        "after_git_blob": "203e3e08000a4d645528ab82d433dbffc1ab14d3"
       },
       "src/construction/runtime.rs": {
         "before_sha256": "0974602c4b5f9e14a8827c3fd70f3c44cdfdda88309d4485750586875e5bcb7a",
@@ -94,6 +94,7 @@
     "pr9_post_merge_codex_review_fix": "Validate JSONL cfg before default allocation, drop stale temporal lane on domain switch, charge failed behavioral-arm work prior to error propagation, quote entire acquired motor route against actual remaining budget. Test source is public, no RSP2 or HumanProtection changes; original one-use test was confirmed SKIPPED.",
     "active_history_experiment1_review": "Opt-in contextual-causal-experiment is a metered one-step epistemic proposal by SAME native U1; generated only if complexity-need verdict is insufficient evidence. It enumerates underobserved connected PRE/action/POST context-suffix/motor choices, never supplies target motor labels, unrealized POST or a physical permit. Frozen RSP2 and HumanProtection untouched.",
     "active_context_review_p1_fix": "Codex PR11 P1: version-1 joint checkpoint backward compatibility requires new fields omitted when zero/false; causal suffix matcher rejects restarts on all interior predecessors, preserving only a real first-in-episode marker. Actual protected history unit controls and joint checkpoint roundtrip integrated; no RSP2 policy or HumanProtection change.",
-    "observable_graph1_review": "Developer-visible opt-in same-Learner real PRE/motor/POST observable graph; BFS bounded depth 5 and 128 seen full sensor states, rejects contradictions per exact pre/motor, budget reserves 16k, source only U1 proposal, stores actual successor POSTs inside existing protected TemporalOptionLane, physical permit at each motor. Backward compatible skip of new false flag, no changes to original RSP2 or HumanProtection."
+    "observable_graph1_review": "Developer-visible opt-in same-Learner real PRE/motor/POST observable graph; BFS bounded depth 5 and 128 seen full sensor states, rejects contradictions per exact pre/motor, budget reserves 16k, source only U1 proposal, stores actual successor POSTs inside existing protected TemporalOptionLane, physical permit at each motor. Backward compatible skip of new false flag, no changes to original RSP2 or HumanProtection.",
+    "pr12_codex_review_p1_p2": "PR12 review 91290426 fixes: P1 all 3 observability workflow scripts now use Bash errexit + pipefail to fail on Rust test error before audit; P2 variable-width empirical graph scan chooses complete recent window within metered expense reserving BFS work; P2 initial graph reservation fits joint memory+graph budget and actual graph budget is allocated after history+memory metered expenditure. Runtime rejects any total planner overspend before physical permit. No RSP2 / HumanProtection edits; original evaluation must be rerun after fix."
   }
 }
