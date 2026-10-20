@@ -252,6 +252,7 @@ fn native_u1_reuses_real_observable_transition_paths_vs_blind_and_unadapted(){
             .unwrap()).unwrap();
     eprintln!("OBSERVABLE_GRAPH1 {}",summary);
     assert_eq!(cases.len(),36);
+    assert!(pass,"precommitted behavior criteria not met");
 }
 #[test]
 fn pre_graph_v1_joint_checkpoint_keeps_unset_fields_omitted(){
