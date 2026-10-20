@@ -159,3 +159,48 @@ fn unknown_sensor_post_stops_actuation_and_does_not_invent_a_training_failure() 
         ))
         .is_err());
 }
+
+#[test]
+fn invalid_sensor_posts_keep_the_known_actual_cost_without_learning() {
+    for (cost, frame) in [
+        (7, image(1, 0)),
+        (0, image(2, 0)),
+        (
+            0,
+            SensorFrame::Image {
+                namespace: 1,
+                pixels: Some(Vec::new()),
+            },
+        ),
+    ] {
+        let mut rt = runtime();
+        let hash = rt
+            .construction_learner()
+            .unwrap()
+            .external_reward_report()
+            .unwrap()
+            .learned_fingerprint;
+        assert!(rt
+            .step_external_sensors(&offers(None), Some(2), safe, |_| Ok(SensorPost {
+                frame,
+                cost,
+                reward: 0.0
+            }))
+            .is_err());
+        assert_eq!(rt.unified_report().unwrap().total_external_cost, cost);
+        assert_eq!(
+            rt.construction_learner()
+                .unwrap()
+                .external_reward_report()
+                .unwrap()
+                .learned_fingerprint,
+            hash
+        );
+        assert_eq!(rt.construction_learner().unwrap().factual_event_count(), 0);
+        assert!(rt
+            .step_external_sensors(&offers(None), Some(1), safe, |_| panic!(
+                "must remain stopped"
+            ))
+            .is_err());
+    }
+}

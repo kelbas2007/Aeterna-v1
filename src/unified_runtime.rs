@@ -830,11 +830,18 @@ impl ScientificRuntime {
         let mut encoder=self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_take_sensor_encoder()?;
         let result=self.step_constructing_with_action_limit(None,offers,remaining_actions,hazard,|action| {
             let post=execute(action)?;
-            if !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[action].max_cost {
-                return Err(UError::InvalidData);
-            }
-            let observation=encoder.observe(&post.frame)?;
-            if observation[0]!=namespace{return Err(UError::InvalidData);}
+            // Preserve a known actual cost even when the sensor result is
+            // invalid. The ordinary outer validator rejects the empty shape
+            // BEFORE commitment, charges this cost and latches the fault.
+            let observation=if !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[action].max_cost {
+                Vec::new()
+            }else{
+                let mut next=encoder.clone();
+                match next.observe(&post.frame) {
+                    Ok(v) if v[0]==namespace=>{encoder=next;v},
+                    _=>Vec::new(),
+                }
+            };
             Ok(UnifiedPost{observation,cost:post.cost,reward:post.reward})
         });
         self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_put_sensor_encoder(encoder);
