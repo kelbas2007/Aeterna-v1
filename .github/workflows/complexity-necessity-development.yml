@@ -1,4 +1,4 @@
-name: Complexity necessity: cold empirical arbitration
+name: 'Complexity necessity - cold empirical arbitration'
 on:
   pull_request:
     paths:
