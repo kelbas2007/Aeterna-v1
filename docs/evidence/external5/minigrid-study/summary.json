@@ -1,0 +1,5973 @@
+{
+  "commitment": {
+    "source_commit": "2569bf54b2be7e6894694725bc57a417f09576e6",
+    "development": false,
+    "working_tree_dirty": false,
+    "binary_sha256": "349b719c8db8661c39520ca409c78756bc46be5b7f1fe101dc07a78d3aad4536",
+    "protocol_sha256": "be0a23b76b5d0b5c2ec185e92afe78dbaf91846b7cec648ccc42f779843d901e",
+    "data_manifest_sha256": "275c4718142943bfb7e882fff8aa28ac3dba34070ab0b83cee69f23d7bb0e11f",
+    "dependencies": {
+      "minigrid": "3.1.0",
+      "gymnasium": "1.2.0",
+      "arc-agi": "0.9.9",
+      "arcengine": "0.9.3",
+      "numpy": "2.3.5"
+    },
+    "variants": [
+      "legacy",
+      "random",
+      "one_step",
+      "fixed",
+      "full"
+    ],
+    "suites": [
+      "minigrid"
+    ],
+    "motor_maps": {
+      "fashion": [
+        [
+          13
+        ],
+        [
+          14,
+          4,
+          5,
+          8,
+          2,
+          3,
+          9,
+          6,
+          7,
+          10
+        ]
+      ],
+      "har": [
+        [
+          11,
+          9,
+          15,
+          13,
+          6,
+          14,
+          8,
+          4,
+          0
+        ],
+        [
+          10,
+          5,
+          12,
+          2,
+          1,
+          3
+        ]
+      ]
+    }
+  },
+  "status": "COMPLETED",
+  "minigrid": {
+    "results": {
+      "MiniGrid-DoorKey-8x8-v0": {
+        "legacy": {
+          "motor_map": [
+            14,
+            11,
+            10,
+            5,
+            3,
+            7,
+            0
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 0,
+            "actions": 8192,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 21
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 23
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 39
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 64
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830024,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830025,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 42
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 21
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 20
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 64
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 18
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 74
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 42
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 56
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 49
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": false,
+            "evictions": 0,
+            "factual_events": 12288,
+            "learned_events": 0,
+            "learned_fingerprint": 15197899416134644559,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 4,
+            "namespaces": 0,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 0,
+            "retained_reward_rates": 0,
+            "strategy_audits": [],
+            "working_transitions": 128
+          }
+        },
+        "random": {
+          "motor_map": [
+            14,
+            11,
+            10,
+            5,
+            3,
+            7,
+            0
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 1,
+            "actions": 8148,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 49
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 60
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 19
+              },
+              {
+                "seed": 830011,
+                "actions": 212,
+                "reward": 0.701875,
+                "success": true,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 49
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 53
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 53
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 16
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 23
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 49
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830024,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 830025,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 58
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 54
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 17
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 60
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 48
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 67
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              }
+            ]
+          },
+          "memory": {
+            "enabled": false,
+            "controller": "uniform_reference",
+            "actions": 12244
+          }
+        },
+        "one_step": {
+          "motor_map": [
+            14,
+            11,
+            10,
+            5,
+            3,
+            7,
+            0
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 0,
+            "actions": 8192,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 19
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 16
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 20
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 19
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 22
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830024,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 21
+              },
+              {
+                "seed": 830025,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 50
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 42
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 55
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 6144,
+            "factual_events": 12288,
+            "learned_events": 8192,
+            "learned_fingerprint": 3851987386578974073,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 821917,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 128
+          }
+        },
+        "fixed": {
+          "motor_map": [
+            14,
+            11,
+            10,
+            5,
+            3,
+            7,
+            0
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 0,
+            "actions": 8192,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 19
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 16
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 20
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 19
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 22
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830024,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 21
+              },
+              {
+                "seed": 830025,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 50
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 42
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 55
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 6144,
+            "factual_events": 12288,
+            "learned_events": 8192,
+            "learned_fingerprint": 3851987386578974073,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 821917,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 128
+          }
+        },
+        "full": {
+          "motor_map": [
+            14,
+            11,
+            10,
+            5,
+            3,
+            7,
+            0
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 0,
+            "actions": 8192,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 19
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 16
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 20
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 19
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 22
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830024,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 21
+              },
+              {
+                "seed": 830025,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 50
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 42
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 55
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 6144,
+            "factual_events": 12288,
+            "learned_events": 8192,
+            "learned_fingerprint": 14697732244555029580,
+            "learned_mutation_weights": [
+              0.6096000000000003,
+              0.7120000000000002,
+              0.7120000000000002
+            ],
+            "model_bytes": 821917,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 7,
+            "rejected_strategy_changes": 7,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 1088,
+                "comparisons": 64,
+                "generation": 0,
+                "incumbent_loss": 0.0,
+                "mutation_family": 0,
+                "retention_guard_passed": true,
+                "trained_before_event": 0
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 2112,
+                "comparisons": 64,
+                "generation": 1,
+                "incumbent_loss": 0.0,
+                "mutation_family": 1,
+                "retention_guard_passed": true,
+                "trained_before_event": 1088
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 3136,
+                "comparisons": 64,
+                "generation": 2,
+                "incumbent_loss": 0.0,
+                "mutation_family": 0,
+                "retention_guard_passed": true,
+                "trained_before_event": 2112
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 4160,
+                "comparisons": 64,
+                "generation": 3,
+                "incumbent_loss": 0.0,
+                "mutation_family": 2,
+                "retention_guard_passed": true,
+                "trained_before_event": 3136
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 5184,
+                "comparisons": 64,
+                "generation": 4,
+                "incumbent_loss": 0.0,
+                "mutation_family": 1,
+                "retention_guard_passed": true,
+                "trained_before_event": 4160
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 6208,
+                "comparisons": 64,
+                "generation": 5,
+                "incumbent_loss": 0.0,
+                "mutation_family": 0,
+                "retention_guard_passed": true,
+                "trained_before_event": 5184
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 7232,
+                "comparisons": 64,
+                "generation": 6,
+                "incumbent_loss": 0.0,
+                "mutation_family": 2,
+                "retention_guard_passed": true,
+                "trained_before_event": 6208
+              }
+            ],
+            "working_transitions": 128
+          }
+        }
+      },
+      "MiniGrid-MultiRoom-N2-S4-v0": {
+        "legacy": {
+          "motor_map": [
+            12,
+            9,
+            13,
+            0,
+            6,
+            11,
+            5
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 0,
+            "actions": 1280,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830008,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 13
+              },
+              {
+                "seed": 830012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830016,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830017,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830018,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830019,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830020,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830021,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830022,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830023,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830024,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830025,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830026,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830027,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830028,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830029,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 3
+              },
+              {
+                "seed": 830030,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830031,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 1,
+            "actions": 630,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 820003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 820006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820008,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 820009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 13
+              },
+              {
+                "seed": 820010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 820011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820012,
+                "actions": 30,
+                "reward": 0.32499999999999996,
+                "success": true,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 820014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": false,
+            "evictions": 0,
+            "factual_events": 1910,
+            "learned_events": 0,
+            "learned_fingerprint": 15197899416134644559,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 4,
+            "namespaces": 0,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 0,
+            "retained_reward_rates": 0,
+            "strategy_audits": [],
+            "working_transitions": 40
+          }
+        },
+        "random": {
+          "motor_map": [
+            12,
+            9,
+            13,
+            0,
+            6,
+            11,
+            5
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 0,
+            "actions": 1280,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830008,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830016,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830017,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830018,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830019,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830020,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830021,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830022,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830023,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830024,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830025,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830026,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830027,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830028,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830029,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830030,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830031,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 640,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 820003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 820004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820008,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 820009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 820011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 820015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              }
+            ]
+          },
+          "memory": {
+            "enabled": false,
+            "controller": "uniform_reference",
+            "actions": 1920
+          }
+        },
+        "one_step": {
+          "motor_map": [
+            12,
+            9,
+            13,
+            0,
+            6,
+            11,
+            5
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 1,
+            "actions": 1272,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830008,
+                "actions": 32,
+                "reward": 0.2799999999999999,
+                "success": true,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830016,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830017,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830018,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830019,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830020,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830021,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830022,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830023,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830024,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830025,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830026,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830027,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830028,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 14
+              },
+              {
+                "seed": 830029,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830030,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830031,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 13
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 1,
+            "actions": 636,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 820001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 820003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 820005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 820006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 820008,
+                "actions": 36,
+                "reward": 0.18999999999999995,
+                "success": true,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 820009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 820011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 820015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 0,
+            "factual_events": 1908,
+            "learned_events": 1272,
+            "learned_fingerprint": 11012037524585928439,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 536367,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 1272,
+            "retained_reward_rates": 906,
+            "strategy_audits": [],
+            "working_transitions": 40
+          }
+        },
+        "fixed": {
+          "motor_map": [
+            12,
+            9,
+            13,
+            0,
+            6,
+            11,
+            5
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 2,
+            "actions": 1239,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830008,
+                "actions": 32,
+                "reward": 0.2799999999999999,
+                "success": true,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830009,
+                "actions": 7,
+                "reward": 0.8425,
+                "success": true,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830016,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830017,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830018,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830019,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830020,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830021,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830022,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830023,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830024,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830025,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830026,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830027,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830028,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830029,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830030,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830031,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 13
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 640,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 820001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 820002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 820005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820008,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 820011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 820012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 820015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 0,
+            "factual_events": 1879,
+            "learned_events": 1239,
+            "learned_fingerprint": 10810979756268383172,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 529067,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 1239,
+            "retained_reward_rates": 912,
+            "strategy_audits": [],
+            "working_transitions": 40
+          }
+        },
+        "full": {
+          "motor_map": [
+            12,
+            9,
+            13,
+            0,
+            6,
+            11,
+            5
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 2,
+            "actions": 1239,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 830007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830008,
+                "actions": 32,
+                "reward": 0.2799999999999999,
+                "success": true,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830009,
+                "actions": 7,
+                "reward": 0.8425,
+                "success": true,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              },
+              {
+                "seed": 830013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830016,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830017,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830018,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830019,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830020,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830021,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 830022,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830023,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 830024,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 830025,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830026,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 830027,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830028,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 830029,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 830030,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 830031,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 13
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 640,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 12
+              },
+              {
+                "seed": 820001,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 820002,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820003,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820004,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 9
+              },
+              {
+                "seed": 820005,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820006,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820007,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 8
+              },
+              {
+                "seed": 820008,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820009,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820010,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 11
+              },
+              {
+                "seed": 820011,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 5
+              },
+              {
+                "seed": 820012,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820013,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 7
+              },
+              {
+                "seed": 820014,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 6
+              },
+              {
+                "seed": 820015,
+                "actions": 40,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 4
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 0,
+            "factual_events": 1879,
+            "learned_events": 1239,
+            "learned_fingerprint": 8697635196962128524,
+            "learned_mutation_weights": [
+              0.8400000000000001,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 529067,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 1,
+            "rejected_strategy_changes": 1,
+            "retained_cases": 1239,
+            "retained_reward_rates": 912,
+            "strategy_audits": [
+              {
+                "accepted": false,
+                "candidate_loss": 0.651394361371027,
+                "closed_at_event": 1088,
+                "comparisons": 64,
+                "generation": 0,
+                "incumbent_loss": 0.651394361371027,
+                "mutation_family": 0,
+                "retention_guard_passed": true,
+                "trained_before_event": 0
+              }
+            ],
+            "working_transitions": 40
+          }
+        }
+      },
+      "MiniGrid-Unlock-v0": {
+        "legacy": {
+          "motor_map": [
+            11,
+            9,
+            4,
+            2,
+            0,
+            3,
+            10
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 1,
+            "actions": 8177,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 51
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830024,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830025,
+                "actions": 241,
+                "reward": 0.24687499999999996,
+                "success": true,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 16
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 29
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 39
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 51
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 56
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 53
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 42
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": false,
+            "evictions": 0,
+            "factual_events": 12273,
+            "learned_events": 0,
+            "learned_fingerprint": 15197899416134644559,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 4,
+            "namespaces": 0,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 0,
+            "retained_reward_rates": 0,
+            "strategy_audits": [],
+            "working_transitions": 128
+          }
+        },
+        "random": {
+          "motor_map": [
+            11,
+            9,
+            4,
+            2,
+            0,
+            3,
+            10
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 3,
+            "actions": 7815,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 53
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 39
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830011,
+                "actions": 189,
+                "reward": 0.40937499999999993,
+                "success": true,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 53
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 46
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 49
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 39
+              },
+              {
+                "seed": 830024,
+                "actions": 46,
+                "reward": 0.85625,
+                "success": true,
+                "distinct_public_views": 15
+              },
+              {
+                "seed": 830025,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 55
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 830031,
+                "actions": 156,
+                "reward": 0.5125,
+                "success": true,
+                "distinct_public_views": 29
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 66
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 48
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 48
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 49
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              }
+            ]
+          },
+          "memory": {
+            "enabled": false,
+            "controller": "uniform_reference",
+            "actions": 11911
+          }
+        },
+        "one_step": {
+          "motor_map": [
+            11,
+            9,
+            4,
+            2,
+            0,
+            3,
+            10
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 1,
+            "actions": 8057,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 51
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830024,
+                "actions": 121,
+                "reward": 0.621875,
+                "success": true,
+                "distinct_public_views": 22
+              },
+              {
+                "seed": 830025,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 56
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 52
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 0,
+            "actions": 4096,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 820003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 34
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 14
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 39
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 6009,
+            "factual_events": 12153,
+            "learned_events": 8057,
+            "learned_fingerprint": 9511493267105757713,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 818267,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 128
+          }
+        },
+        "fixed": {
+          "motor_map": [
+            11,
+            9,
+            4,
+            2,
+            0,
+            3,
+            10
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 2,
+            "actions": 7884,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 51
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830024,
+                "actions": 121,
+                "reward": 0.621875,
+                "success": true,
+                "distinct_public_views": 22
+              },
+              {
+                "seed": 830025,
+                "actions": 83,
+                "reward": 0.7406250000000001,
+                "success": true,
+                "distinct_public_views": 15
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 1,
+            "actions": 3886,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 820003,
+                "actions": 46,
+                "reward": 0.85625,
+                "success": true,
+                "distinct_public_views": 10
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 820008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 41
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 49
+              },
+              {
+                "seed": 820011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 43
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 5836,
+            "factual_events": 11770,
+            "learned_events": 7884,
+            "learned_fingerprint": 15931962107254678416,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 829706,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 128
+          }
+        },
+        "full": {
+          "motor_map": [
+            11,
+            9,
+            4,
+            2,
+            0,
+            3,
+            10
+          ],
+          "training": {
+            "episodes": 32,
+            "successes": 2,
+            "actions": 7884,
+            "lives": [
+              {
+                "seed": 830000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830003,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 35
+              },
+              {
+                "seed": 830004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              },
+              {
+                "seed": 830005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 28
+              },
+              {
+                "seed": 830007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830008,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 30
+              },
+              {
+                "seed": 830011,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 37
+              },
+              {
+                "seed": 830012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 40
+              },
+              {
+                "seed": 830015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 830016,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 24
+              },
+              {
+                "seed": 830017,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 830018,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830019,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 830020,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 830021,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 51
+              },
+              {
+                "seed": 830022,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 830023,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 25
+              },
+              {
+                "seed": 830024,
+                "actions": 121,
+                "reward": 0.621875,
+                "success": true,
+                "distinct_public_views": 22
+              },
+              {
+                "seed": 830025,
+                "actions": 83,
+                "reward": 0.7406250000000001,
+                "success": true,
+                "distinct_public_views": 15
+              },
+              {
+                "seed": 830026,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 830027,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 36
+              },
+              {
+                "seed": 830028,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 830029,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 830030,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 830031,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              }
+            ]
+          },
+          "evaluation": {
+            "episodes": 16,
+            "successes": 3,
+            "actions": 3815,
+            "lives": [
+              {
+                "seed": 820000,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 33
+              },
+              {
+                "seed": 820001,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 820002,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 23
+              },
+              {
+                "seed": 820003,
+                "actions": 51,
+                "reward": 0.840625,
+                "success": true,
+                "distinct_public_views": 16
+              },
+              {
+                "seed": 820004,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 39
+              },
+              {
+                "seed": 820005,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820006,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820007,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820008,
+                "actions": 241,
+                "reward": 0.24687499999999996,
+                "success": true,
+                "distinct_public_views": 47
+              },
+              {
+                "seed": 820009,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 45
+              },
+              {
+                "seed": 820010,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 32
+              },
+              {
+                "seed": 820011,
+                "actions": 195,
+                "reward": 0.390625,
+                "success": true,
+                "distinct_public_views": 31
+              },
+              {
+                "seed": 820012,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 26
+              },
+              {
+                "seed": 820013,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 44
+              },
+              {
+                "seed": 820014,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 38
+              },
+              {
+                "seed": 820015,
+                "actions": 256,
+                "reward": 0.0,
+                "success": false,
+                "distinct_public_views": 27
+              }
+            ]
+          },
+          "memory": {
+            "accepted_strategy_changes": 1,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "enabled": true,
+            "evictions": 5836,
+            "factual_events": 11699,
+            "learned_events": 7884,
+            "learned_fingerprint": 16859128427607861937,
+            "learned_mutation_weights": [
+              0.6096000000000003,
+              0.7120000000000002,
+              1.072
+            ],
+            "model_bytes": 831309,
+            "namespaces": 1,
+            "pending_actions": 0,
+            "recursive_generations": 7,
+            "rejected_strategy_changes": 6,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 1088,
+                "comparisons": 64,
+                "generation": 0,
+                "incumbent_loss": 0.0,
+                "mutation_family": 0,
+                "retention_guard_passed": true,
+                "trained_before_event": 0
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 2112,
+                "comparisons": 64,
+                "generation": 1,
+                "incumbent_loss": 0.0,
+                "mutation_family": 1,
+                "retention_guard_passed": true,
+                "trained_before_event": 1088
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 3136,
+                "comparisons": 64,
+                "generation": 2,
+                "incumbent_loss": 0.0,
+                "mutation_family": 0,
+                "retention_guard_passed": true,
+                "trained_before_event": 2112
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 4160,
+                "comparisons": 64,
+                "generation": 3,
+                "incumbent_loss": 0.0,
+                "mutation_family": 2,
+                "retention_guard_passed": true,
+                "trained_before_event": 3136
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 5184,
+                "comparisons": 64,
+                "generation": 4,
+                "incumbent_loss": 0.0,
+                "mutation_family": 1,
+                "retention_guard_passed": true,
+                "trained_before_event": 4160
+              },
+              {
+                "accepted": false,
+                "candidate_loss": 0.0,
+                "closed_at_event": 6208,
+                "comparisons": 64,
+                "generation": 5,
+                "incumbent_loss": 0.0,
+                "mutation_family": 0,
+                "retention_guard_passed": true,
+                "trained_before_event": 5184
+              },
+              {
+                "accepted": true,
+                "candidate_loss": 1.6356064020312568,
+                "closed_at_event": 7232,
+                "comparisons": 64,
+                "generation": 6,
+                "incumbent_loss": 1.7707876934816718,
+                "mutation_family": 2,
+                "retention_guard_passed": true,
+                "trained_before_event": 6208
+              }
+            ],
+            "working_transitions": 128
+          }
+        }
+      }
+    },
+    "scores": {
+      "legacy": 1,
+      "random": 0,
+      "one_step": 1,
+      "fixed": 1,
+      "full": 3
+    },
+    "episodes_per_variant": 48,
+    "target_met": false
+  }
+}

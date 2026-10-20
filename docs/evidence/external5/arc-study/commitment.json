@@ -1,0 +1,65 @@
+{
+  "source_commit": "2569bf54b2be7e6894694725bc57a417f09576e6",
+  "development": false,
+  "working_tree_dirty": false,
+  "binary_sha256": "349b719c8db8661c39520ca409c78756bc46be5b7f1fe101dc07a78d3aad4536",
+  "protocol_sha256": "be0a23b76b5d0b5c2ec185e92afe78dbaf91846b7cec648ccc42f779843d901e",
+  "data_manifest_sha256": "275c4718142943bfb7e882fff8aa28ac3dba34070ab0b83cee69f23d7bb0e11f",
+  "dependencies": {
+    "minigrid": "3.1.0",
+    "gymnasium": "1.2.0",
+    "arc-agi": "0.9.9",
+    "arcengine": "0.9.3",
+    "numpy": "2.3.5"
+  },
+  "variants": [
+    "legacy",
+    "random",
+    "one_step",
+    "fixed",
+    "full"
+  ],
+  "suites": [
+    "arc"
+  ],
+  "motor_maps": {
+    "fashion": [
+      [
+        13
+      ],
+      [
+        14,
+        4,
+        5,
+        8,
+        2,
+        3,
+        9,
+        6,
+        7,
+        10
+      ]
+    ],
+    "har": [
+      [
+        11,
+        9,
+        15,
+        13,
+        6,
+        14,
+        8,
+        4,
+        0
+      ],
+      [
+        10,
+        5,
+        12,
+        2,
+        1,
+        3
+      ]
+    ]
+  }
+}

@@ -1,4 +1,6 @@
-# AETERNA-v1 — технический обзор после PR #14
+# AETERNA-v1 — технический обзор
+
+Последняя внешняя оценка: [EXTERNAL-CONTINUAL-5](EXTERNAL_CONTINUAL5_RESULT.md). Один сохраняемый ученик прошёл изображения → сигналы: Fashion-MNIST 75.1% → 72.3% после HAR; HAR balanced accuracy 50.5%; MiniGrid 3/48. Пороги HAR и MiniGrid не достигнуты, ARC заблокирован отсутствием ключа. Из 18 изменений стратегии принято 5; устойчивый выигрыш поведения от адаптации не показан. [Архитектура сенсорного контура](EXTERNAL_CONTINUAL5.md), [ревью и точная версия результатов](EXTERNAL_CONTINUAL5_REVIEW.md).
 
 [CAUSAL-CONTINUAL-4C](CAUSAL_CONTINUAL4C_RESULT.md): **ENGINEERING_PASS**, все 384 жизни на 32 новых перестановках.
 Десятишаговые цели **32/32** против **0/32**,

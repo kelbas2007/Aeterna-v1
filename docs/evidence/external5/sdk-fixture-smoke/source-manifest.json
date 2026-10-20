@@ -1,0 +1,18 @@
+{
+  "purpose": "official SDK fixture smoke, not ARC benchmark qualification",
+  "source_commit": "f12822c4d550121c35a275008d964afbbed47d2f",
+  "files": [
+    {
+      "file": "metadata.json",
+      "url": "https://raw.githubusercontent.com/arcprize/ARC-AGI/f12822c4d550121c35a275008d964afbbed47d2f/test_environment_files/game1/metadata.json",
+      "bytes": 335,
+      "sha256": "1b73c9fa74c0ea8e437faf66a09452c1badd1163cad921b21c2ee0d8a22d2790"
+    },
+    {
+      "file": "bt11.py",
+      "url": "https://raw.githubusercontent.com/arcprize/ARC-AGI/f12822c4d550121c35a275008d964afbbed47d2f/test_environment_files/game1/bt11.py",
+      "bytes": 2468,
+      "sha256": "9a9036cf55c41e7134176ec92001128b1ace28cc18b7a3b226d84e5dbabb1a39"
+    }
+  ]
+}

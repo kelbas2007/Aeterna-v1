@@ -38,7 +38,10 @@
     "cost_aware_stochastic_goal_planning_opt_in_development": true,
     "actual_goal_delayed_experiment_credit_opt_in_development": true,
     "bounded_continuous_journal_with_vm_replay_anchors": true,
-    "configurable_jsonl_horizon_sensors_and_motors": true
+    "configurable_jsonl_horizon_sensors_and_motors": true,
+    "raw_sensor_reward_learning_in_joint_checkpoint_opt_in": true,
+    "bounded_prequential_recursive_strategy_adaptation_opt_in": true,
+    "real_recorded_image_and_signal_continual_study_completed": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -135,7 +138,10 @@
     "docs/OBSERVABILITY_LIMIT2_PROTOCOL.md",
     "docs/OBSERVABILITY_LIMIT2_RESULT.md",
     "docs/OBSERVABLE_GRAPH1_RESULT.md",
-    "docs/CAUSAL_CONTINUAL4.md"
+    "docs/CAUSAL_CONTINUAL4.md",
+    "docs/EXTERNAL_CONTINUAL5.md",
+    "docs/EXTERNAL_CONTINUAL5_RESULT.md",
+    "docs/EXTERNAL_CONTINUAL5_REVIEW.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
@@ -233,6 +239,22 @@
       "five_action_goals": 20,
       "five_action_total": 288,
       "third_party_external_qualification": false
+    },
+    "external_continual5": {
+      "source_commit": "2569bf54b2be7e6894694725bc57a417f09576e6",
+      "verdict": "MIXED_EXTERNAL_RESULTS_TARGETS_NOT_ALL_MET",
+      "fashion_correct_before_har": 751,
+      "fashion_correct_after_har": 723,
+      "fashion_test_samples": 1000,
+      "har_balanced_accuracy": 0.5050009692346621,
+      "minigrid_successes": 3,
+      "minigrid_episodes": 48,
+      "recursive_candidates": 18,
+      "recursive_accepted": 5,
+      "consistent_behavioral_recursion_advantage": false,
+      "arc_status": "BLOCKED_NO_KEY_OR_CACHE",
+      "held_partitions_consumed": true,
+      "result_document": "docs/EXTERNAL_CONTINUAL5_RESULT.md"
     }
   },
   "user_facing_limitations": {

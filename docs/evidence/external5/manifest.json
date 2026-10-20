@@ -1,0 +1,391 @@
+{
+  "files": [
+    {
+      "path": "source-freeze.json",
+      "bytes": 35242,
+      "sha256": "3ef5a1203e483d2d39fefeab9282bed01a1362731f397cbd4e3fadfb6c81ea04"
+    },
+    {
+      "path": "toolchain.txt",
+      "bytes": 232,
+      "sha256": "91a27f7fa86c27583f5a7c3d1f23dbd9a7e42ed18dc031db7472502cc55c88b9"
+    },
+    {
+      "path": "sensor-study/commitment.json",
+      "bytes": 1083,
+      "sha256": "cbdd3234a3856f5138fb7770c22e4bda1f80c1c10e8a98a3918d7fdce6350185"
+    },
+    {
+      "path": "sensor-study/summary.json",
+      "bytes": 135686,
+      "sha256": "56d56215227481d1aab7bd0fa04ee669304ff6f36a682ae96182a2219c47b241"
+    },
+    {
+      "path": "traces/sensor-study/sensors/fixed/continuous-training.jsonl.gz",
+      "bytes": 6389878,
+      "sha256": "dd28e4109f6ee3607a1ef95d618240bf40771bd93d6be3c82cc939c156d9c566"
+    },
+    {
+      "path": "traces/sensor-study/sensors/fixed/fashion-after-har.jsonl.gz",
+      "bytes": 846338,
+      "sha256": "1debae07c4c6dbbf15c42dbe61fe3ef501e54e6e61160c1a45bc0063587c521d"
+    },
+    {
+      "path": "traces/sensor-study/sensors/fixed/fashion-before-har.jsonl.gz",
+      "bytes": 845651,
+      "sha256": "d4352b7f1408b5937b015c60ad2771b55587928bcb5566eef9b654d7759f36b8"
+    },
+    {
+      "path": "traces/sensor-study/sensors/fixed/har-after-har.jsonl.gz",
+      "bytes": 783405,
+      "sha256": "f702c2a4bed5202ba7b3fcbbf25aecefcd8642757a40543a5ffe0f16c959b93c"
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/continuous-training.jsonl.gz",
+      "bytes": 6970244,
+      "sha256": "cb53bb048cb9ec924ffcc07dadc3c45279057a39ec0e23325599e87d37b7bf6a"
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/fashion-after-har.jsonl.gz",
+      "bytes": 847160,
+      "sha256": "7ac2f059fd25a10b8f6aca73f0d7da6bed8cd9cab99552c72e212808190bbd4c"
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/fashion-before-har.jsonl.gz",
+      "bytes": 847779,
+      "sha256": "324c7c308f022fb3295752c80aefc0505f96d8ff180d41c0c36124bd2e17d177"
+    },
+    {
+      "path": "traces/sensor-study/sensors/full/har-after-har.jsonl.gz",
+      "bytes": 834663,
+      "sha256": "ff18bbc34ed1a109924620cdae1cf094fc76038450e41a8e56f55fc01d0b2226"
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/continuous-training.jsonl.gz",
+      "bytes": 6988729,
+      "sha256": "2d2ff27ce3f3de4c5937f1f9ec181f368c4ef0490ba42f9ba2b75461e1f4a7a5"
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/fashion-after-har.jsonl.gz",
+      "bytes": 820332,
+      "sha256": "769351e77f8bb1e1e06eae3a58582cf6c0eb43f12ead2e8cc006ccd915d4694c"
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/fashion-before-har.jsonl.gz",
+      "bytes": 856608,
+      "sha256": "b0113f6705ab8893e3238321e14631ef6f3255476cf2a459ebd66a3e326fe5ba"
+    },
+    {
+      "path": "traces/sensor-study/sensors/legacy/har-after-har.jsonl.gz",
+      "bytes": 67391,
+      "sha256": "8b6819d0830b7ca70b8d15fc5e5393b97f284ddb549b1a3f684d088472a2f4ab"
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/continuous-training.jsonl.gz",
+      "bytes": 4623561,
+      "sha256": "90eb4692b7b5ad8b01b6f913464f8bd71cc0da50595d6eda741215ab42aab5e2"
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/fashion-after-har.jsonl.gz",
+      "bytes": 845707,
+      "sha256": "aaf70e805fd95eb8065f1b3165b5e0db923798f215d1f3cdcf869eda2d04f1ae"
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/fashion-before-har.jsonl.gz",
+      "bytes": 845465,
+      "sha256": "734a861a1ef07053cbac8b217b0e95b746c7faf87d9eaea2113fd8009a30b2e1"
+    },
+    {
+      "path": "traces/sensor-study/sensors/one_step/har-after-har.jsonl.gz",
+      "bytes": 58633,
+      "sha256": "23b76d34c6eb98a6d6b243d06c002abff0ac049b0a02b061f39890ca57b92d23"
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/continuous-training.jsonl.gz",
+      "bytes": 12618278,
+      "sha256": "7cb43ac997309a8441768dcaa5a6bf57d3b8f198c29ab8bcca085a4d91810e23"
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/fashion-after-har.jsonl.gz",
+      "bytes": 768304,
+      "sha256": "f4c372905183e8efbd17826d369c311ed294463a135a601b2fd582d21abda209"
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/fashion-before-har.jsonl.gz",
+      "bytes": 768305,
+      "sha256": "0bd60426979b7ab0a485d6549c18d23e334632a7a54e413606974a3ce52ab1a3"
+    },
+    {
+      "path": "traces/sensor-study/sensors/random/har-after-har.jsonl.gz",
+      "bytes": 871070,
+      "sha256": "7133a8553248e0039ed351bb2326435640d6f5a786e435e2d1232cb02b1a3c9c"
+    },
+    {
+      "path": "minigrid-study/commitment.json",
+      "bytes": 1084,
+      "sha256": "2dc580a5cdcea96d6ba64abd3f0c6cf2accea3d683876bf4ebb79f42975ac544"
+    },
+    {
+      "path": "minigrid-study/summary.json",
+      "bytes": 172971,
+      "sha256": "e41982b55109f80da4745799163a1e22266196031f932a81572afc603e8f3d46"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/fixed/held.jsonl.gz",
+      "bytes": 289916,
+      "sha256": "1254cb288229ca9bd9f02436a554753cff8f6d866ce92eb7eaed58bb03781868"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/fixed/training.jsonl.gz",
+      "bytes": 566648,
+      "sha256": "31ab414694a35a40d10922bfca9520118032250a3714ca2bad6371c755b449a6"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/full/held.jsonl.gz",
+      "bytes": 289872,
+      "sha256": "7c8df66a47de70238ee355b6cd2da28ffb71ac064d7b69718547a21dc04f5100"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/full/training.jsonl.gz",
+      "bytes": 566768,
+      "sha256": "8542f11706a962d0f1164bca90d9c69cc17b3b5be82b15aba0a293670ebb4eaf"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/legacy/held.jsonl.gz",
+      "bytes": 323596,
+      "sha256": "c66a45122d9f39cbbc05f6ce0a9344282971947da2cc10c56d870a295928d960"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/legacy/training.jsonl.gz",
+      "bytes": 625676,
+      "sha256": "5b55a6f6112a3700e088704cf0b0d0c1bd112c37ef03789a03962abf414bd1be"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/one_step/held.jsonl.gz",
+      "bytes": 290750,
+      "sha256": "de4223c1b5a090b4577d54802552fa35fda40ad6087bf01b969ad96b898cbf0d"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/one_step/training.jsonl.gz",
+      "bytes": 567306,
+      "sha256": "2e045645d86517c6c40eb1d0f2a353bd4776bd8e41bbccd865f84fbd778e524e"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/random/training.jsonl.gz",
+      "bytes": 636578,
+      "sha256": "5195c6748e46d3228a729ee28ffab71866084fd919c4d9f6e0d7967fe1787963"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/fixed/held.jsonl.gz",
+      "bytes": 50047,
+      "sha256": "9cbe69d7a856f3bc55371eeaca5a50c0cba05c4f3ebf766dfccca9f57ea16ffe"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/fixed/training.jsonl.gz",
+      "bytes": 96401,
+      "sha256": "1cb7fd9f8ccbafed8736222cde644ef627a3df4ca24dfe1929971c14c6cf2617"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/full/held.jsonl.gz",
+      "bytes": 50078,
+      "sha256": "eded83883c106c7c18b1fbc8a693446b468e47c8dd183c7f9ff4d7b942cf7478"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/full/training.jsonl.gz",
+      "bytes": 96432,
+      "sha256": "4fe8bd2ab60ddb27952e54787cae19234336fc47f7ef970559df466713c2500c"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/legacy/held.jsonl.gz",
+      "bytes": 51934,
+      "sha256": "ddd81b2f9e4b40a4e6f5514f9063cd98b710a2fc50d14c27ef4d89b514330e8c"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/legacy/training.jsonl.gz",
+      "bytes": 101928,
+      "sha256": "edc146c8263320601b3be916b7e901f9e03f7ea442657e7a0e90ea5113be2a6c"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/one_step/held.jsonl.gz",
+      "bytes": 50587,
+      "sha256": "a217e82a44880b1a01f1058c801f77175e99c65b373abcf4da88f18522d76fd6"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/one_step/training.jsonl.gz",
+      "bytes": 96805,
+      "sha256": "7bd96b4d37ef1ef7f02d065a9f91fba55120284d3df51a21f5924fa340e1bf5c"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/random/training.jsonl.gz",
+      "bytes": 101704,
+      "sha256": "a394b1767b52111d6e4fde84e6fa2808e91ef54cecaa95d3fa305eb41c796e19"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/fixed/held.jsonl.gz",
+      "bytes": 295878,
+      "sha256": "ce8711127a2c01d87a2a563bb540a1391e07a20242d06dc2a16fbefa31591bc7"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/fixed/training.jsonl.gz",
+      "bytes": 560617,
+      "sha256": "7423ffe2f942644f1224a9545022f12cbce2102068d7c051ba49d7955d225ea6"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/full/held.jsonl.gz",
+      "bytes": 291470,
+      "sha256": "e83d2912bed0c1ef1dbfc395fd4480c625363fad39608f02aff0f163b6112b6c"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/full/training.jsonl.gz",
+      "bytes": 562586,
+      "sha256": "4867313b4d3850afbc7760b278cae8ae1b20e2902032bb057eb104fdcf41b0ad"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/legacy/held.jsonl.gz",
+      "bytes": 322970,
+      "sha256": "fb1c0b335a9eabfe5a56a7071ac376cad96aeabbb91fe9614757ef203373f0dc"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/legacy/training.jsonl.gz",
+      "bytes": 641539,
+      "sha256": "63435eedec37fd86bc35a4dfab806579f7d59555e92da0313cdaae8e1f279dc1"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/one_step/held.jsonl.gz",
+      "bytes": 314195,
+      "sha256": "a016a157913876a716847ea1c7571c87de4584b29286740c1e0628aa14179d92"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/one_step/training.jsonl.gz",
+      "bytes": 573969,
+      "sha256": "607e28f509b24fac15569704e8a3a82a15307c6a650a6cf1a62c3224575060a0"
+    },
+    {
+      "path": "traces/minigrid-study/minigrid/MiniGrid-Unlock-v0/random/training.jsonl.gz",
+      "bytes": 629376,
+      "sha256": "60963ac80c8a9fd221dac88cd2efa672047afa548a9bbc8d547a546733c28393"
+    },
+    {
+      "path": "arc-study/commitment.json",
+      "bytes": 1079,
+      "sha256": "5e4cc1fba787e7f0140dd930e47437524dba9cc13006444d0b16fc02531c4aa9"
+    },
+    {
+      "path": "arc-study/summary.json",
+      "bytes": 1662,
+      "sha256": "91f55e188624177825c37d0ae82122ac26b553f5b68f180ee7ad64e68bf09a07"
+    },
+    {
+      "path": "data-manifest.json",
+      "bytes": 2175,
+      "sha256": "275c4718142943bfb7e882fff8aa28ac3dba34070ab0b83cee69f23d7bb0e11f"
+    },
+    {
+      "path": "har-mirror-manifest.json",
+      "bytes": 10755,
+      "sha256": "2557b0f39e716457d3ffa4d9722c19d1cb45d80e656309cf7d73ebb11fe90ffc"
+    },
+    {
+      "path": "one-continuing-learner.json.gz",
+      "bytes": 88085,
+      "sha256": "e875c3b90a932cf1bd5db87396ec3e02727a19bda531b47398d40b08ac866034"
+    },
+    {
+      "path": "sdk-fixture-smoke/source-manifest.json",
+      "bytes": 744,
+      "sha256": "4484e3ec5bf8a7532604ee5cf1f50fe792a515c0e8ca7b8dacf5c17dfe643295"
+    },
+    {
+      "path": "sdk-fixture-smoke/result.json",
+      "bytes": 451,
+      "sha256": "07ac64ab1818df14f556d5babf3b1b475e1a863ab4156a82b1d6df78484c8cc6"
+    },
+    {
+      "path": "logs/external5-cost-regression.log.gz",
+      "bytes": 1745,
+      "sha256": "ce9bca01527421c023ceb7569db1cf902af1a1d87bb932f85460fb649154a6c8"
+    },
+    {
+      "path": "logs/external5-actual-cost.log.gz",
+      "bytes": 1629,
+      "sha256": "eb1bbd1eb7cb192bf85d2422ee2348b707f6ab20491d8154c755ac26acf3e492"
+    },
+    {
+      "path": "logs/external5-sensors2.log.gz",
+      "bytes": 1515,
+      "sha256": "6b4fa6b4254498cf0e8d352f221856077eff3165cb5880c1d5090f33ea1a60b5"
+    },
+    {
+      "path": "logs/external5-construction-regressions.log.gz",
+      "bytes": 4647,
+      "sha256": "6c24b95d1b0e7a12739c5af4b02dd878544b005de5d6c16028468c0a64623771"
+    },
+    {
+      "path": "logs/external5-causal-integration.log.gz",
+      "bytes": 2204,
+      "sha256": "36502dc24dc4cce49c188efa6243dc8a91008850578d15d7f35160f6fbfcc005"
+    },
+    {
+      "path": "logs/external5-temporal-compatibility.log.gz",
+      "bytes": 1541,
+      "sha256": "dbec4400926bddcfead908eefb2d0ac0eee2e54759cfc4dea2edff761573aa10"
+    },
+    {
+      "path": "logs/external5-all-targets-final.log.gz",
+      "bytes": 6563,
+      "sha256": "80fc1fdd2fd0f9f65955ba1aeb3e11f6fb75c7525c2a4f02561f8d81d6335806"
+    },
+    {
+      "path": "logs/external5-release-frozen.log.gz",
+      "bytes": 1385,
+      "sha256": "e048dad271934e5bfd59a674e748b859f31c8f6eb410ede4b481e464ba509eee"
+    },
+    {
+      "path": "logs/external5-frozen-sensors.log.gz",
+      "bytes": 3247,
+      "sha256": "18670d17ad6e91430df82566aeae8270b8c89e8340da85563677a019abcb6ee8"
+    },
+    {
+      "path": "logs/external5-frozen-minigrid.log.gz",
+      "bytes": 3852,
+      "sha256": "bfbbfcc699968cf274207284ae350f201431545708f0328ca817dec79d01a527"
+    },
+    {
+      "path": "logs/external5-frozen-arc.log.gz",
+      "bytes": 199,
+      "sha256": "81761c59b8e6f3c52d2e3b00556803e6d3bd4040c6c04297bd6654d9e46de3ff"
+    },
+    {
+      "path": "data-observation-audit.json",
+      "bytes": 4736,
+      "sha256": "855b50856c68f78f0c051ed63fb9c8940e97c1aacbea1ac48e7f89e205834ebb",
+      "phase": "post_evaluation_review"
+    },
+    {
+      "path": "training-loader-compatibility.json",
+      "bytes": 259,
+      "sha256": "695d4c61466e2e0504dd1e4479c9a3c049caa04966fc542bb980b6deb4327888",
+      "phase": "post_evaluation_review"
+    },
+    {
+      "path": "logs/external5-data-verified.log.gz",
+      "bytes": 698,
+      "sha256": "b4eb56bc529435b2a3553146ebd9354c17cb65f987f838d8a69b5aa5893cd79d",
+      "phase": "pre_evaluation_preparation_log"
+    },
+    {
+      "path": "logs/external5-review-subset.log.gz",
+      "bytes": 392,
+      "sha256": "5f9c446bd76794c8885f80fec65fc59ee939f88fed28da73f6328e3289538924",
+      "phase": "post_evaluation_review"
+    },
+    {
+      "path": "logs/external5-data-observation-audit.log.gz",
+      "bytes": 99,
+      "sha256": "b1583a660f8dbf9652f2da1d91b3da5a084337cd87edd09264becb1714e563b3",
+      "phase": "post_evaluation_review"
+    }
+  ],
+  "summary_sha256": "2f79bf136769c572533fa4324c2830154b52f02c784826c90dc9a5644cf28b8a",
+  "trace_audit_sha256": "37689a9183b9f376b24302d14cd66787032f783dcc52c51aa676599d8dac81bb"
+}

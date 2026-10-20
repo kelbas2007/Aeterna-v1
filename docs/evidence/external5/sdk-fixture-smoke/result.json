@@ -1,0 +1,19 @@
+{
+  "game_version": "bt11-fd9df0622a1a",
+  "episodes": 1,
+  "actions": 4,
+  "completed_levels": 0,
+  "lives": [
+    {
+      "seed": 810000,
+      "actions": 4,
+      "completed_levels": 0,
+      "win": false,
+      "state": "GAME_OVER",
+      "stop_reason": "GAME_OVER"
+    }
+  ],
+  "purpose": "SDK interface smoke only",
+  "official_benchmark_evaluated": false,
+  "binary_sha256": "3aaa917888d238460a96e1d6c0f3cef936e3500b08b95af4f6af884e560c1975"
+}
