@@ -1,5 +1,22 @@
 # AETERNA-v1 — current status and dated historical records
 
+## New development / sensor observability boundary — 2026-10-20
+
+[OBSERVABLE-GRAPH-1 source-disclosed result](docs/OBSERVABLE_GRAPH1_RESULT.md)
+fixed the empirically identified *invisible preparation assumption*.
+With a truthful additional stage sensor, ordinary U1 achieved only
+**194/864** solved goals; the empirical actual-transition graph improved
+it to **457/864** with 296 real native-selected completed routes,
+and real actions 12,875→8,916. The original blind-sensor control
+still achieved 487/864 and independent five-step problem remains low
+20/288. Prior negative trials [OBSERVABILITY-LIMIT1](docs/OBSERVABILITY_LIMIT1_RESULT.md)
+and [OBSERVABILITY-LIMIT2](docs/OBSERVABILITY_LIMIT2_RESULT.md)
+remain NEGATIVE. Cross-platform real-source development
+[39415390485](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39415390485)
+PASS 2/2 each OS; new feature is PR12 research until merged to
+`main`, NOT new scientific AGI qualification. The true stage coordinate
+is supplied by the environment; Rust BFS is developer-authored.
+
 ## Live integration — 20 October 2026
 
 **Authoritative current state:** [Current Status](docs/CURRENT_STATUS_20261020.md) ·

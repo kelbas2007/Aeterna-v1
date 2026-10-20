@@ -733,3 +733,18 @@ independent scientific evidence.
 | Variable-length options 2–5 | disclosed dev 39372704369 | **ENGINEERING POSITIVE / COLD TRANSFER NOT QUALIFIED** | 467/864 vs 307/864, but original 3-step family regressed 140→137 and one 5-step option completed. [Protocol](docs/VARIABLE_LENGTH_CAUSAL_OPTIONS_DEVELOPMENT.md) |
 | COMPLEXITY-NECESSITY1 | disclosed dev 39374096468 | **ENGINEERING PASS, NOT SCIENCE QUALIFICATION** | 472/864 vs ungated 467/864 and fixed 307/864; 8 834 vs 8 910/11 059 actions; 3-step family restored 140/144; 5-step 7/288. [Original](docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_RESULT.md) |
 | Integration PR #9 | October 20, 2026 | **SOFTWARE MERGE — NOT A NEW COGNITIVE PASS** | Preserves parent history, original RSP2 policy, HumanProtection and old negatives; [integration](docs/MAIN_INTEGRATION_20261020.md) |
+
+## OBSERVABILITY series — 2026-10-20 (new engineering evidence; source disclosed)
+
+All three trials started from canonical `main` `3d5c45b9`.
+Protocols committed **before** their corresponding source tests.
+Physical PRE/action/POST and HumanProtection observed every motor.
+Prior one-use SELF-ORIGINATED OPTION-1 and all earlier failures remain
+frozen, not rerun as fresh science.
+
+| Study | Source/test action run | Verdict | Actually observed |
+|---|---|---|---|
+| [OBSERVABILITY-LIMIT1](docs/OBSERVABILITY_LIMIT1_RESULT.md) | [39413022974](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39413022974) Linux/Windows | **NEGATIVE_SENSOR_ADDITION_UNDER_EXISTING_U1** | An extra real stage observation drove cold goals **487→194/864**, external actions **8,625→12,875** and completed existing macros 323→0 |
+| [OBSERVABILITY-LIMIT2](docs/OBSERVABILITY_LIMIT2_RESULT.md) | [39413911268](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39413911268) Linux/Windows | **NO_CERTIFIED_CHAIN_SENSOR_RESCUE** | Existing strictly certified future graph produced ZERO proposals; rich goal control 194→188/864 |
+| [OBSERVABLE-GRAPH-1](docs/OBSERVABLE_GRAPH1_RESULT.md) | [39415390485](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39415390485) Linux/Windows | **OBSERVABLE_GRAPH1_ENGINEERING_PASS / NOT INDEPENDENT SCIENCE** | Actual protected observed-state graph **194→457/864** and action cost **12,875→8,916**; U1 truly selected and completed **296** new routes. Five-step goal solves 1→20/288, still unreliable. No independent external-world or self-invented graph result |
+
