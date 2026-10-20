@@ -1,0 +1,52 @@
+name: Empirical observable-state graph cold development
+on:
+  pull_request:
+    paths:
+      - 'src/construction/unified_port.rs'
+      - 'src/unified_runtime.rs'
+      - 'tests/observable_graph1_development.rs'
+      - '.github/workflows/observable-graph1-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: observable-graph-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cold:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Rust and code identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p observable-graph-evidence
+          git rev-parse HEAD > observable-graph-evidence/source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Paired real protected cold observable graph trials
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --lib observed_goal_route_and_helper_budget_tests -- --nocapture --test-threads=1 2>&1 | tee observable-graph-evidence/unit-boundary.log
+          cargo test --locked --test observable_graph1_development -- --nocapture --test-threads=1 2>&1 | tee observable-graph-evidence/test.log
+          python scripts/project_audit.py | tee observable-graph-evidence/source-audit.json
+      - name: Archive physical effects and adverse as well as successful outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: observable-graph-${{ runner.os }}-${{ github.sha }}
+          path: observable-graph-evidence/
+          retention-days: 7
+          if-no-files-found: warn

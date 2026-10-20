@@ -4,6 +4,12 @@ use crate::construction::autonomy::{ActionOffer as UOffer,AutonomyPolicy as UPol
 use crate::construction::vm::{Error as UError,Result as UResult,fingerprint as uhash};
 use crate::carrier::{PhaseNativeConfig,PhaseMetaControlConfig};
 use serde::{Serialize as USerialize,Deserialize as UDeserialize};
+/// Reserve a graph ceiling only after accounting for the other planner's
+/// reservation. A later query takes the MIN with actual remaining work.
+fn observable_graph_budget_ceiling(total:u64,autobiographical:u64)->u64{
+    16_000_u64.min(total.saturating_sub(autobiographical)
+        .saturating_sub(4_000))
+}
 #[derive(Debug,USerialize,UDeserialize)]
 struct UnifiedDomain {name:String,learner:ULearner,last_construction:usize,pending_credit:Option<[f32;5]>}
 #[derive(Debug,USerialize,UDeserialize)]
@@ -88,6 +94,10 @@ struct TemporalOptionLane {
     contextual_experiment_proposed:u64,
     #[serde(default,skip_serializing_if="agency_no_count")]
     contextual_experiment_selected:u64,
+    /// New opt-in factual observable-state path search, native U1 only.
+    /// Omit disabled flag so PRE-PR12 V1 checkpoint hashes still match.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    observable_graph_enabled:bool,
     #[serde(default)]
     learned_depth_selected:[u64;6],
     #[serde(default)]
@@ -106,6 +116,7 @@ pub struct TemporalOptionReport {
     pub contextual_experiments_enabled:bool,
     pub contextual_experiment_proposed:u64,
     pub contextual_experiment_selected:u64,
+    pub observable_graph_enabled:bool,
     pub learned_depth_selected:[u64;6],
     pub learned_depth_completed:[u64;6],
 }
@@ -125,6 +136,7 @@ impl TemporalOptionLane {
             contextual_experiments_enabled:self.contextual_experiments_enabled,
             contextual_experiment_proposed:self.contextual_experiment_proposed,
             contextual_experiment_selected:self.contextual_experiment_selected,
+            observable_graph_enabled:self.observable_graph_enabled,
             learned_depth_selected:self.learned_depth_selected,
             learned_depth_completed:self.learned_depth_completed,
         }
@@ -146,6 +158,8 @@ impl TemporalOptionLane {
             (self.contextual_experiments_enabled && !self.complexity_need_gate_enabled) ||
             (self.contextual_experiment_proposed>0 && !self.contextual_experiments_enabled) ||
             (self.contextual_experiment_selected>self.contextual_experiment_proposed) ||
+            (self.observable_graph_enabled &&
+                !u.current.learner.self_directed_control_enabled()) ||
             self.learned_depth_selected[..2].iter().any(|&n|n>0) ||
             self.learned_depth_completed[..2].iter().any(|&n|n>0) ||
             self.learned_depth_completed.iter().sum::<u64>()>self.completed ||
@@ -267,6 +281,10 @@ pub struct UnifiedStep {
     /// fabricated prediction of the terminal goal.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub contextual_experiment_proposed:bool,
+    /// An entirely real PRE/motor/POST route through visibly distinct states.
+    /// This is a tentative historical plan, NOT certified general dynamics.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    pub observable_empirical_route_proposed:bool,
     /// Explicitly a proposal based on a TWO-action latent history suffix.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub adaptive_suffix_plan_proposed:bool,
@@ -877,6 +895,24 @@ impl ScientificRuntime {
         lane.complexity_need_gate_enabled=true;
         Ok(())
     }
+    /// Opt-in BEFORE physical experience to allow the same U1 to test
+    /// bounded executable paths made only from actual distinct-state
+    /// PRE/action/POST edges; no free motor authority.
+    pub fn enable_constructing_observable_factual_routes(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.instrumental_credit.is_some() ||
+            u.total_external_cost!=0 ||
+            !u.current.learner.records().is_empty() ||
+            !u.current.learner.self_directed_control_enabled(){
+            return Err(UError::Busy)
+        }
+        let lane=u.temporal_options.as_mut().ok_or(UError::NoEvidence)?;
+        if lane.observable_graph_enabled || lane.pending.is_some(){
+            return Err(UError::Busy)
+        }
+        lane.observable_graph_enabled=true;
+        Ok(())
+    }
     /// Opt-in to active context-coverage proposals ONLY while existing
     /// simplicity-first control declares insufficient evidence. No
     /// pre-scripted actor or unauthorized motor sequence is introduced.
@@ -1217,8 +1253,10 @@ impl ScientificRuntime {
         // bypass around U1 or the human-protection permit.
         let mut native_route=None::<Vec<(usize,Vec<i64>)>>;
         let mut autobiographical_route=None::<Vec<(usize,Vec<i64>)>>;
+        let mut observable_graph_route=None::<Vec<(usize,Vec<i64>)>>;
         let mut complexity_need_decision=None::<String>;
         let mut contextual_probe_source=false;
+        let mut base_factual_work=0_u64;
         if u.current.learner.self_directed_control_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
@@ -1236,10 +1274,18 @@ impl ScientificRuntime {
                 u.temporal_options.as_ref().is_some_and(|o|o.autobiographical_enabled){
                 if variable_depth{20_000_u64}else{5_000_u64}
             }else{0};
+            // The graph cannot reserve 16k ON TOP of a 20k memory allowance
+            // inside the minimum supported 32k total. Reserve the largest
+            // jointly affordable ceiling, leaving 4k for native U1.
+            let graph_reserve=if goal.is_some() && cfg.planning_work>=32_000 &&
+                u.temporal_options.as_ref().is_some_and(|o|o.observable_graph_enabled){
+                observable_graph_budget_ceiling(cfg.planning_work,memory_budget)
+            }else{0};
             let history_budget=if goal.is_some() &&
                 u.current.learner.predictive_history_states_enabled() &&
                 cfg.planning_work>=32_000 {
-                cfg.planning_work.saturating_sub(4_000).saturating_sub(memory_budget)
+                cfg.planning_work.saturating_sub(4_000)
+                    .saturating_sub(memory_budget).saturating_sub(graph_reserve)
             } else {0};
             let (history,history_work)=if let Some(g)=goal {
                 if u.current.learner.adaptive_history_suffix_enabled(){
@@ -1285,10 +1331,20 @@ impl ScientificRuntime {
                         g,&allowed,memory_budget)
                 }
             }else{(None,0)};
+            // Spend from ACTUAL remaining metered work, never an independent
+            // allocation; history and autobiography have already charged.
+            let graph_budget=graph_reserve.min(cfg.planning_work
+                .saturating_sub(history_work).saturating_sub(memory_work)
+                .saturating_sub(4_000));
+            let (observable_graph,graph_work)=if let Some(g)=goal{
+                u.current.learner.carrier_observable_goal_route_metered(
+                    g,&allowed,graph_budget)
+            }else{(None,0)};
             let probe_budget=if u.current.learner.active_pair_probes_enabled()
                 && !u.freeze_controller && cfg.planning_work>=32_000 {
                 cfg.planning_work.saturating_sub(history_work)
-                    .saturating_sub(memory_work).saturating_sub(4_000).min(6_000)
+                    .saturating_sub(memory_work).saturating_sub(graph_work)
+                    .saturating_sub(4_000).min(6_000)
             }else{0};
             let allow_contextual=u.temporal_options.as_ref()
                 .is_some_and(|l|l.contextual_experiments_enabled) &&
@@ -1312,13 +1368,14 @@ impl ScientificRuntime {
                     &allowed,offers,probe_budget)
             };
             let chain_budget=if goal.is_some() && u.current.learner.certified_chains_enabled() && cfg.planning_work>=32_000 {
-                cfg.planning_work.saturating_sub(history_work).saturating_sub(memory_work).saturating_sub(probe_work).saturating_sub(4_000)
+                cfg.planning_work.saturating_sub(history_work).saturating_sub(memory_work).saturating_sub(graph_work).saturating_sub(probe_work).saturating_sub(4_000)
             } else {0};
             let (chain,chain_work)=if let Some(g)=goal {
                 u.current.learner.carrier_certified_goal_chain_metered(g,&allowed,chain_budget)
             } else {(None,0)};
             let residual=cfg.planning_work.saturating_sub(history_work)
-                .saturating_sub(memory_work).saturating_sub(probe_work).saturating_sub(chain_work);
+                .saturating_sub(memory_work).saturating_sub(graph_work)
+                .saturating_sub(probe_work).saturating_sub(chain_work);
             let (action,chosen_work)=u.current.learner
                 .choose_offered_metered_budget(goal,Some(offers),residual)?;
             if !allowed[action] {return Err(UError::Blocked)}
@@ -1328,10 +1385,16 @@ impl ScientificRuntime {
             let remaining=residual.saturating_sub(chosen_work);
             let (factual_prediction,factual_work)=u.current.learner
                 .carrier_factual_action_consequence_metered(action,remaining);
-            u.computation_work=u.computation_work.checked_add(
-                history_work.saturating_add(memory_work).saturating_add(probe_work)
-                    .saturating_add(chain_work).saturating_add(chosen_work)
-                    .saturating_add(factual_work))
+            let actual_metered_work=history_work.saturating_add(memory_work)
+                .saturating_add(graph_work).saturating_add(probe_work)
+                .saturating_add(chain_work).saturating_add(chosen_work)
+                .saturating_add(factual_work);
+            // Reject an over-budget planner BEFORE preparing or permitting
+            // a physical motor. Future search extensions must share this
+            // invariant instead of claiming separate implicit allowances.
+            if actual_metered_work>cfg.planning_work{return Err(UError::Budget)}
+            base_factual_work=actual_metered_work;
+            u.computation_work=u.computation_work.checked_add(actual_metered_work)
                 .ok_or(UError::Capacity)?;
             if let Some(probe)=probe{
                 if !allowed[probe.action] {return Err(UError::Blocked)}
@@ -1372,6 +1435,28 @@ impl ScientificRuntime {
                         action:memory.first_action,fields},
                         kind:3,source:"autobiographical-option",
                         output:Some(memory.first_consequence)});
+                }
+            }
+            if let Some(plan)=observable_graph {
+                // Entire tentative candidate can compete with U1 ONLY if
+                // the physically quoted TOTAL route is affordable.
+                let cost=plan.route.iter().try_fold(0_u64,|total,(motor,_)|
+                    offers.get(*motor)
+                        .and_then(|offer|total.checked_add(offer.max_cost)));
+                if let Some(quote)=cost.filter(|&n|
+                    n<=u.max_external_cost.saturating_sub(u.total_external_cost)){
+                    let observed=predictions.iter()
+                        .find(|p|p.action==plan.first_action)
+                        .ok_or(UError::InvalidData)?;
+                    let mut fields=ufields(&plan.terminal,goal,
+                        observed.novelty,observed.disagreement,0.7,quote);
+                    fields[0]/=1.0+0.10*(plan.depth.saturating_sub(1) as f32);
+                    observable_graph_route=Some(plan.route.clone());
+                    options.push(UnifiedOption{p:PhaseCognitiveProposal{
+                        proposal_id:0xA00+plan.first_action as u64,
+                        action:plan.first_action,fields
+                    },kind:3,source:"observable-empirical-route",
+                    output:Some(plan.first_consequence)});
                 }
             }
             native_route=history.as_ref()
@@ -1437,6 +1522,8 @@ impl ScientificRuntime {
         let active_pair_probe_proposed=options.iter().any(|o|o.source=="causal-pair-probe");
         let contextual_experiment_proposed=options.iter()
             .any(|o|o.source=="contextual-causal-experiment");
+        let observable_empirical_route_proposed=options.iter()
+            .any(|o|o.source=="observable-empirical-route");
         if contextual_experiment_proposed {
             if let Some(l)=u.temporal_options.as_mut(){
                 l.contextual_experiment_proposed=l.contextual_experiment_proposed
@@ -1446,6 +1533,14 @@ impl ScientificRuntime {
         let autobiographical_option_proposed=options.iter().any(|o|
             o.source=="autobiographical-option");
         let mut tried=[false;3];let mut helpers=Vec::new();let mut operations=Vec::new();let mut selected=None;
+        let mut meta_helper_work=0_u64;
+        // STRICT shared helper budgeting is an opt-in feature of the new
+        // observable graph. For a LEGACY U1 WITHOUT that graph, retain the
+        // original unlimited HDC recall and independent capped planning
+        // search. Tightening either silently changes real motor choices
+        // even when there is no qualifying factual graph proposal.
+        let strict_graph_helper_budget=u.temporal_options.as_ref()
+            .is_some_and(|lane|lane.observable_graph_enabled);
         for round in 0..4 {
             if let Some(approved)=continuation.take(){
                 // Same native choice, bounded saved option, and no
@@ -1488,19 +1583,48 @@ impl ScientificRuntime {
                     if let Err(e)=result {if !matches!(e,UError::NoEvidence|UError::Budget|UError::Capacity){return Err(e);}}
                 },
                 1=>{
-                    let (plans,work)=u.current.learner.carrier_plans(goal.ok_or(UError::InvalidData)?,&allowed)?;
-                    u.computation_work=u.computation_work.saturating_add(work);helpers.push(("plan",chosen.p.fields));
+                    let remaining=if strict_graph_helper_budget {
+                        cfg.planning_work.saturating_sub(base_factual_work)
+                            .saturating_sub(meta_helper_work)
+                    }else{
+                        // Preserve pre-PR12 behavior for 4k/20k legacy U1.
+                        cfg.planning_work
+                    };
+                    let (plans,work)=u.current.learner.carrier_plans(
+                        goal.ok_or(UError::InvalidData)?,&allowed,remaining)?;
+                    if work>remaining{return Err(UError::Budget)}
+                    meta_helper_work=meta_helper_work.checked_add(work).ok_or(UError::Capacity)?;
+                    u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
+                    helpers.push(("plan",chosen.p.fields));
                     for (a,p,depth) in plans {
                         let confidence=predictions.iter().find(|x|x.action==a).map(|x|x.confidence).unwrap_or(0.0);
                         options.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0x200+a as u64,action:a,fields:ufields(&p,goal,0.0,pressure,confidence,depth as u64)},kind:3,source:"plan",output:Some(p)});
                     }
                 },
                 2=>{
-                    let (memories,work)=u.current.learner.carrier_recall(&allowed)?;
-                    u.computation_work=u.computation_work.saturating_add(work);helpers.push(("recall",chosen.p.fields));
+                    let remaining=if strict_graph_helper_budget {
+                        cfg.planning_work.saturating_sub(base_factual_work)
+                            .saturating_sub(meta_helper_work)
+                    }else{
+                        // Former HDC recall processed up to 128 journal rows
+                        // regardless of the native goal planning budget.
+                        u64::MAX
+                    };
+                    let (memories,work)=u.current.learner.carrier_recall(
+                        &allowed,remaining)?;
+                    if work>remaining{return Err(UError::Budget)}
+                    meta_helper_work=meta_helper_work.checked_add(work).ok_or(UError::Capacity)?;
+                    u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
+                    helpers.push(("recall",chosen.p.fields));
                     for (a,p,similarity) in memories {options.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0x300+a as u64,action:a,fields:ufields(&p,goal,0.0,pressure,similarity,1)},kind:3,source:"recall",output:Some(p)});}
                 },_=>return Err(UError::InvalidData)
             }
+        }
+        // A helper runs after the initial meter; repeat the shared limit
+        // check immediately BEFORE acquiring any physical motor permit.
+        if strict_graph_helper_budget &&
+            base_factual_work.saturating_add(meta_helper_work)>cfg.planning_work{
+            return Err(UError::Budget)
         }
         let (option,score)=selected.ok_or(UError::NoEvidence)?;let a=option.p.action;
         // A selected option is one native decision. No intrinsic/novelty
@@ -1508,7 +1632,9 @@ impl ScientificRuntime {
         let selected_temporal_route=u.temporal_options.is_some() &&
             ((option.source=="predictive-suffix" && native_route.is_some()) ||
              (option.source=="autobiographical-option" &&
-                autobiographical_route.is_some()));
+                autobiographical_route.is_some()) ||
+             (option.source=="observable-empirical-route" &&
+                observable_graph_route.is_some()));
         let mut delayed_option_credit=None::<([f32;5],f32)>;
         let original_fields=options.iter().find(|c|c.p.proposal_id==option.p.proposal_id)
             .map(|c|c.p.fields).unwrap_or(option.p.fields);
@@ -1622,7 +1748,10 @@ impl ScientificRuntime {
             // Both prospectively inferred causal chains and firsthand
             // autobiographical hypotheses are chosen BY the same native U1.
             let selected_memory=option.source=="autobiographical-option";
-            let route=if selected_memory{autobiographical_route}else{native_route};
+            let selected_graph=option.source=="observable-empirical-route";
+            let route=if selected_memory{autobiographical_route}
+                else if selected_graph{observable_graph_route}
+                else{native_route};
             if let (Some(lane),Some(route),Some(g))=
                 (u.temporal_options.as_mut(),route,goal){
                 // Only a genuine native-selected FIRST action and a
@@ -1774,7 +1903,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,contextual_experiment_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,contextual_experiment_proposed,observable_empirical_route_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;
@@ -1913,5 +2042,22 @@ mod autonomous_temporal_revision_tests {
         m.observe([0.0,0.5,0.0,0.0,0.0],&[Some(4)],&[1],&[2]);
         assert_eq!(m.pending_steps.len(),1);assert_eq!(m.episodes,0);
         assert!(m.rows.is_empty());m.validate().unwrap();
+    }
+}
+
+#[cfg(test)]
+mod observable_graph_shared_budget_tests{
+    use super::observable_graph_budget_ceiling;
+    #[test]
+    fn no_double_reservation_at_minimum_or_larger_planning_limits(){
+        for total in [32_000_u64,36_000,48_000,120_000,1_000_000]{
+            for memory in [0_u64,5_000,20_000]{
+                let ceiling=observable_graph_budget_ceiling(total,memory);
+                assert!(ceiling<=16_000);
+                assert!(ceiling.saturating_add(memory).saturating_add(4_000)<=total);
+            }
+        }
+        assert_eq!(observable_graph_budget_ceiling(32_000,20_000),8_000);
+        assert_eq!(observable_graph_budget_ceiling(120_000,20_000),16_000);
     }
 }

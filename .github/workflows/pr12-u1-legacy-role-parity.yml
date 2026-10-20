@@ -1,0 +1,43 @@
+name: PR12 original U1 role parity and graph work compatibility
+on:
+  pull_request:
+    paths:
+      - 'src/unified_runtime.rs'
+      - 'src/construction/unified_port.rs'
+      - 'tests/unified_self_directed_lifetime.rs'
+      - '.github/workflows/pr12-u1-legacy-role-parity.yml'
+permissions:
+  contents: read
+concurrency:
+  group: pr12-legacy-compat-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  parity:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Rust compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Original opaque motor parity on ALL role permutations
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --release --test unified_self_directed_lifetime -- --nocapture --test-threads=1
+          cargo test --locked --lib observable_graph_shared_budget_tests -- --nocapture
+          cargo test --locked --lib observable_graph_scan_budget_tests -- --nocapture
+          python scripts/project_audit.py

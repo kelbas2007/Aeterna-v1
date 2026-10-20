@@ -1,4 +1,12 @@
 // Crate-private port, included by runtime.rs: never external authority.
+/// Compute a COMPLETE recent scan window within the available finite meter.
+/// Reserve finite computation for BFS after the read. Never trust a
+/// partially scanned candidate that might hide a contradictory real POST.
+fn observable_graph_scan_rows(width:usize,end:usize,budget:u64)->usize{
+    let unit=(width as u64).saturating_mul(2).saturating_add(6);
+    let reserve=budget.min(2048);
+    end.min(1024).min((budget.saturating_sub(reserve)/unit) as usize)
+}
 #[derive(Debug, Clone)]
 pub(crate) struct PortPrediction {
     pub action: usize, pub output: Vec<i64>, pub confidence: f32,
@@ -48,6 +56,98 @@ impl Learner {
         let mut meter=Meter::new(budget);
         let result=super::runtime::calibrated_factual_prediction(&self.records,&self.current,action,self.frozen_at,&mut meter);
         (result,meter.spent)
+    }
+
+    /// Bounded factual observed-state graph; a proposed route is TENTATIVE.
+    /// Edges are only actually executed PRE/motor/POST tuples. Contradicting
+    /// transitions from the exact same visible PRE and motor are withheld.
+    /// No externally supplied world topology, hidden role or fabricated POST.
+    pub(crate) fn carrier_observable_goal_route_metered(
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+    )->(Option<PortHistoryPlan>,u64){
+        if self.pending||self.poisoned||!self.self_directed||budget==0 ||
+            allowed.len()!=self.config.actions ||
+            goal.len()!=self.config.width ||
+            !goal.iter().any(Option::is_some) ||
+            goal_distance(&self.current,goal)==0 {
+            return (None,0)
+        }
+        let end=self.frozen_at.map_or(self.records.len(),|id|
+            self.records.partition_point(|r|r.transition.id<id));
+        if end<2{return (None,0)}
+        let scan_rows=observable_graph_scan_rows(self.config.width,end,budget);
+        if scan_rows<2{return (None,0)}
+        let mut meter=Meter::new(budget);
+        let mut transitions=std::collections::BTreeMap::<
+            (Vec<i64>,usize),Option<(Vec<i64>,usize)>>::new();
+        // For wider sensors reduce the COMPLETELY checked recent window
+        // instead of exhausting the allowance on row 889 of 1024.
+        for row in &self.records[end-scan_rows..end]{
+            if meter.charge((self.config.width*2+6) as u64).is_err(){
+                // An unfinished scan may hide a physical contradiction:
+                // never promote a partial journal to a causal option.
+                return (None,meter.spent)
+            }
+            let t=&row.transition;
+            let key=(t.pre.clone(),t.action);
+            match transitions.entry(key){
+                std::collections::btree_map::Entry::Vacant(v)=>{
+                    v.insert(Some((t.post.clone(),1)));
+                },
+                std::collections::btree_map::Entry::Occupied(mut o)=>{
+                    if let Some((old,count))=o.get_mut(){
+                        if old==&t.post {
+                            *count=count.saturating_add(1);
+                        }else{
+                            // One true conflicting POST invalidates
+                            // the exact-state edge for THIS source scan.
+                            *o.get_mut()=None;
+                        }
+                    }
+                }
+            }
+        }
+        let depth_cap=self.config.planning_depth.min(5);
+        if depth_cap<2{return (None,meter.spent)}
+        let mut visited=std::collections::BTreeSet::new();
+        visited.insert(self.current.clone());
+        let mut frontier=std::collections::VecDeque::new();
+        frontier.push_back((self.current.clone(),Vec::<(usize,Vec<i64>)>::new()));
+        while let Some((state,route))=frontier.pop_front(){
+            if route.len()>=depth_cap{continue}
+            for action in 0..self.config.actions{
+                if !allowed[action]{continue}
+                if meter.charge((state.len()+4) as u64).is_err(){
+                    return (None,meter.spent)
+                }
+                let Some(Some((post,_count)))=
+                    transitions.get(&(state.clone(),action))
+                else{continue};
+                // A physical no-op cannot supply the useful observable
+                // intermediate state whose absence caused the regression.
+                if post==&state {continue}
+                let mut next=route.clone();
+                next.push((action,post.clone()));
+                if goal_distance(post,goal)==0 {
+                    // A FIRST physical motor which already reaches the
+                    // masked goal is not a multi-step causal skill. Never
+                    // enqueue that solved state to manufacture depth two
+                    // from unrelated later journal observations.
+                    if next.len()==1{continue}
+                    return (Some(PortHistoryPlan{
+                        first_action:next[0].0,
+                        first_consequence:next[0].1.clone(),
+                        terminal:post.clone(),
+                        depth:next.len(),history_suffix_depth:0,route:next
+                    }),meter.spent)
+                }
+                if next.len()<depth_cap && visited.len()<128 &&
+                    visited.insert(post.clone()){
+                    frontier.push_back((post.clone(),next));
+                }
+            }
+        }
+        (None,meter.spent)
     }
 
     /// Search a bounded multi-step path only through consequences that passed
@@ -694,10 +794,11 @@ impl Learner {
             /self.config.width as f32).sum::<f32>()/recent.len() as f32
     }
     // Bounded model-based plans are options. The physical carrier chooses.
-    pub(crate) fn carrier_plans(&self,goal:&[Option<i64>],allowed:&[bool])->Result<(Vec<(usize,Vec<i64>,usize)>,u64)> {
+    pub(crate) fn carrier_plans(&self,goal:&[Option<i64>],allowed:&[bool],budget:u64)->Result<(Vec<(usize,Vec<i64>,usize)>,u64)> {
         if goal.len()!=self.config.width || allowed.len()!=self.config.actions {return Err(Error::InvalidData);}
+        if budget==0 {return Ok((Vec::new(),0))}
         let actions:Vec<_>=(0..self.config.actions).filter(|&a|allowed[a]).collect();
-        let mut meter=Meter::new(self.config.planning_work);
+        let mut meter=Meter::new(budget);
         let mut frontier=vec![(None,self.current.clone(),self.active.state.clone())];
         let mut best:std::collections::BTreeMap<usize,(f64,Vec<i64>,usize)>=std::collections::BTreeMap::new();
         'depth: for depth in 1..=self.config.planning_depth {
@@ -718,17 +819,22 @@ impl Learner {
         Ok((best.into_iter().map(|(a,(_,p,d))|(a,p,d)).collect(),meter.spent))
     }
     // HDC content addressing proposes a consequence, never a solved action.
-    pub(crate) fn carrier_recall(&self,allowed:&[bool])->Result<(Vec<(usize,Vec<i64>,f32)>,u64)> {
+    pub(crate) fn carrier_recall(&self,allowed:&[bool],budget:u64)->Result<(Vec<(usize,Vec<i64>,f32)>,u64)> {
         use crate::hdc::PhaseVector;
         fn encode(values:&[i64])->PhaseVector {
             let roles:Vec<_>=values.iter().enumerate().map(|(i,&v)|
                 PhaseVector::from_seed(32,i as u64+0x517a).bind(&PhaseVector::from_seed(32,v as u64^0x7733))).collect();
             PhaseVector::bundle(&roles.iter().collect::<Vec<_>>())
         }
+        if allowed.len()!=self.config.actions{return Err(Error::InvalidData)}
+        if budget==0{return Ok((Vec::new(),0))}
         let current=encode(&self.current);let mut best=std::collections::BTreeMap::new();let mut work=0u64;
         for r in self.records.iter().rev().take(128) {
             if !allowed[r.transition.action] {continue;}
-            let similarity=current.similarity(&encode(&r.transition.pre)).clamp(0.0,1.0);work+=self.config.width as u64*32;
+            let Some(next_work)=work.checked_add(self.config.width as u64*32) else{break};
+            if next_work>budget{break}
+            work=next_work;
+            let similarity=current.similarity(&encode(&r.transition.pre)).clamp(0.0,1.0);
             if best.get(&r.transition.action).is_none_or(|(s,_)|similarity>*s) {best.insert(r.transition.action,(similarity,r.transition.post.clone()));}
         }
         Ok((best.into_iter().map(|(a,(s,p))|(a,p,s)).collect(),work))
@@ -809,5 +915,120 @@ mod active_context_restart_boundary_tests{
     fn actual_connected_pair_is_still_counted(){
         assert_eq!(run(false),0.5,
             "fix must retain valid same-episode evidence from full real POSTs");
+    }
+}
+
+#[cfg(test)]
+mod observable_graph_scan_budget_tests{
+    use super::observable_graph_scan_rows;
+    #[test]
+    fn complete_recent_windows_fit_valid_self_directed_widths(){
+        for width in 1..=6{
+            for budget in [4000_u64,8000,12000,16000]{
+                let n=observable_graph_scan_rows(width,4096,budget);
+                let unit=width as u64*2+6;
+                assert!(n>=2 && n<=1024);
+                assert!(n as u64*unit<=budget-budget.min(2048));
+                assert_eq!(n,observable_graph_scan_rows(width,n,budget));
+            }
+        }
+        assert_eq!(observable_graph_scan_rows(2,4096,16000),1024);
+        assert!(observable_graph_scan_rows(6,4096,16000)>700);
+        assert!(observable_graph_scan_rows(6,4096,16000)<1024);
+        assert_eq!(observable_graph_scan_rows(6,4096,0),0);
+    }
+}
+
+
+#[cfg(test)]
+mod observed_goal_route_and_helper_budget_tests{
+    use super::*;
+    use crate::HumanProtectionEvidence;
+    use crate::scientific_runtime::{ScientificRuntime,UnifiedPost};
+    use crate::construction::autonomy::{ActionOffer,AutonomyPolicy};
+
+    fn safe(_:usize)->HumanProtectionEvidence{
+        HumanProtectionEvidence{
+            human_present:false,physical_effect_possible:false,
+            predicted_harm_probability:0.0,hazard_confidence:1.0,
+            emergency_stop:false
+        }
+    }
+    fn organism()->ScientificRuntime{
+        let cfg=Config{
+            width:2,actions:2,planning_depth:5,
+            planning_work:120_000,minimum_training:128,
+            search_every:4096,..Default::default()
+        };
+        let mut rt=ScientificRuntime::new_constructing(
+            cfg,AutonomyPolicy::default(),vec![0,0],"goal-route-boundary"
+        ).unwrap();
+        rt.enable_constructing_self_directed_control().unwrap();
+        rt
+    }
+    fn action(rt:&mut ScientificRuntime,motor:usize,actual:Vec<i64>){
+        let offers=(0..2).map(|a|ActionOffer{
+            available:a==motor,max_cost:1
+        }).collect::<Vec<_>>();
+        rt.step_constructing(None,&offers,safe,move |a|{
+            assert_eq!(a,motor);
+            Ok(UnifiedPost{observation:actual,cost:1,reward:0.0})
+        }).unwrap();
+    }
+    #[test]
+    fn one_step_goal_is_never_promoted_into_a_false_two_step_route(){
+        let mut rt=organism();
+        action(&mut rt,0,vec![1,0]);
+        // This is a TRUE later transition recorded under NO goal;
+        // both its ends already satisfy the current masked goal.
+        action(&mut rt,1,vec![1,1]);
+        rt.observe_constructing_external_restart(vec![0,0]).unwrap();
+        let learner=rt.construction_learner().unwrap();
+        let (plan,work)=learner.carrier_observable_goal_route_metered(
+            &[Some(1),None],&[true,true],16000
+        );
+        assert!(work<=16000);
+        assert!(plan.is_none(),
+            "a direct goal action must not be disguised as a causal option");
+        assert_eq!(learner.records().len(),2);
+    }
+    #[test]
+    fn two_distinct_real_successive_postconditions_form_a_valid_option(){
+        let mut rt=organism();
+        action(&mut rt,0,vec![0,1]);
+        action(&mut rt,1,vec![1,2]);
+        rt.observe_constructing_external_restart(vec![0,0]).unwrap();
+        let learner=rt.construction_learner().unwrap();
+        let (plan,work)=learner.carrier_observable_goal_route_metered(
+            &[Some(1),None],&[true,true],16000
+        );
+        assert!(work<=16000);
+        let p=plan.expect("two genuine physical transitions should be found");
+        assert_eq!(p.depth,2);
+        assert_eq!(p.route,vec![(0,vec![0,1]),(1,vec![1,2])]);
+    }
+    #[test]
+    fn plan_and_recall_share_an_explicit_remaining_work_ceiling(){
+        let mut rt=organism();
+        action(&mut rt,0,vec![0,1]);
+        action(&mut rt,1,vec![1,2]);
+        let learner=rt.construction_learner().unwrap();
+        for budget in [0_u64,1,64,256,4096,120000]{
+            let (plans,plan_work)=learner.carrier_plans(
+                &[Some(1),None],&[true,true],budget
+            ).unwrap();
+            let (recalled,recall_work)=learner.carrier_recall(
+                &[true,true],budget
+            ).unwrap();
+            assert!(plan_work<=budget);
+            assert!(recall_work<=budget);
+            if budget==0{
+                assert!(plans.is_empty());
+                assert!(recalled.is_empty());
+            }
+        }
+        let cp=rt.checkpoint_constructing().unwrap();
+        assert_eq!(cp,ScientificRuntime::from_constructing_checkpoint(&cp)
+            .unwrap().checkpoint_constructing().unwrap());
     }
 }

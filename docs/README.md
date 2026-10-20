@@ -8,6 +8,19 @@
 [Actual JSONL API and limits](JSONL_AUTONOMOUS_OPTIONS.md) ·
 [Root README](../README.md).
 
+## Observability and directly observed causal skills (research 2026-10-20)
+
+- [True-sensor ablation: NEGATIVE 487→194/864](OBSERVABILITY_LIMIT1_RESULT.md) ·
+  [frozen development protocol](OBSERVABILITY_LIMIT1_PROTOCOL.md).
+- [Older strict certified chain does not rescue sensory change:
+  NEGATIVE 194→188/864](OBSERVABILITY_LIMIT2_RESULT.md) ·
+  [frozen protocol](OBSERVABILITY_LIMIT2_PROTOCOL.md).
+- [NEW observable empirical graph: ENGINEERING PASS 194→457/864,
+  296 real self-selected completed routes](OBSERVABLE_GRAPH1_RESULT.md) ·
+  [precommitted protocol](OBSERVABLE_GRAPH1_PROTOCOL.md) ·
+  [original first source](https://github.com/kelbas2007/Aeterna-v1/commit/e03b75cc40408e14c624c8b5693177c94039bb00).
+  This is NOT new independent science or learned sensor invention.
+
 ## Source-frozen scientific results vs ordinary engineering
 
 | Line | Protocol or design | Actual result and evidence |

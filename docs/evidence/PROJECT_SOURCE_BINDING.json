@@ -62,11 +62,11 @@
     "modified": {
       "src/unified_runtime.rs": {
         "before_sha256": "8973cc39438c1450bf15c6dc0f48582ffdeb308418c32a7901fa8f414be1e098",
-        "after_git_blob": "00970238e0ece3c39ceb6724ce38bf7a034bb574"
+        "after_git_blob": "d770a1c38590977f276795b0ab4ae9dd1e5e611f"
       },
       "src/construction/unified_port.rs": {
         "before_sha256": "7ef8bf7ed14fae7122f608c5db8e7c49a792833a9ae12dabf70952fc88f28e73",
-        "after_git_blob": "07d70871b03c2b290f947a0112864277d0a912fc"
+        "after_git_blob": "c576d7ce92038e85c6aed84774d1da571dea9c72"
       },
       "src/construction/runtime.rs": {
         "before_sha256": "0974602c4b5f9e14a8827c3fd70f3c44cdfdda88309d4485750586875e5bcb7a",
@@ -93,6 +93,10 @@
     "main_docs_integration": "Update the canonical CLI project version and help for already implemented research opt-in controls, explicitly stating default planning_depth=2. No changes to original U1 planning, RSP2 or HumanProtection.",
     "pr9_post_merge_codex_review_fix": "Validate JSONL cfg before default allocation, drop stale temporal lane on domain switch, charge failed behavioral-arm work prior to error propagation, quote entire acquired motor route against actual remaining budget. Test source is public, no RSP2 or HumanProtection changes; original one-use test was confirmed SKIPPED.",
     "active_history_experiment1_review": "Opt-in contextual-causal-experiment is a metered one-step epistemic proposal by SAME native U1; generated only if complexity-need verdict is insufficient evidence. It enumerates underobserved connected PRE/action/POST context-suffix/motor choices, never supplies target motor labels, unrealized POST or a physical permit. Frozen RSP2 and HumanProtection untouched.",
-    "active_context_review_p1_fix": "Codex PR11 P1: version-1 joint checkpoint backward compatibility requires new fields omitted when zero/false; causal suffix matcher rejects restarts on all interior predecessors, preserving only a real first-in-episode marker. Actual protected history unit controls and joint checkpoint roundtrip integrated; no RSP2 policy or HumanProtection change."
+    "active_context_review_p1_fix": "Codex PR11 P1: version-1 joint checkpoint backward compatibility requires new fields omitted when zero/false; causal suffix matcher rejects restarts on all interior predecessors, preserving only a real first-in-episode marker. Actual protected history unit controls and joint checkpoint roundtrip integrated; no RSP2 policy or HumanProtection change.",
+    "observable_graph1_review": "Developer-visible opt-in same-Learner real PRE/motor/POST observable graph; BFS bounded depth 5 and 128 seen full sensor states, rejects contradictions per exact pre/motor, budget reserves 16k, source only U1 proposal, stores actual successor POSTs inside existing protected TemporalOptionLane, physical permit at each motor. Backward compatible skip of new false flag, no changes to original RSP2 or HumanProtection.",
+    "pr12_codex_review_p1_p2": "P1: three observability Bash test pipelines now fail-closed with set -euo pipefail. P2: width-priced complete recent graph scan with 2k BFS reserve and unit-tested 1..6 widths; shared graph budget derived from remaining total after memory reserve and actual history/memory work, explicit pre-action max planning_work fail. Tests for 32k with memory20k and 120k. No RSP2/HumanProtection alterations; re-evaluate real synthetic success on exact new code.",
+    "pr12_codex_review_round2": "Review of 90188fd6: downstream native phase-meta plan/recall helpers use remaining shared planning_work instead of full independent budget and a final pre-permit check enforces combined factual helper work; direct masked-goal edge can no longer be the first step of a fake multi-action route; developer-visible engineering regression must assert its precommitted PASS after saving complete adverse traces. Added real protected PRE/action/POST and helper-budget unit regressions. RSP2 and HumanProtection unchanged; all source-disclosed results must be reevaluated at corrected head.",
+    "pr12_legacy_u1_parity_fix": "Restore original exact 4k/20k U1 plan-helper and HDC recall arbitration when observable graph is OFF, using existing test physical_roles_remain_opaque_under_joint_arbitration across 24 opaque role permutations. Keep shared strict planner helper cap only for observable_graph_enabled. Full CI failed before this fix (23/24 goals both arms, 646 vs 671 physical actions), so do not merge without exact-head pass."
   }
 }

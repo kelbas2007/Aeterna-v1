@@ -32,7 +32,8 @@
     "variable_length_autobiographical_option_2_to_5_opt_in_development": true,
     "evidence_based_complexity_necessity_gate_opt_in_development": true,
     "complexity_necessity1_engineering_regression_pass_36_worlds": true,
-    "active_history_contextual_experiment_opt_in_development": true
+    "active_history_contextual_experiment_opt_in_development": true,
+    "observable_empirical_factual_graph_option_opt_in_development": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -78,7 +79,10 @@
     "independent_qualified_complexity_need_architecture_growth",
     "general_need_driven_structural_complexification",
     "reliable_cold_five_action_skill_learning",
-    "independently_qualified_5_step_autonomous_experiment_advantage"
+    "independently_qualified_5_step_autonomous_experiment_advantage",
+    "qualified_real_observable_state_graph_transfer",
+    "self_acquired_external_sensor",
+    "independent_stochastic_observable_world_transfer"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -119,7 +123,13 @@
     "docs/VARIABLE_LENGTH_CAUSAL_OPTIONS_DEVELOPMENT.md",
     "docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_PROTOCOL.md",
     "docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_RESULT.md",
-    "docs/ACTIVE_HISTORY_EXPERIMENT1_PROTOCOL.md"
+    "docs/ACTIVE_HISTORY_EXPERIMENT1_PROTOCOL.md",
+    "docs/OBSERVABLE_GRAPH1_PROTOCOL.md",
+    "docs/OBSERVABILITY_LIMIT1_PROTOCOL.md",
+    "docs/OBSERVABILITY_LIMIT1_RESULT.md",
+    "docs/OBSERVABILITY_LIMIT2_PROTOCOL.md",
+    "docs/OBSERVABILITY_LIMIT2_RESULT.md",
+    "docs/OBSERVABLE_GRAPH1_RESULT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
@@ -183,7 +193,41 @@
       "T-SR1",
       "T-SR2",
       "COLD-EPISODES-FRESH1"
-    ]
+    ],
+    "observability_limit1": {
+      "verdict": "NEGATIVE_SENSOR_ADDITION_UNDER_EXISTING_U1",
+      "run_id": 39413022974,
+      "worlds": 36,
+      "episodes_per_arm": 864,
+      "blind_goals": 487,
+      "rich_goals": 194,
+      "blind_physical_actions": 8625,
+      "rich_physical_actions": 12875
+    },
+    "observability_limit2": {
+      "verdict": "NO_CERTIFIED_CHAIN_SENSOR_RESCUE",
+      "run_id": 39413911268,
+      "worlds": 36,
+      "rich_without_chain_goals": 194,
+      "rich_with_chain_goals": 188,
+      "native_certified_chain_proposals": 0,
+      "independent_science": false
+    },
+    "observable_graph1": {
+      "verdict": "OBSERVABLE_GRAPH1_ENGINEERING_PASS_NOT_INDEPENDENT_SCIENCE",
+      "run_id": 39415390485,
+      "worlds": 36,
+      "episodes_per_arm": 864,
+      "blind_goals": 487,
+      "rich_unadapted_goals": 194,
+      "rich_empirical_graph_goals": 457,
+      "rich_unadapted_physical_actions": 12875,
+      "rich_empirical_graph_physical_actions": 8916,
+      "native_selected_and_really_completed_new_routes": 296,
+      "five_action_goals": 20,
+      "five_action_total": 288,
+      "third_party_external_qualification": false
+    }
   },
   "user_facing_limitations": {
     "default_jsonl_planning_depth": 2,
