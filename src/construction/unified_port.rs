@@ -789,10 +789,11 @@ impl Learner {
             /self.config.width as f32).sum::<f32>()/recent.len() as f32
     }
     // Bounded model-based plans are options. The physical carrier chooses.
-    pub(crate) fn carrier_plans(&self,goal:&[Option<i64>],allowed:&[bool])->Result<(Vec<(usize,Vec<i64>,usize)>,u64)> {
+    pub(crate) fn carrier_plans(&self,goal:&[Option<i64>],allowed:&[bool],budget:u64)->Result<(Vec<(usize,Vec<i64>,usize)>,u64)> {
         if goal.len()!=self.config.width || allowed.len()!=self.config.actions {return Err(Error::InvalidData);}
+        if budget==0 {return Ok((Vec::new(),0))}
         let actions:Vec<_>=(0..self.config.actions).filter(|&a|allowed[a]).collect();
-        let mut meter=Meter::new(self.config.planning_work);
+        let mut meter=Meter::new(budget);
         let mut frontier=vec![(None,self.current.clone(),self.active.state.clone())];
         let mut best:std::collections::BTreeMap<usize,(f64,Vec<i64>,usize)>=std::collections::BTreeMap::new();
         'depth: for depth in 1..=self.config.planning_depth {
@@ -813,17 +814,22 @@ impl Learner {
         Ok((best.into_iter().map(|(a,(_,p,d))|(a,p,d)).collect(),meter.spent))
     }
     // HDC content addressing proposes a consequence, never a solved action.
-    pub(crate) fn carrier_recall(&self,allowed:&[bool])->Result<(Vec<(usize,Vec<i64>,f32)>,u64)> {
+    pub(crate) fn carrier_recall(&self,allowed:&[bool],budget:u64)->Result<(Vec<(usize,Vec<i64>,f32)>,u64)> {
         use crate::hdc::PhaseVector;
         fn encode(values:&[i64])->PhaseVector {
             let roles:Vec<_>=values.iter().enumerate().map(|(i,&v)|
                 PhaseVector::from_seed(32,i as u64+0x517a).bind(&PhaseVector::from_seed(32,v as u64^0x7733))).collect();
             PhaseVector::bundle(&roles.iter().collect::<Vec<_>>())
         }
+        if allowed.len()!=self.config.actions{return Err(Error::InvalidData)}
+        if budget==0{return Ok((Vec::new(),0))}
         let current=encode(&self.current);let mut best=std::collections::BTreeMap::new();let mut work=0u64;
         for r in self.records.iter().rev().take(128) {
             if !allowed[r.transition.action] {continue;}
-            let similarity=current.similarity(&encode(&r.transition.pre)).clamp(0.0,1.0);work+=self.config.width as u64*32;
+            let Some(next_work)=work.checked_add(self.config.width as u64*32) else{break};
+            if next_work>budget{break}
+            work=next_work;
+            let similarity=current.similarity(&encode(&r.transition.pre)).clamp(0.0,1.0);
             if best.get(&r.transition.action).is_none_or(|(s,_)|similarity>*s) {best.insert(r.transition.action,(similarity,r.transition.post.clone()));}
         }
         Ok((best.into_iter().map(|(a,(s,p))|(a,p,s)).collect(),work))
