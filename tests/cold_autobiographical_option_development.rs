@@ -127,7 +127,7 @@ fn permutations()->Vec<[usize;4]>{
             let d=(0..4).find(|&x|x!=a&&x!=b&&x!=c).unwrap();
             out.push([a,b,c,d]);
         }
-    }}}
+    }}
     assert_eq!(out.len(),24);
     // Fixed disclosed developmental shuffle, never a one-use scientific seed.
     let mut seed=0x7e51_13ae_09df_d410_u64;
