@@ -177,7 +177,7 @@ fn roles(family:usize,n:usize)->Vec<[usize;4]>{
             let d=(0..4).find(|&m|m!=a&&m!=b&&m!=c).unwrap();
             v.push([a,b,c,d]);
         }
-    }}}
+    }}
     let mut seed=mix(0x6ba4_6c4d_1701_32f0 ^ family as u64);
     for i in (1..v.len()).rev(){
         seed=mix(seed);v.swap(i,(seed%(i as u64+1)) as usize);
