@@ -1,0 +1,145 @@
+{
+  "source_revision": "0ef1a733ec6d45f8ee0e478b08bc43517e80b2ec",
+  "binary_sha256": "45e3987ddd3a936446d268aaceb4a5b870f5cf6fe2c8d408cbf454195b4d79b7",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "started_at": "2026-10-20T17:13:20.351822+00:00",
+  "seeds": [
+    240000,
+    240031
+  ],
+  "workers": 4,
+  "process_isolation": "one seed per process, fresh runtime per arm/family",
+  "independent_external_qualification": false,
+  "completed_at": "2026-10-20T17:18:05.247361+00:00",
+  "verdict": "ENGINEERING_PASS",
+  "gates": {
+    "ten_step_at_least_24_of_32": true,
+    "ten_step_better_than_horizon_one": true,
+    "noisy_sensor_at_least_75_percent": true,
+    "noisy_sensor_at_least_10_points_over_legacy": true,
+    "direct_goal_nonregression_2_points": true
+  },
+  "groups": [
+    {
+      "family": "direct_goal",
+      "arm": "causal",
+      "worlds": 32,
+      "goals": 2048,
+      "episodes": 2048,
+      "actions": 2048,
+      "queries": 0,
+      "training_actions": 4096
+    },
+    {
+      "family": "direct_goal",
+      "arm": "horizon_one",
+      "worlds": 32,
+      "goals": 2048,
+      "episodes": 2048,
+      "actions": 2048,
+      "queries": 0,
+      "training_actions": 4096
+    },
+    {
+      "family": "direct_goal",
+      "arm": "legacy",
+      "worlds": 32,
+      "goals": 2048,
+      "episodes": 2048,
+      "actions": 2048,
+      "queries": 0,
+      "training_actions": 4096
+    },
+    {
+      "family": "noisy_sensor",
+      "arm": "causal",
+      "worlds": 32,
+      "goals": 1874,
+      "episodes": 2048,
+      "actions": 5125,
+      "queries": 2637,
+      "training_actions": 43657
+    },
+    {
+      "family": "noisy_sensor",
+      "arm": "horizon_one",
+      "worlds": 32,
+      "goals": 1058,
+      "episodes": 2048,
+      "actions": 2048,
+      "queries": 0,
+      "training_actions": 20282
+    },
+    {
+      "family": "noisy_sensor",
+      "arm": "legacy",
+      "worlds": 32,
+      "goals": 1005,
+      "episodes": 2048,
+      "actions": 3257,
+      "queries": 560,
+      "training_actions": 29814
+    },
+    {
+      "family": "ten_step",
+      "arm": "causal",
+      "worlds": 32,
+      "goals": 32,
+      "episodes": 32,
+      "actions": 320,
+      "queries": 0,
+      "training_actions": 53428
+    },
+    {
+      "family": "ten_step",
+      "arm": "horizon_one",
+      "worlds": 32,
+      "goals": 0,
+      "episodes": 32,
+      "actions": 1152,
+      "queries": 0,
+      "training_actions": 67335
+    },
+    {
+      "family": "ten_step",
+      "arm": "legacy",
+      "worlds": 32,
+      "goals": 0,
+      "episodes": 32,
+      "actions": 1152,
+      "queries": 0,
+      "training_actions": 72546
+    },
+    {
+      "family": "uninformative_sensor",
+      "arm": "causal",
+      "worlds": 32,
+      "goals": 1089,
+      "episodes": 2048,
+      "actions": 3334,
+      "queries": 802,
+      "training_actions": 36068
+    },
+    {
+      "family": "uninformative_sensor",
+      "arm": "horizon_one",
+      "worlds": 32,
+      "goals": 1050,
+      "episodes": 2048,
+      "actions": 2048,
+      "queries": 0,
+      "training_actions": 20276
+    },
+    {
+      "family": "uninformative_sensor",
+      "arm": "legacy",
+      "worlds": 32,
+      "goals": 978,
+      "episodes": 2048,
+      "actions": 3218,
+      "queries": 645,
+      "training_actions": 30542
+    }
+  ],
+  "traces_sha256": "db0b59421e12d99a151ae29208ef573423e8e5330d6ad36fb63e37ee0c931992"
+}

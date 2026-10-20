@@ -26,7 +26,7 @@ impl Config {
         if !(1..=32).contains(&self.width) || !(1..=16).contains(&self.actions)
             || !(2..=128).contains(&self.minimum_training) || self.search_every == 0
             || !(2..=128).contains(&self.shadow_steps) || self.journal_capacity < self.minimum_training+self.shadow_steps
-            || self.journal_capacity > 4096 || !(1..=5).contains(&self.planning_depth)
+            || self.journal_capacity > 65536 || !(1..=32).contains(&self.planning_depth)
             || !(100..=1000000).contains(&self.planning_work) { return Err(Error::Capacity); }
         Ok(())
     }
@@ -103,6 +103,11 @@ pub struct Learner {
     /// not an authored hidden state. All older inference stays opt-in safe.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     adaptive_history_suffix:bool,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    causal_memory:Option<super::causal_memory::CausalMemory>,
+    /// Encoding cache only; never changes legacy checkpoint bytes or state.
+    #[serde(skip)]
+    journal_encoding:Option<(usize,usize)>,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -486,7 +491,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false,causal_memory:None,journal_encoding:None })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -520,13 +525,13 @@ impl Learner {
         let policy=self.autonomy.as_ref()?;let c=self.curriculum.as_ref()?;
         let levels:Vec<_>=(0..self.config.width).map(|j|policy.level(c,j)).collect();
         let effective_limits=levels.iter().map(|&n|policy.limits(&self.config.search,n)).collect();
-        let external_cost=self.records.iter().fold(0_u64,|s,r|s.saturating_add(r.external_cost));
-        Some(AutonomyReport{levels,effective_limits,external_cost,remaining_cost:policy.max_external_cost.saturating_sub(external_cost),frozen_at:self.frozen_at,events:self.records.len()})
+        let external_cost=self.records.iter().fold(self.causal_memory.as_ref().map_or(0,|m|m.compacted_cost),|s,r|s.saturating_add(r.external_cost));
+        Some(AutonomyReport{levels,effective_limits,external_cost,remaining_cost:policy.max_external_cost.saturating_sub(external_cost),frozen_at:self.frozen_at,events:self.factual_event_count()})
     }
     /// Irreversible freeze; facts and action costs continue, learning does not.
     pub fn freeze_learning(&mut self)->Result<()> {
         if self.pending || self.poisoned {return Err(Error::Busy);}
-        if self.frozen_at.is_none(){self.cancel_shadow();self.frozen_at=Some(self.next_id);}
+        if self.frozen_at.is_none(){self.cancel_shadow();if let Some(m)=&mut self.causal_memory{m.finish_learning();}self.frozen_at=Some(self.next_id);}
         self.freeze_recursive_search();if let Some(b)=&mut self.requirements{b.freeze();}Ok(())
     }
     pub fn program(&self) -> &Program { &self.active.program }
@@ -537,7 +542,7 @@ impl Learner {
     pub fn last_search(&self) -> Option<&SearchTrace> { self.last_trace.as_ref() }
     pub fn current(&self) -> &[i64] { &self.current }
     pub fn report(&self) -> SnapshotReport {
-        SnapshotReport { events: self.records.len(),active_program: self.active.program.fingerprint(),state_cells: self.active.program.cells.len(),program_nodes: self.active.program.nodes(),library_nodes: self.library.nodes(),constructors: self.registry.constructors().len(),promotions: self.promotions.iter().filter(|p| p.accepted).count(),construction_work: self.construction_work,shadow_pending: self.shadow.is_some(),poisoned: self.poisoned,last_error: self.last_error.clone(),
+        SnapshotReport { events: self.factual_event_count(),active_program: self.active.program.fingerprint(),state_cells: self.active.program.cells.len(),program_nodes: self.active.program.nodes(),library_nodes: self.library.nodes(),constructors: self.registry.constructors().len(),promotions: self.promotions.iter().filter(|p| p.accepted).count(),construction_work: self.construction_work,shadow_pending: self.shadow.is_some(),poisoned: self.poisoned,last_error: self.last_error.clone(),
             constructor_generation: self.registry.constructors().iter().map(|c| c.generation).max().unwrap_or(0),
             recursive_trials: self.registry.meta_ledger().reports().len(),
             recursive_improvements: self.registry.meta_ledger().reports().iter().filter(|r| r.recursive_search_value).count() }
@@ -547,7 +552,12 @@ impl Learner {
         if self.poisoned { return Err(Error::Execution("unknown external state after callback fault".into())); }
         if self.pending { return Err(Error::Busy); }
         if action >= self.config.actions { return Err(Error::Index); }
-        if self.records.len() >= self.config.journal_capacity || self.next_id == u64::MAX { return Err(Error::Capacity); }
+        if self.causal_memory.is_some() && self.records.len()>=self.causal_journal_capacity() {
+            self.compact_causal_journal()?;
+        }
+        let record_limit=if self.causal_memory.is_some(){self.config.journal_capacity}else{self.config.journal_capacity.min(4096)};
+        if self.records.len() >= record_limit || self.next_id == u64::MAX { return Err(Error::Capacity); }
+        if self.causal_memory.is_none(){self.ensure_legacy_journal_capacity()?;}
         if let (Some(risk),Some(shadow)) = (&self.epistemic,&self.shadow) {
             let bound = shadow.evidence.as_ref().ok_or(Error::Stale).and_then(|e|
                 e.binding(risk,&self.active.program,&shadow.model.program,&self.library,shadow.trace.job.target,shadow.start_id));
@@ -592,8 +602,15 @@ impl Learner {
             shadow.model.state = state; shadow.samples += 1; shadow.incumbent_nll += incumbent_nll; shadow.candidate_nll += nll;
         }
         let transition = Transition { id: token.id,restart: self.restart_next,pre: token.pre,action: token.action,post: post.clone() };
+        if let Some(memory)=&mut self.causal_memory {memory.observe(&transition,self.frozen_at.is_none());}
         self.records.push(Record { transition,model: token.model,prediction: token.prediction,candidate: token.candidate,candidate_prediction: token.candidate_prediction,permit_sequence,external_cost });
         self.current = post; self.next_id += 1; self.restart_next = false; self.pending = false;
+        if let Some((rows,bytes))=self.journal_encoding {
+            self.journal_encoding=if rows+1==self.records.len(){
+                serde_json::to_vec(self.records.last().unwrap()).ok()
+                    .map(|row|(rows+1,bytes+row.len()+usize::from(rows>0)))
+            }else{None};
+        }
         // A costly contract violation stays in history, never promotes a model.
         if self.poisoned {self.cancel_shadow();return Ok(());}
         if let Some(error) = evidence_error {
@@ -620,9 +637,17 @@ impl Learner {
     fn construct_inner(&mut self) -> Result<()> {
         if self.pending || self.shadow.is_some() { return Err(Error::Busy); }
         if self.frozen_at.is_some() || self.poisoned || self.records.len() < self.config.minimum_training { return Err(Error::NoEvidence); }
+        // Recursive synthesis starts from initial registers. When a raw
+        // prefix has been folded into VM anchors, wait for an actual restart
+        // and expose only that factual suffix to every synthesis/audit lane.
+        if self.causal_memory.is_some() && self.records.first().is_some_and(|r|!r.transition.restart) {
+            let start=self.records.iter().position(|r|r.transition.restart).ok_or(Error::NoEvidence)?;
+            self.compact_causal_prefix(start)?;
+            if self.records.len()<self.config.minimum_training { return Err(Error::NoEvidence); }
+        }
         let data = self.data();
         let requested = if let Some(c) = &mut self.curriculum {
-            let mut meter = Meter::new(2_000_000);
+            let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(data.len(),1)}else{2_000_000});
             let discovery = (|| -> Result<_> {
                 let (predictions,_) = replay(&self.active.program,&data,&self.library,&mut meter)?;
                 let mut errors = vec![0.0; self.config.width];
@@ -652,10 +677,14 @@ impl Learner {
             self.registry.cancel_trial(controls)?; return Ok(());
         }
         let program = controls.program().clone();
-        let mut meter = Meter::new(1000000);
+        let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(data.len(),2)}else{1000000});
         let calibration = (|| -> Result<_> {
-            let (state,scale) = calibrate(&program,&data,&self.library,&mut meter)?;
-            let (_,old_scale) = calibrate(&self.active.program,&data,&self.library,&mut meter)?;
+            let (state,scale)=if let Some(m)=&self.causal_memory {
+                calibrate_causal_window(&program,&data,&self.library,&mut meter,causal_candidate_seed(m,&self.active.program,&program))?
+            }else{calibrate(&program,&data,&self.library,&mut meter)?};
+            let (_,old_scale)=if let Some(m)=&self.causal_memory {
+                calibrate_causal_window(&self.active.program,&data,&self.library,&mut meter,m.seed_state.clone())?
+            }else{calibrate(&self.active.program,&data,&self.library,&mut meter)?};
             Ok((state,scale,old_scale))
         })();
         let (state,scale,incumbent_scale) = match calibration {
@@ -677,9 +706,13 @@ impl Learner {
     fn finish_shadow(&mut self) -> Result<()> {
         let shadow = self.shadow.as_ref().ok_or(Error::NoEvidence)?;
         let data = self.data(); let training = &data[..shadow.training_len];
-        let mut meter = Meter::new(2000000);
-        let (old,_) = replay(&self.active.program,training,&self.library,&mut meter)?;
-        let (new,_) = replay(&shadow.model.program,training,&self.library,&mut meter)?;
+        let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(training.len(),2)}else{2000000});
+        let (old,_)=if let Some(m)=&self.causal_memory {
+            replay_causal_window(&self.active.program,training,&self.library,&mut meter,m.seed_state.clone())?
+        }else{replay(&self.active.program,training,&self.library,&mut meter)?};
+        let (new,_)=if let Some(m)=&self.causal_memory {
+            replay_causal_window(&shadow.model.program,training,&self.library,&mut meter,causal_candidate_seed(m,&self.active.program,&shadow.model.program))?
+        }else{replay(&shadow.model.program,training,&self.library,&mut meter)?};
         let pointwise_ok = old.iter().zip(new.iter()).zip(training).all(|((a,b),t)| {
             let cost = |p: &[i64]| p.iter().zip(&t.post).map(|(&x,&y)| (x as i128-y as i128).abs()).sum::<i128>(); cost(b) <= cost(a)
         });
@@ -749,7 +782,12 @@ impl Learner {
         self.last_trace = Some(shadow.trace.clone());
         self.promotions.push(Promotion { first_id: shadow.start_id,last_id: self.next_id-1,parent: self.active.program.fingerprint(),candidate: shadow.model.program.fingerprint(),accepted,retention_ok,incumbent_nll: shadow.incumbent_nll,candidate_nll: shadow.candidate_nll });
         if accepted {
+            let seed=self.causal_memory.as_ref().map(|m|causal_candidate_seed(m,&self.active.program,&shadow.model.program));
             self.previous = Some(self.active.program.clone()); self.active = shadow.model;
+            if let Some(m)=&mut self.causal_memory {
+                m.previous_seed=Some((m.seed_model,m.seed_state.clone()));
+                m.seed_model=self.active.program.fingerprint();m.seed_state=seed.unwrap();
+            }
             if let Some(patch) = &shadow.trace.winner {
                 if let Err(e) = acquire_function(&patch.replacement,&mut self.library,self.config.width) { self.last_error = Some(format!("library: {e}")); }
             }
@@ -768,15 +806,24 @@ impl Learner {
     pub fn rollback(&mut self) -> Result<()> {
         if self.frozen_at.is_some() || self.pending || self.poisoned { return Err(Error::Busy); }
         let program = self.previous.clone().ok_or(Error::NoEvidence)?;
-        let mut meter = Meter::new(2000000);
-        let (state,scale) = calibrate(&program,&self.data(),&self.library,&mut meter)?;
+        let mut meter = Meter::new(if self.causal_memory.is_some(){causal_replay_work(self.records.len(),1)}else{2000000});
+        let seed=if let Some(m)=&self.causal_memory {
+            Some(m.previous_seed.as_ref().filter(|(hash,_)|*hash==program.fingerprint()).ok_or(Error::Stale)?.1.clone())
+        }else{None};
+        let (state,scale)=if let Some(seed)=&seed {
+            calibrate_causal_window(&program,&self.data(),&self.library,&mut meter,seed.clone())?
+        }else{calibrate(&program,&self.data(),&self.library,&mut meter)?};
         self.previous = Some(self.active.program.clone()); self.active = Model { program,state,scale }; self.cancel_shadow();
+        if let Some(m)=&mut self.causal_memory {
+            m.previous_seed=Some((m.seed_model,m.seed_state.clone()));m.seed_model=self.active.program.fingerprint();m.seed_state=seed.unwrap();
+        }
         self.construction_work += meter.spent; Ok(())
     }
     /// Records a real host-observed reset, retaining one lifetime journal.
     pub fn record_external_restart(&mut self,observation: Vec<i64>) -> Result<()> {
         if self.pending || self.poisoned { return Err(Error::Busy); }
         if observation.len() != self.config.width { return Err(Error::InvalidData); }
+        if let Some(memory)=&mut self.causal_memory {memory.reset(self.frozen_at.is_none());}
         self.current = observation; self.restart_next = true; self.active.state = self.active.program.initial_state();
         if let Some(s) = &mut self.shadow { s.model.state = s.model.program.initial_state(); }
         Ok(())
@@ -787,7 +834,7 @@ impl Learner {
     /// still pass through ProtectedConstructionRuntime and HumanProtection.
     /// No schedules, reward labels, privileged motor roles, or synthetic POSTs.
     pub fn enable_self_directed_control(&mut self)->Result<()> {
-        if self.config.width>6 || self.config.actions>8 {return Err(Error::Capacity);}
+        if self.config.width>32 || self.config.actions>16 {return Err(Error::Capacity);}
         if self.autonomy.is_none() || self.pending || self.poisoned || self.self_directed ||
            self.frozen_at.is_some() {return Err(Error::Busy);}
         self.self_directed=true;
@@ -975,13 +1022,16 @@ impl Learner {
     pub fn checkpoint(&self) -> Result<Vec<u8>> {
         if self.pending { return Err(Error::Busy); }
         let payload = serde_json::to_vec(self).map_err(|_| Error::InvalidData)?;
-        if payload.len() > 4*1024*1024 { return Err(Error::Capacity); }
-        serde_json::to_vec(&(1u32,fingerprint(&payload),self)).map_err(|_| Error::InvalidData)
+        if payload.len()>if self.causal_memory.is_some(){16*1024*1024}else{4*1024*1024} {return Err(Error::Capacity)}
+        let bytes=serde_json::to_vec(&(1u32,fingerprint(&payload),self)).map_err(|_| Error::InvalidData)?;
+        if bytes.len()>if self.causal_memory.is_some(){16*1024*1024}else{4*1024*1024}{return Err(Error::Capacity)}
+        Ok(bytes)
     }
     pub fn from_checkpoint(bytes: &[u8]) -> Result<Self> {
-        if bytes.len() > 4*1024*1024 { return Err(Error::Capacity); }
+        if bytes.len()>16*1024*1024 {return Err(Error::Capacity)}
         let (version,hash,mut state): (u32,u64,Self) = serde_json::from_slice(bytes).map_err(|_| Error::InvalidData)?;
         if version != 1 || hash != fingerprint(&serde_json::to_vec(&state).map_err(|_| Error::InvalidData)?) || state.pending { return Err(Error::InvalidData); }
+        if state.causal_memory.is_none() && bytes.len()>4*1024*1024{return Err(Error::Capacity)}
         if let Some(c) = &state.curriculum {
             c.validate(state.config.width)?;
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
@@ -996,7 +1046,7 @@ impl Learner {
             if learned.frozen!=state.frozen_at.is_some(){return Err(Error::InvalidData)}
         }
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
-        if state.self_directed && (state.autonomy.is_none() || state.config.width>6 || state.config.actions>8) {
+        if state.self_directed && (state.autonomy.is_none() || state.config.width>32 || state.config.actions>16) {
             return Err(Error::InvalidData);
         }
         if state.certified_chains && (!state.self_directed || state.config.planning_work<32_000) {
@@ -1025,19 +1075,39 @@ impl Learner {
             risk.validate(state.config.width)?;
             if state.config.search.deterministic { return Err(Error::InvalidData); }
         }
-        if state.records.len() > state.config.journal_capacity || state.promotions.len() > 128 || state.current.len() != state.config.width || state.next_id != state.records.len() as u64 { return Err(Error::InvalidData); }
+        let offset=state.causal_memory.as_ref().map_or(0,|m|m.offset);
+        if state.records.len()>state.config.journal_capacity || state.promotions.len()>128 || state.current.len()!=state.config.width ||
+            offset.checked_add(state.records.len() as u64)!=Some(state.next_id) {return Err(Error::InvalidData)}
+        if let Some(m)=&state.causal_memory {m.validate(state.config.width,state.config.actions,state.next_id,
+            state.active.program.fingerprint(),state.active.program.cells.len())?;
+            match (&state.previous,&m.previous_seed) {
+                (Some(p),Some((hash,seed))) if *hash==p.fingerprint() && seed.len()==p.cells.len()=>{},
+                (None,None)=>{},_=>return Err(Error::InvalidData)
+            }
+        }
         state.active.program.validate(state.config.width,&state.library)?;
         if let Some(p) = &state.previous { p.validate(state.config.width,&state.library)?; }
-        let mut meter = Meter::new(10000000);
+        let mut meter = Meter::new(if state.causal_memory.is_some(){causal_replay_work(state.records.len(),4)}else{10000000});
         if !state.records.is_empty() {
-            validate_data(&state.data(),state.config.width,state.config.actions)?;
+            if state.causal_memory.is_some() {
+                validate_contiguous_data(&state.data(),state.config.width,state.config.actions)?;
+                if state.shadow.is_some() && !state.records[0].transition.restart { return Err(Error::InvalidData); }
+            } else {validate_data(&state.data(),state.config.width,state.config.actions)?;}
             if !state.restart_next && state.records.last().unwrap().transition.post != state.current { return Err(Error::InvalidData); }
             for (i,r) in state.records.iter().enumerate() {
-                if r.transition.id != i as u64 { return Err(Error::InvalidData); }
+                if r.transition.id != offset+i as u64 { return Err(Error::InvalidData); }
                 r.prediction.nll(&r.transition.post)?;
                 if let Some(p) = &r.candidate_prediction { p.nll(&r.transition.post)?; }
             }
-            state.active.state = replay(&state.active.program,&state.data(),&state.library,&mut meter)?.1;
+            if let Some(memory)=&state.causal_memory {
+                let mut seed=memory.seed_state.clone();
+                for row in &state.records {
+                    if row.transition.restart {seed=state.active.program.initial_state()}
+                    seed=state.active.program.step(&row.transition.pre,row.transition.action,&seed,&state.library,&mut meter)?.1;
+                }
+                if state.restart_next{seed=state.active.program.initial_state()}
+                if seed!=state.active.state{return Err(Error::InvalidData)}
+            }else{state.active.state=replay(&state.active.program,&state.data(),&state.library,&mut meter)?.1;}
         } else { state.active.state = state.active.program.initial_state(); }
         if state.restart_next { state.active.state = state.active.program.initial_state(); }
         Forecast { center: state.current.clone(),scale: state.active.scale.clone() }.nll(&state.current)?;
@@ -1049,7 +1119,7 @@ impl Learner {
                     || state.registry.meta.pending != Some(trial.fingerprint()) { return Err(Error::InvalidData); }
             } else if state.registry.meta.pending.is_some() { return Err(Error::InvalidData); }
             s.model.program.validate(state.config.width,&state.library)?;
-            if s.training_len > data.len() || s.start_id != s.training_len as u64 || s.samples != data.len()-s.training_len || (s.evidence.is_none() && s.samples >= state.config.shadow_steps) || !s.incumbent_nll.is_finite() || !s.candidate_nll.is_finite() { return Err(Error::InvalidData); }
+            if s.training_len > data.len() || s.start_id != offset+s.training_len as u64 || s.samples != data.len()-s.training_len || (s.evidence.is_none() && s.samples >= state.config.shadow_steps) || !s.incumbent_nll.is_finite() || !s.candidate_nll.is_finite() { return Err(Error::InvalidData); }
             if let Some(e) = &s.evidence {
                 let risk=state.epistemic.as_ref().ok_or(Error::InvalidData)?;
                 e.binding(risk,&state.active.program,&s.model.program,&state.library,s.trace.job.target,s.start_id)?;
@@ -1061,11 +1131,17 @@ impl Learner {
                 e.verify_replay(&old,&new,&data[s.training_len..])?;
                 // Check stored forecasts against the frozen executable models,
                 // not only against another editable presentation of evidence.
-                let old_vm=replay(&state.active.program,&data,&state.library,&mut meter)?.0;
-                let new_vm=replay(&s.model.program,&data,&state.library,&mut meter)?.0;
+                let old_vm=if let Some(m)=&state.causal_memory {
+                    replay_causal_window(&state.active.program,&data,&state.library,&mut meter,m.seed_state.clone())?.0
+                }else{replay(&state.active.program,&data,&state.library,&mut meter)?.0};
+                let new_vm=if let Some(m)=&state.causal_memory {
+                    replay_causal_window(&s.model.program,&data,&state.library,&mut meter,causal_candidate_seed(m,&state.active.program,&s.model.program))?.0
+                }else{replay(&s.model.program,&data,&state.library,&mut meter)?.0};
                 if old_vm[s.training_len..]!=old || new_vm[s.training_len..]!=new {return Err(Error::InvalidData);}
             } else if state.epistemic.is_some() { return Err(Error::InvalidData); }
-            s.model.state = replay(&s.model.program,&data,&state.library,&mut meter)?.1;
+            s.model.state=if let Some(m)=&state.causal_memory {
+                replay_causal_window(&s.model.program,&data,&state.library,&mut meter,causal_candidate_seed(m,&state.active.program,&s.model.program))?.1
+            }else{replay(&s.model.program,&data,&state.library,&mut meter)?.1};
             if state.restart_next { s.model.state = s.model.program.initial_state(); }
             Forecast { center: state.current.clone(),scale: s.model.scale.clone() }.nll(&state.current)?;
         }
@@ -1356,6 +1432,7 @@ mod tests {
 
 fn carrier_unmanaged(v:&bool)->bool{!*v}
 include!("unified_port.rs");
+include!("causal_port.rs");
 
 include!("recursive_search_port.rs");
 

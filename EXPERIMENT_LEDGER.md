@@ -748,3 +748,15 @@ frozen, not rerun as fresh science.
 | [OBSERVABILITY-LIMIT2](docs/OBSERVABILITY_LIMIT2_RESULT.md) | [39413911268](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39413911268) Linux/Windows | **NO_CERTIFIED_CHAIN_SENSOR_RESCUE** | Existing strictly certified future graph produced ZERO proposals; rich goal control 194→188/864 |
 | [OBSERVABLE-GRAPH-1](docs/OBSERVABLE_GRAPH1_RESULT.md) | [39415390485](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39415390485) Linux/Windows | **OBSERVABLE_GRAPH1_ENGINEERING_PASS / NOT INDEPENDENT SCIENCE** | Actual protected observed-state graph **194→457/864** and action cost **12,875→8,916**; U1 truly selected and completed **296** new routes. Five-step goal solves 1→20/288, still unreliable. No independent external-world or self-invented graph result |
 
+
+
+## 2026-10-20 — causal continual autonomy, preserved failure and cohort B
+
+- [CAUSAL4 interrupted negative](docs/CAUSAL_CONTINUAL4_NEGATIVE.md): source
+  46b18fe, 110/384 completed lives; explicit protocol deviation, all completed
+  traces retained, entire 230000..230031 range withdrawn.
+- [CAUSAL4B ENGINEERING PASS](docs/CAUSAL_CONTINUAL4B_RESULT.md): source
+  0ef1a73 frozen before 240000..240031; all 384 lives retained. Ten-step goals
+  32/32 vs 0/32; noisy sensing 1874/2048 vs 1005/2048; direct-goal 2048/2048.
+  Noisy sensing used more actual actions; useless noise queries remain.
+  Authored engineering controls, no new independent external qualification.

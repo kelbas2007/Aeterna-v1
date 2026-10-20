@@ -19,3 +19,4 @@ pub mod search_policy;
 pub mod experiential;
 
 pub mod requirements;
+pub mod causal_memory;

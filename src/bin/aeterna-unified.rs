@@ -10,7 +10,8 @@ use serde_json::{Value,json};
 use std::io::{self,BufRead,Read,Write};
 type Result<T> = std::result::Result<T,Box<dyn std::error::Error>>;
 fn read<R:BufRead>(input:&mut R)->Result<Value>{
-    let mut line=String::new();input.take(34*1024*1024).read_line(&mut line)?;
+    // A 32 MiB checkpoint can double when escaped into a JSONL string.
+    let mut line=String::new();input.take(66*1024*1024).read_line(&mut line)?;
     if line.is_empty(){return Err("transport closed".into());}
     if !line.ends_with('\n'){return Err("unterminated or oversized request".into());}
     Ok(serde_json::from_str(&line)?)
@@ -61,14 +62,20 @@ pub(crate) fn main()->Result<()>{
                 "project_status"=>Ok(json!({"type":"project_status","project":project_status()})),
                 "init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
-                    let (mut cfg,policy)=configuration();
+                    let (mut cfg,mut policy)=configuration();
                     // Backward-compatible opt-in sensor width. The ordinary
-                    // JSONL interface still defaults to 32 channels; a small
-                    // virtual world may expose 1..6 factual sensor values for
+                    // JSONL interface still defaults to 32 channels; a
+                    // virtual world may expose 1..32 factual sensor values for
                     // bounded self-directed exploration without motor tuition.
                     if let Some(w)=request.get("width") {
                         cfg.width=usize::try_from(w.as_u64().ok_or("width must be an integer")?)?;
                     }
+                    for (field,value) in [("actions",&mut cfg.actions),("planning_depth",&mut cfg.planning_depth),
+                        ("journal_capacity",&mut cfg.journal_capacity)] {
+                        if let Some(v)=request.get(field) {*value=usize::try_from(v.as_u64().ok_or("configuration must be an unsigned integer")?)?;}
+                    }
+                    if let Some(v)=request.get("planning_work"){cfg.planning_work=v.as_u64().ok_or("invalid planning_work")?;}
+                    if let Some(v)=request.get("max_external_cost"){policy.max_external_cost=v.as_u64().ok_or("invalid max_external_cost")?;}
                     // Validate width BEFORE allocating a default observation.
                     // Untrusted u64::MAX must produce Capacity, not OOM/abort.
                     cfg.validate()?;
@@ -82,6 +89,13 @@ pub(crate) fn main()->Result<()>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_self_directed_control()?;
                     Ok(json!({"type":"self_directed_enabled","action_authority":"protected_u1"}))
                 },
+                "enable_causal_memory"=>{
+                    let config=serde_json::from_value(request.get("config").cloned().unwrap_or(json!({})))?;
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_causal_memory(config)?;
+                    Ok(json!({"type":"causal_memory_enabled"}))
+                },
+                "causal_report"=>Ok(json!({"type":"causal_report","report":runtime.as_ref().ok_or("not loaded")?
+                    .construction_learner().ok_or("not constructing")?.causal_report()})),
                 "enable_agency_aware_credit"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_agency_aware_credit()?;
                     Ok(json!({"type":"agency_aware_credit_enabled",
@@ -275,22 +289,29 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"loaded","report":runtime.as_ref().unwrap().unified_report()}))
                 },
                 "enter"=>{
-                    let (mut cfg,policy)=configuration();
-                    // Preserve the carrier's initialized sensor width; an
-                    // entered domain does not recreate the default 32 cells.
-                    let organism=runtime.as_ref().ok_or("not loaded")?;
-                    cfg.width=organism.construction_learner().ok_or("no constructing learner")?.current().len();
+                    // Retain the carrier dimensions and explicit limits,
+                    // including configurations restored from a checkpoint.
+                    let learner=runtime.as_ref().ok_or("not loaded")?.construction_learner().ok_or("no constructing learner")?;
+                    let cfg=learner.configuration().clone();
+                    let policy=learner.autonomy_policy().ok_or("no autonomy policy")?.clone();
                     let initial=serde_json::from_value(request["observation"].clone())?;
                     let name=request["name"].as_str().ok_or("missing sensor contract")?;
                     runtime.as_mut().ok_or("not loaded")?.enter_constructing_domain(name,cfg,policy,initial)?;
                     Ok(json!({"type":"entered","report":runtime.as_ref().unwrap().unified_report()}))
                 },
                 "step"=>{
-                    let available:Vec<bool>=serde_json::from_value(request["available"].clone())?;
-                    if available.len()!=4{return Err("requires four primitive action channels".into());}
-                    let offers:Vec<_>=available.into_iter().map(|available|ActionOffer{available,max_cost:1}).collect();
+                    let offers:Vec<ActionOffer>=if let Some(value)=request.get("offers") {
+                        if request.get("available").is_some(){return Err("use offers or available, not both".into())}
+                        serde_json::from_value(value.clone())?
+                    }else{
+                        let available:Vec<bool>=serde_json::from_value(request["available"].clone())?;
+                        available.into_iter().map(|available|ActionOffer{available,max_cost:1}).collect()
+                    };
+                    if offers.len()!=runtime.as_ref().ok_or("not loaded")?.construction_learner()
+                        .ok_or("not constructing")?.action_count(){return Err("incorrect primitive action channels".into());}
                     let goal:Option<Vec<Option<i64>>>=serde_json::from_value(request.get("goal").cloned().unwrap_or(Value::Null))?;
-                    let step=runtime.as_mut().ok_or("not loaded")?.step_constructing(goal.as_deref(),&offers,safe,|action|{
+                    let remaining_actions=request.get("remaining_actions").map(|v|v.as_u64().ok_or("remaining_actions must be an unsigned integer").and_then(|n|usize::try_from(n).map_err(|_|"remaining_actions overflow"))).transpose()?;
+                    let step=runtime.as_mut().ok_or("not loaded")?.step_constructing_with_action_limit(goal.as_deref(),&offers,remaining_actions,safe,|action|{
                         let result:Result<UnifiedPost>=(||{
                             write(&mut out,&json!({"type":"action","action":action}))?;
                             let post=read(&mut input)?;
@@ -406,7 +427,7 @@ The aeterna-unified binary is a compatibility alias of this same code.
 A learned checkpoint must be supplied explicitly; no pretrained state is invented.
 RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
 solve_synthesis, recursive_search_report, checkpoint, quit.
-Self-directed factual control: init(width<=6), enable_self_directed_control,
+Self-directed factual control: init(width<=32, actions<=16), enable_self_directed_control,
 then step(goal,available). Optional opt-in credit:
 enable_agency_aware_credit BEFORE collecting experience; the organism
 still learns world effects from forced actions, not native choice weights.
@@ -424,7 +445,8 @@ then enable_variable_depth_options, then enable_complexity_need_gate,
 all before the first physical experience. The gate may retain a simpler
 model, investigate an unresolved contradiction, or offer a longer option
 only when observed evidence pays its complexity cost.
-IMPORTANT: standard JSONL init planning_depth=2. Published cold 3..5-action
+JSONL init accepts planning_depth (1..32), planning_work, journal_capacity,
+actions and max_external_cost. Legacy default planning_depth=2. Published cold 3..5-action
 skills used a custom Rust ScientificRuntime Config with greater depth;
 the flags alone do NOT reproduce the longer experiments.
 Optional own evaluator synthesis:

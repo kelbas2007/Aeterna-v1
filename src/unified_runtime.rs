@@ -12,6 +12,24 @@ fn observable_graph_budget_ceiling(total:u64,autobiographical:u64)->u64{
 }
 #[derive(Debug,USerialize,UDeserialize)]
 struct UnifiedDomain {name:String,learner:ULearner,last_construction:usize,pending_credit:Option<[f32;5]>}
+impl UnifiedDomain {
+    fn try_construct(&mut self)->(UResult<()>,u64) {
+        let event=self.learner.factual_event_count();
+        let before=self.learner.report().construction_work;
+        let waiting_for_restart=self.learner.carrier_causal_waiting_for_restart();
+        let result=self.learner.construct();
+        if !waiting_for_restart || result!=Err(UError::NoEvidence) {
+            self.last_construction=event;
+        }
+        let work=self.learner.report().construction_work.saturating_sub(before);
+        (result,work)
+    }
+    fn clear_canceled_causal_credit(&mut self) {
+        if self.learner.causal_memory_enabled() && !self.learner.report().shadow_pending {
+            self.pending_credit=None;
+        }
+    }
+}
 #[derive(Debug,USerialize,UDeserialize)]
 struct UnifiedConstruction {
     current:UnifiedDomain,archived:Vec<UnifiedDomain>,nonce:u64,operations:[u64;4],
@@ -231,7 +249,7 @@ impl InstrumentalCredit {
     fn validate(&self,current:&UnifiedDomain,archived:&[UnifiedDomain],
                 freeze:bool)->UResult<()> {
         let recorded=archived.iter().chain(std::iter::once(current))
-            .map(|d|d.learner.records().len()).sum::<usize>();
+            .map(|d|d.learner.factual_event_count()).sum::<usize>();
         if self.facts_without_progress
             .checked_add(self.actual_progress_credited)
             .is_none_or(|n|n>recorded as u64)
@@ -242,7 +260,7 @@ impl InstrumentalCredit {
             let cfg=current.learner.carrier_config();
             if freeze || p.goal.len()!=cfg.width ||
                 p.expected_post.len()!=cfg.width ||
-                p.event!=current.learner.records().len() ||
+                p.event!=current.learner.factual_event_count() ||
                 p.fields.iter().any(|v|!v.is_finite()||!(0.0..=1.0).contains(v)){
                 return Err(UError::InvalidData)
             }
@@ -776,6 +794,14 @@ impl ScientificRuntime {
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
+    /// Learned probabilistic predictive contexts and bounded continuous memory.
+    /// Must be enabled before experience; native U1 and per-action protection
+    /// retain all physical authority. There are no task/motor role arguments.
+    pub fn enable_constructing_causal_memory(&mut self,config:crate::construction::causal_memory::CausalConfig)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Busy)}
+        u.current.learner.enable_causal_memory(config)
+    }
     /// Decide before any experience whether the native action policy may be
     /// credited for outcomes of externally FORCED identification actions.
     /// When enabled, those actions still teach the causal/world Learner,
@@ -1137,6 +1163,10 @@ impl ScientificRuntime {
         if let Some(e)=&mut policy.evidence{e.total_alpha=e.total_alpha.min(0.01/(k*(k+1)) as f64);}
         policy.max_external_cost=policy.max_external_cost.min(u.max_external_cost.saturating_sub(u.total_external_cost));
         let mut learner=ULearner::new(config,initial.clone())?;learner.enable_autonomy(policy)?;learner.manage_from_carrier()?;
+        let credits=u.current.learner.carrier_finish_causal_episode();
+        for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }
         let old=std::mem::replace(&mut u.current,UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None});
         u.archived.push(old);
         if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
@@ -1157,6 +1187,10 @@ impl ScientificRuntime {
     )->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         u.current.learner.carrier_observe_external_restart(observed.clone())?;
+        let credits=u.current.learner.carrier_take_causal_credits();
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         u.current.pending_credit=None;
         if let Some(revision)=u.self_revision.as_mut(){
             revision.pending_steps.clear();
@@ -1174,6 +1208,11 @@ impl ScientificRuntime {
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         u.current.learner.freeze_learning()?;
+        u.current.clear_canceled_causal_credit();
+        let credits=u.current.learner.carrier_take_causal_credits();
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         if let Some(c)=u.instrumental_credit.as_mut(){c.pending=None;}
         if let Some(s)=&mut u.education{s.freeze();}u.freeze_controller=true;self.organism.set_phase_native_meta_learning_enabled(false);Ok(())
     }
@@ -1186,20 +1225,46 @@ impl ScientificRuntime {
     }
     pub fn step_constructing<H,F>(&mut self,goal:Option<&[Option<i64>]>,offers:&[UOffer],hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
-        if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
-        let mut u=self.constructing.take().ok_or(UError::NoEvidence)?;
-        let result=self.step_constructing_inner(&mut u,goal,offers,hazard,execute);self.constructing=Some(u);result
+        self.step_constructing_with_action_limit(goal,offers,None,hazard,execute)
     }
-    fn step_constructing_inner<H,F>(&mut self,u:&mut UnifiedConstruction,goal:Option<&[Option<i64>]>,offers:&[UOffer],hazard:H,execute:F)->UResult<UnifiedStep>
+    /// The trusted adapter can announce a real remaining episode budget.
+    /// This constrains MODEL search; it grants no additional motor authority.
+    pub fn step_constructing_with_action_limit<H,F>(&mut self,goal:Option<&[Option<i64>]>,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
-        let cfg=u.current.learner.carrier_config().clone();
+        if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
+        if remaining_actions==Some(0){return Err(UError::Capacity)}
+        let mut u=self.constructing.take().ok_or(UError::NoEvidence)?;
+        let configured_depth=u.current.learner.carrier_config().planning_depth;
+        if let Some(left)=remaining_actions {
+            u.current.learner.carrier_swap_planning_depth(configured_depth.min(left));
+            if let Some(lane)=u.temporal_options.as_mut() {
+                if lane.pending.as_ref().is_some_and(|p|p.remaining.len()>left){lane.reject_pending();}
+            }
+        }
+        let result=self.step_constructing_inner(&mut u,goal,offers,remaining_actions,hazard,execute);
+        u.current.learner.carrier_swap_planning_depth(configured_depth);
+        self.constructing=Some(u);result
+    }
+    fn step_constructing_inner<H,F>(&mut self,u:&mut UnifiedConstruction,goal:Option<&[Option<i64>]>,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
+    where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
+        u.current.clear_canceled_causal_credit();
+        let mut cfg=u.current.learner.carrier_config().clone();
+        if let Some(left)=remaining_actions{cfg.planning_depth=cfg.planning_depth.min(left)}
         if offers.len()!=cfg.actions || goal.is_some_and(|g|g.len()!=cfg.width){return Err(UError::InvalidData);}
+        if u.current.learner.causal_memory_enabled() && goal.is_some_and(|g|!g.iter().any(Option::is_some)) {
+            return Err(UError::InvalidData);
+        }
+        let already_satisfied=goal.is_some_and(|g|g.iter().any(Option::is_some)
+            && udistance(u.current.learner.current(),Some(g))==0.0);
+        let credits=u.current.learner.carrier_prepare_causal_goal(if already_satisfied{None}else{goal});
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         // Once all *specified* goal coordinates already match the last
         // factual observation, do not issue an unneeded protected action.
         // Masked goals may intentionally leave unrelated state unconstrained.
         if u.current.learner.self_directed_control_enabled()
-            && goal.is_some_and(|g|g.iter().any(Option::is_some)
-                && udistance(u.current.learner.current(),Some(g))==0.0)
+            && already_satisfied
         {return Err(UError::NoEvidence)}
         let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
         let allowed:Vec<_>=offers.iter().map(|o|o.available&&o.max_cost<=remaining).collect();
@@ -1257,7 +1322,9 @@ impl ScientificRuntime {
         let mut complexity_need_decision=None::<String>;
         let mut contextual_probe_source=false;
         let mut base_factual_work=0_u64;
-        if u.current.learner.self_directed_control_enabled() &&
+        let mut causal_immediate_goals=vec![0.0_f64;cfg.actions];
+        let mut causal_immediate_support=vec![0_u64;cfg.actions];
+        if u.current.learner.self_directed_control_enabled() && !u.current.learner.causal_memory_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
             // explicitly allocates a larger bounded work budget. The published
@@ -1514,6 +1581,22 @@ impl ScientificRuntime {
             // Ordinary U1 already owns uncertainty-driven action selection:
             // an unverified factual hypothesis must ABSTAIN, not override it.
         }
+        if u.current.learner.causal_memory_enabled() && !is_option_continuation {
+            let planning_offers=offers.iter().zip(&allowed).map(|(o,&available)|UOffer{available,max_cost:o.max_cost}).collect::<Vec<_>>();
+            let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
+            let (proposal,work)=u.current.learner.carrier_causal_proposal(&planning_offers,goal,cfg.planning_work/2,cfg.planning_depth,remaining);
+            base_factual_work=work;
+            u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
+            if let Some(p)=proposal {
+                causal_immediate_goals=p.immediate_goals;
+                causal_immediate_support=p.immediate_support;
+                let information=(p.information_gain/std::f64::consts::LN_2).clamp(0.0,1.0) as f32;
+                options.push(UnifiedOption {p:PhaseCognitiveProposal {proposal_id:0xa00+p.action as u64,action:p.action,
+                    fields:[p.value as f32,0.0,information,(p.confidence*if goal.is_some(){p.value}else{1.0}) as f32,
+                        1.0/(1.0+(offers[p.action].max_cost as f32).ln_1p())]},
+                    kind:3,source:if information>0.0{"causal-belief-experiment"}else{"causal-belief-plan"},output:p.expected});
+            }
+        }
         let certified_chain_proposed=options.iter().any(|o|o.source=="factual-chain");
         let predictive_history_plan_proposed=options.iter().any(|o|
             o.source=="predictive-history" || o.source=="predictive-suffix");
@@ -1539,7 +1622,7 @@ impl ScientificRuntime {
         // original unlimited HDC recall and independent capped planning
         // search. Tightening either silently changes real motor choices
         // even when there is no qualifying factual graph proposal.
-        let strict_graph_helper_budget=u.temporal_options.as_ref()
+        let strict_graph_helper_budget=u.current.learner.causal_memory_enabled() || u.temporal_options.as_ref()
             .is_some_and(|lane|lane.observable_graph_enabled);
         for round in 0..4 {
             if let Some(approved)=continuation.take(){
@@ -1548,8 +1631,27 @@ impl ScientificRuntime {
                 operations.push("persisted-native-option".into());
                 selected=Some((approved,0.0));break
             }
+            if u.current.learner.causal_memory_enabled() && goal.is_some() {
+                for candidate in &mut options {
+                    if candidate.kind==3 && !candidate.source.starts_with("causal-belief-") {
+                        // Sensor codes need not have an ordinal meaning. An
+                        // old recall/VM proposal cannot turn arbitrary numeric
+                        // proximity into a goal forecast. Calibrate its motor
+                        // against the SAME acquired contextual distribution.
+                        candidate.p.fields[0]=causal_immediate_goals[candidate.p.action] as f32;
+                        // Reliability/novelty of an irrelevant sensor code is
+                        // not evidence for this goal. All immediate motor
+                        // proposals share the same acquired utility support.
+                        let n=causal_immediate_support[candidate.p.action] as f64;
+                        candidate.p.fields[1]=0.0;
+                        candidate.p.fields[2]=0.0;
+                        candidate.p.fields[3]=(causal_immediate_goals[candidate.p.action]*n/(n+2.0)) as f32;
+                        candidate.p.fields[4]=1.0/(1.0+(offers[candidate.p.action].max_cost as f32).ln_1p());
+                    }
+                }
+            }
             let mut candidates=options.clone();
-            let can_construct=u.current.learner.carrier_can_construct() && u.current.learner.records().len().saturating_sub(u.current.last_construction)>=cfg.search_every;
+            let can_construct=u.current.learner.carrier_can_construct() && u.current.learner.factual_event_count().saturating_sub(u.current.last_construction)>=cfg.search_every;
             if round<3 {
                 let action=allowed.iter().position(|&a|a).ok_or(UError::Blocked)?;
                 if !tried[0] && can_construct {candidates.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:1,action,fields:[0.0,pressure,pressure,0.0,0.15]},kind:0,source:"construct",output:None});}
@@ -1569,11 +1671,13 @@ impl ScientificRuntime {
             tried[chosen.kind as usize]=true;
             match chosen.kind {
                 0=>{
-                    u.current.last_construction=u.current.learner.records().len();let before=u.current.learner.report().construction_work;
-                    let result=u.current.learner.construct();u.computation_work=u.computation_work.saturating_add(u.current.learner.report().construction_work.saturating_sub(before));
+                    let (result,work)=u.current.try_construct();
+                    u.computation_work=u.computation_work.saturating_add(work);
                     if result.is_ok() && u.current.learner.report().shadow_pending {
                         if native_credit_eligible && u.instrumental_credit.is_none() {
                             u.current.pending_credit=Some(chosen.p.fields);
+                        }else if u.current.learner.causal_memory_enabled(){
+                            u.current.pending_credit=None;
                         }
                     }
                     else if !u.freeze_controller && native_credit_eligible &&
@@ -1638,7 +1742,9 @@ impl ScientificRuntime {
         let mut delayed_option_credit=None::<([f32;5],f32)>;
         let original_fields=options.iter().find(|c|c.p.proposal_id==option.p.proposal_id)
             .map(|c|c.p.fields).unwrap_or(option.p.fields);
-        let token=u.current.learner.carrier_prepare(a)?;
+        let prepared=u.current.learner.carrier_prepare(a);
+        u.current.clear_canceled_causal_credit();
+        let token=prepared?;
         let decision=self.protection.screen(a,hazard(a));let record=decision.record().clone();
         let Some(permit)=decision.into_permit() else {
             if is_option_continuation{
@@ -1679,10 +1785,25 @@ impl ScientificRuntime {
         }
         let before=udistance(u.current.learner.current(),goal);let after=udistance(&post.observation,goal);
         let novel=!u.current.learner.records().iter().any(|r|r.transition.post==post.observation);
-        let progress=if goal.is_some(){((before-after)/(1.0+before)).max(0.0) as f32}else{0.0};
-        let value=(0.8*post.reward.max(progress).max(0.0)+0.2*(if novel {1.0}else{0.0})).clamp(0.0,1.0);
+        let progress=if u.current.learner.causal_memory_enabled(){
+            f32::from(goal.is_some_and(|g|post.observation.iter().zip(g)
+                .all(|(&value,wanted)|wanted.is_none_or(|target|target==value))))
+        }else if goal.is_some(){((before-after)/(1.0+before)).max(0.0) as f32}else{0.0};
+        let value=if u.current.learner.causal_memory_enabled(){post.reward.max(progress).max(0.0).clamp(0.0,1.0)}
+            else{(0.8*post.reward.max(progress).max(0.0)+0.2*(if novel {1.0}else{0.0})).clamp(0.0,1.0)};
         let verdicts=u.current.learner.promotions().len();u.total_external_cost=u.total_external_cost.saturating_add(post.cost);
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
+        let delayed_causal_decision=u.current.learner.causal_memory_enabled() &&
+            option.source.starts_with("causal-belief-") &&
+            (option.source=="causal-belief-experiment" ||
+                option.p.fields[0]>causal_immediate_goals[a] as f32+0.03);
+        // An explicit reward settles this choice now; do not subsequently
+        // replace it with zero merely because a different goal was unfinished.
+        let probe=if native_credit_eligible && delayed_causal_decision && post.reward==0.0 {Some(option.p.fields)}else{None};
+        let credits=u.current.learner.carrier_causal_feedback(goal,&post.observation,post.cost,probe,policy_has_choice);
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         if option.source=="contextual-causal-experiment" {
             if let Some(l)=u.temporal_options.as_mut(){
                 l.contextual_experiment_selected=l.contextual_experiment_selected
@@ -1802,6 +1923,13 @@ impl ScientificRuntime {
             }
         }
         if !u.freeze_controller {
+            // A real environment reward is already factual. Only predicted
+            // future goal utility waits for a delayed causal/option outcome.
+            if native_credit_eligible && u.current.learner.causal_memory_enabled()
+                && post.reward!=0.0 && (delayed_causal_decision || selected_temporal_route
+                    || u.instrumental_credit.is_some()) {
+                self.organism.observe_phase_native_meta_utility(option.p.fields,post.reward.clamp(0.0,1.0));
+            }
             if let Some(ledger)=u.agency_credit.as_mut() {
                 if is_option_continuation{
                     ledger.option_continuation_actions=ledger.option_continuation_actions
@@ -1815,7 +1943,7 @@ impl ScientificRuntime {
                 }
             }
             if native_credit_eligible && u.instrumental_credit.is_none() {
-                if !selected_temporal_route {
+                if !selected_temporal_route && !delayed_causal_decision {
                     self.organism.observe_phase_native_meta_utility(option.p.fields,value);
                     for (source,fields) in helpers {
                         self.organism.observe_phase_native_meta_utility(
@@ -1833,6 +1961,7 @@ impl ScientificRuntime {
                 // motor-choice success even if a separate model improved.
                 u.current.pending_credit=None;
             }
+            u.current.clear_canceled_causal_credit();
             // Credited once to the ORIGINAL U1 option decision, after a
             // genuine physical terminal success or executed contradiction.
             // Continuation steps cannot independently receive this credit.
@@ -1840,7 +1969,7 @@ impl ScientificRuntime {
                 self.organism.observe_phase_native_meta_utility(fields,utility);
             }
             if let Some(c)=u.instrumental_credit.as_mut(){
-                let event=u.current.learner.records().len();
+                let event=u.current.learner.factual_event_count();
                 let mut valid_pending=None;
                 if let Some(prior)=c.pending.take(){
                     if goal.is_some_and(|g|g==prior.goal.as_slice()) &&
@@ -1903,14 +2032,16 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,contextual_experiment_proposed,observable_empirical_route_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.factual_event_count(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,contextual_experiment_proposed,observable_empirical_route_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;
         let carrier=self.organism.constructing_carrier_checkpoint().ok_or(UError::InvalidData)?;
         let hash=uhash(&serde_json::to_vec(&(1u32,&carrier,u,self.sequence,self.emergency_latched(),self.protection.audit_position().0)).map_err(|_|UError::InvalidData)?);
         let value=serde_json::json!({"version":1,"carrier":carrier,"cognition":u,"sequence":self.sequence,"emergency":self.emergency_latched(),"protection_sequence":self.protection.audit_position().0,"hash":hash});
-        serde_json::to_vec(&value).map_err(|_|UError::InvalidData)
+        let bytes=serde_json::to_vec(&value).map_err(|_|UError::InvalidData)?;
+        if bytes.len()>32*1024*1024{return Err(UError::Capacity)}
+        Ok(bytes)
     }
     // Cognition only; every action still needs fresh trusted hazard evidence.
     pub fn from_constructing_checkpoint(bytes:&[u8])->UResult<Self> {
@@ -1933,7 +2064,7 @@ impl ScientificRuntime {
         if let Some(agency)=&s.cognition.agency_credit {
             let recorded:usize = s.cognition.archived.iter()
                 .chain(std::iter::once(&s.cognition.current))
-                .map(|d|d.learner.records().len()).sum();
+                .map(|d|d.learner.factual_event_count()).sum();
             if agency.externally_forced_actions
                 .checked_add(agency.self_selected_actions)
                 .and_then(|n|n.checked_add(agency.option_continuation_actions))
@@ -1947,9 +2078,10 @@ impl ScientificRuntime {
             let _=ULearner::from_checkpoint(&d.learner.checkpoint()?)?;
             if !d.learner.carrier_is_managed() || d.learner.carrier_config().width!=evo.config().sensory_cells
                 || d.learner.carrier_config().actions!=evo.config().motor_cells || !names.insert(&d.name)
-                || d.name.is_empty() || d.name.len()>128 || d.last_construction>d.learner.records().len()
+                || d.name.is_empty() || d.name.len()>128 || d.last_construction>d.learner.factual_event_count()
                 || d.pending_credit.is_some_and(|f|f.iter().any(|x|!x.is_finite()||!(0.0..=1.0).contains(x))) {return Err(UError::InvalidData);}
-            costs=costs.saturating_add(d.learner.records().iter().map(|r|r.external_cost).sum::<u64>());
+            costs=costs.saturating_add(d.learner.records().iter().map(|r|r.external_cost).sum::<u64>())
+                .saturating_add(d.learner.causal_report().map_or(0,|r|r.compacted_external_cost));
         }
         if costs>s.cognition.total_external_cost || s.cognition.max_external_cost==0
             || evo.current_real().map(|r|r.sensory.clone())!=Some(usensory(s.cognition.current.learner.current())) {return Err(UError::InvalidData);}
@@ -2059,5 +2191,273 @@ mod observable_graph_shared_budget_tests{
         }
         assert_eq!(observable_graph_budget_ceiling(32_000,20_000),8_000);
         assert_eq!(observable_graph_budget_ceiling(120_000,20_000),16_000);
+    }
+}
+
+#[cfg(test)]
+mod causal_continuity_credit_tests {
+    use super::*;
+    fn safe(_:usize)->HumanProtectionEvidence {
+        HumanProtectionEvidence{human_present:false,physical_effect_possible:false,
+            predicted_harm_probability:0.0,hazard_confidence:1.0,emergency_stop:false}
+    }
+    fn runtime()->ScientificRuntime {
+        runtime_for(true)
+    }
+    fn runtime_for(causal:bool)->ScientificRuntime {
+        let mut config=UConfig{journal_capacity:32,search_every:100_000,shadow_steps:2,..Default::default()};
+        config.search.deterministic=true;
+        let mut policy=UPolicy::default();policy.evidence=None;policy.ceiling.deterministic=true;
+        let mut rt=ScientificRuntime::new_constructing(config,policy,vec![0],"credit-lifecycle").unwrap();
+        rt.enable_constructing_self_directed_control().unwrap();
+        rt.enable_constructing_agency_aware_credit().unwrap();
+        if causal {rt.enable_constructing_causal_memory(crate::construction::causal_memory::CausalConfig::default()).unwrap();}
+        rt
+    }
+    fn step(rt:&mut ScientificRuntime,physical:&mut i64,choice:bool){
+        rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:choice,max_cost:1}],safe,|_|{
+            *physical+=1;Ok(UnifiedPost{observation:vec![*physical],reward:0.0,cost:1})
+        }).unwrap();
+    }
+    #[test]
+    fn changing_goals_closes_old_credit_even_when_no_new_action_is_possible(){
+        for (goal,available) in [(0,true),(8,false)] {
+            let mut rt=runtime();
+            rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+                Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+            let before=rt.organism.phase_native_meta_observations();
+            let result=rt.step_constructing(Some(&[Some(goal)]),&[UOffer{available,max_cost:1};2],safe,
+                |_|panic!("no physical action for this goal transition"));
+            assert!(matches!(result,Err(UError::NoEvidence|UError::Blocked)));
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+            assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().failed_goal_episodes,1);
+            rt.freeze_constructing().unwrap();
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+            assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().failed_goal_episodes,1);
+        }
+    }
+    #[test]
+    fn entering_a_domain_delivers_old_goal_credit_before_archival(){
+        for unknown_post in [false,true] {
+            let mut rt=runtime();
+            rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+                Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+            let before=rt.organism.phase_native_meta_observations();
+            if unknown_post {
+                let result=rt.step_constructing(Some(&[Some(9)]),&[UOffer{available:true,max_cost:1};2],safe,
+                    |_|Err(UError::Execution("POST unavailable after possible execution".into())));
+                assert!(result.is_err());assert!(rt.emergency_latched());
+            }
+            let config=rt.construction_learner().unwrap().configuration().clone();
+            let policy=rt.construction_learner().unwrap().autonomy_policy().unwrap().clone();
+            rt.enter_constructing_domain("direct-next-domain",config,policy,vec![0]).unwrap();
+            let learned=usize::from(!unknown_post) as u64;
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+learned);
+            let old=&mut rt.constructing.as_mut().unwrap().archived[0].learner;
+            assert_eq!(old.causal_report().unwrap().failed_goal_episodes,learned);
+            assert!(old.carrier_take_causal_credits().is_empty());
+        }
+    }
+    #[test]
+    fn restart_failure_credit_is_delivered_before_new_actions_or_domains(){
+        let mut rt=runtime();
+        rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+            Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+        let before=rt.organism.phase_native_meta_observations();
+        rt.observe_constructing_external_restart(vec![0]).unwrap();
+        assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+        assert_eq!(rt.construction_learner().unwrap().factual_event_count(),0);
+        assert!(rt.constructing.as_mut().unwrap().current.learner.carrier_take_causal_credits().is_empty());
+        let config=rt.construction_learner().unwrap().configuration().clone();
+        let policy=rt.construction_learner().unwrap().autonomy_policy().unwrap().clone();
+        rt.enter_constructing_domain("next-domain",config,policy,vec![0]).unwrap();
+        assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+        assert_eq!(rt.constructing.as_ref().unwrap().archived[0].learner.causal_report().unwrap().failed_goal_episodes,1);
+    }
+    #[test]
+    fn instrumental_preparation_keeps_its_event_identity_across_compaction(){
+        let mut rt=runtime();rt.enable_constructing_instrumental_credit().unwrap();
+        let mut physical=0;
+        for _ in 0..32 {step(&mut rt,&mut physical,false);}
+        rt.constructing.as_mut().unwrap().instrumental_credit.as_mut().unwrap().pending=Some(
+            InstrumentalPending{goal:vec![Some(33)],expected_post:vec![32],
+                fields:[0.5;5],event:32});
+        rt.step_constructing(Some(&[Some(33)]),&[UOffer{available:true,max_cost:1};2],safe,
+            |_|Ok(UnifiedPost{observation:vec![33],reward:0.0,cost:1})).unwrap();
+        let report=rt.unified_report().unwrap().instrumental_credit.unwrap();
+        assert_eq!(report.validated_preparations_credited,1);
+        assert!(rt.construction_learner().unwrap().causal_report().unwrap().compactions>0);
+        ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
+    }
+    #[test]
+    fn forced_followups_settle_earlier_choices_without_creating_new_credit(){
+        for earlier_choice in [false,true] {
+            let mut rt=runtime();
+            rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+                Some(&[Some(9)]),&[0],1,Some([0.5;5]),earlier_choice);
+            let before=rt.organism.phase_native_meta_observations();
+            rt.step_constructing(Some(&[Some(9)]),&[
+                UOffer{available:true,max_cost:1},UOffer{available:false,max_cost:1}],safe,
+                |_|Ok(UnifiedPost{observation:vec![9],reward:0.0,cost:1})).unwrap();
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+u64::from(earlier_choice));
+            let report=rt.construction_learner().unwrap().causal_report().unwrap();
+            assert_eq!(report.completed_goal_episodes,1);
+            assert_eq!(report.useful_experiments,u64::from(earlier_choice));
+            assert_eq!(report.delayed_experiment_credits,u64::from(earlier_choice));
+        }
+    }
+    #[test]
+    fn ordinary_no_evidence_consumes_the_construction_cadence(){
+        let mut rt=runtime();
+        let domain=&mut rt.constructing.as_mut().unwrap().current;
+        for id in 0..8 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![0],id+1,1).unwrap();
+        }
+        assert_eq!(domain.try_construct().0,Err(UError::NoEvidence));
+        assert_eq!(domain.last_construction,8);
+    }
+    #[test]
+    fn a_missing_restart_does_not_consume_the_next_construction_opportunity(){
+        let mut rt=runtime();
+        let domain=&mut rt.constructing.as_mut().unwrap().current;
+        for id in 0..33 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![id as i64+1],id+1,1).unwrap();
+        }
+        assert_eq!(domain.try_construct().0,Err(UError::NoEvidence));
+        assert_eq!(domain.last_construction,0);
+        domain.learner.record_external_restart(vec![33]).unwrap();
+        for id in 33..36 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![id as i64+1],id+1,1).unwrap();
+        }
+        assert_eq!(domain.try_construct().0,Err(UError::NoEvidence));
+        assert_eq!(domain.last_construction,0,"a short genuine suffix must remain retryable");
+        for id in 36..41 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![id as i64+1],id+1,1).unwrap();
+        }
+        assert!(domain.learner.carrier_can_construct());
+        domain.try_construct().0.unwrap();
+        assert!(domain.learner.report().shadow_pending);
+        assert_eq!(domain.last_construction,41);
+    }
+    #[test]
+    fn the_action_deadline_limits_legacy_vm_plans_and_restores_configuration(){
+        let mut rt=runtime_for(false);let mut physical=0;
+        for _ in 0..8 {step(&mut rt,&mut physical,false);}
+        rt.constructing.as_mut().unwrap().current.try_construct().0.unwrap();
+        for _ in 0..2 {step(&mut rt,&mut physical,false);}
+        assert!(rt.construction_learner().unwrap().promotions().iter().any(|p|p.accepted));
+        let depth=rt.construction_learner().unwrap().configuration().planning_depth;
+        let goal=[Some(physical+2)];
+        let full=rt.construction_learner().unwrap().carrier_plans(&goal,&[true,true],20_000).unwrap().0;
+        assert!(full.iter().any(|(_,p,d)|*d>=2 && p==&[physical+2]));
+        let checkpoint=rt.checkpoint_constructing().unwrap();
+        let mut observed_plan=false;
+        for nonce in 0..64 {
+            let mut trial=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+            trial.constructing.as_mut().unwrap().nonce=nonce;
+            let result=trial.step_constructing_with_action_limit(Some(&goal),
+                &[UOffer{available:true,max_cost:1};2],Some(1),safe,|_|{
+                    Ok(UnifiedPost{observation:vec![physical+1],reward:0.0,cost:1})
+                }).unwrap();
+            assert_eq!(trial.construction_learner().unwrap().configuration().planning_depth,depth);
+            if result.source=="plan" {
+                observed_plan=true;
+                assert!(result.selected_fields[0]<=0.5,"a two-step goal cannot be promised within one action");
+            }
+        }
+        assert!(observed_plan);
+        let blocked=rt.step_constructing_with_action_limit(Some(&goal),
+            &[UOffer{available:false,max_cost:1};2],Some(1),safe,|_|panic!("no physical action"));
+        assert!(matches!(blocked,Err(UError::Blocked)));
+        assert_eq!(rt.construction_learner().unwrap().configuration().planning_depth,depth);
+    }
+    #[test]
+    fn real_rewards_reach_native_learning_even_for_delayed_causal_experiments(){
+        for goal in [None,Some([Some(999)])] {
+            let mut rt=runtime();
+            for _ in 0..2 {for context in 0..2 {
+                rt.observe_constructing_external_restart(vec![5]).unwrap();
+                let only=|action|[UOffer{available:action==0,max_cost:1},UOffer{available:action==1,max_cost:1}];
+                rt.step_constructing(None,&only(context),safe,|_|Ok(UnifiedPost{observation:vec![0],reward:0.0,cost:1})).unwrap();
+                rt.step_constructing(None,&only(1),safe,|_|Ok(UnifiedPost{observation:vec![if context==0{7}else{9}],reward:0.0,cost:1})).unwrap();
+            }}
+            rt.observe_constructing_external_restart(vec![5]).unwrap();
+            rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:false,max_cost:1}],safe,
+                |_|Ok(UnifiedPost{observation:vec![0],reward:0.0,cost:1})).unwrap();
+            let checkpoint=rt.checkpoint_constructing().unwrap();let mut found=false;
+            for nonce in 0..64 {
+                let mut trial=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+                trial.constructing.as_mut().unwrap().nonce=nonce;
+                let before=trial.organism.phase_native_meta_observations();
+                let result=trial.step_constructing(goal.as_ref().map(|g|g.as_slice()),&[UOffer{available:true,max_cost:1};2],safe,
+                    |action|Ok(UnifiedPost{observation:vec![if action==1{7}else{0}],reward:1.0,cost:1})).unwrap();
+                if result.source=="causal-belief-experiment" {
+                    assert_eq!(result.factual_utility,1.0);
+                    assert_eq!(trial.organism.phase_native_meta_observations(),before+1);
+                    trial.freeze_constructing().unwrap();
+                    assert_eq!(trial.organism.phase_native_meta_observations(),before+1,
+                        "freezing an unfinished goal cannot undo an already observed reward");
+                    found=true;break;
+                }
+            }
+            assert!(found,"native U1 must actually select the informative proposal in this control");
+        }
+    }
+    #[test]
+    fn valid_domain_checkpoints_cannot_create_an_unrestorable_combined_checkpoint(){
+        let mut rt=runtime();
+        let mut value=serde_json::to_value(&rt.constructing.as_ref().unwrap().current.learner).unwrap();
+        // A large diagnostic is legal in one bounded causal checkpoint.
+        value["last_error"]=serde_json::json!("x".repeat(12*1024*1024));
+        let learner:ULearner=serde_json::from_value(value).unwrap();
+        let individual=learner.checkpoint().unwrap();
+        ULearner::from_checkpoint(&individual).unwrap();
+        let u=rt.constructing.as_mut().unwrap();u.current.learner=learner;
+        for index in 0..2 {
+            u.archived.push(UnifiedDomain{name:format!("prior-{index}"),
+                learner:ULearner::from_checkpoint(&individual).unwrap(),
+                last_construction:0,pending_credit:None});
+        }
+        assert!(matches!(rt.checkpoint_constructing(),Err(UError::Capacity)));
+    }
+    #[test]
+    fn canceled_construction_credit_cannot_pass_to_a_later_trial(){
+        let mut rt=runtime();let mut physical=0;
+        for _ in 0..32 {step(&mut rt,&mut physical,false);}
+        {
+            let domain=&mut rt.constructing.as_mut().unwrap().current;
+            domain.learner.construct().unwrap();assert!(domain.learner.report().shadow_pending);
+            domain.pending_credit=Some([0.73,0.11,0.31,0.29,0.83]);
+        }
+        step(&mut rt,&mut physical,false); // Compaction cancels this real trial.
+        let domain=&rt.constructing.as_ref().unwrap().current;
+        assert!(!domain.learner.report().shadow_pending);
+        assert!(domain.pending_credit.is_none());
+        rt=ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
+        rt.observe_constructing_external_restart(vec![physical]).unwrap();
+        for _ in 0..8 {step(&mut rt,&mut physical,false);}
+        rt.constructing.as_mut().unwrap().current.learner.construct().unwrap();
+        assert!(rt.constructing.as_ref().unwrap().current.learner.report().shadow_pending);
+        for _ in 0..2 {step(&mut rt,&mut physical,true);}
+        let domain=&rt.constructing.as_ref().unwrap().current;
+        assert!(domain.learner.promotions().iter().any(|p|p.accepted));
+        assert!(domain.pending_credit.is_none());
+    }
+    #[test]
+    fn freezing_delivers_final_failure_credit_before_disabling_native_learning(){
+        let mut rt=runtime();
+        rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+            Some(&[Some(9)]),&[0],1,Some([0.5;5]),true);
+        let before=rt.organism.phase_native_meta_observations();
+        rt.freeze_constructing().unwrap();
+        assert_eq!(rt.organism.phase_native_meta_observations(),before+1);
+        assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().failed_goal_episodes,1);
+        let frozen=rt.checkpoint_constructing().unwrap();
+        rt.freeze_constructing().unwrap();
+        assert_eq!(rt.checkpoint_constructing().unwrap(),frozen);
     }
 }
