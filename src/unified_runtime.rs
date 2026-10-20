@@ -16,8 +16,9 @@ impl UnifiedDomain {
     fn try_construct(&mut self)->(UResult<()>,u64) {
         let event=self.learner.factual_event_count();
         let before=self.learner.report().construction_work;
+        let waiting_for_restart=self.learner.carrier_causal_waiting_for_restart();
         let result=self.learner.construct();
-        if !self.learner.causal_memory_enabled() || result!=Err(UError::NoEvidence) {
+        if !waiting_for_restart || result!=Err(UError::NoEvidence) {
             self.last_construction=event;
         }
         let work=self.learner.report().construction_work.saturating_sub(before);
@@ -2289,6 +2290,34 @@ mod causal_continuity_credit_tests {
         ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
     }
     #[test]
+    fn forced_followups_settle_earlier_choices_without_creating_new_credit(){
+        for earlier_choice in [false,true] {
+            let mut rt=runtime();
+            rt.constructing.as_mut().unwrap().current.learner.carrier_causal_feedback(
+                Some(&[Some(9)]),&[0],1,Some([0.5;5]),earlier_choice);
+            let before=rt.organism.phase_native_meta_observations();
+            rt.step_constructing(Some(&[Some(9)]),&[
+                UOffer{available:true,max_cost:1},UOffer{available:false,max_cost:1}],safe,
+                |_|Ok(UnifiedPost{observation:vec![9],reward:0.0,cost:1})).unwrap();
+            assert_eq!(rt.organism.phase_native_meta_observations(),before+u64::from(earlier_choice));
+            let report=rt.construction_learner().unwrap().causal_report().unwrap();
+            assert_eq!(report.completed_goal_episodes,1);
+            assert_eq!(report.useful_experiments,u64::from(earlier_choice));
+            assert_eq!(report.delayed_experiment_credits,u64::from(earlier_choice));
+        }
+    }
+    #[test]
+    fn ordinary_no_evidence_consumes_the_construction_cadence(){
+        let mut rt=runtime();
+        let domain=&mut rt.constructing.as_mut().unwrap().current;
+        for id in 0..8 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![0],id+1,1).unwrap();
+        }
+        assert_eq!(domain.try_construct().0,Err(UError::NoEvidence));
+        assert_eq!(domain.last_construction,8);
+    }
+    #[test]
     fn a_missing_restart_does_not_consume_the_next_construction_opportunity(){
         let mut rt=runtime();
         let domain=&mut rt.constructing.as_mut().unwrap().current;
@@ -2299,7 +2328,13 @@ mod causal_continuity_credit_tests {
         assert_eq!(domain.try_construct().0,Err(UError::NoEvidence));
         assert_eq!(domain.last_construction,0);
         domain.learner.record_external_restart(vec![33]).unwrap();
-        for id in 33..41 {
+        for id in 33..36 {
+            let token=domain.learner.carrier_prepare(0).unwrap();
+            domain.learner.carrier_commit(token,vec![id as i64+1],id+1,1).unwrap();
+        }
+        assert_eq!(domain.try_construct().0,Err(UError::NoEvidence));
+        assert_eq!(domain.last_construction,0,"a short genuine suffix must remain retryable");
+        for id in 36..41 {
             let token=domain.learner.carrier_prepare(0).unwrap();
             domain.learner.carrier_commit(token,vec![id as i64+1],id+1,1).unwrap();
         }

@@ -98,6 +98,20 @@ impl Learner {
             .as_mut()
             .map_or_else(Vec::new, |m| m.take_credits())
     }
+    pub(crate) fn carrier_causal_waiting_for_restart(&self) -> bool {
+        self.causal_memory.is_some()
+            && !self.pending
+            && self.shadow.is_none()
+            && self.frozen_at.is_none()
+            && !self.poisoned
+            && self.records.len() >= self.config.minimum_training
+            && self.records.first().is_some_and(|r| !r.transition.restart)
+            && self
+                .records
+                .iter()
+                .position(|r| r.transition.restart)
+                .is_none_or(|start| self.records.len() - start < self.config.minimum_training)
+    }
     pub(crate) fn carrier_prepare_causal_goal(
         &mut self,
         goal: Option<&[Option<i64>]>,
@@ -236,9 +250,9 @@ impl Learner {
         let Some(memory) = &mut self.causal_memory else {
             return Vec::new();
         };
-        if !native_choice {
-            memory.cancel_experiment_credit();
-        }
+        // A forced follow-up cannot earn new choice credit, but its real
+        // outcome must still settle earlier freely selected experiments.
+        let experiment = experiment.filter(|_| native_choice);
         memory.feedback(goal, post, cost, experiment, self.frozen_at.is_none());
         memory.take_credits()
     }

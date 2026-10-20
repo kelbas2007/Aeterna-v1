@@ -364,9 +364,6 @@ impl CausalMemory {
     pub fn take_credits(&mut self) -> Vec<([f32; 5], f64)> {
         std::mem::take(&mut self.credits)
     }
-    pub fn cancel_experiment_credit(&mut self) {
-        self.pending.clear();
-    }
     pub fn observe(&mut self, t: &Transition, learning: bool) {
         if t.restart {
             self.context.clear()
