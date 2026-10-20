@@ -204,3 +204,65 @@ fn invalid_sensor_posts_keep_the_known_actual_cost_without_learning() {
             .is_err());
     }
 }
+
+#[test]
+fn jsonl_malformed_sensor_content_preserves_known_cost_and_stops_without_learning() {
+    use serde_json::{json, Value};
+    use std::io::{BufRead, BufReader, Write};
+    use std::process::{Command, Stdio};
+    for (cost, frame, reward) in [
+        (
+            7,
+            json!({"kind":"image","namespace":1,"pixels":[[256]]}),
+            json!(0.0),
+        ),
+        (
+            3,
+            json!({"kind":"image","namespace":65536,"pixels":null}),
+            json!(0.0),
+        ),
+        (2, Value::Null, json!(0.0)),
+        (
+            1,
+            json!({"kind":"image","namespace":1,"pixels":null}),
+            json!("invalid"),
+        ),
+    ] {
+        let mut child = Command::new(env!("CARGO_BIN_EXE_aeterna-v1"))
+            .arg("--jsonl")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        let mut input = child.stdin.take().unwrap();
+        let mut output = BufReader::new(child.stdout.take().unwrap());
+        let mut exchange = |message: Value| -> Value {
+            writeln!(input, "{message}").unwrap();
+            input.flush().unwrap();
+            let mut line = String::new();
+            output.read_line(&mut line).unwrap();
+            serde_json::from_str(&line).unwrap()
+        };
+        assert_eq!(
+            exchange(json!({"op":"external_init","adaptive":false,
+            "frame":{"kind":"image","namespace":1,"pixels":null}}))["type"],
+            "initialized"
+        );
+        let offers = vec![json!({"available":true,"max_cost":10}); 16];
+        assert_eq!(
+            exchange(json!({"op":"external_step","offers":offers,
+            "remaining_actions":1}))["type"],
+            "action"
+        );
+        let error =
+            exchange(json!({"op":"post","result":{"frame":frame,"cost":cost,"reward":reward}}));
+        assert_eq!(error["type"], "error", "{error}");
+        assert_eq!(error["report"]["total_external_cost"], cost, "{error}");
+        assert_eq!(error["external_reward_report"]["factual_events"], 0);
+        assert_eq!(error["external_reward_report"]["learned_events"], 0);
+        drop(exchange);
+        drop(input);
+        assert!(!child.wait().unwrap().success());
+    }
+}

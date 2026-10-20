@@ -138,7 +138,7 @@
     "modified": {
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "7dc1f3597403d010b9c8a59063c5fa1404edb26f0ef5bf1a3730b10be5928248",
-        "after_sha256": "c8c1f28952c1614150d04dd95db9599fb520af3f7645014354a6c4e407c67a45"
+        "after_sha256": "d64e70952dde8c80f3ab4438ff9fee809c8f005baacf964900b1ae77c7057f5b"
       },
       "src/construction/causal_port.rs": {
         "before_sha256": "3b866b966548d455c9f0aa9119f9432954b4ae89a555e52a64653ad152ecb052",
@@ -159,7 +159,7 @@
     },
     "added": {
       "src/construction/external_port.rs": "c150a9679d91bd8447c1c482fabdf6bc16a8611bb6bfdeeb6c6e5bd659c06c61",
-      "src/construction/external_reward.rs": "1232df3022836992e23f8180fb0df373c557138dd59f2ab66650681743ab270c",
+      "src/construction/external_reward.rs": "86af566ccc01d9efc7e2fd68cb568329c6c1b69f27dac233455f219f3c2fc660",
       "src/construction/sensors.rs": "69180aa9ce6583907abae8dd2329356a00014984510c426efd6d686dd6baf202"
     },
     "status": "implemented; external scoring is separate from historical CAUSAL-CONTINUAL-4C evidence"

@@ -495,6 +495,10 @@ impl ExternalMemory {
                 if let Some(rate) = self.reward_rates.get(&key) {
                     values[a] = rate.sum / (rate.count as f64 + rate.retired_failures);
                     support[a] = rate.count;
+                } else if let Some(retired) = &self.retired_failures {
+                    // Apply forgotten failures BEFORE choosing the first
+                    // revisiting action, not only after its new POST arrives.
+                    values[a] /= 1.0 + retired.estimate(&key);
                 }
             }
         }
@@ -876,9 +880,10 @@ impl ExternalMemory {
                     || r.retired_failures < 0.0
                     || r.retired_failures > events as f64 + 1e-9
                     || (r.retired_failures > 0.0 && self.retired_failures.is_none())
-                    || self.retired_failures.as_ref().is_some_and(|s| {
-                        r.retired_failures > s.estimate(key) + 1e-9
-                    })
+                    || self
+                        .retired_failures
+                        .as_ref()
+                        .is_some_and(|s| r.retired_failures > s.estimate(key) + 1e-9)
                     || parsed.is_err()
                     || parsed.is_ok_and(|(s, a)| !valid_state(&s) || a >= actions)
             })
@@ -1111,6 +1116,13 @@ mod tests {
             m.report().learned_fingerprint,
             restored.report().learned_fingerprint
         );
+        let (first_revisit, _) = restored.immediate(
+            &original,
+            2,
+            &Strategy::default(),
+            &mut Meter::new(1_000_000),
+        );
+        assert!(first_revisit[0] > 0.0 && first_revisit[0] <= 0.5);
         restored.observe(original.clone(), 0, original.clone(), 1.0, 1, None, true);
         let (values, _) = restored.immediate(
             &original,

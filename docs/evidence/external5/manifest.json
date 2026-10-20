@@ -432,6 +432,30 @@
       "bytes": 99,
       "sha256": "b1583a660f8dbf9652f2da1d91b3da5a084337cd87edd09264becb1714e563b3",
       "phase": "post_evaluation_review2"
+    },
+    {
+      "path": "review3-checkpoint-restore.json",
+      "bytes": 423,
+      "sha256": "3067c425d38b925f4c3abacfb770d49898eee0a3f3097771e7e5bc3f532eb54a",
+      "phase": "post_evaluation_review3"
+    },
+    {
+      "path": "logs/external5-review3-reward-tests.log.gz",
+      "bytes": 1800,
+      "sha256": "b13f0846f2469bcbb8eb84c37cc1f53c14b3bd6bc228161081d7d12d6616bab4",
+      "phase": "post_evaluation_review3"
+    },
+    {
+      "path": "logs/external5-review3-jsonl-tests.log.gz",
+      "bytes": 1781,
+      "sha256": "b403a9ff264d60686e0f64ad3267e4e012ed369572900eb980e97e60318c57da",
+      "phase": "post_evaluation_review3"
+    },
+    {
+      "path": "logs/external5-review3-source-audit.json.gz",
+      "bytes": 222,
+      "sha256": "174f9a5420eb151b4e7fc95e8390f4d9917b4933e509f6db1f1df8a682cdf49d",
+      "phase": "post_evaluation_review3"
     }
   ],
   "summary_sha256": "2f79bf136769c572533fa4324c2830154b52f02c784826c90dc9a5644cf28b8a",

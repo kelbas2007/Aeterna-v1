@@ -18,6 +18,18 @@ fn read<R:BufRead>(input:&mut R)->Result<Value>{
 }
 fn write<W:Write>(out:&mut W,v:&Value)->Result<()>{serde_json::to_writer(&mut *out,v)?;out.write_all(b"\n")?;out.flush()?;Ok(())}
 fn safe(_:usize)->HumanProtectionEvidence{HumanProtectionEvidence{human_present:false,physical_effect_possible:false,predicted_harm_probability:0.0,hazard_confidence:1.0,emergency_stop:false}}
+fn decode_sensor_post(value:Value)->Result<SensorPost>{
+    // Recover the known cost before decoding sensor-specific content. An
+    // invalid frame/reward must reach the ordinary cost-bearing reject path.
+    let cost=value.get("cost").and_then(Value::as_u64).ok_or("unknown or invalid actual sensor cost")?;
+    let reward=serde_json::from_value::<f32>(value["reward"].clone());
+    let frame=serde_json::from_value(value["frame"].clone());
+    match (reward,frame) {
+        (Ok(reward),Ok(frame))=>Ok(SensorPost{frame,cost,reward}),
+        _=>Ok(SensorPost{cost,reward:f32::NAN,
+            frame:aeterna_v1::construction::sensors::SensorFrame::Image{namespace:0,pixels:Some(Vec::new())}}),
+    }
+}
 fn configuration()->(Config,AutonomyPolicy){
     let cfg=Config{width:32,actions:4,search:SearchConfig{work:100_000,max_expr_nodes:3,max_frontier:512,max_updates:4,max_state:0,deterministic:false},minimum_training:32,search_every:16,shadow_steps:12,journal_capacity:1024,planning_depth:2,planning_work:50_000};
     let policy=AutonomyPolicy{ceiling:SearchConfig{work:300_000,max_expr_nodes:5,max_frontier:2048,max_updates:8,max_state:1,deterministic:false},failures_per_expansion:2,max_external_cost:10000,evidence:Some(EvidencePolicy::default())};
@@ -95,7 +107,7 @@ pub(crate) fn main()->Result<()>{
                             write(&mut out,&json!({"type":"action","action":action}))?;
                             let post=read(&mut input)?;
                             if post["op"]!="post"{return Err("expected actual sensor POST, no retry permitted".into());}
-                            Ok(serde_json::from_value(post["result"].clone())?)
+                            decode_sensor_post(post["result"].clone())
                         })();
                         result.map_err(|e|Error::Execution(e.to_string()))
                     })?;
@@ -374,7 +386,14 @@ pub(crate) fn main()->Result<()>{
         })();
         match response {
             Ok(v)=>{write(&mut out,&v)?;if v["type"]=="bye"{break;}},
-            Err(e)=>{write(&mut out,&json!({"type":"error","message":e.to_string()}))?;return Err(e);}
+            Err(e)=>{
+                let mut diagnostic=json!({"type":"error","message":e.to_string()});
+                if request["op"]=="external_step" {
+                    diagnostic["report"]=json!(runtime.as_ref().and_then(|rt|rt.unified_report()));
+                    diagnostic["external_reward_report"]=json!(runtime.as_ref().and_then(|rt|rt.construction_learner()).and_then(|l|l.external_reward_report()));
+                }
+                write(&mut out,&diagnostic)?;return Err(e);
+            }
         }
     }
     Ok(())
