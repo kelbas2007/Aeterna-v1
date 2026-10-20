@@ -1,0 +1,51 @@
+name: Complexity necessity: cold empirical arbitration
+on:
+  pull_request:
+    paths:
+      - 'src/construction/unified_port.rs'
+      - 'src/unified_runtime.rs'
+      - 'tests/complexity_necessity_development.rs'
+      - '.github/workflows/complexity-necessity-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: complexity-need-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin compiler and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p necessity-evidence
+          git rev-parse HEAD > necessity-evidence/exact_source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Compare all three true cold protected policy modes
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test complexity_necessity_development -- --nocapture --test-threads=1 2>&1 | tee necessity-evidence/test.log
+          python scripts/project_audit.py | tee necessity-evidence/source-audit.json
+      - name: Save full positive and negative outcome traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: complexity-need-${{ runner.os }}-${{ github.sha }}
+          path: necessity-evidence/
+          retention-days: 7
+          if-no-files-found: warn
