@@ -1,0 +1,74 @@
+name: History action execution regression
+on:
+  pull_request:
+    paths:
+      - 'src/construction/**'
+      - 'src/unified_runtime.rs'
+      - 'tests/predictive_history*'
+      - 'tests/history_score_diagnosis.rs'
+      - '.github/workflows/history-action-regression.yml'
+permissions:
+  contents: read
+concurrency:
+  group: history-action-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned toolchain and baseline source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          git fetch --depth=1 origin 73004cf83239ed3bd0a276c00482efac29dabec4
+          mkdir -p history-evidence
+          git rev-parse HEAD > history-evidence/head.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Reproduce exposed forced-credit failure with the historical test, not a compiler failure
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Exact historical test asks U1 to execute a suffix after FORCED
+          # identification without agency-aware credit. Native code is current
+          # and the new option defaults OFF, preserving the old semantics.
+          path=tests/predictive_history_action_development.rs
+          trap 'git checkout HEAD -- tests/predictive_history_action_development.rs' EXIT
+          git show 73004cf83239ed3bd0a276c00482efac29dabec4:$path > "$path"
+          set +e
+          cargo test --locked --test predictive_history_action_development prepared_context -- --nocapture > history-evidence/baseline.log 2>&1
+          status=$?
+          set -e
+          test "$status" -ne 0
+          grep -q 'history remainder must' history-evidence/baseline.log
+          if grep -q 'error: could not compile' history-evidence/baseline.log; then exit 1; fi
+          git checkout HEAD -- "$path"
+          trap - EXIT
+          git diff --exit-code
+      - name: Verify fixed execution, contradiction, safety and existing history contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --test history_score_diagnosis --test predictive_history_action_development --test predictive_history_state_development -- --nocapture --test-threads=1 2>&1 | tee history-evidence/fixed.log
+          python scripts/project_audit.py | tee history-evidence/source-binding.json
+      - name: Preserve complete positive and negative development traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-action-${{ runner.os }}-${{ github.sha }}
+          path: history-evidence/
+          retention-days: 7
+          if-no-files-found: warn

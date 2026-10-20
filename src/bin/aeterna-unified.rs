@@ -27,7 +27,7 @@ pub(crate) fn main()->Result<()>{
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(String::as_str) {
         Some("--help" | "-h") if args.len()==2 => { print!("{}", PROJECT_HELP); return Ok(()); },
-        Some("--version") if args.len()==2 => { println!("AETERNA-v1 {} / project-20261018", env!("CARGO_PKG_VERSION")); return Ok(()); },
+        Some("--version") if args.len()==2 => { println!("AETERNA-v1 {} / project-20261020", env!("CARGO_PKG_VERSION")); return Ok(()); },
         Some("--status") if args.len()==2 => { println!("{}", serde_json::to_string_pretty(&project_status())?); return Ok(()); },
         Some("--inspect") if args.len()==3 => {
             let bytes=std::fs::read(&args[2])?;
@@ -61,9 +61,91 @@ pub(crate) fn main()->Result<()>{
                 "project_status"=>Ok(json!({"type":"project_status","project":project_status()})),
                 "init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
-                    let (cfg,policy)=configuration();runtime=Some(ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"interactive-v1")?);
+                    let (mut cfg,policy)=configuration();
+                    // Backward-compatible opt-in sensor width. The ordinary
+                    // JSONL interface still defaults to 32 channels; a small
+                    // virtual world may expose 1..6 factual sensor values for
+                    // bounded self-directed exploration without motor tuition.
+                    if let Some(w)=request.get("width") {
+                        cfg.width=usize::try_from(w.as_u64().ok_or("width must be an integer")?)?;
+                    }
+                    let initial=if let Some(v)=request.get("observation"){
+                        serde_json::from_value::<Vec<i64>>(v.clone())?
+                    }else{vec![0;cfg.width]};
+                    runtime=Some(ScientificRuntime::new_constructing(cfg,policy,initial,"interactive-v1")?);
                     Ok(json!({"type":"initialized"}))
                 },
+                "enable_self_directed_control"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_self_directed_control()?;
+                    Ok(json!({"type":"self_directed_enabled","action_authority":"protected_u1"}))
+                },
+                "enable_agency_aware_credit"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_agency_aware_credit()?;
+                    Ok(json!({"type":"agency_aware_credit_enabled",
+                        "credit_rule":"only_if_more_than_one_feasible_motor",
+                        "causal_observations":"always_record_real_post"}))
+                },
+                "enable_instrumental_credit"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_instrumental_credit()?;
+                    Ok(json!({"type":"instrumental_credit_enabled",
+                        "credit":"actual_goal_progress_only",
+                        "epistemic_facts":"remain_in_real_journal"}))
+                },
+                "enable_predictive_history_states"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_predictive_history_states()?;
+                    Ok(json!({"type":"predictive_history_states_enabled",
+                        "proposal_authority":"u1_only","evidence":"real_executed_history"}))
+                },
+                "enable_adaptive_history_suffix"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_adaptive_history_suffix()?;
+                    Ok(json!({"type":"adaptive_history_suffix_enabled",
+                        "max_predecessor_actions":2,"context":"real_protected_journal",
+                        "proposal_authority":"native_U1_only"}))
+                },
+                "enable_temporal_options"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_temporal_options()?;
+                    Ok(json!({"type":"temporal_options_enabled",
+                        "authority":"one_native_U1_choice_then_bounded_continuation",
+                        "every_physical_step":"fresh_HumanProtection_and_real_POST"}))
+                },
+                "enable_autobiographical_options"=>{
+                    runtime.as_mut().ok_or("not loaded")?
+                        .enable_constructing_autobiographical_options()?;
+                    Ok(json!({"type":"autobiographical_options_enabled",
+                        "memory":"own_chronological_protected_POST_only",
+                        "authority":"one_native_U1_choice_then_freshly_protected_steps",
+                        "confidence":"tentative_until_real_replay"}))
+                },
+                "enable_variable_depth_options"=>{
+                    runtime.as_mut().ok_or("not loaded")?
+                        .enable_constructing_variable_depth_options()?;
+                    Ok(json!({"type":"variable_depth_options_enabled",
+                        "memory":"minimum_observed_contrast_supported_suffix",
+                        "depth_bound":"2_to_planning_depth_max_5",
+                        "authority":"native_U1_and_fresh_HumanProtection"}))
+                },
+                "enable_complexity_need_gate"=>{
+                    runtime.as_mut().ok_or("not loaded")?
+                        .enable_constructing_complexity_need_gate()?;
+                    Ok(json!({"type":"complexity_need_gate_enabled",
+                        "decision":"retain_simpler_investigate_or_extend",
+                        "source":"real_matched_history_consequences",
+                        "admission":"incremental_prediction_gain_exceeds_action_complexity_tax",
+                        "authority":"same_U1_fresh_HumanProtection"}))
+                },
+                "enable_active_causal_probes"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
+                    Ok(json!({"type":"active_causal_probes_enabled",
+                        "proposal_authority":"native_U1_only",
+                        "outcomes":"real_protected_POST_only"}))
+                },
+                "enable_trajectory_self_revision"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_trajectory_self_revision()?;
+                    Ok(json!({"type":"trajectory_self_revision_enabled",
+                        "program_authority":"evaluation_only","action_authority":"human_protection"}))
+                },
+                "trajectory_self_revision_report"=>Ok(json!({"type":"trajectory_self_revision_report",
+                    "report":runtime.as_ref().ok_or("not loaded")?.trajectory_self_revision_report()})),
                 "enable_recursive_search"=>{
                     let config=serde_json::from_value(request["config"].clone())?;
                     runtime.as_mut().ok_or("not loaded")?.enable_recursive_search(config)?;
@@ -182,7 +264,12 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"loaded","report":runtime.as_ref().unwrap().unified_report()}))
                 },
                 "enter"=>{
-                    let (cfg,policy)=configuration();let initial=serde_json::from_value(request["observation"].clone())?;
+                    let (mut cfg,policy)=configuration();
+                    // Preserve the carrier's initialized sensor width; an
+                    // entered domain does not recreate the default 32 cells.
+                    let organism=runtime.as_ref().ok_or("not loaded")?;
+                    cfg.width=organism.construction_learner().ok_or("no constructing learner")?.current().len();
+                    let initial=serde_json::from_value(request["observation"].clone())?;
                     let name=request["name"].as_str().ok_or("missing sensor contract")?;
                     runtime.as_mut().ok_or("not loaded")?.enter_constructing_domain(name,cfg,policy,initial)?;
                     Ok(json!({"type":"entered","report":runtime.as_ref().unwrap().unified_report()}))
@@ -308,6 +395,31 @@ The aeterna-unified binary is a compatibility alias of this same code.
 A learned checkpoint must be supplied explicitly; no pretrained state is invented.
 RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
 solve_synthesis, recursive_search_report, checkpoint, quit.
+Self-directed factual control: init(width<=6), enable_self_directed_control,
+then step(goal,available). Optional opt-in credit:
+enable_agency_aware_credit BEFORE collecting experience; the organism
+still learns world effects from forced actions, not native choice weights.
+Optional instrument-only utility: enable_instrumental_credit (after agency,
+before first factual action); invisible history preparation gets credit
+only after later REAL POST shows goal progress.
+Optional predictive history states
+(planning_work>=32000): enable_predictive_history_states.
+Optional unforced causal pair experiments: enable_active_causal_probes.
+Additional conditional past-length inference (opt-in): enable_adaptive_history_suffix.
+For a certified two-action-suffix route, opt into persisted multi-step
+native choice with enable_temporal_options; each physical step remains protected.
+Own-history options (research opt-ins): enable_autobiographical_options,
+then enable_variable_depth_options, then enable_complexity_need_gate,
+all before the first physical experience. The gate may retain a simpler
+model, investigate an unresolved contradiction, or offer a longer option
+only when observed evidence pays its complexity cost.
+IMPORTANT: standard JSONL init planning_depth=2. Published cold 3..5-action
+skills used a custom Rust ScientificRuntime Config with greater depth;
+the flags alone do NOT reproduce the longer experiments.
+Optional own evaluator synthesis:
+enable_trajectory_self_revision, step(goal,available),
+trajectory_self_revision_report. The evaluator changes U1 valuation only,
+not the protected actuator boundary or task objectives.
 LC1: enable_missing_computation_learning, observe_executed_computations,
 complete_missing_computation, missing_computation_report; learned rules share
 one checkpoint. Both LC1 and RSP3 remain candidate-only without RSP2 adoption.

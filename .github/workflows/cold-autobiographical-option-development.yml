@@ -1,0 +1,51 @@
+name: Cold self-originated option development
+on:
+  pull_request:
+    paths:
+      - 'src/construction/unified_port.rs'
+      - 'src/unified_runtime.rs'
+      - 'tests/cold_autobiographical_option_development.rs'
+      - '.github/workflows/cold-autobiographical-option-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: cold-self-option-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cold:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Use frozen toolchain and record exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p cold-memory-evidence
+          git rev-parse HEAD > cold-memory-evidence/source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Execute real U1 cold acquisition and matched control
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test cold_autobiographical_option_development -- --nocapture --test-threads=1 2>&1 | tee cold-memory-evidence/execution.log
+          python scripts/project_audit.py | tee cold-memory-evidence/source-audit.json
+      - name: Preserve success AND negative cold traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cold-self-originated-option-${{ runner.os }}-${{ github.sha }}
+          path: cold-memory-evidence/
+          retention-days: 7
+          if-no-files-found: warn

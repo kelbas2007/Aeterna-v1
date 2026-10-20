@@ -9,6 +9,7 @@ use super::curriculum::{Curriculum, SelectionMode};
 use super::epistemic::{EvidencePolicy, EvidenceReport, EvidenceTrial, RiskLedger};
 use crate::{EvoPhase, HumanProtectionDecision, HumanProtectionEvidence};
 use serde::{Deserialize, Serialize};
+use std::collections::{BTreeSet, VecDeque};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -85,6 +86,23 @@ pub struct Learner {
     carrier_managed: bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
     requirements: Option<super::requirements::RequirementMemory>,
+    /// Opt-in factual control; no extra teacher/model/independent checkpoint.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    self_directed: bool,
+    /// Separate, explicit research opt-in for certified multi-step edges.
+    /// An enabled factual Learner can thus be ablated against SAME checkpoint.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    certified_chains:bool,
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    predictive_history_states:bool,
+    /// Opt-in active discrimination of unknown predecessor/action pairs,
+    /// using only actual PRE/action/POSTs. Never actuator authority.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    active_pair_probes:bool,
+    /// Depth 1 OR 2 is selected from observationally contrasted evidence,
+    /// not an authored hidden state. All older inference stays opt-in safe.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
+    adaptive_history_suffix:bool,
 }
 /// Non-cloneable and non-serializable PRE-action commitment.
 pub(crate) struct Commitment {
@@ -118,13 +136,357 @@ fn exploration_word(event: u64) -> u64 {
     z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
     z ^ (z >> 31)
 }
+
+/// A tiny bounded grammar fitted to *executed* transitions in Learner's journal.
+/// The same facts, not a separately installed world model, are used after
+/// restart. These are authored mathematical operators, not invented by SNN.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+enum ObservedEffect { Keep, Delta(i64), Set(i64) }
+impl ObservedEffect {
+    fn apply(self,x:i64)->Option<i64>{ match self { Self::Keep=>Some(x), Self::Delta(d)=>x.checked_add(d),Self::Set(v)=>Some(v) } }
+}
+// Explicitly metered factual fitting. The journal is bounded by the original
+// runtime policy, but every row/axis/guard considered here ALSO consumes the
+// same planning meter. No hidden O(journal_size * candidates) scans.
+fn effect(rows:&[&Transition],axis:usize,meter:&mut Meter)->Option<ObservedEffect>{
+    meter.charge((rows.len() as u64).saturating_mul(4)).ok()?;
+    if rows.len()<2 {return None;}
+    if rows.iter().all(|r|r.pre[axis]==r.post[axis]){return Some(ObservedEffect::Keep)}
+    let difference=rows[0].post[axis] as i128 - rows[0].pre[axis] as i128;
+    if let Ok(d)=i64::try_from(difference) {
+        if rows.iter().all(|r|r.post[axis] as i128-r.pre[axis] as i128==difference){return Some(ObservedEffect::Delta(d))}
+    }
+    let output=rows[0].post[axis];
+    if rows.iter().all(|r|r.post[axis]==output){return Some(ObservedEffect::Set(output))}
+    None
+}
+fn predict_axis(rows:&[&Transition],axis:usize,current:&[i64],meter:&mut Meter)->Option<i64>{
+    if let Some(rule)=effect(rows,axis,meter){return rule.apply(current[axis]);}
+    // Test an independently contrasted joint effect before sweeping cheaper
+    // but insufficient single-guard hypotheses: prospective re-fitting must
+    // fit inside the SAME finite planning budget, not demand extra compute.
+    if let Some(joint)=predict_conjunctive_axis(rows,axis,current,meter){return Some(joint)}
+    for guard in 0..current.len() {
+        if guard==axis{continue}
+        // Upfront charge covers collection, sorting and de-duplication of at
+        // most 96 numeric witnesses; exact CPU cycles are NOT claimed.
+        meter.charge((rows.len() as u64).saturating_mul(9)).ok()?;
+        let mut values:Vec<i64>=rows.iter().map(|r|r.pre[guard]).collect();
+        values.sort_unstable();values.dedup();
+        if values.len()>4 {continue;}
+        for value in values {
+            meter.charge((rows.len() as u64).saturating_mul(2)).ok()?;
+            let yes=rows.iter().copied().filter(|r|r.pre[guard]==value).collect::<Vec<_>>();
+            let no=rows.iter().copied().filter(|r|r.pre[guard]!=value).collect::<Vec<_>>();
+            if yes.len()>=2 && !no.is_empty() && current[guard]==value {
+                if let Some(rule)=effect(&yes,axis,meter) {
+                    meter.charge(no.len() as u64).ok()?;
+                    if no.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis]))
+                        && controlled_guard_contrast(&yes,&no,axis,guard,meter)? {
+                        return rule.apply(current[axis]);
+                    }
+                }
+            }
+            if no.len()>=2 && !yes.is_empty() && current[guard]!=value {
+                if let Some(rule)=effect(&no,axis,meter) {
+                    meter.charge(yes.len() as u64).ok()?;
+                    if yes.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis]))
+                        && controlled_guard_contrast(&no,&yes,axis,guard,meter)? {
+                        return rule.apply(current[axis]);
+                    }
+                }
+            }
+        }
+    }
+
+    // An unidentifiable conditional effect is unknown; do not invent a
+    // proposed consequence when no controlled explanation survives.
+    None
+}
+/// Find an observed contrast in which the candidate guard changes but all
+/// OTHER pre-action sensors (excluding the predicted output's own input)
+/// remain equal. This rejects simple co-varying-sensor confounding.
+/// Stop immediately if the existing computation budget is exhausted.
+fn controlled_guard_contrast(positive:&[&Transition],negative:&[&Transition],
+                             axis:usize,guard:usize,meter:&mut Meter)->Option<bool> {
+    for &a in positive {
+        for &b in negative {
+            meter.charge(a.pre.len() as u64+1).ok()?;
+            if a.pre.iter().zip(&b.pre).enumerate()
+                .all(|(i,(x,y))|i==axis||i==guard||x==y) {return Some(true)}
+        }
+    }
+    Some(false)
+}
+/// Discover a two-condition effect from real BEFORE/ACTION/AFTER samples.
+/// No caller supplies an action meaning, prerequisite indices, thresholds or
+/// a learned outcome. Both necessary conditions must have independent,
+/// controlled negative witnesses and the positive examples must agree.
+/// A rule learned from this prefix is *still untrusted* until the separate
+/// chronological prospective validator accepts later real transitions.
+fn predict_conjunctive_axis(rows:&[&Transition],axis:usize,current:&[i64],
+                            meter:&mut Meter)->Option<i64> {
+    let mut accepted:Option<i64>=None;
+    for left in 0..current.len(){
+        if left==axis{continue}
+        for right in (left+1)..current.len(){
+            if right==axis{continue}
+            meter.charge((rows.len() as u64).saturating_mul(4).saturating_add(8)).ok()?;
+            let mut both=Vec::new();
+            let mut without_left=Vec::new();
+            let mut without_right=Vec::new();
+            for &row in rows {
+                let l=row.pre[left]==current[left];
+                let r=row.pre[right]==current[right];
+                if l&&r {both.push(row)}
+                else if !l&&r {without_left.push(row)}
+                else if l&&!r {without_right.push(row)}
+            }
+            if both.len()<3||without_left.len()<2||without_right.len()<2 {continue}
+            let Some(rule)=effect(&both,axis,meter) else {
+                if meter.remaining()==0{return None}
+                continue
+            };
+            let Some(predicted)=rule.apply(current[axis]) else {continue};
+            if predicted==current[axis] {continue} // no uninformative no-op rule
+            meter.charge((without_left.len()+without_right.len()) as u64).ok()?;
+            if !without_left.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis]))
+                || !without_right.iter().any(|r|rule.apply(r.pre[axis])!=Some(r.post[axis])) {continue}
+            if !controlled_guard_contrast(&both,&without_left,axis,left,meter)?
+                || !controlled_guard_contrast(&both,&without_right,axis,right,meter)? {continue}
+            if accepted.is_some_and(|other|other!=predicted){return None}
+            accepted=Some(predicted);
+        }
+    }
+    accepted
+}
+fn factual_prediction(records:&[Record],pre:&[i64],action:usize,
+                      frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>> {
+    // A frozen Learner may still commit REAL external observations for safety
+    // and accounting, but they must not become new training examples.
+    let end=frozen_at.map_or(records.len(),|id|records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?; // upper bound on binary selection of <=4096 rows
+    let mut observations=Vec::new();
+    for r in records[..end].iter().rev().take(96) {
+        meter.charge(1).ok()?;
+        if r.transition.action==action {observations.push(&r.transition)}
+    }
+    if observations.len()<2 {return None;}
+    (0..pre.len()).map(|axis|predict_axis(&observations,axis,pre,meter)).collect()
+}
+/// A conservative, prospective belief check inside the existing Learner.
+/// The latest three REAL transitions of an action are evidence held out from
+/// the older prefix used to infer the effect. A fact is offered to U1 only if
+/// all three consequences were predictable, at least one actually changed the
+/// environment, and the inferred rule did not change after those events.
+/// This is not proof of causality or a learned SNN rule: ambiguous/contextual
+/// effects are UNKNOWN, and U1 remains responsible for exploration.
+fn calibrated_factual_prediction(records:&[Record],pre:&[i64],action:usize,
+                                  frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>> {
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    // This partition and sample itself have bounded, charged cost; there is no
+    // post-freeze leakage into prediction or the confidence assessment.
+    meter.charge(16).ok()?;
+    let mut seen=Vec::new();
+    for (idx,r) in records[..end].iter().enumerate().rev().take(96) {
+        meter.charge(1).ok()?;
+        if r.transition.action==action {
+            seen.push(idx);
+            if seen.len()==32{break}
+        }
+    }
+    // Five+ earlier training instances, three chronological holdouts.
+    if seen.len()<8{return None}
+    let held=&seen[..3];
+    let cutoff=seen[2];
+    let training=&records[..cutoff];
+    let mut effect_seen=false;
+    for &idx in held {
+        let row=&records[idx].transition;
+        let predicted=factual_prediction(training,&row.pre,action,None,meter)?;
+        if predicted!=row.post {return None}
+        effect_seen|=row.pre!=row.post;
+    }
+    if !effect_seen{return None}
+    let predicted_from_training=factual_prediction(training,pre,action,None,meter)?;
+    let predicted_from_all=factual_prediction(records,pre,action,frozen_at,meter)?;
+    (predicted_from_training==predicted_from_all).then_some(predicted_from_all)
+}
+
+/// Predictive history-state learning from this organism's executed journal.
+/// Adjacent PRE/action/POST events must match, without crossing a restart.
+fn factual_predecessor(records:&[Record],i:usize)->Option<usize>{
+    if i==0 || records[i].transition.restart {return None}
+    let a=&records[i-1].transition;let b=&records[i].transition;
+    (a.id.checked_add(1)==Some(b.id) && a.post==b.pre).then_some(a.action)
+}
+/// One-step suffix state: same visible PRE and tested action, distinct
+/// predecessor actions and independently different real POST consequences.
+/// The model assigns no authored meanings to opaque motor IDs.
+fn fitted_history_effect(records:&[Record],pre:&[i64],action:usize,
+                         previous:usize,meter:&mut Meter)->Option<Vec<i64>>{
+    let mut yes=Vec::new();let mut no=Vec::new();
+    for i in (0..records.len()).rev().take(128){
+        meter.charge(pre.len() as u64+2).ok()?;
+        let t=&records[i].transition;
+        if t.action!=action || t.pre.len()!=pre.len(){continue}
+        let Some(p)=factual_predecessor(records,i) else {continue};
+        if p==previous{yes.push(t)}else{no.push(t)}
+    }
+    if yes.len()<4||no.len()<4{return None}
+    let mut contrasted=0;
+    for a in &yes {
+        for b in &no {
+            meter.charge(pre.len() as u64+1).ok()?;
+            if a.pre==b.pre&&a.post!=b.post{contrasted+=1;break}
+        }
+    }
+    if contrasted<3{return None}
+    (0..pre.len()).map(|axis|{
+        effect(&yes,axis,meter)?.apply(pre[axis])
+    }).collect()
+}
+/// Three chronological, actual later consequences in this predecessor
+/// context must be predictable using older experience, with a stable re-fit.
+fn calibrated_history_effect(records:&[Record],pre:&[i64],action:usize,
+    previous:usize,frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>>{
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?;
+    let mut seen=Vec::new();
+    for i in (0..end).rev().take(128) {
+        meter.charge(2).ok()?;
+        if records[i].transition.action==action &&
+            factual_predecessor(&records[..end],i)==Some(previous){seen.push(i)}
+    }
+    if seen.len()<7{return None}
+    let old=&records[..seen[2]];
+    let mut actual_change=false;
+    for &i in seen.iter().take(3) {
+        let row=&records[i].transition;
+        if fitted_history_effect(old,&row.pre,action,previous,meter)?!=row.post{
+            return None
+        }
+        actual_change|=row.pre!=row.post;
+    }
+    if !actual_change{return None}
+    let trained=fitted_history_effect(old,pre,action,previous,meter)?;
+    let current=fitted_history_effect(&records[..end],pre,action,previous,meter)?;
+    (trained==current).then_some(current)
+}
+
+/// A variable-length predictive state suffix from the ONE existing protected
+/// chronological journal. It never crosses physical episode restarts,
+/// id gaps or discontinuous PRE/POST readings.
+fn observed_action_suffix(records:&[Record],index:usize,len:usize)
+    ->Option<Vec<usize>>{
+    if !(1..=2).contains(&len){return None}
+    let mut i=index;
+    let mut suffix=Vec::with_capacity(len);
+    for _ in 0..len {
+        suffix.push(factual_predecessor(records,i)?);
+        i=i.checked_sub(1)?;
+    }
+    Some(suffix)
+}
+/// The comparison is conditional on the SAME immediately preceding motor
+/// and the SAME real PRE observation. The only differing variable may be
+/// the older predecessor: no motor label or key/charge meaning is supplied.
+fn fitted_second_order_effect(records:&[Record],pre:&[i64],action:usize,
+    suffix:[usize;2],meter:&mut Meter)->Option<Vec<i64>>{
+    let mut yes=Vec::new();let mut no=Vec::new();
+    for i in (0..records.len()).rev().take(192){
+        meter.charge((pre.len()+4) as u64).ok()?;
+        let row=&records[i].transition;
+        if row.action!=action || row.pre.len()!=pre.len(){continue}
+        let Some(s)=observed_action_suffix(records,i,2) else{continue};
+        if s[0]!=suffix[0]{continue}
+        if s[1]==suffix[1]{yes.push(row)}else{no.push(row)}
+    }
+    if yes.len()<4||no.len()<4 {return None}
+    let mut contrasts=0;
+    for a in &yes{
+        for b in &no{
+            meter.charge((pre.len()+1) as u64).ok()?;
+            if a.pre==b.pre && a.post!=b.post{
+                contrasts+=1;break
+            }
+        }
+    }
+    if contrasts<3{return None}
+    (0..pre.len()).map(|axis|
+        effect(&yes,axis,meter)?.apply(pre[axis])
+    ).collect()
+}
+/// Three LATER real transitions are withheld from induction and must all
+/// match the older conditional law. Prediction after refitting cannot drift.
+/// The frozen journal prefix is used for BOTH the fit and confidence test.
+fn calibrated_second_order_effect(records:&[Record],pre:&[i64],action:usize,
+    suffix:[usize;2],frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>>{
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?;
+    let mut latest=Vec::new();
+    for i in (0..end).rev().take(192){
+        meter.charge(2).ok()?;
+        if records[i].transition.action==action &&
+            observed_action_suffix(&records[..end],i,2).as_deref()
+                ==Some(suffix.as_slice()){
+            latest.push(i);
+        }
+    }
+    if latest.len()<7{return None}
+    let old=&records[..latest[2]];
+    let mut changed=false;
+    for &i in latest.iter().take(3){
+        let row=&records[i].transition;
+        if fitted_second_order_effect(old,&row.pre,action,suffix,meter)?
+            !=row.post{return None}
+        changed|=row.pre!=row.post;
+    }
+    if !changed{return None}
+    let older=fitted_second_order_effect(old,pre,action,suffix,meter)?;
+    let newer=fitted_second_order_effect(&records[..end],pre,action,suffix,meter)?;
+    (older==newer).then_some(newer)
+}
+
+/// Verified no-op only as a *preparatory* step in a full causal plan;
+/// never as a direct high-value U1 action or fabricated real POST.
+fn certified_history_noop(records:&[Record],pre:&[i64],action:usize,
+    frozen_at:Option<u64>,meter:&mut Meter)->Option<Vec<i64>>{
+    let end=frozen_at.map_or(records.len(),|id|
+        records.partition_point(|r|r.transition.id<id));
+    meter.charge(16).ok()?;
+    let mut seen=Vec::new();
+    for i in (0..end).rev().take(96){
+        meter.charge(1).ok()?;
+        if records[i].transition.action==action {seen.push(i)}
+    }
+    if seen.len()<8{return None}
+    let old=&records[..seen[2]];
+    for &i in seen.iter().take(3){
+        let r=&records[i].transition;
+        if r.pre!=r.post ||
+            factual_prediction(old,&r.pre,action,None,meter)!=Some(r.post.clone()){
+            return None
+        }
+    }
+    let trained=factual_prediction(old,pre,action,None,meter)?;
+    let all=factual_prediction(&records[..end],pre,action,None,meter)?;
+    (trained==pre && trained==all).then_some(all)
+}
+
+fn goal_distance(state:&[i64],goal:&[Option<i64>])->u128{
+    state.iter().zip(goal).filter_map(|(&x,g)|g.map(|v|(i128::from(x)-i128::from(v)).unsigned_abs())).sum()
+}
 impl Learner {
     pub fn new(config: Config,initial: Vec<i64>) -> Result<Self> {
         config.validate()?;
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -419,6 +781,128 @@ impl Learner {
         if let Some(s) = &mut self.shadow { s.model.state = s.model.program.initial_state(); }
         Ok(())
     }
+
+    /// Repair the existing Learner loop: factual uncertainty -> an information
+    /// probe -> observed consequence -> updated law -> goal action. All motors
+    /// still pass through ProtectedConstructionRuntime and HumanProtection.
+    /// No schedules, reward labels, privileged motor roles, or synthetic POSTs.
+    pub fn enable_self_directed_control(&mut self)->Result<()> {
+        if self.config.width>6 || self.config.actions>8 {return Err(Error::Capacity);}
+        if self.autonomy.is_none() || self.pending || self.poisoned || self.self_directed ||
+           self.frozen_at.is_some() {return Err(Error::Busy);}
+        self.self_directed=true;
+        Ok(())
+    }
+    pub fn self_directed_control_enabled(&self)->bool {self.self_directed}
+    pub fn certified_chains_enabled(&self)->bool {self.certified_chains}
+    pub fn predictive_history_states_enabled(&self)->bool{self.predictive_history_states}
+    pub fn active_pair_probes_enabled(&self)->bool{self.active_pair_probes}
+    pub fn adaptive_history_suffix_enabled(&self)->bool{self.adaptive_history_suffix}
+    pub fn enable_adaptive_history_suffix(&mut self)->Result<()>{
+        if !self.predictive_history_states || self.adaptive_history_suffix ||
+            self.pending || self.poisoned || self.frozen_at.is_some() ||
+            self.config.planning_depth<3 || self.config.planning_work<32_000{
+            return Err(Error::Busy)
+        }
+        self.adaptive_history_suffix=true;Ok(())
+    }
+    /// Native U1 owns the final choice; historical contrasts are the ONLY
+    /// learning signal. The experiment is restricted to one-step suffixes.
+    pub fn enable_active_pair_probes(&mut self)->Result<()>{
+        if !self.self_directed || !self.predictive_history_states ||
+            self.active_pair_probes || self.pending || self.poisoned ||
+            self.frozen_at.is_some(){return Err(Error::Busy)}
+        if self.config.planning_work<32_000{return Err(Error::Capacity)}
+        self.active_pair_probes=true;Ok(())
+    }
+    /// Uses the same Learner PRE/action/POST and one joint checkpoint.
+    pub fn enable_predictive_history_states(&mut self)->Result<()>{
+        if !self.self_directed || self.predictive_history_states ||
+            self.pending || self.poisoned || self.frozen_at.is_some(){
+            return Err(Error::Busy)
+        }
+        if self.config.planning_work<32_000{return Err(Error::Capacity)}
+        self.predictive_history_states=true;Ok(())
+    }
+    /// The old factual branch remains an independently measurable control.
+    pub fn enable_certified_chains(&mut self)->Result<()> {
+        if !self.self_directed || self.certified_chains || self.pending || self.poisoned
+            || self.frozen_at.is_some() {return Err(Error::Busy)}
+        if self.config.planning_work<32_000 {return Err(Error::Capacity)}
+        self.certified_chains=true;Ok(())
+    }
+    /// Returns both the factual choice and its metered reasoning cost. All
+    /// loops stop as soon as the configured work budget is spent. The candidate
+    /// is still only a U1 proposal, not authority to perform an action.
+    fn factual_control_metered(&self,goal:&[Option<i64>],allowed:&[usize],budget:u64)->(usize,u64){
+        let mut meter=Meter::new(budget);
+        let baseline=goal_distance(&self.current,goal);
+        let mut best:Option<(u128,usize,usize)>=None;
+        let mut frontier=VecDeque::from([(self.current.clone(),None::<usize>,0usize)]);
+        let mut visited=BTreeSet::new();visited.insert(self.current.clone());
+        let mut expanded=0usize;
+        let cap=budget.min(512) as usize;
+        'search: while let Some((state,first,depth))=frontier.pop_front() {
+            if depth>=self.config.planning_depth || expanded>=cap {continue}
+            for &action in allowed {
+                if meter.charge(1+state.len() as u64).is_err(){break 'search}
+                expanded+=1;
+                let Some(next)=factual_prediction(&self.records,&state,action,self.frozen_at,&mut meter) else {
+                    if meter.remaining()==0 {break 'search}
+                    continue
+                };
+                if next==state{continue}
+                let origin=first.unwrap_or(action);
+                let distance=goal_distance(&next,goal);
+                if distance<baseline {
+                    let candidate=(distance,depth+1,origin);
+                    if best.as_ref().is_none_or(|b|candidate<*b){best=Some(candidate)}
+                }
+                if visited.len()<2048 {
+                    if meter.charge(12+next.len() as u64).is_err(){break 'search}
+                    if visited.insert(next.clone()) {frontier.push_back((next,Some(origin),depth+1))}
+                }
+            }
+        }
+        if let Some((_,_,action))=best {return (action,meter.spent)}
+        // No proven model improvement. Probe less-observed actions based only
+        // on PRE-FREEZE evidence; post-freeze action logs cannot retrain it.
+        let end=self.frozen_at.map_or(self.records.len(),|id|
+            self.records.partition_point(|r|r.transition.id<id));
+        let mut selected=allowed[0];let mut rank=(usize::MAX,usize::MAX,u64::MAX);
+        for &action in allowed {
+            let mut local=0usize;let mut global=0usize;
+            for r in self.records[..end].iter().rev().take(96) {
+                if meter.charge(self.current.len() as u64+1).is_err(){break}
+                if r.transition.action==action {
+                    global+=1;
+                    if r.transition.pre==self.current{local+=1}
+                }
+            }
+            let tie_event=self.frozen_at.unwrap_or(self.next_id);
+            let score=(local,global,exploration_word(tie_event^action as u64));
+            if score<rank {rank=score;selected=action}
+            if meter.remaining()==0{break}
+        }
+        (selected,meter.spent)
+    }
+    /// Explicitly report factual planning work to its caller so both the
+    /// standalone protected executor and U1 can charge their own ledgers.
+    pub(crate) fn choose_offered_metered_budget(&self,goal:Option<&[Option<i64>]>,offers:Option<&[ActionOffer]>,budget:u64)->Result<(usize,u64)> {
+        if !self.self_directed {return self.choose_offered(goal,offers).map(|action|(action,0))}
+        if self.pending||self.poisoned{return Err(Error::Busy)}
+        if goal.is_some_and(|g|g.len()!=self.config.width) || offers.is_some_and(|o|o.len()!=self.config.actions){return Err(Error::InvalidData)}
+        let remaining=self.autonomy_report().map(|r|r.remaining_cost).unwrap_or(u64::MAX);
+        let allowed=(0..self.config.actions).filter(|&a|offers.is_none_or(|o|o[a].available&&o[a].max_cost<=remaining)).collect::<Vec<_>>();
+        if allowed.is_empty(){return Err(Error::Blocked)}
+        if goal.is_some_and(|g|g.iter().any(Option::is_some)&&goal_distance(&self.current,g)==0){return Err(Error::NoEvidence)}
+        Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed,budget))
+    }
+    /// Compatibility entry point: the existing default budget remains intact.
+    /// Chain-aware U1 may explicitly share that budget with its certificate search.
+    pub(crate) fn choose_offered_metered(&self,goal:Option<&[Option<i64>]>,offers:Option<&[ActionOffer]>)->Result<(usize,u64)> {
+        self.choose_offered_metered_budget(goal,offers,self.config.planning_work)
+    }
     /// Ephemeral imagination plus a model-independent exploration reserve.
     /// No simulated POST is inserted into the factual journal.
     pub fn choose_action(&self,goal: Option<&[i64]>) -> Result<usize> {
@@ -435,6 +919,14 @@ impl Learner {
         if offers.is_some_and(|o|o.len()!=self.config.actions){return Err(Error::InvalidData);}
         let allowed:Vec<_>=(0..self.config.actions).filter(|&a|offers.is_none_or(|o|o[a].available && o[a].max_cost<=remaining)).collect();
         if allowed.is_empty(){return Err(Error::Blocked);}
+        if self.self_directed {
+            if let Some(goal)=goal {
+                if goal.iter().any(Option::is_some) && goal_distance(&self.current,goal)==0 {
+                    return Err(Error::NoEvidence); // no unnecessary protected action
+                }
+            }
+            return Ok(self.factual_control_metered(goal.unwrap_or(&[]),&allowed,self.config.planning_work).0);
+        }
         let word=exploration_word(self.next_id);
         if goal.is_none() && word & 3 == 0 {return Ok(allowed[((word>>2)%allowed.len() as u64) as usize]);}
         let mut models = vec![&self.active]; if let Some(s) = &self.shadow { models.push(&s.model); }
@@ -495,18 +987,35 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
-        if let Some(book)=&state.requirements{
+        if let Some(book)=&state.requirements {
             book.validate()?;
-            // LC1-only acquisition work is included in Learner's cumulative
-            // all-mechanism ledger. A re-enveloped book may not claim to have
-            // spent more than its owning Learner has ever charged.
             let learned=book.report();
+            // LC1-only spent work is part of the all-mechanism Learner ledger.
             if learned.work>state.construction_work{return Err(Error::InvalidData)}
-            // Only the Learner's irreversible freeze can freeze LC1.
-            // Reject BOTH impossible directions in restored checkpoints.
+            // Both freeze directions must match, even after re-envelope.
             if learned.frozen!=state.frozen_at.is_some(){return Err(Error::InvalidData)}
         }
         if state.frozen_at.is_some_and(|id|id>state.next_id || state.shadow.is_some()){return Err(Error::InvalidData);}
+        if state.self_directed && (state.autonomy.is_none() || state.config.width>6 || state.config.actions>8) {
+            return Err(Error::InvalidData);
+        }
+        if state.certified_chains && (!state.self_directed || state.config.planning_work<32_000) {
+            return Err(Error::InvalidData);
+        }
+        if state.predictive_history_states &&
+            (!state.self_directed || state.config.planning_work<32_000){
+            return Err(Error::InvalidData);
+        }
+        if state.active_pair_probes && (!state.predictive_history_states ||
+            !state.self_directed || state.config.planning_work<32_000){
+            return Err(Error::InvalidData);
+        }
+        if state.adaptive_history_suffix &&
+            (!state.predictive_history_states ||
+             state.config.planning_depth<3 ||
+             state.config.planning_work<32_000){
+            return Err(Error::InvalidData);
+        }
         if let Some(policy)=&state.autonomy {
             policy.validate(&state.config)?;
             if state.curriculum.as_ref().is_none_or(|c|c.mode!=SelectionMode::Fair)
@@ -577,10 +1086,12 @@ impl ProtectedConstructionRuntime {
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> { self.learner.enable_curriculum(mode) }
     pub fn enable_autonomy(&mut self,policy:AutonomyPolicy)->Result<()> {self.learner.enable_autonomy(policy)}
     pub fn freeze_learning(&mut self)->Result<()> {self.learner.freeze_learning()}
+    pub fn enable_self_directed_control(&mut self)->Result<()> {self.learner.enable_self_directed_control()}
     pub fn step_autonomous<H,F>(&mut self,goal:Option<&[Option<i64>]>,offers:&[ActionOffer],hazard:H,execute:F)->Result<usize>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->Result<ExternalPost> {
         if self.learner.autonomy.is_none(){return Err(Error::InvalidData);}
-        let action=self.learner.choose_offered(goal,Some(offers))?;
+        let (action,work)=self.learner.choose_offered_metered(goal,Some(offers))?;
+        self.learner.construction_work=self.learner.construction_work.checked_add(work).ok_or(Error::Capacity)?;
         self.step_action_inner(action,hazard,execute,Some(offers[action].max_cost))
     }
     /// Restores software cognition only, never the old SNN or a live permit.
@@ -595,6 +1106,11 @@ impl ProtectedConstructionRuntime {
     pub fn learner(&self) -> &Learner { &self.learner }
     pub fn organism(&self) -> &EvoPhase { &self.organism }
     pub fn checkpoint(&self) -> Result<Vec<u8>> { self.learner.checkpoint() }
+    /// Environment-reported restart, not an imagined reset or action. It
+    /// leaves the cognitive journal and lifetime's physical permits intact.
+    pub fn observe_factual_restart(&mut self,observation:Vec<i64>)->Result<()> {
+        self.learner.record_external_restart(observation)
+    }
     /// Live round-trip requires the identical cognitive generation, including
     /// history, costs, consumed trials and fault state. Equal observations alone
     /// are insufficient. Use rollback_cognition to revert only computation.
@@ -844,3 +1360,219 @@ include!("unified_port.rs");
 include!("recursive_search_port.rs");
 
 include!("requirements_port.rs");
+
+#[cfg(test)]
+mod factual_control_integrity_tests {
+    use super::*;
+
+    fn record(id:u64, action:usize, start:i64, end:i64)->Record {
+        Record {
+            transition:Transition{id,restart:id==0,pre:vec![start,1],action,post:vec![end,1]},
+            model:0,prediction:Forecast{center:vec![end,1],scale:vec![1.0,1.0]},
+            candidate:None,candidate_prediction:None,permit_sequence:id+1,external_cost:1,
+        }
+    }
+
+    #[test]
+    fn prospective_factual_validation_uses_real_heldout_consequences() {
+        // Twelve true observations of the same affine effect, with THREE
+        // latest examples withheld from rule fitting, are enough to offer a
+        // prediction. We have never given the learner an authored action role.
+        let mut data=(0..12).map(|i|record(i,0,i as i64,i as i64+1)).collect::<Vec<_>>();
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,None,&mut meter),Some(vec![31,1]));
+        assert!(meter.spent>0 && meter.spent<=40_000);
+
+        // A once-consistent prediction that encounters three observed
+        // contradictions MUST become unknown rather than trusted, even if
+        // the original model would still confidently extrapolate.
+        for i in 12..15 {data.push(record(i,0,i as i64,i as i64+10))}
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,None,&mut meter),None);
+
+        // Freeze binds BOTH fitting and confidence to the same old prefix.
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,Some(12),&mut meter),Some(vec![31,1]));
+    }
+
+    #[test]
+    fn never_certify_uninformative_repetition_or_unmetered_guess() {
+        let data=(0..12).map(|i|record(i,0,0,0)).collect::<Vec<_>>();
+        let mut meter=Meter::new(40_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[10,1],0,None,&mut meter),None,
+            "many no-op repetitions must not certify a useful consequence");
+        let data=(0..12).map(|i|record(i,0,i as i64,i as i64+1)).collect::<Vec<_>>();
+        let mut meter=Meter::new(100);
+        assert_eq!(calibrated_factual_prediction(&data,&[30,1],0,None,&mut meter),None,
+            "incomplete validation due to budget exhaustion must fail closed");
+        assert!(meter.spent<=100);
+    }
+
+    #[test]
+    fn freeze_excludes_actual_later_transitions_from_acquired_effects() {
+        let cfg=Config{width:2,actions:2,minimum_training:128,search_every:4096,
+            planning_work:4000,..Default::default()};
+        let mut learner=Learner::new(cfg,vec![5,1]).unwrap();
+        learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
+        learner.enable_self_directed_control().unwrap();
+        for i in 0..8 {learner.records.push(record(i,0,i as i64,i as i64+1))}
+        learner.next_id=8;
+        let mut before_meter=Meter::new(4000);
+        let before=factual_prediction(&learner.records,&[11,1],0,None,&mut before_meter);
+        assert_eq!(before,Some(vec![12,1]));
+        learner.freeze_learning().unwrap();
+        assert_eq!(learner.frozen_at,Some(8));
+        // Later real consequences contradict the acquired law, but frozen
+        // inference remains pinned to id < frozen_at, even across a restart.
+        for i in 8..18 {learner.records.push(record(i,0,i as i64,i as i64+10))}
+        learner.next_id=18;
+        let mut frozen_meter=Meter::new(4000);
+        let after=factual_prediction(&learner.records,&[11,1],0,learner.frozen_at,&mut frozen_meter);
+        assert_eq!(after,before);
+        let mut unrestricted_meter=Meter::new(4000);
+        let unrestricted=factual_prediction(&learner.records,&[11,1],0,None,&mut unrestricted_meter);
+        assert_ne!(unrestricted,before,"post-freeze evidence must be excluded, not ignored by chance");
+        assert!(frozen_meter.spent<=learner.config.planning_work);
+    }
+
+
+    fn joint_record(id:u64,left:i64,right:i64,effect:i64)->Record {
+        let x=id as i64*3;
+        let pre=vec![x,left,right];
+        let post=vec![x+effect,left,right];
+        Record {
+            transition:Transition{id,restart:id==0,pre,action:0,post:post.clone()},
+            model:0,prediction:Forecast{center:post,scale:vec![1.0;3]},
+            candidate:None,candidate_prediction:None,permit_sequence:id+1,external_cost:1,
+        }
+    }
+
+    #[test]
+    fn independently_contrasted_double_guard_survives_later_real_evidence() {
+        // Vary both opaque sensors independently. Neither alone explains
+        // progress; the conjunction is inferred from PRE/action/POST only.
+        let mut data=Vec::new();
+        for i in 0..28_u64 {
+            let (a,b)=[(0,0),(1,0),(0,1),(1,1)][i as usize%4];
+            data.push(joint_record(i,a,b,i64::from(a==1 && b==1)));
+        }
+        let prior=&data[..25];
+        let mut meter=Meter::new(100_000);
+        assert_eq!(factual_prediction(prior,&[99,1,1],0,None,&mut meter),Some(vec![100,1,1]));
+        let mut meter=Meter::new(4_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),
+            Some(vec![100,1,1]),"verified conjunction must fit the existing U1 planning budget");
+        assert!(meter.spent<=4_000);
+
+        // Three newest contradictory real POSTs revoke the original effect,
+        // rather than treating the first acquired conjunction as immutable.
+        for i in 28..31_u64 {data.push(joint_record(i,1,1,10))}
+        let mut meter=Meter::new(100_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),None);
+    }
+
+    #[test]
+    fn correlated_sensors_cannot_fake_independent_causal_guards() {
+        // The same apparent joint effect without either unilateral contrast
+        // is ambiguous: guard A and guard B might be redundant/confounded.
+        let data=(0..28_u64).map(|i| {
+            let v=(i%2) as i64;
+            joint_record(i,v,v,v)
+        }).collect::<Vec<_>>();
+        let mut meter=Meter::new(100_000);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),None,
+            "do not certify a conditional cause from perfectly correlated sensors");
+    }
+
+
+    #[test]
+    fn certified_multistep_chain_uses_only_heldout_validated_factual_edges() {
+        // SYNTHETIC journal fixture, not an autonomous acquisition benchmark.
+        // The learner is never given motor role labels or prerequisite indices.
+        // Action 0 sets the first sensor, action 1 the second; action 2
+        // increments progress iff BOTH sensors were set. No one-step move
+        // from [0,0,0] reaches the masked goal.
+        let cfg=Config{width:3,actions:3,minimum_training:128,search_every:4096,
+            planning_depth:4,planning_work:120_000,..Default::default()};
+        let mut learner=Learner::new(cfg,vec![0,0,0]).unwrap();
+        learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
+        learner.enable_self_directed_control().unwrap();
+        learner.enable_certified_chains().unwrap();
+        let mut id=0_u64;
+        for i in 0..48_usize {
+            let (left,right)=[(0,0),(1,0),(0,1),(1,1)][i%4];
+            for action in 0..3 {
+                let pre=vec![0,left,right];
+                let mut post=pre.clone();
+                match action {
+                    0=>post[1]=1,
+                    1=>post[2]=1,
+                    2=>{if left==1&&right==1{post[0]+=1}},
+                    _=>unreachable!(),
+                }
+                learner.records.push(Record{
+                    transition:Transition{id,restart:id==0,pre,action,post:post.clone()},
+                    model:0,prediction:Forecast{center:post,scale:vec![1.0;3]},
+                    candidate:None,candidate_prediction:None,
+                    permit_sequence:id+1,external_cost:1,
+                });
+                id+=1;
+            }
+        }
+        learner.next_id=id;
+        let goal=[Some(1),None,None];
+        let (plan,spent)=learner.carrier_certified_goal_chain_metered(&goal,&[true;3],120_000);
+        let plan=plan.expect("a two-prerequisite acquired chain must be constructible");
+        assert_eq!(plan.depth,3);
+        assert!(plan.first_action==0||plan.first_action==1);
+        assert_eq!(plan.first_consequence[0],0,"first action must establish a prerequisite, not fake goal progress");
+        assert_eq!(plan.endpoint[0],1);
+        assert!(spent<=120_000);
+        let (disabled,spent)=learner.carrier_certified_goal_chain_metered(&goal,&[true,false,true],120_000);
+        assert!(disabled.is_none(),"an unavailable prerequisite must prevent a fabricated plan");
+        assert!(spent<=120_000);
+        let (unfunded,spent)=learner.carrier_certified_goal_chain_metered(&goal,&[true;3],100);
+        assert!(unfunded.is_none(),"insufficient proof budget must abstain");
+        assert!(spent<=100);
+        // Three genuine contradictory consequences of the same last action
+        // must revoke the previously accepted causal edge on recomputation.
+        for i in 0..3 {
+            let pre=vec![i,1,1];let post=vec![i+10,1,1];
+            learner.records.push(Record{
+                transition:Transition{id,restart:false,pre,action:2,post:post.clone()},
+                model:0,prediction:Forecast{center:post,scale:vec![1.0;3]},
+                candidate:None,candidate_prediction:None,permit_sequence:id+1,external_cost:1,
+            });id+=1;
+        }
+        learner.next_id=id;
+        let (revoked,_) = learner.carrier_certified_goal_chain_metered(&goal,&[true;3],120_000);
+        assert!(revoked.is_none(),"contradicting real consequences must not leave a trusted old chain");
+    }
+
+    #[test]
+    fn double_guard_fails_closed_on_insufficient_meter() {
+        let data=(0..28_u64).map(|i|{
+            let (a,b)=[(0,0),(1,0),(0,1),(1,1)][i as usize%4];
+            joint_record(i,a,b,i64::from(a==1&&b==1))
+        }).collect::<Vec<_>>();
+        let mut meter=Meter::new(100);
+        assert_eq!(calibrated_factual_prediction(&data,&[99,1,1],0,None,&mut meter),None);
+        assert!(meter.spent<=100);
+    }
+
+    #[test]
+    fn factual_search_cost_is_bounded_even_with_large_journal() {
+        let cfg=Config{width:2,actions:2,minimum_training:128,search_every:4096,
+            journal_capacity:4096,planning_work:100,..Default::default()};
+        let mut learner=Learner::new(cfg,vec![5,1]).unwrap();
+        learner.enable_autonomy(AutonomyPolicy::default()).unwrap();
+        learner.enable_self_directed_control().unwrap();
+        for i in 0..4000 {learner.records.push(record(i,0,i as i64,i as i64+1))}
+        learner.next_id=4000;
+        let (_,cost)=learner.choose_offered_metered(Some(&[Some(10),None]),None).unwrap();
+        assert!(cost<=100,"measured factual work must never exceed planning_work");
+        let mut meter=Meter::new(100);
+        let _=factual_prediction(&learner.records,&[5,1],0,None,&mut meter);
+        assert!(meter.spent<=100);
+    }
+}

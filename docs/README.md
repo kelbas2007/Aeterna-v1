@@ -1,6 +1,35 @@
-# Documentation index
+# Documentation index — current main integration, 20 October 2026
 
-## Current consolidation — 2026-10-18
+**Start with current truth, not older dated "latest" passages:**
+[Current status (RU)](CURRENT_STATUS_20261020.md) ·
+[Architecture](PROJECT_OVERVIEW.md) ·
+[JSON state](PROJECT_STATE.json) ·
+[Integration / provenance](MAIN_INTEGRATION_20261020.md) ·
+[Actual JSONL API and limits](JSONL_AUTONOMOUS_OPTIONS.md) ·
+[Root README](../README.md).
+
+## Source-frozen scientific results vs ordinary engineering
+
+| Line | Protocol or design | Actual result and evidence |
+|---|---|---|
+| Own self-selected causal sequences | [frozen one-use protocol](SELF_ORIGINATED_OPTION1_ONE_USE_PROTOCOL.md) | [658/768 vs 366/768 QUALIFIED_SYNTHETIC](SELF_ORIGINATED_OPTION1_ONE_USE_RESULT.md), first [run 39370868718](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39370868718) |
+| Cold causal history negative control | [COLD-FRESH protocol](COLD_EPISODES_FRESH1_PROTOCOL.md) | [NEGATIVE 407→432/768 with two regressed families](COLD_EPISODES_FRESH1_RESULT.md) |
+| Acquired trajectory evaluator | [design](TRAJECTORY_SELF_REVISION_TRANSFER_PROTOCOL.md) | [T-SR1 NEGATIVE](TRAJECTORY_SELF_REVISION_TRANSFER_RESULTS.md); [T-SR2 NEGATIVE](T_SR2_BEHAVIORAL_GATE_RESULTS.md) |
+| Experience-derived options | [development protocol](SELF_ORIGINATED_OPTION0_DEVELOPMENT_PROTOCOL.md) | [Open cold development positive](SELF_ORIGINATED_OPTION0_DEVELOPMENT_RESULT.md) |
+| Physical option execution and terminal credit | [mechanism](TEMPORAL_OPTION_OUTCOME_CREDIT_DEVELOPMENT.md) | [Causal option real POST regression](CAUSAL_OPTION_EXECUTION_RESULT.md) |
+| Variable option depth (2–5) | [development protocol](VARIABLE_LENGTH_CAUSAL_OPTIONS_DEVELOPMENT.md) | 467/864 vs fixed 307/864; five-action reliability not established |
+| Necessity before extra complexity | [preimplementation protocol](COMPLEXITY_NECESSITY1_DEVELOPMENT_PROTOCOL.md) | [Development 472 vs 467 vs 307 /864](COMPLEXITY_NECESSITY1_DEVELOPMENT_RESULT.md), Linux/Windows PASS |
+| LC1 / RSP2 / RSP3 | [LC1](LC1_INTEGRATION.md), [RSP2](RSP2_REPAIR_RESULTS.md), [RSP3](RSP3_EXPERIENCE_RESULTS.md) | Limited software learning, no proven recursively self-improving general policy |
+
+Later successful *SKIPPED* one-use workflow invocations are **not new
+scientific results**. Preserve original PASS/NEGATIVE protocols and seeds.
+See [experiment ledger](../EXPERIMENT_LEDGER.md).
+
+---
+
+## Historical documentation catalog — original October 2026 material
+
+## Earlier consolidation — 2026-10-18
 
 Read [the current project overview](PROJECT_OVERVIEW.md) first. The canonical executable is
 `aeterna-v1`; `aeterna-unified` shares the same application code. RSP2 from PR #5

@@ -713,3 +713,23 @@ for images and 7 for signals despite true signal serialization width 6.
 The constructor, algorithms and uncertainty heuristic remain authored Rust;
 primitive invention, full ownership and general intelligence are unproved.
 Prior failures and historical scientific snapshots remain unchanged.
+
+## New central-line results (2026-10-19 to 2026-10-20, append-only)
+
+These events belong to the PR #9 `research/unified-factual-loop-20261019`
+line integrated into `main`. The one-use seeds, original source and
+FAIL verdicts are immutable. A successful software merge is not
+independent scientific evidence.
+
+| Research | Attempt | Verdict | Measured evidence |
+|---|---|---|---|
+| T-SR1 acquired evaluator | first one-use 39259810410 | **NEGATIVE** | 23→27 successes/48, but one family regressed; actions 773→774. [Original](docs/TRAJECTORY_SELF_REVISION_TRANSFER_RESULTS.md) |
+| T-SR2 candidate behavioral gate | first one-use 39267209746 | **NEGATIVE_BEHAVIORAL_ADMISSION** | Candidate 2/32 against incumbent 4/32, 749 vs 743 actions; candidate blocked. [Original](docs/T_SR2_BEHAVIORAL_GATE_RESULTS.md) |
+| AGENCY-CREDIT2 | first one-use 39310456378 | **QUALIFIED_SYNTHETIC** | 22/32 vs 16/32, reduced actions, but acquisition externally scheduled. [Original](docs/AGENCY_CREDIT2_ONE_USE_RESULT.md) |
+| COLD-EPISODES-FRESH1 | first one-use 39327061666 | **NEGATIVE_COLD_TRANSFER** | 432 vs 407 successes/768, but 2 families regressed; action savings 8.27% below mandatory 10%. [Original](docs/COLD_EPISODES_FRESH1_RESULT.md) |
+| Delayed trajectory credit | dev 39368562721 | **ENGINEERING PASS** | 12/12 Linux + Windows, U1 terminal reward from full real executed option; no independent generalization. [Mechanism](docs/TEMPORAL_OPTION_OUTCOME_CREDIT_DEVELOPMENT.md) |
+| SELF-ORIGINATED OPTION0 | open dev 39370185754 | **ENGINEERING POSITIVE** | 171/192 vs 40/192, actual actions 1 030 vs 3 115, no trainer-scheduled motors. [Result](docs/SELF_ORIGINATED_OPTION0_DEVELOPMENT_RESULT.md) |
+| SELF-ORIGINATED OPTION1 | **FIRST one-use 39370868718** | **QUALIFIED_SYNTHETIC_SELF_ORIGINATED_OPTION_TRANSFER** | 658/768 vs 366/768, real actions 4 194 vs 9 356, 413 native selected own-options and 410 actually completed, new deterministic synthetic families. [Frozen result](docs/SELF_ORIGINATED_OPTION1_ONE_USE_RESULT.md) |
+| Variable-length options 2–5 | disclosed dev 39372704369 | **ENGINEERING POSITIVE / COLD TRANSFER NOT QUALIFIED** | 467/864 vs 307/864, but original 3-step family regressed 140→137 and one 5-step option completed. [Protocol](docs/VARIABLE_LENGTH_CAUSAL_OPTIONS_DEVELOPMENT.md) |
+| COMPLEXITY-NECESSITY1 | disclosed dev 39374096468 | **ENGINEERING PASS, NOT SCIENCE QUALIFICATION** | 472/864 vs ungated 467/864 and fixed 307/864; 8 834 vs 8 910/11 059 actions; 3-step family restored 140/144; 5-step 7/288. [Original](docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_RESULT.md) |
+| Integration PR #9 | October 20, 2026 | **SOFTWARE MERGE — NOT A NEW COGNITIVE PASS** | Preserves parent history, original RSP2 policy, HumanProtection and old negatives; [integration](docs/MAIN_INTEGRATION_20261020.md) |

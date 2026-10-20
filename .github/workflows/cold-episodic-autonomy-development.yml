@@ -1,0 +1,45 @@
+name: Cold episodic autonomy development
+on:
+  pull_request:
+    paths:
+      - 'src/unified_runtime.rs'
+      - 'src/construction/unified_port.rs'
+      - 'tests/cold_episodic_autonomy_development.rs'
+      - '.github/workflows/cold-episodic-autonomy-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: cold-episodes-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  developmental:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_BUILD_JOBS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pinned Rust + source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p episode-evidence
+          git rev-parse HEAD > episode-evidence/source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Execute repeated goal episodes and physical reset boundary contract
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test cold_episodic_autonomy_development -- --nocapture --test-threads=1 2>&1 | tee episode-evidence/episodes.log
+          python scripts/project_audit.py | tee episode-evidence/source-binding.json
+      - name: Preserve small positive/negative engineering trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cold-episodes-${{ github.sha }}
+          path: episode-evidence/
+          retention-days: 2

@@ -1,0 +1,51 @@
+name: Variable depth causal option cold development
+on:
+  pull_request:
+    paths:
+      - 'src/construction/unified_port.rs'
+      - 'src/unified_runtime.rs'
+      - 'tests/cold_variable_depth_option_development.rs'
+      - '.github/workflows/cold-variable-depth-option-development.yml'
+permissions:
+  contents: read
+concurrency:
+  group: variable-option-development-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  developmental:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin toolchain and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+          mkdir -p variable-depth-evidence
+          git rev-parse HEAD > variable-depth-evidence/source.txt
+      - uses: Swatinem/rust-cache@v2
+      - name: Execute cold length-4 and length-5 protected learning
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --test cold_variable_depth_option_development -- --nocapture --test-threads=1 2>&1 | tee variable-depth-evidence/test.log
+          python scripts/project_audit.py | tee variable-depth-evidence/source-audit.json
+      - name: Archive genuine action and POST traces, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: variable-length-cold-${{ runner.os }}-${{ github.sha }}
+          path: variable-depth-evidence/
+          retention-days: 3
+          if-no-files-found: warn

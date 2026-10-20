@@ -1,7 +1,7 @@
 {
   "schema": "aeterna.project.v1",
   "project": "AETERNA-v1",
-  "consolidation": "2026-10-18",
+  "consolidation": "2026-10-20",
   "canonical_binary": "aeterna-v1",
   "compatibility_binary": "aeterna-unified",
   "runtime": "ScientificRuntime",
@@ -16,7 +16,22 @@
     "quantity_relations_rel1": true,
     "recursive_search_rsp2": true,
     "rsp3_experiential_proposal_research": true,
-    "lc1_learned_computation_requirements_opt_in": true
+    "lc1_learned_computation_requirements_opt_in": true,
+    "unified_self_directed_factual_action_proposal_opt_in": true,
+    "trajectory_self_revision_opt_in_experimental": true,
+    "trajectory_behavioral_admission_opt_in_development": true,
+    "predictive_short_history_states_opt_in_experimental": true,
+    "agency_aware_u1_credit_opt_in_experimental": true,
+    "self_selected_causal_pair_probes_opt_in_experimental": true,
+    "grounded_instrumental_credit_opt_in_development": true,
+    "truthful_external_episode_restart_development": true,
+    "adaptive_two_action_predictive_history_opt_in_experimental": true,
+    "native_selected_temporally_extended_option_opt_in_development": true,
+    "self_originated_autobiographical_three_step_option_opt_in_development": true,
+    "qualified_synthetic_self_originated_cold_options_2026_10_20": true,
+    "variable_length_autobiographical_option_2_to_5_opt_in_development": true,
+    "evidence_based_complexity_necessity_gate_opt_in_development": true,
+    "complexity_necessity1_engineering_regression_pass_36_worlds": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -38,7 +53,30 @@
     "rsp3_policy_admitted_by_rsp2_producer_gate",
     "open_ended_missing_computation_discovery",
     "learned_conditional_inverse_rules",
-    "stable_cross_domain_lc1_advantage"
+    "stable_cross_domain_lc1_advantage",
+    "broad_unfamiliar_external_world_autonomy",
+    "blind_independent_autonomous_advantage",
+    "native_spiking_discovery_of_symbolic_inverse_operators",
+    "independently_qualified_autonomous_self_improvement",
+    "validated_behavioral_self_improvement_transfer",
+    "general_POMDP_latent_state_recovery",
+    "blind_independent_hidden_state_transfer_advantage",
+    "independently_qualified_agency_credit_policy_advantage",
+    "autonomous_cold_causal_discovery_verified",
+    "independently_qualified_autonomous_curriculum",
+    "independent_cold_instrumental_credit_advantage",
+    "self_selected_multiepisode_hidden_world_advantage",
+    "independent_cold_goal_transfer",
+    "independent_adaptive_history_length_generalization",
+    "self_invented_history_grammar",
+    "blind_cold_multi_prerequisite_transfer",
+    "autonomously_created_action_hierarchy",
+    "third_party_external_world_cold_self_originated_option_transfer",
+    "independent_cold_variable_depth_skill_generalization",
+    "autonomously_invented_unbounded_action_grammar",
+    "independent_qualified_complexity_need_architecture_growth",
+    "general_need_driven_structural_complexification",
+    "reliable_cold_five_action_skill_learning"
   ],
   "historical_only": {
     "rsp2_local_exam": {
@@ -50,12 +88,35 @@
     }
   },
   "guides": [
+    "docs/JSONL_AUTONOMOUS_OPTIONS.md",
+    "docs/MAIN_INTEGRATION_20261020.md",
+    "docs/CURRENT_STATUS_20261020.md",
     "docs/PROJECT_OVERVIEW.md",
     "docs/RSP2_REPAIR.md",
     "docs/RSP2_REPAIR_RESULTS.md",
     "docs/RSP3_EXPERIENCE_RESULTS.md",
     "docs/LC1_PROTOCOL.md",
-    "docs/LC1_INTEGRATION.md"
+    "docs/LC1_INTEGRATION.md",
+    "docs/AUTONOMY_UNIFIED_EXPERIMENT.md",
+    "docs/AUTONOMOUS_TRAJECTORY_SELF_REVISION.md",
+    "docs/T_SR2_BEHAVIORAL_GATE_IMPLEMENTATION.md",
+    "docs/PREDICTIVE_HISTORY_STATES_EXPERIMENT.md",
+    "docs/AGENCY_CREDIT1_PROTOCOL.md",
+    "docs/AGENCY_CREDIT1_IMPLEMENTATION.md",
+    "docs/SELF_DIRECTED_CAUSAL_PROBES_DEVELOPMENT.md",
+    "docs/INSTRUMENTAL_CREDIT1_PROTOCOL.md",
+    "docs/SELF_DIRECTED_CAUSAL_PROBES_RESULT.md",
+    "docs/COLD_EPISODES1_DEVELOPMENT.md",
+    "docs/ADAPTIVE_HISTORY_SUFFIX1_PROTOCOL.md",
+    "docs/COLD_EPISODES_FRESH1_RESULT.md",
+    "docs/CAUSAL_OPTION_EXECUTION_RESULT.md",
+    "docs/SELF_ORIGINATED_OPTION0_DEVELOPMENT_PROTOCOL.md",
+    "docs/SELF_ORIGINATED_OPTION0_DEVELOPMENT_RESULT.md",
+    "docs/SELF_ORIGINATED_OPTION1_ONE_USE_PROTOCOL.md",
+    "docs/SELF_ORIGINATED_OPTION1_ONE_USE_RESULT.md",
+    "docs/VARIABLE_LENGTH_CAUSAL_OPTIONS_DEVELOPMENT.md",
+    "docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_PROTOCOL.md",
+    "docs/COMPLEXITY_NECESSITY1_DEVELOPMENT_RESULT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
@@ -73,5 +134,60 @@
     "dc2-r1.yml",
     "education-development.yml"
   ],
-  "restoration_contract": "construction state must use joint checkpoint APIs; native-only restart/restore rejected before mutation"
+  "restoration_contract": "construction state must use joint checkpoint APIs; native-only restart/restore rejected before mutation",
+  "integration": {
+    "target_branch": "main",
+    "pr_number": 9,
+    "source_branch": "research/unified-factual-loop-20261019",
+    "previous_main": "e8d3a72c3726f1ee06e05d13b011627fc45fead4",
+    "pre_documentation_head": "dcaf9839fa3f139c78930551184db3d69a2b773d",
+    "method": "merge_commit",
+    "preserve_history": true,
+    "scientific_upgrade_from_merge": false,
+    "prior_full_linux_windows_pass": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39374600877"
+  },
+  "measured_research": {
+    "self_originated_option1": {
+      "verdict": "QUALIFIED_SYNTHETIC_SELF_ORIGINATED_OPTION_TRANSFER",
+      "first_science_run_id": 39370868718,
+      "worlds": 32,
+      "episodes": 768,
+      "baseline_goals": 366,
+      "candidate_goals": 658,
+      "baseline_actions": 9356,
+      "candidate_actions": 4194,
+      "autonomously_selected_options": 413,
+      "actually_completed_options": 410,
+      "physical_environment": "disclosed_deterministic_synthetic",
+      "independently_qualified_external_world": false
+    },
+    "complexity_necessity1": {
+      "verdict": "ENGINEERING_PASS_NOT_INDEPENDENT_SCIENCE",
+      "development_run_id": 39374096468,
+      "worlds": 36,
+      "episodes_per_arm": 864,
+      "fixed_goals": 307,
+      "ungated_goals": 467,
+      "gated_goals": 472,
+      "fixed_actions": 11059,
+      "ungated_actions": 8910,
+      "gated_actions": 8834,
+      "five_step_goals": 7,
+      "five_step_total": 288,
+      "five_step_completed_macros": 1
+    },
+    "unchanged_negative_verdicts": [
+      "T-SR1",
+      "T-SR2",
+      "COLD-EPISODES-FRESH1"
+    ]
+  },
+  "user_facing_limitations": {
+    "default_jsonl_planning_depth": 2,
+    "advanced_depth_requires_rust_config": true,
+    "general_language_qualified": false,
+    "unrestricted_real_world_action_authority": false,
+    "independent_external_agi_qualified": false,
+    "autonomous_rust_self_rewrite": false
+  }
 }
