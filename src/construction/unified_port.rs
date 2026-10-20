@@ -128,7 +128,12 @@ impl Learner {
                 if post==&state {continue}
                 let mut next=route.clone();
                 next.push((action,post.clone()));
-                if next.len()>=2 && goal_distance(post,goal)==0 {
+                if goal_distance(post,goal)==0 {
+                    // A FIRST physical motor which already reaches the
+                    // masked goal is not a multi-step causal skill. Never
+                    // enqueue that solved state to manufacture depth two
+                    // from unrelated later journal observations.
+                    if next.len()==1{continue}
                     return (Some(PortHistoryPlan{
                         first_action:next[0].0,
                         first_consequence:next[0].1.clone(),
