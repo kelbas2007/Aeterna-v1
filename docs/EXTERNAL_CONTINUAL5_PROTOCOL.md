@@ -15,6 +15,19 @@ features of real images/signals. Raw observations and all action intentions,
 costs, rewards, remaining deadlines, failures and checkpoints are recorded.
 Neither model rollouts nor held-out answers become training facts.
 
+Recursive strategy adaptation is included: a candidate is mutated from the last
+accepted strategy, evaluated before fitting subsequent factual rewards, and
+admitted only after a future 64-observation prequential comparison improves
+squared reward-prediction error by at least 2% and 0.01 total loss. Every sixteenth
+interaction is sampled for this comparison. Mutation-family weights adapt to
+accepted/rejected proposals, so the next generation depends on earlier search
+outcomes. Neighbor counts and kernel feature weights are bounded authored
+mutation families. Report admissions and rejections separately; improved
+prediction does not by itself prove improved whole-episode action performance.
+Before admission, leave-one-out forecasts on up to three retained rewarded facts
+from older sensor interfaces must also avoid an increase of squared error above
+0.01 each. This is a bounded rehearsal guard, not an independent retention exam.
+
 ## Development / scoring boundary
 
 MiniGrid development uses Empty-5x5 and DoorKey-5x5 seeds 810000..810007.
@@ -23,6 +36,10 @@ Only official training partitions of Fashion-MNIST and UCI HAR may be decoded
 before the final source, binary, configuration and this protocol are frozen.
 Public training-partition validation is allowed and must be labeled development.
 Downloads of unopened test archives for integrity checking do not expose answers.
+If the official UCI download host is unavailable, raw files from two independently
+hosted, pinned public mirrors must match byte-for-byte Git blob hashes before
+use. Publish both origins and individual SHA256 hashes; a repacked subset archive
+must not be described as the original UCI distribution archive.
 
 Before scoring, commit the implementation and save source / binary / data hashes
 in a commitment. Score once; any repair after disclosure requires a new protocol
@@ -42,24 +59,31 @@ Use official arc-agi 0.9.9 / arcengine 0.9.3, offline public games ft09 and vc33
 For each game, train for eight episodes, seeds 840100..840107; freeze/restore
 before eight episodes, seeds 840000..840007, at most 256 actions each. Only raw
 public frames, available actions, completion rewards and episode boundaries are
-available. A finite click interface may expose up to eleven generic observed
-component centroids, alongside the five ordinary actions. This restriction is
+available. A finite click interface exposes up to ten generic observed
+component points, alongside six ordinary actions (ACTION1..5 and ACTION7). This restriction is
 reported, and game source or a game-specific solution must not be inspected.
 
-Compare full reward learning, the same reward learner with one-step horizon,
-the previous causal learner without reward generalization, and uniform random,
+Compare full reward learning, a fixed-strategy reward learner with the same
+horizon (the recursion control), a fixed-strategy reward learner with one-step
+horizon, the previous causal learner without reward generalization, and uniform random,
 with identical observations and maximum action budgets. Report actual actions,
 successes / completed levels, distinct observations and per-family results.
 MiniGrid target: at least 25% success overall and above both legacy and random.
 ARC target: at least one held-out completed level and more than random. A failure
 is published as a failure, not converted into success by counting exploration.
 
+The full/fixed comparison isolates recursive strategy adaptation; fixed/one-step
+isolates lookahead. Report their differences even when no advantage is found.
+
 ## Real recorded sensor streams
 
 Fashion-MNIST: first 3000 official training images, then first 1000 official test
 images. Labels are obtainable only by an executed answer action and its actual
 binary correctness feedback. One paid image acquisition plus up to ten distinct
-answer attempts in training; one acquisition and one answer in testing.
+answer attempts in training; one acquisition and one answer in testing. Every
+answer ends a reward episode. Corrective training retries start a new attempt
+with the already acquired readings; a later correct answer cannot reward an
+earlier incorrect guess. All attempts consume the same per-window budget.
 
 UCI HAR: first 3000 official training windows, then first 1000 official test
 windows. Official train/test subjects are disjoint. Nine real 128-sample inertial

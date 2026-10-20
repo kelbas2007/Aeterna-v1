@@ -1,0 +1,39 @@
+"""Format and observation-boundary regressions using tiny generated fixtures."""
+import gzip,struct,tempfile,unittest,zipfile
+from pathlib import Path
+import numpy as np
+from external5_sensors import load_fashion,load_har,SENSOR_NAMES,MatchedKNN
+from external5_arc import targets
+
+class ExternalInputs(unittest.TestCase):
+    def test_idx_headers_never_become_pixels_or_feedback_labels(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);pixels=np.stack([np.zeros((28,28),dtype=np.uint8),np.full((28,28),17,dtype=np.uint8)])
+            (root/'train-images-idx3-ubyte.gz').write_bytes(gzip.compress(struct.pack('>IIII',2051,2,28,28)+pixels.tobytes()))
+            (root/'train-labels-idx1-ubyte.gz').write_bytes(gzip.compress(struct.pack('>II',2049,2)+bytes([3,7])))
+            x,y,_=load_fashion(root,'train',1,1)
+            self.assertTrue(np.all(x==17));self.assertEqual(y.tolist(),[7])
+    def test_har_reads_raw_channels_and_keeps_subjects_outside_observation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with zipfile.ZipFile(Path(folder)/'uci-har.zip','w') as archive:
+                for i,name in enumerate(SENSOR_NAMES):
+                    archive.writestr(f'UCI HAR Dataset/train/Inertial Signals/{name}_train.txt',
+                        ' '.join(['0']*128)+'\n'+' '.join([str(i+1)]*128)+'\n')
+                archive.writestr('UCI HAR Dataset/train/y_train.txt','1\n6\n')
+                archive.writestr('UCI HAR Dataset/train/subject_train.txt','3\n15\n')
+            x,y,subjects=load_har(folder,'train',1,1)
+            self.assertEqual(x.shape,(1,9,128));self.assertEqual(float(x[0,8,0]),9)
+            self.assertEqual(y.tolist(),[5]);self.assertEqual(subjects.tolist(),[15])
+    def test_matched_control_cannot_use_unmeasured_training_axes(self):
+        model=MatchedKNN();unknown={'kind':'signals','namespace':2,'channels':[None]*9}
+        observed={'kind':'signals','namespace':2,'channels':[[1.0,2.0,3.0]]+[None]*8}
+        model.observe(observed);model.remember(unknown,3);model.remember(observed,11)
+        self.assertEqual(model.predict(observed,[3,11]),11)
+    def test_click_target_is_inside_a_visible_component_with_a_hole(self):
+        pixels=[[0]*10 for _ in range(10)]
+        for y in range(3,6):
+            for x in range(3,6):
+                if (y,x)!=(4,4):pixels[y][x]=7
+        x,y=targets(pixels)[0];self.assertEqual(pixels[y][x],7)
+
+if __name__=='__main__':unittest.main()
