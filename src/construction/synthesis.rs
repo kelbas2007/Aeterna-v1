@@ -13,9 +13,14 @@ pub struct Transition {
     pub pre: Vec<i64>, pub action: usize, pub post: Vec<i64>,
 }
 pub fn validate_data(data: &[Transition], width: usize, actions: usize) -> Result<()> {
-    // An absolute id above zero can begin a retained, contiguous journal
-    // window. It does NOT fabricate an external restart. Newly synthesized
-    // candidate VM state is a hypothesis and still needs prospective POSTs.
+    validate_contiguous_data(data,width,actions)?;
+    // Synthesis and recursive admission replay from initial VM registers.
+    // Only a factual restart makes that replay valid. Retained continuous
+    // windows have a separate validator and are replayed with their anchor.
+    if !data[0].restart { return Err(Error::InvalidData); }
+    Ok(())
+}
+pub(crate) fn validate_contiguous_data(data: &[Transition], width: usize, actions: usize) -> Result<()> {
     if data.is_empty() || (!data[0].restart && data[0].id==0) || data.len()>65536 || width==0 || width>32 || actions==0 || actions>32 {return Err(Error::InvalidData)}
     let mut last = None;
     for (i,t) in data.iter().enumerate() {
@@ -77,6 +82,7 @@ pub struct SearchTrace {
 pub struct Hint { pub constructor_id: u64, pub output: Expr, pub cells: Vec<StateCell> }
 
 pub fn replay(program: &Program,data: &[Transition],lib: &Library,meter: &mut Meter) -> Result<(Vec<Vec<i64>>,Vec<i64>)> {
+    if data.first().is_some_and(|t|!t.restart) { return Err(Error::InvalidData); }
     let mut state = program.initial_state(); let mut predictions = Vec::with_capacity(data.len());
     for t in data {
         meter.charge(1)?;

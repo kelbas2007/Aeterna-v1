@@ -522,8 +522,8 @@ impl Learner {
         let policy=self.autonomy.as_ref()?;let c=self.curriculum.as_ref()?;
         let levels:Vec<_>=(0..self.config.width).map(|j|policy.level(c,j)).collect();
         let effective_limits=levels.iter().map(|&n|policy.limits(&self.config.search,n)).collect();
-        let external_cost=self.records.iter().fold(0_u64,|s,r|s.saturating_add(r.external_cost));
-        Some(AutonomyReport{levels,effective_limits,external_cost,remaining_cost:policy.max_external_cost.saturating_sub(external_cost),frozen_at:self.frozen_at,events:self.records.len()})
+        let external_cost=self.records.iter().fold(self.causal_memory.as_ref().map_or(0,|m|m.compacted_cost),|s,r|s.saturating_add(r.external_cost));
+        Some(AutonomyReport{levels,effective_limits,external_cost,remaining_cost:policy.max_external_cost.saturating_sub(external_cost),frozen_at:self.frozen_at,events:self.factual_event_count()})
     }
     /// Irreversible freeze; facts and action costs continue, learning does not.
     pub fn freeze_learning(&mut self)->Result<()> {
@@ -539,7 +539,7 @@ impl Learner {
     pub fn last_search(&self) -> Option<&SearchTrace> { self.last_trace.as_ref() }
     pub fn current(&self) -> &[i64] { &self.current }
     pub fn report(&self) -> SnapshotReport {
-        SnapshotReport { events: self.records.len(),active_program: self.active.program.fingerprint(),state_cells: self.active.program.cells.len(),program_nodes: self.active.program.nodes(),library_nodes: self.library.nodes(),constructors: self.registry.constructors().len(),promotions: self.promotions.iter().filter(|p| p.accepted).count(),construction_work: self.construction_work,shadow_pending: self.shadow.is_some(),poisoned: self.poisoned,last_error: self.last_error.clone(),
+        SnapshotReport { events: self.factual_event_count(),active_program: self.active.program.fingerprint(),state_cells: self.active.program.cells.len(),program_nodes: self.active.program.nodes(),library_nodes: self.library.nodes(),constructors: self.registry.constructors().len(),promotions: self.promotions.iter().filter(|p| p.accepted).count(),construction_work: self.construction_work,shadow_pending: self.shadow.is_some(),poisoned: self.poisoned,last_error: self.last_error.clone(),
             constructor_generation: self.registry.constructors().iter().map(|c| c.generation).max().unwrap_or(0),
             recursive_trials: self.registry.meta_ledger().reports().len(),
             recursive_improvements: self.registry.meta_ledger().reports().iter().filter(|r| r.recursive_search_value).count() }
@@ -549,7 +549,7 @@ impl Learner {
         if self.poisoned { return Err(Error::Execution("unknown external state after callback fault".into())); }
         if self.pending { return Err(Error::Busy); }
         if action >= self.config.actions { return Err(Error::Index); }
-        if self.records.len()>=self.config.journal_capacity && self.causal_memory.is_some() {
+        if self.causal_memory.is_some() && self.records.len()>=self.causal_journal_capacity() {
             self.compact_causal_journal()?;
         }
         if self.records.len() >= self.config.journal_capacity || self.next_id == u64::MAX { return Err(Error::Capacity); }
@@ -626,6 +626,14 @@ impl Learner {
     fn construct_inner(&mut self) -> Result<()> {
         if self.pending || self.shadow.is_some() { return Err(Error::Busy); }
         if self.frozen_at.is_some() || self.poisoned || self.records.len() < self.config.minimum_training { return Err(Error::NoEvidence); }
+        // Recursive synthesis starts from initial registers. When a raw
+        // prefix has been folded into VM anchors, wait for an actual restart
+        // and expose only that factual suffix to every synthesis/audit lane.
+        if self.causal_memory.is_some() && self.records.first().is_some_and(|r|!r.transition.restart) {
+            let start=self.records.iter().position(|r|r.transition.restart).ok_or(Error::NoEvidence)?;
+            self.compact_causal_prefix(start)?;
+            if self.records.len()<self.config.minimum_training { return Err(Error::NoEvidence); }
+        }
         let data = self.data();
         let requested = if let Some(c) = &mut self.curriculum {
             let mut meter = Meter::new(2_000_000);
@@ -1068,7 +1076,10 @@ impl Learner {
         if let Some(p) = &state.previous { p.validate(state.config.width,&state.library)?; }
         let mut meter = Meter::new(10000000);
         if !state.records.is_empty() {
-            validate_data(&state.data(),state.config.width,state.config.actions)?;
+            if state.causal_memory.is_some() {
+                validate_contiguous_data(&state.data(),state.config.width,state.config.actions)?;
+                if state.shadow.is_some() && !state.records[0].transition.restart { return Err(Error::InvalidData); }
+            } else {validate_data(&state.data(),state.config.width,state.config.actions)?;}
             if !state.restart_next && state.records.last().unwrap().transition.post != state.current { return Err(Error::InvalidData); }
             for (i,r) in state.records.iter().enumerate() {
                 if r.transition.id != offset+i as u64 { return Err(Error::InvalidData); }

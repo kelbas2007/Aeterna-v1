@@ -49,6 +49,17 @@ fn causal_jsonl_exposes_wide_inputs_motor_count_and_long_horizon_with_real_post_
         exchange(json!({"op":"report"}))["report"]["total_external_cost"],
         cost
     );
+    let entered = exchange(json!({"op":"enter","name":"signals-v2","observation":vec![0;12]}));
+    assert_eq!(entered["type"], "entered", "{entered}");
+    let snapshot = exchange(json!({"op":"checkpoint"}));
+    let state: Value = serde_json::from_str(snapshot["checkpoint"].as_str().unwrap()).unwrap();
+    let cfg = &state["cognition"]["current"]["learner"]["config"];
+    assert_eq!(cfg["width"], 12);
+    assert_eq!(cfg["actions"], 7);
+    assert_eq!(cfg["planning_depth"], 12);
+    assert_eq!(cfg["planning_work"], 120000);
+    assert_eq!(cfg["journal_capacity"], 256);
+    assert_eq!(entered["report"]["total_external_cost"], cost);
     assert_eq!(exchange(json!({"op":"quit"}))["type"], "bye");
     drop(exchange);
     drop(input);

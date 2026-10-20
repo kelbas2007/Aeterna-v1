@@ -30,6 +30,12 @@ impl Learner {
     pub fn action_count(&self) -> usize {
         self.config.actions
     }
+    pub fn configuration(&self) -> &Config {
+        &self.config
+    }
+    pub fn autonomy_policy(&self) -> Option<&super::autonomy::AutonomyPolicy> {
+        self.autonomy.as_ref()
+    }
     pub fn factual_event_count(&self) -> usize {
         usize::try_from(self.next_id).unwrap_or(usize::MAX)
     }
@@ -49,14 +55,6 @@ impl Learner {
             .beliefs(&self.current, offers, goal, work)
     }
     fn compact_causal_journal(&mut self) -> Result<()> {
-        if self.pending || self.poisoned || self.causal_memory.is_none() {
-            return Err(Error::Busy);
-        }
-        // A canceled prospective trial keeps its original risk debt. Never
-        // splice an in-flight evidence window into an apparently fresh trial.
-        if self.shadow.is_some() {
-            self.cancel_shadow();
-        }
         let half = self.records.len() / 2;
         let remove = self
             .records
@@ -65,7 +63,25 @@ impl Learner {
             .skip(half)
             .find(|(_, r)| r.transition.restart)
             .map_or(half, |(i, _)| i);
-        if remove == 0 {
+        self.compact_causal_prefix(remove)
+    }
+    // Upper bound on the encoded journal, including optional forecasts and
+    // extreme numbers. The configured record capacity is still an upper cap.
+    fn causal_journal_capacity(&self) -> usize {
+        self.config
+            .journal_capacity
+            .min(4 * 1024 * 1024 / (1024 + 160 * self.config.width))
+    }
+    fn compact_causal_prefix(&mut self, remove: usize) -> Result<()> {
+        if self.pending || self.poisoned || self.causal_memory.is_none() {
+            return Err(Error::Busy);
+        }
+        // A canceled prospective trial keeps its original risk debt. Never
+        // splice an in-flight evidence window into an apparently fresh trial.
+        if self.shadow.is_some() {
+            self.cancel_shadow();
+        }
+        if remove == 0 || remove > self.records.len() {
             return Err(Error::Capacity);
         }
         let memory = self.causal_memory.as_ref().ok_or(Error::NoEvidence)?;
@@ -129,13 +145,15 @@ impl Learner {
         goal: Option<&[Option<i64>]>,
         budget: u64,
         horizon: usize,
+        remaining_cost: u64,
     ) -> (Option<super::causal_memory::CausalProposal>, u64) {
         self.causal_memory.as_ref().map_or((None, 0), |m| {
-            m.propose(
+            m.propose_with_cost_limit(
                 &self.current,
                 offers,
                 goal,
                 self.config.planning_depth.min(horizon),
+                remaining_cost,
                 budget,
             )
         })
@@ -215,6 +233,44 @@ fn calibrate_causal_window(
 mod causal_checkpoint_tests {
     use super::*;
     #[test]
+    fn wide_large_capacity_journal_remains_checkpointable_and_reports_lifetime_debt() {
+        let observation = (0..32)
+            .map(|i| if i % 2 == 0 { i64::MIN } else { i64::MAX })
+            .collect::<Vec<_>>();
+        let mut l = Learner::new(
+            Config {
+                width: 32,
+                journal_capacity: 65_536,
+                search_every: 100_000,
+                ..Default::default()
+            },
+            observation.clone(),
+        )
+        .unwrap();
+        l.enable_autonomy(super::super::autonomy::AutonomyPolicy::default())
+            .unwrap();
+        l.manage_from_carrier().unwrap();
+        l.enable_self_directed_control().unwrap();
+        l.enable_causal_memory(super::super::causal_memory::CausalConfig::default())
+            .unwrap();
+        for id in 0..8000 {
+            let token = l.prepare(id as usize % 2).unwrap();
+            l.commit(token, observation.clone(), id + 1, 3).unwrap();
+            if id % 500 == 499 {
+                let bytes = l.checkpoint().unwrap();
+                assert!(bytes.len() < 16 * 1024 * 1024);
+                l = Learner::from_checkpoint(&bytes).unwrap();
+                let report = l.autonomy_report().unwrap();
+                assert_eq!(report.events as u64, id + 1);
+                assert_eq!(report.external_cost, (id + 1) * 3);
+                assert_eq!(report.remaining_cost, 1_000_000 - (id + 1) * 3);
+                assert_eq!(l.report().events as u64, id + 1);
+            }
+        }
+        assert!(l.causal_report().unwrap().compactions > 0);
+        assert!(l.records.len() < l.config.journal_capacity);
+    }
+    #[test]
     fn stateful_vm_anchor_survives_compaction_and_a_real_restart() {
         let cfg = Config {
             journal_capacity: 32,
@@ -280,12 +336,35 @@ mod causal_checkpoint_tests {
             let t = l.prepare(0).unwrap();
             l.commit(t, vec![5], id + 1, 1).unwrap();
         }
+        assert!(!l.records[0].transition.restart);
+        assert_eq!(validate_data(&l.data(), 1, 2), Err(Error::InvalidData));
+        assert_eq!(
+            replay(
+                &l.active.program,
+                &l.data(),
+                &l.library,
+                &mut Meter::new(100_000)
+            ),
+            Err(Error::InvalidData)
+        );
+        let before = l.active.state.clone();
+        assert_eq!(l.construct(), Err(Error::NoEvidence));
+        assert_eq!(l.active.state, before, "construction cannot invent a reset");
+        assert!(l.shadow.is_none());
+        // Only a real, host-observed episode boundary gives every existing
+        // synthesis and recursive audit lane valid initial register history.
+        l.record_external_restart(vec![5]).unwrap();
+        for id in 100..108 {
+            let t = l.prepare(0).unwrap();
+            l.commit(t, vec![5], id + 1, 1).unwrap();
+        }
         l.construct().unwrap();
+        assert!(l.records[0].transition.restart);
         assert!(
             l.shadow.is_some(),
             "existing synthesis must still create a prospective trial"
         );
-        for id in 100..145 {
+        for id in 108..153 {
             let t = l.prepare(0).unwrap();
             l.commit(t, vec![5], id + 1, 1).unwrap();
             let bytes = l.checkpoint().unwrap();
@@ -294,13 +373,13 @@ mod causal_checkpoint_tests {
         assert!(l.promotions.iter().any(|p| p.accepted));
         assert_eq!(
             l.active.state,
-            vec![152],
+            vec![60],
             "unchanged VM registers retain their absolute physical history"
         );
         l.rollback().unwrap();
-        assert_eq!(l.active.state, vec![152]);
-        assert_eq!(l.factual_event_count(), 145);
-        assert_eq!(l.causal_report().unwrap().factual_transitions, 145);
+        assert_eq!(l.active.state, vec![60]);
+        assert_eq!(l.factual_event_count(), 153);
+        assert_eq!(l.causal_report().unwrap().factual_transitions, 153);
         let bytes = l.checkpoint().unwrap();
         assert_eq!(
             Learner::from_checkpoint(&bytes)

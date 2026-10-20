@@ -105,6 +105,11 @@ fn causal_continuous_physical_learning_compacts_restores_and_preserves_frozen_kn
     let learner = rt.construction_learner().unwrap();
     let r = learner.causal_report().unwrap();
     assert_eq!(learner.factual_event_count(), 6200);
+    assert_eq!(learner.report().events, 6200);
+    let autonomy = learner.autonomy_report().unwrap();
+    assert_eq!(autonomy.events, 6200);
+    assert_eq!(autonomy.external_cost, 6200);
+    assert_eq!(autonomy.remaining_cost, 1_000_000 - 6200);
     assert_eq!(rt.unified_report().unwrap().total_external_cost, 6200);
     assert!(learner.records().len() <= 192 && r.compactions > 20);
     assert_eq!(r.learned_transitions, 6200);
@@ -128,6 +133,34 @@ fn causal_continuous_physical_learning_compacts_restores_and_preserves_frozen_kn
     let bytes = rt.checkpoint_constructing().unwrap();
     let restored = ScientificRuntime::from_constructing_checkpoint(&bytes).unwrap();
     assert_eq!(restored.checkpoint_constructing().unwrap(), bytes);
+}
+
+#[test]
+fn an_empty_masked_goal_is_rejected_before_a_physical_action() {
+    let mut rt = make(12, 7, 12, 192, true);
+    let mut calls = 0;
+    let result = rt.step_constructing(Some(&[None; 12]), &offers(7), safe, |_| {
+        calls += 1;
+        Ok(UnifiedPost {
+            observation: vec![0; 12],
+            reward: 0.0,
+            cost: 1,
+        })
+    });
+    assert!(matches!(
+        result,
+        Err(aeterna_v1::construction::Error::InvalidData)
+    ));
+    assert_eq!(calls, 0);
+    assert_eq!(rt.construction_learner().unwrap().factual_event_count(), 0);
+    assert_eq!(
+        rt.construction_learner()
+            .unwrap()
+            .causal_report()
+            .unwrap()
+            .completed_goal_episodes,
+        0
+    );
 }
 
 fn observation(stage: usize) -> Vec<i64> {

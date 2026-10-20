@@ -107,7 +107,7 @@
     "modified": {
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "a0cf2ebc2fb4ad8b53a7e72b4ed034526ce6ae413d1cfbfe4abd675b0060eb40",
-        "after_sha256": "41d9c691657a12e8be07c71daae12ba7fba6a5cf981088e65a23629014dfa1f4"
+        "after_sha256": "3a39f2aa4bbb042c8c9810a4a9ee05388b28e7318489cbb42daca75195917646"
       },
       "src/construction/mod.rs": {
         "before_sha256": "051ad8a512a3f4f7c6b396252fb97313dc9f2717114c1d245ce508615bcd3ba1",
@@ -115,20 +115,20 @@
       },
       "src/construction/runtime.rs": {
         "before_sha256": "fa2dd322bf982d3dec19d920da195d9ecd1b503bae514b6e7287c4865b3b2007",
-        "after_sha256": "4b4678ddeb7e9c37a1fce5a5e142489f9468653d58835a3f1b96ad15171385ae"
+        "after_sha256": "7a14de09c9a49276fc621de106c28c81e1c688507b2d1c90f29b9570d61156ae"
       },
       "src/construction/synthesis.rs": {
         "before_sha256": "2f4eb3af5c9a6775a9863f8f4057f7154ae69b83a45f2334ee9551fe0d57b768",
-        "after_sha256": "378de6c9370c2270a2219156c9a20160d353491d09f1aad83a76058bbbc0cc92"
+        "after_sha256": "03673af7142dd002afea2d4840a2d8b847bca64093bf828bd01f5b03860d8abd"
       },
       "src/unified_runtime.rs": {
         "before_sha256": "659c57e0623151a7ebd05f7c7dd0defd7915f55f04cf9e2eae1ec995304cb605",
-        "after_sha256": "a51db162e2f8eb5bccb2971d739a61cee5c1d0ad23c6011a5f3386b8614a3575"
+        "after_sha256": "a555fa731192caaa57d9a881a20a09ae6e0c2d39d73b15077e519641f483b6a6"
       }
     },
     "added": {
-      "src/construction/causal_memory.rs": "5ec0fd7b52e721b91475875a42c28b4164b2812f58833782fc2ff379787c0d73",
-      "src/construction/causal_port.rs": "638482ca242518c67b4554f4bc668c8c1b4624777171f9a74c96eac23b225de6"
+      "src/construction/causal_memory.rs": "2977ad6dc20f421aecb5432496e6758b7406b093674ab6e30ed0492ac509d908",
+      "src/construction/causal_port.rs": "73f320e8b4112604da8895038cb35b621b7ff72f1d297e8699836b178cde99b3"
     }
   }
 }

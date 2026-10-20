@@ -65,10 +65,12 @@ impl Counts {
             .fold(self.other, |n, o| n.saturating_add(o.count))
     }
     fn bytes(&self) -> usize {
-        64 + self
+        // Account conservatively for RAM and JSON: signed i64 values need
+        // up to twenty digits, not eight bytes, in persistent checkpoints.
+        128 + self
             .outcomes
             .iter()
-            .map(|o| 32 + o.post.len() * 8)
+            .map(|o| 64 + o.post.len() * 24)
             .sum::<usize>()
     }
     fn distribution(&self) -> Vec<(Vec<i64>, f64)> {
@@ -193,6 +195,7 @@ fn goal_law_information(support: u64, goal_probability: f64) -> f64 {
 }
 fn matches_goal(state: &[i64], goal: &[Option<i64>]) -> bool {
     state.len() == goal.len()
+        && goal.iter().any(Option::is_some)
         && state
             .iter()
             .zip(goal)
@@ -306,6 +309,7 @@ impl CausalMemory {
         if !learning {
             return;
         }
+        let goal = goal.filter(|g| g.len() == post.len() && g.iter().any(Option::is_some));
         if self.goal.as_deref() != goal {
             self.finish_episode(false);
             self.goal = goal.map(<[Option<i64>]>::to_vec);
@@ -405,7 +409,11 @@ impl CausalMemory {
         }
         self.events = self.events.saturating_add(1);
         self.learned_events = self.learned_events.saturating_add(1);
-        self.bytes = self.counts.iter().map(|(k, c)| k.len() + c.bytes()).sum();
+        self.bytes = self
+            .counts
+            .iter()
+            .map(|(k, c)| 2 * k.len() + c.bytes())
+            .sum();
         while self.counts.len() > self.config.model_entries || self.bytes > self.config.model_bytes
         {
             // Keep frequent evidence and counterexamples; expire least useful
@@ -415,7 +423,7 @@ impl CausalMemory {
                 weights[c.depth].sqrt()
                     * (c.total() as f64).sqrt()
                     * (1.0 + (c.outcomes.len() as f64).ln())
-                    / (k.len() + c.bytes()).max(1) as f64
+                    / (2 * k.len() + c.bytes()).max(1) as f64
             };
             let victim = self
                 .counts
@@ -428,7 +436,7 @@ impl CausalMemory {
                 .map(|(k, _)| k.clone());
             let Some(k) = victim else { break };
             if let Some(c) = self.counts.remove(&k) {
-                self.bytes = self.bytes.saturating_sub(k.len() + c.bytes());
+                self.bytes = self.bytes.saturating_sub(2 * k.len() + c.bytes());
                 self.evicted = self.evicted.saturating_add(1);
             }
         }
@@ -559,8 +567,23 @@ impl CausalMemory {
         horizon: usize,
         budget: u64,
     ) -> (Option<CausalProposal>, u64) {
+        self.propose_with_cost_limit(pre, offers, goal, horizon, u64::MAX, budget)
+    }
+    pub(crate) fn propose_with_cost_limit(
+        &self,
+        pre: &[i64],
+        offers: &[ActionOffer],
+        goal: Option<&[Option<i64>]>,
+        horizon: usize,
+        remaining_cost: u64,
+        budget: u64,
+    ) -> (Option<CausalProposal>, u64) {
         let mut meter = Meter::new(budget);
-        let p = self.propose_inner(pre, offers, goal, horizon, &mut meter);
+        let p = if horizon == 0 {
+            None
+        } else {
+            self.propose_inner(pre, offers, goal, horizon, remaining_cost, &mut meter)
+        };
         (p, meter.spent)
     }
     fn propose_inner(
@@ -569,8 +592,17 @@ impl CausalMemory {
         offers: &[ActionOffer],
         goal: Option<&[Option<i64>]>,
         horizon: usize,
+        remaining_cost: u64,
         meter: &mut Meter,
     ) -> Option<CausalProposal> {
+        let affordable_offers = offers
+            .iter()
+            .map(|o| ActionOffer {
+                available: o.available && o.max_cost <= remaining_cost,
+                max_cost: o.max_cost,
+            })
+            .collect::<Vec<_>>();
+        let offers = affordable_offers.as_slice();
         let initial = self
             .beliefs_at(pre, &self.context, offers, goal, meter)
             .ok()?;
@@ -615,27 +647,57 @@ impl CausalMemory {
             .unwrap_or(0);
         // A bounded empirical belief graph. Unseen paths back off to shorter
         // hypotheses; all route values remain MODEL predictions.
-        let mut states = vec![(pre.to_vec(), self.context.clone())];
+        // Distinguish path budgets only when they constrain this horizon.
+        // This preserves the unconstrained graph and avoids multiplying its
+        // states by costs when every possible path is already affordable.
+        let cost_bound = !offers
+            .iter()
+            .filter(|o| o.available)
+            .map(|o| o.max_cost)
+            .max()
+            .unwrap_or(0)
+            .checked_mul(horizon as u64)
+            .is_some_and(|cost| cost <= remaining_cost);
+        let graph_key = |state: &[i64], context: &[ContextStep], left: u64| {
+            let k = key(state, 0, context, context.len());
+            if cost_bound {
+                format!("{k}:{left}")
+            } else {
+                k
+            }
+        };
+        let mut states = vec![(pre.to_vec(), self.context.clone(), remaining_cost)];
         let mut edges = Vec::new();
         let mut keys = BTreeMap::new();
-        keys.insert(key(pre, 0, &self.context, self.context.len()), 0usize);
+        keys.insert(graph_key(pre, &self.context, remaining_cost), 0usize);
         let mut pos = 0;
         let mut layers = vec![0usize];
         while pos < states.len() {
             if meter.remaining() < 512 {
                 break;
             }
-            let (state, context) = states[pos].clone();
+            let (state, context, left) = states[pos].clone();
+            let local_offers = offers
+                .iter()
+                .map(|o| ActionOffer {
+                    available: o.available && o.max_cost <= left,
+                    max_cost: o.max_cost,
+                })
+                .collect::<Vec<_>>();
             let b = if pos == 0 {
                 initial.clone()
             } else {
-                match self.beliefs_at(&state, &context, offers, goal, meter) {
+                match self.beliefs_at(&state, &context, &local_offers, goal, meter) {
                     Ok(v) => v,
                     Err(_) => break,
                 }
             };
             let mut row = Vec::new();
             for belief in b {
+                if !local_offers[belief.action].available {
+                    continue;
+                }
+                let next_left = left - offers[belief.action].max_cost;
                 let mut outcomes = Vec::new();
                 for (post, p) in &belief.outcomes {
                     if meter.charge((post.len() + 4) as u64).is_err() {
@@ -663,7 +725,7 @@ impl CausalMemory {
                     if depth < next_context.len() {
                         next_context = next_context[next_context.len() - depth..].to_vec()
                     }
-                    let k = key(post, 0, &next_context, next_context.len());
+                    let k = graph_key(post, &next_context, next_left);
                     let target = if reached {
                         None
                     } else if let Some(&id) = keys.get(&k) {
@@ -673,7 +735,7 @@ impl CausalMemory {
                     {
                         let id = states.len();
                         keys.insert(k, id);
-                        states.push((post.clone(), next_context));
+                        states.push((post.clone(), next_context, next_left));
                         layers.push(layers[pos] + 1);
                         Some(id)
                     } else {
@@ -843,7 +905,7 @@ impl CausalMemory {
             if unique.len() != c.outcomes.len() {
                 return Err(Error::InvalidData);
             }
-            bytes += k.len() + c.bytes();
+            bytes += 2 * k.len() + c.bytes();
         }
         if bytes != self.bytes
             || self.pending.iter().any(|c| {
@@ -874,6 +936,69 @@ impl CausalMemory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn heterogeneous_quotes_preserve_cheap_routes_without_exceeding_path_budget() {
+        let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();
+        for _ in 0..12 {
+            for stage in 0..10 {
+                fact(&mut m, stage, 0, stage + 1, true);
+                fact(&mut m, stage, 1, stage, true);
+            }
+        }
+        m.context.clear();
+        let offers = [
+            ActionOffer {
+                available: true,
+                max_cost: 1,
+            },
+            ActionOffer {
+                available: true,
+                max_cost: 10,
+            },
+        ];
+        let (plan, work) =
+            m.propose_with_cost_limit(&[0], &offers, Some(&[Some(10)]), 10, 10, 200_000);
+        let plan = plan.unwrap();
+        assert_eq!(plan.action, 0);
+        assert!(
+            plan.value > 0.5,
+            "ten cheap actions fit despite the unrelated expensive offer"
+        );
+        assert!(work <= 200_000);
+        let short = m
+            .propose_with_cost_limit(&[0], &offers, Some(&[Some(10)]), 10, 9, 200_000)
+            .0
+            .unwrap();
+        assert_eq!(
+            short.value, 0.0,
+            "an unaffordable continuation cannot contribute goal value"
+        );
+    }
+    #[test]
+    fn an_empty_goal_mask_cannot_complete_an_episode() {
+        assert!(!matches_goal(&[42], &[None]));
+        let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();
+        m.feedback(Some(&[None]), &[42], 1, Some([0.5; 5]), true);
+        assert_eq!(m.report().completed_goal_episodes, 0);
+        assert_eq!(m.report().useful_experiments, 0);
+    }
+    #[test]
+    fn accounted_model_bytes_cover_encoded_extreme_integer_outcomes() {
+        let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();
+        for id in 0..64 {
+            m.observe(
+                &Transition {
+                    id,
+                    restart: true,
+                    pre: vec![i64::MIN; 32],
+                    action: 0,
+                    post: vec![i64::MAX - id as i64; 32],
+                },
+                true,
+            );
+        }
+        assert!(serde_json::to_vec(&m.counts).unwrap().len() <= m.bytes);
+    }
     #[test]
     fn goal_parameter_information_decreases_while_noise_entropy_stays_high() {
         let empty = goal_law_information(0, 0.5);

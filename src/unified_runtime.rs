@@ -1210,6 +1210,9 @@ impl ScientificRuntime {
         let mut cfg=u.current.learner.carrier_config().clone();
         if let Some(left)=remaining_actions{cfg.planning_depth=cfg.planning_depth.min(left)}
         if offers.len()!=cfg.actions || goal.is_some_and(|g|g.len()!=cfg.width){return Err(UError::InvalidData);}
+        if u.current.learner.causal_memory_enabled() && goal.is_some_and(|g|!g.iter().any(Option::is_some)) {
+            return Err(UError::InvalidData);
+        }
         // Once all *specified* goal coordinates already match the last
         // factual observation, do not issue an unneeded protected action.
         // Masked goals may intentionally leave unrelated state unconstrained.
@@ -1535,9 +1538,7 @@ impl ScientificRuntime {
         if u.current.learner.causal_memory_enabled() && !is_option_continuation {
             let planning_offers=offers.iter().zip(&allowed).map(|(o,&available)|UOffer{available,max_cost:o.max_cost}).collect::<Vec<_>>();
             let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
-            let worst=planning_offers.iter().filter(|o|o.available).map(|o|o.max_cost).max().unwrap_or(0);
-            let affordable=if worst==0{cfg.planning_depth}else{usize::try_from(remaining/worst).unwrap_or(usize::MAX)};
-            let (proposal,work)=u.current.learner.carrier_causal_proposal(&planning_offers,goal,cfg.planning_work/2,affordable.min(cfg.planning_depth));
+            let (proposal,work)=u.current.learner.carrier_causal_proposal(&planning_offers,goal,cfg.planning_work/2,cfg.planning_depth,remaining);
             base_factual_work=work;
             u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
             if let Some(p)=proposal {
