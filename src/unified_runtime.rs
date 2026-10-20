@@ -1997,7 +1997,9 @@ impl ScientificRuntime {
         let carrier=self.organism.constructing_carrier_checkpoint().ok_or(UError::InvalidData)?;
         let hash=uhash(&serde_json::to_vec(&(1u32,&carrier,u,self.sequence,self.emergency_latched(),self.protection.audit_position().0)).map_err(|_|UError::InvalidData)?);
         let value=serde_json::json!({"version":1,"carrier":carrier,"cognition":u,"sequence":self.sequence,"emergency":self.emergency_latched(),"protection_sequence":self.protection.audit_position().0,"hash":hash});
-        serde_json::to_vec(&value).map_err(|_|UError::InvalidData)
+        let bytes=serde_json::to_vec(&value).map_err(|_|UError::InvalidData)?;
+        if bytes.len()>32*1024*1024{return Err(UError::Capacity)}
+        Ok(bytes)
     }
     // Cognition only; every action still needs fresh trusted hazard evidence.
     pub fn from_constructing_checkpoint(bytes:&[u8])->UResult<Self> {
@@ -2171,6 +2173,23 @@ mod causal_continuity_credit_tests {
         rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:choice,max_cost:1}],safe,|_|{
             *physical+=1;Ok(UnifiedPost{observation:vec![*physical],reward:0.0,cost:1})
         }).unwrap();
+    }
+    #[test]
+    fn valid_domain_checkpoints_cannot_create_an_unrestorable_combined_checkpoint(){
+        let mut rt=runtime();
+        let mut value=serde_json::to_value(&rt.constructing.as_ref().unwrap().current.learner).unwrap();
+        // A large diagnostic is legal in one bounded causal checkpoint.
+        value["last_error"]=serde_json::json!("x".repeat(12*1024*1024));
+        let learner:ULearner=serde_json::from_value(value).unwrap();
+        let individual=learner.checkpoint().unwrap();
+        ULearner::from_checkpoint(&individual).unwrap();
+        let u=rt.constructing.as_mut().unwrap();u.current.learner=learner;
+        for index in 0..2 {
+            u.archived.push(UnifiedDomain{name:format!("prior-{index}"),
+                learner:ULearner::from_checkpoint(&individual).unwrap(),
+                last_construction:0,pending_credit:None});
+        }
+        assert!(matches!(rt.checkpoint_constructing(),Err(UError::Capacity)));
     }
     #[test]
     fn canceled_construction_credit_cannot_pass_to_a_later_trial(){

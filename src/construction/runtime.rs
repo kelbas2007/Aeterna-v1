@@ -1023,7 +1023,9 @@ impl Learner {
         if self.pending { return Err(Error::Busy); }
         let payload = serde_json::to_vec(self).map_err(|_| Error::InvalidData)?;
         if payload.len()>if self.causal_memory.is_some(){16*1024*1024}else{4*1024*1024} {return Err(Error::Capacity)}
-        serde_json::to_vec(&(1u32,fingerprint(&payload),self)).map_err(|_| Error::InvalidData)
+        let bytes=serde_json::to_vec(&(1u32,fingerprint(&payload),self)).map_err(|_| Error::InvalidData)?;
+        if bytes.len()>if self.causal_memory.is_some(){16*1024*1024}else{4*1024*1024}{return Err(Error::Capacity)}
+        Ok(bytes)
     }
     pub fn from_checkpoint(bytes: &[u8]) -> Result<Self> {
         if bytes.len()>16*1024*1024 {return Err(Error::Capacity)}

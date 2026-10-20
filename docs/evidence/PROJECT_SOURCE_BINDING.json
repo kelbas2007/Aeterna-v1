@@ -107,7 +107,7 @@
     "modified": {
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "a0cf2ebc2fb4ad8b53a7e72b4ed034526ce6ae413d1cfbfe4abd675b0060eb40",
-        "after_sha256": "3a39f2aa4bbb042c8c9810a4a9ee05388b28e7318489cbb42daca75195917646"
+        "after_sha256": "7dc1f3597403d010b9c8a59063c5fa1404edb26f0ef5bf1a3730b10be5928248"
       },
       "src/construction/mod.rs": {
         "before_sha256": "051ad8a512a3f4f7c6b396252fb97313dc9f2717114c1d245ce508615bcd3ba1",
@@ -115,7 +115,7 @@
       },
       "src/construction/runtime.rs": {
         "before_sha256": "fa2dd322bf982d3dec19d920da195d9ecd1b503bae514b6e7287c4865b3b2007",
-        "after_sha256": "acd6c2533895ad7035ce2eaea3759e01dc166333bb18b6672b7bd870e7df4a23"
+        "after_sha256": "7238179c2c67f7678588567434da90309cdee55496c92c8f4c3a1fb28acbbf6b"
       },
       "src/construction/synthesis.rs": {
         "before_sha256": "2f4eb3af5c9a6775a9863f8f4057f7154ae69b83a45f2334ee9551fe0d57b768",
@@ -123,7 +123,7 @@
       },
       "src/unified_runtime.rs": {
         "before_sha256": "659c57e0623151a7ebd05f7c7dd0defd7915f55f04cf9e2eae1ec995304cb605",
-        "after_sha256": "bb7c1d7ab533c2369ad2fcd145c0a1187795cda761f51a271379e60de7f7b38e"
+        "after_sha256": "3616dd2ac990931515abaaea508efc4c689432941fe431850d19a98436dfa339"
       }
     },
     "added": {

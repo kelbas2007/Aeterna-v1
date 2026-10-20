@@ -10,7 +10,8 @@ use serde_json::{Value,json};
 use std::io::{self,BufRead,Read,Write};
 type Result<T> = std::result::Result<T,Box<dyn std::error::Error>>;
 fn read<R:BufRead>(input:&mut R)->Result<Value>{
-    let mut line=String::new();input.take(34*1024*1024).read_line(&mut line)?;
+    // A 32 MiB checkpoint can double when escaped into a JSONL string.
+    let mut line=String::new();input.take(66*1024*1024).read_line(&mut line)?;
     if line.is_empty(){return Err("transport closed".into());}
     if !line.ends_with('\n'){return Err("unterminated or oversized request".into());}
     Ok(serde_json::from_str(&line)?)
