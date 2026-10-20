@@ -1267,15 +1267,19 @@ impl ScientificRuntime {
                 u.temporal_options.as_ref().is_some_and(|o|o.autobiographical_enabled){
                 if variable_depth{20_000_u64}else{5_000_u64}
             }else{0};
-            let graph_budget=if goal.is_some() && cfg.planning_work>=32_000 &&
+            // The graph cannot reserve 16k ON TOP of a 20k memory allowance
+            // inside the minimum supported 32k total. Reserve the largest
+            // jointly affordable ceiling, leaving 4k for native U1.
+            let graph_reserve=if goal.is_some() && cfg.planning_work>=32_000 &&
                 u.temporal_options.as_ref().is_some_and(|o|o.observable_graph_enabled){
-                16_000_u64
+                16_000_u64.min(cfg.planning_work
+                    .saturating_sub(memory_budget).saturating_sub(4_000))
             }else{0};
             let history_budget=if goal.is_some() &&
                 u.current.learner.predictive_history_states_enabled() &&
                 cfg.planning_work>=32_000 {
                 cfg.planning_work.saturating_sub(4_000)
-                    .saturating_sub(memory_budget).saturating_sub(graph_budget)
+                    .saturating_sub(memory_budget).saturating_sub(graph_reserve)
             } else {0};
             let (history,history_work)=if let Some(g)=goal {
                 if u.current.learner.adaptive_history_suffix_enabled(){
@@ -1321,6 +1325,11 @@ impl ScientificRuntime {
                         g,&allowed,memory_budget)
                 }
             }else{(None,0)};
+            // Spend from ACTUAL remaining metered work, never an independent
+            // allocation; history and autobiography have already charged.
+            let graph_budget=graph_reserve.min(cfg.planning_work
+                .saturating_sub(history_work).saturating_sub(memory_work)
+                .saturating_sub(4_000));
             let (observable_graph,graph_work)=if let Some(g)=goal{
                 u.current.learner.carrier_observable_goal_route_metered(
                     g,&allowed,graph_budget)
