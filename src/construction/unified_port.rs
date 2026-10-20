@@ -305,10 +305,13 @@ impl Learner {
                     matched=false;break
                 }
                 expected_id=p.id;
-                if p.restart && prior_index+1<index-depth+depth{
-                    // Restart may mark the FIRST action in the suffix,
-                    // never one of its interior causal links.
-                    if prior_index!=index-depth{matched=false;break}
+                // An external restart marks the FIRST physical motor in
+                // its episode. A restart on ANY interior suffix motor
+                // invalidates the candidate even if IDs/observations match.
+                // The old prior_index+1<index check inadvertently allowed
+                // a restart at the final predecessor (index-1).
+                if p.restart && prior_index!=index-depth{
+                    matched=false;break
                 }
             }
             if matched{within[row.action]+=1}
@@ -729,5 +732,82 @@ impl Learner {
             if best.get(&r.transition.action).is_none_or(|(s,_)|similarity>*s) {best.insert(r.transition.action,(similarity,r.transition.post.clone()));}
         }
         Ok((best.into_iter().map(|(a,(s,p))|(a,p,s)).collect(),work))
+    }
+}
+
+
+#[cfg(test)]
+mod active_context_restart_boundary_tests{
+    use super::*;
+    use crate::HumanProtectionEvidence;
+    use crate::scientific_runtime::{ScientificRuntime,UnifiedPost};
+    use crate::construction::autonomy::{ActionOffer,AutonomyPolicy};
+
+    fn safe(_:usize)->HumanProtectionEvidence{
+        HumanProtectionEvidence{
+            human_present:false,physical_effect_possible:false,
+            predicted_harm_probability:0.0,hazard_confidence:1.0,
+            emergency_stop:false
+        }
+    }
+    fn step(rt:&mut ScientificRuntime,motor:usize){
+        let offers=(0..3).map(|a|ActionOffer{
+            available:a==motor,max_cost:1
+        }).collect::<Vec<_>>();
+        rt.step_constructing(None,&offers,safe,|executed|{
+            assert_eq!(executed,motor);
+            Ok(UnifiedPost{observation:vec![0],cost:1,reward:0.0})
+        }).unwrap();
+    }
+    fn run(with_interior_restart:bool)->f32{
+        let cfg=Config{
+            width:1,actions:3,planning_depth:5,planning_work:100_000,
+            minimum_training:128,search_every:4096,
+            ..Default::default()
+        };
+        let mut rt=ScientificRuntime::new_constructing(cfg,
+            AutonomyPolicy::default(),vec![0],"restarts").unwrap();
+        rt.enable_constructing_self_directed_control().unwrap();
+        rt.enable_constructing_predictive_history_states().unwrap();
+        rt.enable_constructing_active_causal_probes().unwrap();
+        step(&mut rt,0);
+        if with_interior_restart {
+            rt.observe_constructing_external_restart(vec![0]).unwrap();
+        }
+        step(&mut rt,1);
+        step(&mut rt,2);
+        // Current after-reset history is a real 0,1 pair, ready to
+        // investigate action 2. Both worlds have the SAME visible PRE.
+        rt.observe_constructing_external_restart(vec![0]).unwrap();
+        step(&mut rt,0);
+        step(&mut rt,1);
+        let history=rt.construction_learner().unwrap();
+        let t=history.records();
+        assert_eq!(t.len(),5);
+        assert_eq!(t[1].transition.restart,with_interior_restart);
+        assert!(t[3].transition.restart);
+        assert!(!t[4].transition.restart);
+        let allowed=[false,false,true];
+        let quoted=[ActionOffer{available:true,max_cost:1};3];
+        let (probe,work)=history.carrier_contextual_experiment_metered(
+            &allowed,&quoted,6000);
+        assert!(work>0 && work<=6000);
+        let candidate=probe.expect("actual connected suffix can nominate offered next motor");
+        assert_eq!(candidate.action,2);
+        // No simulation or inserted journal entries: this is purely
+        // an inspection of real protected steps.
+        assert_eq!(history.records().len(),5);
+        candidate.novelty
+    }
+
+    #[test]
+    fn restart_inside_suffix_cannot_be_credited_as_observed_pair(){
+        assert_eq!(run(true),1.0,
+            "failed old logic counted real actions across two separate episodes");
+    }
+    #[test]
+    fn actual_connected_pair_is_still_counted(){
+        assert_eq!(run(false),0.5,
+            "fix must retain valid same-episode evidence from full real POSTs");
     }
 }

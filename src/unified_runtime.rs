@@ -78,11 +78,15 @@ struct TemporalOptionLane {
     /// no longer supported and real matched controls justify extension.
     #[serde(default)]
     complexity_need_gate_enabled:bool,
-    #[serde(default)]
+    // These fields DID NOT EXIST in version-1 PR10 checkpoints. Omit
+    // absent/default values when reserializing BEFORE integrity hashing.
+    // Deserialization still supplies zeros; a historical checkpoint stays
+    // byte-identical in the cognition field under the original V1 hash.
+    #[serde(default,skip_serializing_if="std::ops::Not::not")]
     contextual_experiments_enabled:bool,
-    #[serde(default)]
+    #[serde(default,skip_serializing_if="agency_no_count")]
     contextual_experiment_proposed:u64,
-    #[serde(default)]
+    #[serde(default,skip_serializing_if="agency_no_count")]
     contextual_experiment_selected:u64,
     #[serde(default)]
     learned_depth_selected:[u64;6],

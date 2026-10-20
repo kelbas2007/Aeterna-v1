@@ -74,3 +74,30 @@ this contextual coverage control and preserved simpler skills.
 This result is experimental. Do NOT merge it as a proven scientific
 advance until all platform/safety regressions finish, and do not
 represent its disclosed source as independent qualification.
+
+## Codex code-review P1 repairs (2026-10-20)
+
+Automated Codex code review of PR11 head `4df4c2b` found two real
+**P1** defects; see inline review comments:
+- `src/unified_runtime.rs` : new contextual option fields were
+  serialized even when default. The version-1 joint checkpoint
+  integrity hash uses reserialized cognition; previously created
+  checkpoint hashes with a TemporalOptionLane could mismatch.
+  **Repair:** skip serializing zero/false newly added fields; test
+  asserts V1-compatible absent fields and checkpoint roundtrip.
+- `src/construction/unified_port.rs`: a same-visible-sensor
+  history suffix could incorrectly span an externally observed
+  restart when it occurred at the LAST predecessor. Its old
+  `prior_index+1<index` clause falsely ignored that boundary.
+  **Repair:** only permit the restart flag on the FIRST physical
+  motor of the candidate suffix. Two unit controls use actual
+  protected PRE/action/POST steps; crossing a restart must have
+  novelty 1.0, a connected same-episode pair novelty 0.5.
+
+The developer-visible outcome `472→492/864` was measured on the
+PRE-REVIEW source. The restart fix may alter experiments. It MUST be
+recomputed as an OPEN new development run, never silently retain
+`492` as validated for fixed code; the original result remains
+the preserved historical observation. Do not merge until old checkpoint
+compatibility, new episode-boundary controls and paired Linux/Windows
+behavioral regressions all pass.

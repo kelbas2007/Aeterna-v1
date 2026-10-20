@@ -39,6 +39,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          cargo test --locked --lib active_context_restart_boundary_tests -- --nocapture --test-threads=1 2>&1 | tee context-experiment-evidence/restart-boundary.log
           cargo test --locked --test active_history_experiment_development -- --nocapture --test-threads=1 2>&1 | tee context-experiment-evidence/results.log
           python scripts/project_audit.py | tee context-experiment-evidence/source-audit.json
       - name: Preserve positive AND negative real outcome traces

@@ -300,3 +300,27 @@ fn history_probe_requires_cold_gate_and_cannot_inject_hidden_knowledge(){
     }).unwrap();
     assert!(after.enable_constructing_contextual_experiments().is_err());
 }
+
+
+#[test]
+fn legacy_version_one_temporal_lane_omits_nonexistent_context_fields(){
+    // The previous main version serializes a lane without the three
+    // contextual-experiment fields. A V1 checkpoint hash compares the
+    // serialization AFTER deserialization; emitting new default fields
+    // would corrupt that historical equality on restore.
+    let rt=fresh(2);
+    let cp=rt.checkpoint_constructing().unwrap();
+    let v:serde_json::Value=serde_json::from_slice(&cp).unwrap();
+    let lane=v["cognition"]["temporal_options"].as_object().unwrap();
+    for name in [
+        "contextual_experiments_enabled",
+        "contextual_experiment_proposed",
+        "contextual_experiment_selected"
+    ]{
+        assert!(!lane.contains_key(name),
+            "new default field must not invalidate a pre-PR11 V1 hash: {name}");
+    }
+    let restored=ScientificRuntime::from_constructing_checkpoint(&cp)
+        .expect("version one default lane remains loadable");
+    assert_eq!(restored.checkpoint_constructing().unwrap(),cp);
+}
