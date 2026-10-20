@@ -74,6 +74,10 @@ struct TemporalOptionLane {
     autobiographical_started:u64,
     #[serde(default)]
     variable_depth_enabled:bool,
+    /// Adopt added action memory ONLY when incumbent short explanation is
+    /// no longer supported and real matched controls justify extension.
+    #[serde(default)]
+    complexity_need_gate_enabled:bool,
     #[serde(default)]
     learned_depth_selected:[u64;6],
     #[serde(default)]
@@ -88,6 +92,7 @@ pub struct TemporalOptionReport {
     pub completed_real_cost:u64,
     pub autobiographical_enabled:bool,pub autobiographical_started:u64,
     pub variable_depth_enabled:bool,
+    pub complexity_need_gate_enabled:bool,
     pub learned_depth_selected:[u64;6],
     pub learned_depth_completed:[u64;6],
 }
@@ -103,6 +108,7 @@ impl TemporalOptionLane {
             autobiographical_enabled:self.autobiographical_enabled,
             autobiographical_started:self.autobiographical_started,
             variable_depth_enabled:self.variable_depth_enabled,
+            complexity_need_gate_enabled:self.complexity_need_gate_enabled,
             learned_depth_selected:self.learned_depth_selected,
             learned_depth_completed:self.learned_depth_completed,
         }
@@ -120,6 +126,7 @@ impl TemporalOptionLane {
             self.autobiographical_started>self.started ||
             (self.autobiographical_started>0 && !self.autobiographical_enabled) ||
             (self.variable_depth_enabled && !self.autobiographical_enabled) ||
+            (self.complexity_need_gate_enabled && !self.variable_depth_enabled) ||
             self.learned_depth_selected[..2].iter().any(|&n|n>0) ||
             self.learned_depth_completed[..2].iter().any(|&n|n>0) ||
             self.learned_depth_completed.iter().sum::<u64>()>self.completed ||
@@ -243,6 +250,9 @@ pub struct UnifiedStep {
     /// Tentative three-motor option found from the organism's OWN real POSTs.
     #[serde(default,skip_serializing_if="std::ops::Not::not")]
     pub autobiographical_option_proposed:bool,
+    /// Exposed meta-decision from real history; not an extra action actor.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub complexity_need_decision:Option<String>,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedReport {
@@ -829,6 +839,21 @@ impl ScientificRuntime {
         lane.variable_depth_enabled=true;
         Ok(())
     }
+    /// Opt-in pre-experience decision on whether more history is NEEDED.
+    /// Keeps the same protected learner and the original native U1 as actor.
+    pub fn enable_constructing_complexity_need_gate(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.instrumental_credit.is_some() ||
+            u.total_external_cost!=0 ||
+            !u.current.learner.records().is_empty(){
+            return Err(UError::Busy)
+        }
+        let lane=u.temporal_options.as_mut().ok_or(UError::NoEvidence)?;
+        if !lane.variable_depth_enabled || lane.complexity_need_gate_enabled ||
+            lane.pending.is_some(){return Err(UError::Busy)}
+        lane.complexity_need_gate_enabled=true;
+        Ok(())
+    }
     /// The same U1 may elect to test an underobserved action pair. No other
     /// action authority and no externally scheduled experiment steps.
     pub fn enable_constructing_active_causal_probes(&mut self)->UResult<()>{
@@ -1139,6 +1164,7 @@ impl ScientificRuntime {
         // bypass around U1 or the human-protection permit.
         let mut native_route=None::<Vec<(usize,Vec<i64>)>>;
         let mut autobiographical_route=None::<Vec<(usize,Vec<i64>)>>;
+        let mut complexity_need_decision=None::<String>;
         if u.current.learner.self_directed_control_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
@@ -1150,6 +1176,8 @@ impl ScientificRuntime {
             // experiment remains opt-in; existing 4k/20k runs are identical.
             let variable_depth=u.temporal_options.as_ref()
                 .is_some_and(|o|o.variable_depth_enabled);
+            let necessity_gate=u.temporal_options.as_ref()
+                .is_some_and(|o|o.complexity_need_gate_enabled);
             let memory_budget=if goal.is_some() && cfg.planning_work>=32_000 &&
                 u.temporal_options.as_ref().is_some_and(|o|o.autobiographical_enabled){
                 if variable_depth{20_000_u64}else{5_000_u64}
@@ -1169,9 +1197,35 @@ impl ScientificRuntime {
                 }
             } else {(None,0)};
             let (autobiographical,memory_work)=if let Some(g)=goal{
-                if variable_depth{
+                if necessity_gate {
+                    // Complexity is NOT a goal. Retain the simplest
+                    // non-contradicted learned explanatory route first.
+                    // Physical failure of that exact shorter route is
+                    // written in the SAME journal and withdraws it.
+                    let (incumbent,cheap_work)=u.current.learner
+                        .carrier_autobiographical_option_metered(
+                            g,&allowed,memory_budget.min(5_000));
+                    if incumbent.is_some(){
+                        complexity_need_decision=Some("retain_simpler".into());
+                        (incumbent,cheap_work)
+                    }else {
+                        let (extended,deep_work)=u.current.learner
+                            .carrier_variable_depth_option_metered(
+                                g,&allowed,
+                                memory_budget.saturating_sub(cheap_work),true);
+                        complexity_need_decision=Some(if extended.as_ref()
+                            .is_some_and(|p|p.depth>3) {
+                                "extend_after_contradiction"
+                            }else if extended.is_some(){
+                                "retain_low_complexity"
+                            }else{
+                                "investigate_insufficient_evidence"
+                            }.into());
+                        (extended,cheap_work.saturating_add(deep_work))
+                    }
+                }else if variable_depth{
                     u.current.learner.carrier_variable_depth_option_metered(
-                        g,&allowed,memory_budget)
+                        g,&allowed,memory_budget,false)
                 }else{
                     u.current.learner.carrier_autobiographical_option_metered(
                         g,&allowed,memory_budget)
@@ -1621,7 +1675,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.records().len(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;

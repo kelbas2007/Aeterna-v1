@@ -342,7 +342,8 @@ impl Learner {
     /// recruiting ONE more preceding action into the causal hypothesis.
     /// Any real contradicting execution of the full sequence withdraws it.
     pub(crate) fn carrier_variable_depth_option_metered(
-        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64
+        &self,goal:&[Option<i64>],allowed:&[bool],budget:u64,
+        require_complexity_evidence:bool
     )->(Option<PortHistoryPlan>,u64){
         if self.pending || self.poisoned || budget==0 ||
             self.config.planning_depth<2 ||
@@ -423,10 +424,29 @@ impl Learner {
             // suffix has previously been executed and FAILED with the same
             // observable PRE. Hence length is supported by contrast, not
             // by an arbitrary user-specified 3-action pattern.
+            let shorter=observed.get(&motors[1..]);
             if motors.len()>2 &&
-                !observed.get(&motors[1..])
-                    .is_some_and(|old|old.1>0){
+                !shorter.is_some_and(|old|old.1>0){
                 continue
+            }
+            if require_complexity_evidence && motors.len()>3{
+                let Some((short_success,short_failure,_))=shorter else{
+                    continue
+                };
+                // Compare empirical goal predictability with the same
+                // shorter executed suffix, using real successes AND real
+                // failures, never a hidden-stage or authored motor role.
+                // An extension costs another physical action, so mere
+                // novelty is not justification for added capacity.
+                let full_prob=(*successes as f64+1.0)/
+                    (*successes as f64+*failures as f64+2.0);
+                let short_prob=(*short_success as f64+1.0)/
+                    (*short_success as f64+*short_failure as f64+2.0);
+                let complexity_tax=0.03*(motors.len()-3) as f64;
+                if !full_prob.is_finite() || !short_prob.is_finite() ||
+                    full_prob-short_prob<=complexity_tax{
+                    continue
+                }
             }
             let better=best.as_ref().is_none_or(|(n,old,_)|
                 successes>n ||

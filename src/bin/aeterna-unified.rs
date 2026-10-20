@@ -124,6 +124,15 @@ pub(crate) fn main()->Result<()>{
                         "depth_bound":"2_to_planning_depth_max_5",
                         "authority":"native_U1_and_fresh_HumanProtection"}))
                 },
+                "enable_complexity_need_gate"=>{
+                    runtime.as_mut().ok_or("not loaded")?
+                        .enable_constructing_complexity_need_gate()?;
+                    Ok(json!({"type":"complexity_need_gate_enabled",
+                        "decision":"retain_simpler_investigate_or_extend",
+                        "source":"real_matched_history_consequences",
+                        "admission":"incremental_prediction_gain_exceeds_action_complexity_tax",
+                        "authority":"same_U1_fresh_HumanProtection"}))
+                },
                 "enable_active_causal_probes"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
                     Ok(json!({"type":"active_causal_probes_enabled",
