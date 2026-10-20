@@ -102,6 +102,12 @@ pub(crate) fn main()->Result<()>{
                         "max_predecessor_actions":2,"context":"real_protected_journal",
                         "proposal_authority":"native_U1_only"}))
                 },
+                "enable_temporal_options"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_temporal_options()?;
+                    Ok(json!({"type":"temporal_options_enabled",
+                        "authority":"one_native_U1_choice_then_bounded_continuation",
+                        "every_physical_step":"fresh_HumanProtection_and_real_POST"}))
+                },
                 "enable_active_causal_probes"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_active_causal_probes()?;
                     Ok(json!({"type":"active_causal_probes_enabled",
@@ -375,6 +381,8 @@ Optional predictive history states
 (planning_work>=32000): enable_predictive_history_states.
 Optional unforced causal pair experiments: enable_active_causal_probes.
 Additional conditional past-length inference (opt-in): enable_adaptive_history_suffix.
+For a certified two-action-suffix route, opt into persisted multi-step
+native choice with enable_temporal_options; each physical step remains protected.
 Optional own evaluator synthesis:
 enable_trajectory_self_revision, step(goal,available),
 trajectory_self_revision_report. The evaluator changes U1 valuation only,
