@@ -1,5 +1,10 @@
 # AETERNA-v1 — current status and dated historical records
 
+Текущая разработка: [причинные гипотезы, ценность измерения, отложенная
+награда и непрерывная память](docs/CAUSAL_CONTINUAL4.md). Новый режим включается явно;
+JSONL принимает горизонт до 32, до 32 датчиков и 16 моторов.
+Приведённые ниже старые оценки сохраняют исходные версии и границы.
+
 ## New development / sensor observability boundary — 2026-10-20
 
 [OBSERVABLE-GRAPH-1 source-disclosed result](docs/OBSERVABLE_GRAPH1_RESULT.md)

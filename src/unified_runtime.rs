@@ -231,7 +231,7 @@ impl InstrumentalCredit {
     fn validate(&self,current:&UnifiedDomain,archived:&[UnifiedDomain],
                 freeze:bool)->UResult<()> {
         let recorded=archived.iter().chain(std::iter::once(current))
-            .map(|d|d.learner.records().len()).sum::<usize>();
+            .map(|d|d.learner.factual_event_count()).sum::<usize>();
         if self.facts_without_progress
             .checked_add(self.actual_progress_credited)
             .is_none_or(|n|n>recorded as u64)
@@ -776,6 +776,14 @@ impl ScientificRuntime {
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
+    /// Learned probabilistic predictive contexts and bounded continuous memory.
+    /// Must be enabled before experience; native U1 and per-action protection
+    /// retain all physical authority. There are no task/motor role arguments.
+    pub fn enable_constructing_causal_memory(&mut self,config:crate::construction::causal_memory::CausalConfig)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Busy)}
+        u.current.learner.enable_causal_memory(config)
+    }
     /// Decide before any experience whether the native action policy may be
     /// credited for outcomes of externally FORCED identification actions.
     /// When enabled, those actions still teach the causal/world Learner,
@@ -1257,7 +1265,7 @@ impl ScientificRuntime {
         let mut complexity_need_decision=None::<String>;
         let mut contextual_probe_source=false;
         let mut base_factual_work=0_u64;
-        if u.current.learner.self_directed_control_enabled() &&
+        if u.current.learner.self_directed_control_enabled() && !u.current.learner.causal_memory_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
             // explicitly allocates a larger bounded work budget. The published
@@ -1514,6 +1522,22 @@ impl ScientificRuntime {
             // Ordinary U1 already owns uncertainty-driven action selection:
             // an unverified factual hypothesis must ABSTAIN, not override it.
         }
+        if u.current.learner.causal_memory_enabled() && !is_option_continuation {
+            let planning_offers=offers.iter().zip(&allowed).map(|(o,&available)|UOffer{available,max_cost:o.max_cost}).collect::<Vec<_>>();
+            let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
+            let worst=planning_offers.iter().filter(|o|o.available).map(|o|o.max_cost).max().unwrap_or(0);
+            let affordable=if worst==0{cfg.planning_depth}else{usize::try_from(remaining/worst).unwrap_or(usize::MAX)};
+            let (proposal,work)=u.current.learner.carrier_causal_proposal(&planning_offers,goal,cfg.planning_work/2,affordable);
+            base_factual_work=work;
+            u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
+            if let Some(p)=proposal {
+                let information=(p.information_gain/std::f64::consts::LN_2).clamp(0.0,1.0) as f32;
+                options.push(UnifiedOption {p:PhaseCognitiveProposal {proposal_id:0xa00+p.action as u64,action:p.action,
+                    fields:[p.value as f32,0.0,information,p.confidence as f32,
+                        1.0/(1.0+(offers[p.action].max_cost as f32).ln_1p())]},
+                    kind:3,source:if information>0.0{"causal-belief-experiment"}else{"causal-belief-plan"},output:p.expected});
+            }
+        }
         let certified_chain_proposed=options.iter().any(|o|o.source=="factual-chain");
         let predictive_history_plan_proposed=options.iter().any(|o|
             o.source=="predictive-history" || o.source=="predictive-suffix");
@@ -1539,7 +1563,7 @@ impl ScientificRuntime {
         // original unlimited HDC recall and independent capped planning
         // search. Tightening either silently changes real motor choices
         // even when there is no qualifying factual graph proposal.
-        let strict_graph_helper_budget=u.temporal_options.as_ref()
+        let strict_graph_helper_budget=u.current.learner.causal_memory_enabled() || u.temporal_options.as_ref()
             .is_some_and(|lane|lane.observable_graph_enabled);
         for round in 0..4 {
             if let Some(approved)=continuation.take(){
@@ -1549,7 +1573,7 @@ impl ScientificRuntime {
                 selected=Some((approved,0.0));break
             }
             let mut candidates=options.clone();
-            let can_construct=u.current.learner.carrier_can_construct() && u.current.learner.records().len().saturating_sub(u.current.last_construction)>=cfg.search_every;
+            let can_construct=u.current.learner.carrier_can_construct() && u.current.learner.factual_event_count().saturating_sub(u.current.last_construction)>=cfg.search_every;
             if round<3 {
                 let action=allowed.iter().position(|&a|a).ok_or(UError::Blocked)?;
                 if !tried[0] && can_construct {candidates.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:1,action,fields:[0.0,pressure,pressure,0.0,0.15]},kind:0,source:"construct",output:None});}
@@ -1569,7 +1593,7 @@ impl ScientificRuntime {
             tried[chosen.kind as usize]=true;
             match chosen.kind {
                 0=>{
-                    u.current.last_construction=u.current.learner.records().len();let before=u.current.learner.report().construction_work;
+                    u.current.last_construction=u.current.learner.factual_event_count();let before=u.current.learner.report().construction_work;
                     let result=u.current.learner.construct();u.computation_work=u.computation_work.saturating_add(u.current.learner.report().construction_work.saturating_sub(before));
                     if result.is_ok() && u.current.learner.report().shadow_pending {
                         if native_credit_eligible && u.instrumental_credit.is_none() {
@@ -1680,9 +1704,15 @@ impl ScientificRuntime {
         let before=udistance(u.current.learner.current(),goal);let after=udistance(&post.observation,goal);
         let novel=!u.current.learner.records().iter().any(|r|r.transition.post==post.observation);
         let progress=if goal.is_some(){((before-after)/(1.0+before)).max(0.0) as f32}else{0.0};
-        let value=(0.8*post.reward.max(progress).max(0.0)+0.2*(if novel {1.0}else{0.0})).clamp(0.0,1.0);
+        let value=if u.current.learner.causal_memory_enabled(){post.reward.max(progress).max(0.0).clamp(0.0,1.0)}
+            else{(0.8*post.reward.max(progress).max(0.0)+0.2*(if novel {1.0}else{0.0})).clamp(0.0,1.0)};
         let verdicts=u.current.learner.promotions().len();u.total_external_cost=u.total_external_cost.saturating_add(post.cost);
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
+        let probe=if native_credit_eligible && option.source=="causal-belief-experiment" {Some(option.p.fields)}else{None};
+        let credits=u.current.learner.carrier_causal_feedback(goal,&post.observation,post.cost,probe,policy_has_choice);
+        if !u.freeze_controller {for (fields,utility) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,utility as f32);
+        }}
         if option.source=="contextual-causal-experiment" {
             if let Some(l)=u.temporal_options.as_mut(){
                 l.contextual_experiment_selected=l.contextual_experiment_selected
@@ -1933,7 +1963,7 @@ impl ScientificRuntime {
         if let Some(agency)=&s.cognition.agency_credit {
             let recorded:usize = s.cognition.archived.iter()
                 .chain(std::iter::once(&s.cognition.current))
-                .map(|d|d.learner.records().len()).sum();
+                .map(|d|d.learner.factual_event_count()).sum();
             if agency.externally_forced_actions
                 .checked_add(agency.self_selected_actions)
                 .and_then(|n|n.checked_add(agency.option_continuation_actions))
@@ -1947,9 +1977,10 @@ impl ScientificRuntime {
             let _=ULearner::from_checkpoint(&d.learner.checkpoint()?)?;
             if !d.learner.carrier_is_managed() || d.learner.carrier_config().width!=evo.config().sensory_cells
                 || d.learner.carrier_config().actions!=evo.config().motor_cells || !names.insert(&d.name)
-                || d.name.is_empty() || d.name.len()>128 || d.last_construction>d.learner.records().len()
+                || d.name.is_empty() || d.name.len()>128 || d.last_construction>d.learner.factual_event_count()
                 || d.pending_credit.is_some_and(|f|f.iter().any(|x|!x.is_finite()||!(0.0..=1.0).contains(x))) {return Err(UError::InvalidData);}
-            costs=costs.saturating_add(d.learner.records().iter().map(|r|r.external_cost).sum::<u64>());
+            costs=costs.saturating_add(d.learner.records().iter().map(|r|r.external_cost).sum::<u64>())
+                .saturating_add(d.learner.causal_report().map_or(0,|r|r.compacted_external_cost));
         }
         if costs>s.cognition.total_external_cost || s.cognition.max_external_cost==0
             || evo.current_real().map(|r|r.sensory.clone())!=Some(usensory(s.cognition.current.learner.current())) {return Err(UError::InvalidData);}

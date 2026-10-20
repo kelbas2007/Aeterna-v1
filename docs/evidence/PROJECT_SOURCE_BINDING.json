@@ -98,5 +98,37 @@
     "pr12_codex_review_p1_p2": "P1: three observability Bash test pipelines now fail-closed with set -euo pipefail. P2: width-priced complete recent graph scan with 2k BFS reserve and unit-tested 1..6 widths; shared graph budget derived from remaining total after memory reserve and actual history/memory work, explicit pre-action max planning_work fail. Tests for 32k with memory20k and 120k. No RSP2/HumanProtection alterations; re-evaluate real synthetic success on exact new code.",
     "pr12_codex_review_round2": "Review of 90188fd6: downstream native phase-meta plan/recall helpers use remaining shared planning_work instead of full independent budget and a final pre-permit check enforces combined factual helper work; direct masked-goal edge can no longer be the first step of a fake multi-action route; developer-visible engineering regression must assert its precommitted PASS after saving complete adverse traces. Added real protected PRE/action/POST and helper-budget unit regressions. RSP2 and HumanProtection unchanged; all source-disclosed results must be reevaluated at corrected head.",
     "pr12_legacy_u1_parity_fix": "Restore original exact 4k/20k U1 plan-helper and HDC recall arbitration when observable graph is OFF, using existing test physical_roles_remain_opaque_under_joint_arbitration across 24 opaque role permutations. Keep shared strict planner helper cap only for observable_graph_enabled. Full CI failed before this fix (23/24 goals both arms, 646 vs 671 physical actions), so do not merge without exact-head pass."
+  },
+  "implemented_causal_continual_extension": {
+    "base_revision": "a5b22cc4fb0114cbd117e4d0846fae7ae4ecd162",
+    "status": "implementation awaiting independent review; source binding is not behavioral qualification",
+    "base_archive": "docs/evidence/CAUSAL4_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "2e021eb031e5693e0688eb84d53e75a4b90a63c0c92a3ca5b9c2b507d7d91c5c",
+    "modified": {
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "a0cf2ebc2fb4ad8b53a7e72b4ed034526ce6ae413d1cfbfe4abd675b0060eb40",
+        "after_sha256": "5921f2d0eb205b2fb816003568e4c38972736c4069a9ebe4d1a3e1847968d55c"
+      },
+      "src/construction/mod.rs": {
+        "before_sha256": "051ad8a512a3f4f7c6b396252fb97313dc9f2717114c1d245ce508615bcd3ba1",
+        "after_sha256": "98fafb94182475a7a26840f95f0e697e0e4c043dd1b79a634985d1ad49f5f55a"
+      },
+      "src/construction/runtime.rs": {
+        "before_sha256": "fa2dd322bf982d3dec19d920da195d9ecd1b503bae514b6e7287c4865b3b2007",
+        "after_sha256": "4b4678ddeb7e9c37a1fce5a5e142489f9468653d58835a3f1b96ad15171385ae"
+      },
+      "src/construction/synthesis.rs": {
+        "before_sha256": "2f4eb3af5c9a6775a9863f8f4057f7154ae69b83a45f2334ee9551fe0d57b768",
+        "after_sha256": "378de6c9370c2270a2219156c9a20160d353491d09f1aad83a76058bbbc0cc92"
+      },
+      "src/unified_runtime.rs": {
+        "before_sha256": "659c57e0623151a7ebd05f7c7dd0defd7915f55f04cf9e2eae1ec995304cb605",
+        "after_sha256": "1962d1b90bad916323a7bf0b8e7c3cde47ebc740a3cd430162c66477f10e3264"
+      }
+    },
+    "added": {
+      "src/construction/causal_memory.rs": "6ddfb0b80c33df174eeab80c9af22c91d04f052c1ba91a39b4993095c5e73f19",
+      "src/construction/causal_port.rs": "638482ca242518c67b4554f4bc668c8c1b4624777171f9a74c96eac23b225de6"
+    }
   }
 }

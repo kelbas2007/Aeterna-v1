@@ -13,7 +13,10 @@ pub struct Transition {
     pub pre: Vec<i64>, pub action: usize, pub post: Vec<i64>,
 }
 pub fn validate_data(data: &[Transition], width: usize, actions: usize) -> Result<()> {
-    if data.is_empty() || !data[0].restart || data.len() > 4096 || width == 0 || width > 32 || actions == 0 || actions > 32 { return Err(Error::InvalidData); }
+    // An absolute id above zero can begin a retained, contiguous journal
+    // window. It does NOT fabricate an external restart. Newly synthesized
+    // candidate VM state is a hypothesis and still needs prospective POSTs.
+    if data.is_empty() || (!data[0].restart && data[0].id==0) || data.len()>65536 || width==0 || width>32 || actions==0 || actions>32 {return Err(Error::InvalidData)}
     let mut last = None;
     for (i,t) in data.iter().enumerate() {
         if t.pre.len() != width || t.post.len() != width || t.action >= actions || last.is_some_and(|id| id >= t.id) { return Err(Error::InvalidData); }

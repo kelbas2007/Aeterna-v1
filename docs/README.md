@@ -1,5 +1,10 @@
 # Documentation index — current main integration, 20 October 2026
 
+Текущая разработка: [причинные гипотезы, ценность измерения, отложенная
+награда и непрерывная память](CAUSAL_CONTINUAL4.md). Новый режим включается явно;
+JSONL принимает горизонт до 32, до 32 датчиков и 16 моторов.
+Приведённые ниже старые оценки сохраняют исходные версии и границы.
+
 **Start with current truth, not older dated "latest" passages:**
 [Current status (RU)](CURRENT_STATUS_20261020.md) ·
 [Architecture](PROJECT_OVERVIEW.md) ·

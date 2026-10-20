@@ -26,7 +26,13 @@
 
 Затем `committed` содержит реальный результат выбора и `complexity_need_decision`: `retain_simpler`, `investigate_insufficient_evidence` либо `extend_after_contradiction`. `report` возвращает данные когнитивной оценки; `checkpoint` сохраняет совместное состояние; `load` восстанавливает его в новом процессе. Прерывание, вето или изменение цели не могут выдать ложный успешный POST.
 
-**Существенное ограничение:** стандартная функция `configuration()` в `src/bin/aeterna-unified.rs` устанавливает `planning_depth=2`, `planning_work=50_000`. Хотя операции включения присутствуют в JSONL, опубликованные 3–5-моторные сценарии были проверены на специальных Rust `Config` (обычно `planning_depth=3..5`, `planning_work=100_000..120_000`). Настоящий 3–5-шаговый успех нельзя получить «из коробки» простым переключением JSONL-флага.
+`init` сохраняет совместимые значения по умолчанию `planning_depth=2`,
+`planning_work=50_000`. Теперь доступны явные поля `planning_depth` (1–32),
+`planning_work`, `width` (1–32), `actions` (до 16 для самостоятельного
+управления), `journal_capacity` и `max_external_cost`. Исторические результаты
+3–5 действий использовали специальные Rust `Config` и остаются привязаны к
+исходным версиям. Новый [режим причинной памяти](CAUSAL_CONTINUAL4.md)
+показывает настройку длинного горизонта, платных моторов и уплотнения журнала.
 
 Для воспроизведения инженерного механизма — [cold autobiography test](../tests/cold_autobiographical_option_development.rs), [variable-depth test](../tests/cold_variable_depth_option_development.rs), [necessity-gate test](../tests/complexity_necessity_development.rs). Замороженный [SELF-ORIGINATED-OPTION1](SELF_ORIGINATED_OPTION1_ONE_USE_RESULT.md) используется **только** как историческое научное доказательство; повторять его для нового seed нельзя.
 
