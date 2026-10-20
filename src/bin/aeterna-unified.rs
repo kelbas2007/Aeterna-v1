@@ -27,7 +27,7 @@ pub(crate) fn main()->Result<()>{
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(String::as_str) {
         Some("--help" | "-h") if args.len()==2 => { print!("{}", PROJECT_HELP); return Ok(()); },
-        Some("--version") if args.len()==2 => { println!("AETERNA-v1 {} / project-20261018", env!("CARGO_PKG_VERSION")); return Ok(()); },
+        Some("--version") if args.len()==2 => { println!("AETERNA-v1 {} / project-20261020", env!("CARGO_PKG_VERSION")); return Ok(()); },
         Some("--status") if args.len()==2 => { println!("{}", serde_json::to_string_pretty(&project_status())?); return Ok(()); },
         Some("--inspect") if args.len()==3 => {
             let bytes=std::fs::read(&args[2])?;
@@ -408,6 +408,14 @@ Optional unforced causal pair experiments: enable_active_causal_probes.
 Additional conditional past-length inference (opt-in): enable_adaptive_history_suffix.
 For a certified two-action-suffix route, opt into persisted multi-step
 native choice with enable_temporal_options; each physical step remains protected.
+Own-history options (research opt-ins): enable_autobiographical_options,
+then enable_variable_depth_options, then enable_complexity_need_gate,
+all before the first physical experience. The gate may retain a simpler
+model, investigate an unresolved contradiction, or offer a longer option
+only when observed evidence pays its complexity cost.
+IMPORTANT: standard JSONL init planning_depth=2. Published cold 3..5-action
+skills used a custom Rust ScientificRuntime Config with greater depth;
+the flags alone do NOT reproduce the longer experiments.
 Optional own evaluator synthesis:
 enable_trajectory_self_revision, step(goal,available),
 trajectory_self_revision_report. The evaluator changes U1 valuation only,

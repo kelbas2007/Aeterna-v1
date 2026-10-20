@@ -1,7 +1,7 @@
 {
   "schema": "aeterna.project.v1",
   "project": "AETERNA-v1",
-  "consolidation": "2026-10-18",
+  "consolidation": "2026-10-20",
   "canonical_binary": "aeterna-v1",
   "compatibility_binary": "aeterna-unified",
   "runtime": "ScientificRuntime",
@@ -88,6 +88,9 @@
     }
   },
   "guides": [
+    "docs/JSONL_AUTONOMOUS_OPTIONS.md",
+    "docs/MAIN_INTEGRATION_20261020.md",
+    "docs/CURRENT_STATUS_20261020.md",
     "docs/PROJECT_OVERVIEW.md",
     "docs/RSP2_REPAIR.md",
     "docs/RSP2_REPAIR_RESULTS.md",
@@ -131,5 +134,60 @@
     "dc2-r1.yml",
     "education-development.yml"
   ],
-  "restoration_contract": "construction state must use joint checkpoint APIs; native-only restart/restore rejected before mutation"
+  "restoration_contract": "construction state must use joint checkpoint APIs; native-only restart/restore rejected before mutation",
+  "integration": {
+    "target_branch": "main",
+    "pr_number": 9,
+    "source_branch": "research/unified-factual-loop-20261019",
+    "previous_main": "e8d3a72c3726f1ee06e05d13b011627fc45fead4",
+    "pre_documentation_head": "dcaf9839fa3f139c78930551184db3d69a2b773d",
+    "method": "merge_commit",
+    "preserve_history": true,
+    "scientific_upgrade_from_merge": false,
+    "prior_full_linux_windows_pass": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39374600877"
+  },
+  "measured_research": {
+    "self_originated_option1": {
+      "verdict": "QUALIFIED_SYNTHETIC_SELF_ORIGINATED_OPTION_TRANSFER",
+      "first_science_run_id": 39370868718,
+      "worlds": 32,
+      "episodes": 768,
+      "baseline_goals": 366,
+      "candidate_goals": 658,
+      "baseline_actions": 9356,
+      "candidate_actions": 4194,
+      "autonomously_selected_options": 413,
+      "actually_completed_options": 410,
+      "physical_environment": "disclosed_deterministic_synthetic",
+      "independently_qualified_external_world": false
+    },
+    "complexity_necessity1": {
+      "verdict": "ENGINEERING_PASS_NOT_INDEPENDENT_SCIENCE",
+      "development_run_id": 39374096468,
+      "worlds": 36,
+      "episodes_per_arm": 864,
+      "fixed_goals": 307,
+      "ungated_goals": 467,
+      "gated_goals": 472,
+      "fixed_actions": 11059,
+      "ungated_actions": 8910,
+      "gated_actions": 8834,
+      "five_step_goals": 7,
+      "five_step_total": 288,
+      "five_step_completed_macros": 1
+    },
+    "unchanged_negative_verdicts": [
+      "T-SR1",
+      "T-SR2",
+      "COLD-EPISODES-FRESH1"
+    ]
+  },
+  "user_facing_limitations": {
+    "default_jsonl_planning_depth": 2,
+    "advanced_depth_requires_rust_config": true,
+    "general_language_qualified": false,
+    "unrestricted_real_world_action_authority": false,
+    "independent_external_agi_qualified": false,
+    "autonomous_rust_self_rewrite": false
+  }
 }

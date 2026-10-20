@@ -1,6 +1,33 @@
-# AETERNA-v1 — project map
+# AETERNA-v1 — project map and historical archive
 
-## Current consolidation — 2026-10-18
+## Current canonical structure — 2026-10-20
+
+[Current status](docs/CURRENT_STATUS_20261020.md) ·
+[Technical overview](docs/PROJECT_OVERVIEW.md) ·
+[Documentation index](docs/README.md) ·
+[Machine-readable state](docs/PROJECT_STATE.json) ·
+[PR #9 integration](docs/MAIN_INTEGRATION_20261020.md).
+
+| Ref | Status after the PR9 integration |
+|---|---|
+| `main` | **Canonical** AETERNA-v1 binary/source/docs and ordinary integration CI |
+| `research/unified-factual-loop-20261019` | Evidence-bearing PR9 source, not a second active main after integration |
+| `research/beyond-intel4`, `research/rsp3-*`, `integration/*` | Older development histories, not automatically current |
+| `intel4-frozen-unified`, `archive/evidence-20261008` | Historical/frozen refs; never rewrite their scientific claims |
+
+The integrated PR9 line supports source-frozen self-originated options
+(658/768 vs 366/768, [first science run](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39370868718)).
+The **newer but developer-disclosed** need gate scored 472 vs 467 vs 307
+on 864 cold episodes; the extra +5 goal solves from gating does not
+establish AGI. COLD-FRESH1, T-SR1, T-SR2 negative reports remain intact.
+
+All sections below are a **dated archive**. Old sentences saying
+"latest", "current main" or "ongoing research" refer to their
+original dates and no longer override the current map above.
+
+---
+
+## Historical consolidation — 2026-10-18
 
 Read [the current project overview](docs/PROJECT_OVERVIEW.md) first. The canonical executable is
 `aeterna-v1`; `aeterna-unified` shares the same application code. RSP2 from PR #5

@@ -1,13 +1,16 @@
 # Contributing to Aeterna-v1
 
-## Current consolidation — 2026-10-18
+## Current integration — 2026-10-20
 
-Read [the current project overview](docs/PROJECT_OVERVIEW.md) first. The canonical executable is
-`aeterna-v1`; `aeterna-unified` shares the same application code. RSP2 from PR #5
-is included. Run `python scripts/check_project.py` for the current regression
-set. Historical results below remain tied to their original code; statements
-calling older results “latest” apply only to their original date. The unified
-CI does not repeat external exams or consumed authority packs.
+Read [current status](docs/CURRENT_STATUS_20261020.md),
+[technical overview](docs/PROJECT_OVERVIEW.md) and
+[PR9 integration contract](docs/MAIN_INTEGRATION_20261020.md).
+`aeterna-v1` is the canonical Rust executable,
+`aeterna-unified` the compatible alias. One ScientificRuntime,
+one protected joint checkpoint. The positive self-originated result
+is **QUALIFIED_SYNTHETIC**, not AGI; prior negative verdicts stand.
+Regular engineering checks are repeatable; one-use scientific trials
+are permanently consumed.
 
 
 Use [the project map](PROJECT_MAP.md) to choose the branch and
@@ -15,10 +18,15 @@ Use [the project map](PROJECT_MAP.md) to choose the branch and
 
 ## Branches and scope
 
-- `main` publishes the integrated current development source, examples and guides.
-- `research/beyond-intel4` receives active development, opt-in modes and ordinary regressions.
-- `intel4-frozen-unified` preserves the independent INTEL-4 snapshot.
-- `archive/evidence-20261008` preserves earlier branch histories.
+- `main` is the **single canonical** integrated development source
+  and is the base for all new work.
+- `research/unified-factual-loop-20261019` preserves the evidence
+  lineage of PR #9; after merging, do not maintain it as a parallel
+  latest program.
+- `research/beyond-intel4`, `research/rsp3-*` and prior
+  `integration/*` refs are dated historical research.
+- `intel4-frozen-unified` and `archive/evidence-20261008`
+  must remain unchanged (frozen science/provenance).
 
 Prepare development against the latest main or research branch. Integrate tested
 research into `main` by fast-forward when possible, otherwise preserve both
@@ -58,7 +66,33 @@ Change only the relevant modules and format touched Rust files. Existing files
 have differing historical formatting; a whole-repository reformat would obscure
 the evidence changes. Use the locked dependencies for reproducible builds.
 
-## Research evidence
+## Current research and integration protocol (2026-10-20)
+
+Integrate via a reviewed GitHub PR and a regular merge commit
+(no squash/force push); retain experiment parents and true status of
+negative results. Keep current README, project overview, document index,
+STATUS, PROJECT_MAP, manifest and evidence ledger in sync. Old dated
+documents are archives, not up-to-date instructions.
+
+Repeatable ordinary/causal tests, *not* one-use science:
+
+```bash
+python scripts/check_project.py
+python scripts/check_docs.py
+python scripts/project_audit.py
+cargo test --locked --test cold_autobiographical_option_development
+cargo test --locked --test cold_variable_depth_option_development
+cargo test --locked --test complexity_necessity_development
+```
+
+Before increasing cognitive complexity, require demonstrated
+insufficiency of the simpler candidate on REAL matched PRE/action/POST,
+prospective evidence, computation/physical-action cost, retention and
+rollback. These rules are developer-authored. The default JSONL
+`planning_depth=2` cannot reproduce special 3–5-step Rust test
+configurations. [Actual interface limitations](docs/JSONL_AUTONOMOUS_OPTIONS.md).
+
+## Historical research evidence
 
 Document the task generator, factual observations, controls and equal action
 budgets before interpreting a new capability. Predicted or inferred values

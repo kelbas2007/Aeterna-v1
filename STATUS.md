@@ -1,6 +1,39 @@
-# Aeterna-v1 status
+# AETERNA-v1 — current status and dated historical records
 
-## Current consolidation — 2026-10-18
+## Live integration — 20 October 2026
+
+**Authoritative current state:** [Current Status](docs/CURRENT_STATUS_20261020.md) ·
+[Current Architecture](docs/PROJECT_OVERVIEW.md) ·
+[Implementation Manifest](docs/PROJECT_STATE.json) ·
+[PR #9 merge provenance](docs/MAIN_INTEGRATION_20261020.md).
+
+On the PR9 line, source-frozen **SELF-ORIGINATED-OPTION1**
+qualified on disclosed deterministic synthetic worlds:
+**658/768 vs 366/768** successful episodes and **4 194 vs 9 356**
+real physical actions. Actual first and only science run
+[39370868718](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39370868718).
+Later open development Complexity Necessity Gate gave **472/864**
+vs ungated **467/864** and fixed **307/864**, reducing actions to
+**8 834** vs **8 910** / **11 059**. The gate's own marginal benefit
+is only +5 goals and 76 actions relative to variable-depth; it did
+restore the previously regressed 3-action family. Five-action
+self-acquisition remains weak (7/288 goal episodes, 1 completed
+five-step option). New evidence does not change **T-SR1, T-SR2 or
+COLD-EPISODES-FRESH1 NEGATIVE** historical verdicts.
+
+After PR #9 merges, **main is the sole canonical integrated source**.
+Older branch names below describe the situation in the dated historical
+section, not today's latest tree. These are software research results;
+no third-party independent general-world AGI or autonomous source-code
+self-improvement qualification. Full PR-source
+[Linux/Windows CI](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39374600877)
+was SUCCESS, consumed science workflows are deliberately not rerun.
+
+---
+
+## Historical status archive (do not reinterpret dated claims)
+
+### As of 2026-10-18 (historical consolidation)
 
 Read [the current project overview](docs/PROJECT_OVERVIEW.md) first. The canonical executable is
 `aeterna-v1`; `aeterna-unified` shares the same application code. RSP2 from PR #5
