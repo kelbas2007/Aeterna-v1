@@ -190,6 +190,61 @@ fn a_self_selected_macro_learns_from_the_entire_executed_trajectory(){
 }
 
 #[test]
+fn matched_physical_option_outcomes_causally_diverge_native_u1_weights(){
+    // Exposed MECHANISM check, not cold generalization: one identical
+    // acquired checkpoint, identical native choices/POSTs through two steps.
+    // The third REAL physical POST alone differs. No synthetic learner rows.
+    let (trained,original_world)=acquired(true);
+    let bytes=trained.checkpoint_constructing().unwrap();
+    let mut solved=ScientificRuntime::from_constructing_checkpoint(&bytes).unwrap();
+    let mut failed=ScientificRuntime::from_constructing_checkpoint(&bytes).unwrap();
+    enable(&mut solved,true);enable(&mut failed,true);
+    solved.enable_constructing_temporal_options().unwrap();
+    failed.enable_constructing_temporal_options().unwrap();
+    let mut good_world=original_world.clone();
+    let mut bad_world=original_world.clone();
+    for expected in ["predictive-suffix","temporal-option-continuation"] {
+        let good=step(&mut solved,&mut good_world,None);
+        let bad=step(&mut failed,&mut bad_world,None);
+        assert_eq!((good.action,good.source.as_str()),
+            (bad.action,bad.source.as_str()));
+        assert_eq!(good.source,expected);
+        assert_eq!(solved.unified_report().unwrap().native_weights,
+            failed.unified_report().unwrap().native_weights,
+            "prior selected physical actions and native learning must match");
+    }
+    let before=solved.unified_report().unwrap().native_meta_observations;
+    bad_world.broken=true; // evaluator-only latent change, no privileged input
+    let good=step(&mut solved,&mut good_world,None);
+    let bad=step(&mut failed,&mut bad_world,None);
+    assert_eq!((good.action,good.source.as_str()),
+        (bad.action,bad.source.as_str()));
+    assert_eq!((good_world.progress,bad_world.progress),(1,0));
+    let good=solved.unified_report().unwrap();
+    let bad=failed.unified_report().unwrap();
+    assert_eq!((good.native_meta_observations,bad.native_meta_observations),
+        (before+1,before+1),"both real terminal outcomes update exactly once");
+    assert_eq!(good.temporal_options.as_ref().unwrap().terminal_credits,1);
+    assert_eq!(bad.temporal_options.as_ref().unwrap().contradictory_credits,1);
+    let change: f32=good.native_weights.iter().zip(bad.native_weights.iter())
+        .map(|(a,b)|(a-b).abs()).sum();
+    assert!(change>1.0e-6,
+        "successful vs failed complete actions must alter physical U1 synaptic evaluation");
+    for rt in [&solved,&failed]{
+        let cp=rt.checkpoint_constructing().unwrap();
+        let restored=ScientificRuntime::from_constructing_checkpoint(&cp).unwrap();
+        assert_eq!(restored.checkpoint_constructing().unwrap(),cp);
+    }
+    eprintln!("TEMPORAL_CREDIT_MATCHED_POST {}",json!({
+        "same_earned_votes":true,
+        "actual_goal_good":good_world.progress,
+        "actual_goal_bad":bad_world.progress,
+        "native_weight_l1_divergence":change,
+        "independent_qualification":false
+    }));
+}
+
+#[test]
 fn no_hidden_history_effect_cannot_produce_spurious_suffix_goal_plan(){
     let (mut rt,mut w)=acquired(false);enable(&mut rt,true);
     let chosen=step(&mut rt,&mut w,None);
