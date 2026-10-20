@@ -34,7 +34,7 @@ fn causal_jsonl_exposes_wide_inputs_motor_count_and_long_horizon_with_real_post_
     let offers = (1..=7)
         .map(|cost| json!({"available":true,"max_cost":cost}))
         .collect::<Vec<_>>();
-    let choice = exchange(json!({"op":"step","offers":offers}));
+    let choice = exchange(json!({"op":"step","offers":offers,"remaining_actions":1}));
     assert_eq!(choice["type"], "action");
     assert!(choice["action"].as_u64().unwrap() < 7);
     let cost = choice["action"].as_u64().unwrap() + 1;

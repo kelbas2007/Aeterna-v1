@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Retain the entire frozen CAUSAL4 engineering comparison, including failures."""
 import argparse
+import concurrent.futures
 import datetime
 import gzip
 import hashlib
 import json
 import platform
+import queue
 import subprocess
 from pathlib import Path
 
@@ -20,9 +22,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--workers', type=int, default=4)
     args = parser.parse_args()
     binary = args.binary.resolve()
     output = args.output.resolve()
+    assert 1 <= args.workers <= 8
     if output.exists():
         raise SystemExit('Refusing to overwrite existing evaluation evidence')
     if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip():
@@ -33,7 +37,9 @@ def main():
         'binary_sha256': digest(binary),
         'platform': platform.platform(),
         'started_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        'seeds': [230000, 230031],
+        'seeds': [240000, 240031],
+        'workers': args.workers,
+        'process_isolation': 'one seed per process, fresh runtime per arm/family',
         'independent_external_qualification': False,
     }
     # Persist commitment BEFORE the executable sees the held worlds.
@@ -41,10 +47,30 @@ def main():
     groups = {}
     seen = set()
     trace_path = output / 'actual_traces.jsonl.gz'
-    with (output / 'progress.log').open('w') as log, gzip.open(trace_path, 'wt') as traces:
-        with subprocess.Popen([str(binary)], cwd=ROOT, stdout=subprocess.PIPE,
-                              stderr=log, text=True, bufsize=1) as process:
-            for line in process.stdout:
+    messages = queue.Queue(maxsize=32)
+
+    def worker(seed):
+        try:
+            with (output / f'progress-{seed}.log').open('w') as log:
+                with subprocess.Popen([str(binary), '--first', str(seed), '--count', '1'],
+                    cwd=ROOT, stdout=subprocess.PIPE, stderr=log, text=True, bufsize=1) as process:
+                    for line in process.stdout:
+                        messages.put(('row', line))
+                    messages.put(('exit', process.wait()))
+        except Exception as error:
+            messages.put(('error', repr(error)))
+
+    exits = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool, gzip.open(trace_path, 'wt') as traces:
+        futures = [pool.submit(worker, seed) for seed in range(240000, 240032)]
+        while len(exits) < 32:
+            kind, payload = messages.get()
+            if kind == 'error':
+                exits.append(payload)
+            elif kind == 'exit':
+                exits.append(payload)
+            else:
+                line = payload
                 row = json.loads(line)
                 key = (row['seed'], row['family'], row['arm'])
                 assert key not in seen, key
@@ -63,9 +89,13 @@ def main():
                 if len(seen) % 12 == 0:
                     traces.flush()
                     print(f'{len(seen)}/384 complete', flush=True)
-            code = process.wait()
-    assert code == 0, f'evaluator exited {code}; partial traces retained'
-    assert len(seen) == 384 and all(v['worlds'] == 32 for v in groups.values())
+        for future in futures:
+            future.result()
+    assert exits == [0] * 32, f'evaluator exits {exits}; partial traces retained'
+    expected = {(seed, family, arm) for seed in range(240000, 240032)
+        for family in ['ten_step', 'noisy_sensor', 'uninformative_sensor', 'direct_goal']
+        for arm in ['legacy', 'causal', 'horizon_one']}
+    assert seen == expected and all(v['worlds'] == 32 for v in groups.values())
 
     def score(family, arm):
         row = groups[family, arm]

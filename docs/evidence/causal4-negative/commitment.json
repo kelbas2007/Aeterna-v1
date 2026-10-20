@@ -1,0 +1,11 @@
+{
+  "source_revision": "46b18fed76070d24db0e84a76afd869a78a4b2c1",
+  "binary_sha256": "09ba8b39948670a8b82cb9cff01b07d9e950c637f4dae2ce8f799fe695ffdd54",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "started_at": "2026-10-20T16:39:06.354833+00:00",
+  "seeds": [
+    230000,
+    230031
+  ],
+  "independent_external_qualification": false
+}

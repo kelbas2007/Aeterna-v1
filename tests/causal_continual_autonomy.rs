@@ -5,6 +5,28 @@ use aeterna_v1::construction::{Config, Result};
 use aeterna_v1::scientific_runtime::{ScientificRuntime, UnifiedPost};
 use aeterna_v1::HumanProtectionEvidence;
 
+// These two exposed failures belong to the interrupted, negative CAUSAL4
+// cohort. They are now ordinary development regressions, never fresh evidence.
+#[path = "../examples/causal_continual_eval.rs"]
+#[allow(dead_code)]
+mod opaque_controls;
+
+#[test]
+fn causal_goal_credit_and_proposals_do_not_use_numeric_closeness_of_opaque_codes() {
+    let long = opaque_controls::life(230001, "ten_step", "causal");
+    let sensor = opaque_controls::life(230002, "noisy_sensor", "causal");
+    eprintln!(
+        "OPAQUE_ROUTE goals={} actions={}",
+        long["held_goals"], long["held_actions"]
+    );
+    eprintln!(
+        "OPAQUE_SENSOR goals={} actions={}",
+        sensor["held_goals"], sensor["held_actions"]
+    );
+    assert_eq!(long["held_goals"], 1);
+    assert!(sensor["held_goals"].as_u64().unwrap() >= 48);
+}
+
 fn safe(_: usize) -> HumanProtectionEvidence {
     HumanProtectionEvidence {
         human_present: false,
@@ -62,16 +84,18 @@ fn causal_continuous_physical_learning_compacts_restores_and_preserves_frozen_kn
     let mut rt = make(12, 7, 12, 192, true);
     let mut physical = vec![0; 12];
     for step in 0..6200 {
-        rt.step_constructing(None, &offers(7), safe, |a| {
-            physical[0] = (physical[0] + 1) % 5;
-            physical[11] = a as i64;
-            Ok(UnifiedPost {
-                observation: physical.clone(),
-                reward: 0.0,
-                cost: 1,
+        let committed = rt
+            .step_constructing(None, &offers(7), safe, |a| {
+                physical[0] = (physical[0] + 1) % 5;
+                physical[11] = a as i64;
+                Ok(UnifiedPost {
+                    observation: physical.clone(),
+                    reward: 0.0,
+                    cost: 1,
+                })
             })
-        })
-        .unwrap();
+            .unwrap();
+        assert_eq!(committed.event, step + 1);
         if step == 3100 {
             let bytes = rt.checkpoint_constructing().unwrap();
             rt = ScientificRuntime::from_constructing_checkpoint(&bytes).unwrap();
@@ -147,6 +171,26 @@ fn long_life(enabled: bool, rotation: usize) -> Result<(bool, usize)> {
     }
     rt.freeze_constructing()?;
     rt = ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing()?)?;
+    if enabled {
+        for stage in 0..10 {
+            let good = (stage * 7 + rotation) % 4;
+            let count = rt
+                .construction_learner()
+                .unwrap()
+                .records()
+                .iter()
+                .filter(|r| {
+                    r.transition.pre == observation(stage)
+                        && r.transition.action == good
+                        && r.transition.post == observation(stage + 1)
+                })
+                .count();
+            assert!(
+                count > 0,
+                "stage {stage} must have been acquired through a real chosen motor"
+            );
+        }
+    }
     let mut state = 0;
     let mut cost = 0;
     rt.observe_constructing_external_restart(observation(state))?;
@@ -199,6 +243,28 @@ fn causal_memory_does_not_bypass_protection_or_accept_a_late_enable() {
     assert!(result.is_err());
     assert_eq!(calls, 0);
     assert_eq!(rt.construction_learner().unwrap().factual_event_count(), 0);
+    let mut limited = make(2, 4, 3, 192, true);
+    let exhausted =
+        limited.step_constructing_with_action_limit(None, &offers(4), Some(0), safe, |_| {
+            calls += 1;
+            Ok(UnifiedPost {
+                observation: vec![0; 2],
+                cost: 1,
+                reward: 0.0,
+            })
+        });
+    assert!(matches!(
+        exhausted,
+        Err(aeterna_v1::construction::Error::Capacity)
+    ));
+    assert_eq!(calls, 0);
+    assert_eq!(
+        limited
+            .construction_learner()
+            .unwrap()
+            .factual_event_count(),
+        0
+    );
     let restored = ScientificRuntime::from_constructing_checkpoint(&before).unwrap();
     assert_eq!(
         restored

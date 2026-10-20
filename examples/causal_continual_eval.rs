@@ -42,7 +42,7 @@ fn safe(_: usize) -> HumanProtectionEvidence {
         emergency_stop: false,
     }
 }
-fn life(seed: u64, family: &str, arm: &str) -> Value {
+pub(crate) fn life(seed: u64, family: &str, arm: &str) -> Value {
     let long = family == "ten_step";
     let direct = family == "direct_goal";
     let noise_control = family == "uninformative_sensor";
@@ -138,52 +138,67 @@ fn life(seed: u64, family: &str, arm: &str) -> Value {
             }
             let mut terminal = false;
             let pre = observation(seed, state, width);
-            rt.step_constructing(Some(&goal), &offers, safe, |action| {
-                let role = p.iter().position(|&a| a == action).unwrap();
-                let random = mix(seed * 31_337 + ep as u64 * 101 + draw as u64 + 0x9321);
-                let mut success = false;
-                if long {
-                    if role == (state * 7 + (seed % 4) as usize) % 4 {
-                        state += 1;
+            rt.step_constructing_with_action_limit(
+                Some(&goal),
+                &offers,
+                Some(limit - draw),
+                safe,
+                |action| {
+                    let role = p.iter().position(|&a| a == action).unwrap();
+                    let random = mix(seed * 31_337 + ep as u64 * 101 + draw as u64 + 0x9321);
+                    let mut success = false;
+                    if long {
+                        if role == (state * 7 + (seed % 4) as usize) % 4 {
+                            state += 1;
+                        } else {
+                            state = 0;
+                        }
+                        success = state == target;
+                    } else if direct {
+                        terminal = true;
+                        success = role == 1;
+                        state = if success { target } else { 6 };
+                    } else if role == 0 {
+                        if !learning {
+                            held_queries += 1;
+                        }
+                        let cue = if noise_control {
+                            (random & 1) as usize
+                        } else {
+                            hidden ^ usize::from(random % 10 == 0)
+                        };
+                        state = 1 + cue;
+                    } else if role == 2 {
+                        state = 3 + (random & 1) as usize;
                     } else {
-                        state = 0;
+                        terminal = true;
+                        success = (role == 1 && hidden == 0) || (role == 3 && hidden == 1);
+                        state = if success { target } else { 6 };
                     }
-                    success = state == target;
-                } else if direct {
-                    terminal = true;
-                    success = role == 1;
-                    state = if success { target } else { 6 };
-                } else if role == 0 {
                     if !learning {
-                        held_queries += 1;
+                        held_actions += 1;
+                        if success {
+                            held_goals += 1;
+                        }
                     }
-                    let cue = if noise_control {
-                        (random & 1) as usize
-                    } else {
-                        hidden ^ usize::from(random % 10 == 0)
-                    };
-                    state = 1 + cue;
-                } else if role == 2 {
-                    state = 3 + (random & 1) as usize;
-                } else {
-                    terminal = true;
-                    success = (role == 1 && hidden == 0) || (role == 3 && hidden == 1);
-                    state = if success { target } else { 6 };
-                }
-                if !learning {
-                    held_actions += 1;
-                    if success {
-                        held_goals += 1;
-                    }
-                }
-                let post = observation(seed, state, width);
-                trace.push(json!([learning, ep, pre, action, post, 1, success]));
-                Ok(UnifiedPost {
-                    observation: observation(seed, state, width),
-                    cost: 1,
-                    reward: f32::from(success),
-                })
-            })
+                    let post = observation(seed, state, width);
+                    trace.push(json!([
+                        learning,
+                        ep,
+                        pre,
+                        action,
+                        post,
+                        1,
+                        success,
+                        limit - draw
+                    ]));
+                    Ok(UnifiedPost {
+                        observation: observation(seed, state, width),
+                        cost: 1,
+                        reward: f32::from(success),
+                    })
+                },
+            )
             .unwrap();
             if terminal {
                 break;
@@ -206,18 +221,38 @@ fn life(seed: u64, family: &str, arm: &str) -> Value {
     json!({"seed":seed,"family":family,"arm":arm,"training_episodes":training,
         "held_episodes":held,"held_goals":held_goals,"held_actions":held_actions,
         "held_queries":held_queries,"motor_permutation":p,"causal_report":report,
-        "trace_columns":["learning","episode","pre","action","post","cost","goal"],
+        "trace_columns":["learning","episode","pre","action","post","cost","goal","remaining_actions"],
         "trace":trace})
 }
 fn main() {
-    for seed in 230000..230032 {
+    let args = std::env::args().skip(1).collect::<Vec<_>>();
+    let (mut first, mut count) = (240000u64, 32u64);
+    let (mut only_family, mut only_arm) = (None, None);
+    assert!(args.len().is_multiple_of(2));
+    for pair in args.chunks_exact(2) {
+        match pair[0].as_str() {
+            "--first" => first = pair[1].parse().unwrap(),
+            "--count" => count = pair[1].parse().unwrap(),
+            "--family" => only_family = Some(pair[1].as_str()),
+            "--arm" => only_arm = Some(pair[1].as_str()),
+            _ => panic!("unknown evaluator option"),
+        }
+    }
+    assert!(first < 1_000_000_000 && (1..=32).contains(&count));
+    for seed in first..first + count {
         for family in [
             "ten_step",
             "noisy_sensor",
             "uninformative_sensor",
             "direct_goal",
         ] {
+            if only_family.is_some_and(|wanted| wanted != family) {
+                continue;
+            }
             for arm in ["legacy", "causal", "horizon_one"] {
+                if only_arm.is_some_and(|wanted| wanted != arm) {
+                    continue;
+                }
                 let result = life(seed, family, arm);
                 eprintln!(
                     "CAUSAL4 {seed} {family} {arm} {}/{} goals {} actions",

@@ -1,0 +1,142 @@
+{
+  "source_revision": "46b18fed76070d24db0e84a76afd869a78a4b2c1",
+  "binary_sha256": "09ba8b39948670a8b82cb9cff01b07d9e950c637f4dae2ce8f799fe695ffdd54",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "started_at": "2026-10-20T16:39:06.354833+00:00",
+  "seeds": [
+    230000,
+    230031
+  ],
+  "independent_external_qualification": false,
+  "verdict": "ABORTED_NEGATIVE_PROTOCOL_DEVIATION",
+  "completed_lives": 110,
+  "planned_lives": 384,
+  "withdrawn_seed_range": [
+    230000,
+    230031
+  ],
+  "reason": "Stopped after exposed categorical-label failures. Numeric proximity was still rewarded as progress and could inflate competing proposals. Incomplete lifetime traces are unavailable; all completed lifetime traces retained. No qualification from this incomplete cohort.",
+  "groups": [
+    {
+      "family": "direct_goal",
+      "arm": "causal",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 576,
+      "actions": 576,
+      "queries": 0,
+      "training_actions": 1152
+    },
+    {
+      "family": "direct_goal",
+      "arm": "horizon_one",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 576,
+      "actions": 576,
+      "queries": 0,
+      "training_actions": 1152
+    },
+    {
+      "family": "direct_goal",
+      "arm": "legacy",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 576,
+      "actions": 576,
+      "queries": 0,
+      "training_actions": 1152
+    },
+    {
+      "family": "noisy_sensor",
+      "arm": "causal",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 415,
+      "actions": 1063,
+      "queries": 401,
+      "training_actions": 11806
+    },
+    {
+      "family": "noisy_sensor",
+      "arm": "horizon_one",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 293,
+      "actions": 577,
+      "queries": 1,
+      "training_actions": 6101
+    },
+    {
+      "family": "noisy_sensor",
+      "arm": "legacy",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 296,
+      "actions": 813,
+      "queries": 138,
+      "training_actions": 8278
+    },
+    {
+      "family": "ten_step",
+      "arm": "causal",
+      "worlds": 10,
+      "episodes": 10,
+      "goals": 8,
+      "actions": 152,
+      "queries": 0,
+      "training_actions": 19412
+    },
+    {
+      "family": "ten_step",
+      "arm": "horizon_one",
+      "worlds": 9,
+      "episodes": 9,
+      "goals": 0,
+      "actions": 324,
+      "queries": 0,
+      "training_actions": 20315
+    },
+    {
+      "family": "ten_step",
+      "arm": "legacy",
+      "worlds": 10,
+      "episodes": 10,
+      "goals": 0,
+      "actions": 360,
+      "queries": 0,
+      "training_actions": 22594
+    },
+    {
+      "family": "uninformative_sensor",
+      "arm": "causal",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 282,
+      "actions": 872,
+      "queries": 178,
+      "training_actions": 10401
+    },
+    {
+      "family": "uninformative_sensor",
+      "arm": "horizon_one",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 295,
+      "actions": 687,
+      "queries": 67,
+      "training_actions": 6130
+    },
+    {
+      "family": "uninformative_sensor",
+      "arm": "legacy",
+      "worlds": 9,
+      "episodes": 576,
+      "goals": 267,
+      "actions": 808,
+      "queries": 147,
+      "training_actions": 8464
+    }
+  ],
+  "traces_sha256": "ba5bb8b1d9638b0c8cc47af36364f073deba3a66f6070d17a55dd9d6ec08d044"
+}

@@ -128,6 +128,8 @@ pub(crate) struct CausalProposal {
     pub information_gain: f64,
     pub confidence: f64,
     pub expected: Option<Vec<i64>>,
+    pub immediate_goals: Vec<f64>,
+    pub immediate_support: Vec<u64>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ExperimentCredit {
@@ -167,6 +169,27 @@ fn key(pre: &[i64], action: usize, context: &[ContextStep], depth: usize) -> Str
 }
 fn entropy(p: impl Iterator<Item = f64>) -> f64 {
     p.filter(|&v| v > 0.0).map(|v| -v * v.ln()).sum()
+}
+fn digamma(mut x: f64) -> f64 {
+    let mut value = 0.0;
+    while x < 8.0 {
+        value -= 1.0 / x;
+        x += 1.0;
+    }
+    let inv = 1.0 / x;
+    let square = inv * inv;
+    value + x.ln() - 0.5 * inv - square * (1.0 / 12.0 - square * (1.0 / 120.0 - square / 252.0))
+}
+fn goal_law_information(support: u64, goal_probability: f64) -> f64 {
+    // Beta(1,1) prior on the causal goal outcome of this motor/context.
+    // I(theta; next factual goal bit), not outcome entropy or visit novelty.
+    let a = 1.0 + support as f64 * goal_probability;
+    let b = 1.0 + support as f64 * (1.0 - goal_probability);
+    let n = a + b;
+    let p = a / n;
+    let predictive = entropy([p, 1.0 - p].into_iter());
+    let conditional = digamma(n + 1.0) - p * digamma(a + 1.0) - (1.0 - p) * digamma(b + 1.0);
+    (predictive - conditional).clamp(0.0, std::f64::consts::LN_2)
 }
 fn matches_goal(state: &[i64], goal: &[Option<i64>]) -> bool {
     state.len() == goal.len()
@@ -264,7 +287,7 @@ impl CausalMemory {
             } else {
                 0.0
             };
-            if success {
+            if success && probe.fields[2] > 0.0 {
                 self.rewarded_experiments = self.rewarded_experiments.saturating_add(1)
             }
             if self.credits.len() < 128 {
@@ -293,12 +316,14 @@ impl CausalMemory {
             credit.elapsed_cost = credit.elapsed_cost.saturating_add(cost)
         }
         if let Some(fields) = chosen_experiment {
-            if fields[2] > 0.0 && self.pending.len() < 32 && goal.is_some() {
+            if self.pending.len() < 32 && goal.is_some() {
                 self.pending.push(ExperimentCredit {
                     fields,
                     elapsed_cost: cost,
                 });
-                self.experiments = self.experiments.saturating_add(1);
+                if fields[2] > 0.0 {
+                    self.experiments = self.experiments.saturating_add(1);
+                }
             }
         }
         if goal.is_some_and(|g| matches_goal(post, g)) {
@@ -552,6 +577,19 @@ impl CausalMemory {
         if initial.iter().all(|b| b.support == 0) {
             return None;
         }
+        let mut immediate_goals = vec![0.0; offers.len()];
+        let mut immediate_support = vec![0; offers.len()];
+        for b in &initial {
+            immediate_support[b.action] = b.support;
+            for (post, probability) in &b.outcomes {
+                if meter.charge((post.len() + 1) as u64).is_err() {
+                    return None;
+                }
+                if goal.is_some_and(|g| matches_goal(post, g)) {
+                    immediate_goals[b.action] += probability;
+                }
+            }
+        }
         if goal.is_none() {
             let b = initial.iter().filter(|b| b.support > 0).max_by(|a, b| {
                 (a.information_gain / (1.0 + offers[a.action].max_cost as f64))
@@ -563,6 +601,8 @@ impl CausalMemory {
                 information_gain: b.information_gain,
                 confidence: b.support as f64 / (b.support as f64 + 2.0),
                 expected: None,
+                immediate_goals,
+                immediate_support,
             });
         }
         let credible_depth = self
@@ -677,8 +717,11 @@ impl CausalMemory {
             }
             values = next;
         }
-        let mut best = None::<(f64, &ActionBelief, f64)>;
+        let mut best = None::<(f64, &ActionBelief, f64, f64, f64)>;
         for (b, outcomes) in edges.first()? {
+            meter
+                .charge((outcomes.len() * pre.len() + 48) as u64)
+                .ok()?;
             let q = outcomes
                 .iter()
                 .map(|(id, p, goal)| {
@@ -689,8 +732,17 @@ impl CausalMemory {
                     }
                 })
                 .sum::<f64>();
-            let info =
-                b.information_gain * b.goal_relevance / (1.0 + offers[b.action].max_cost as f64);
+            // Missing laws must remain testable even when every currently
+            // known route has zero goal value. The parameter-information prior
+            // decays on actual outcomes, including pure noise. Never put this
+            // optimistic learning value into the predicted GOAL field.
+            let frontier = if q < 0.05 {
+                goal_law_information(b.support, immediate_goals[b.action])
+            } else {
+                0.0
+            };
+            let raw_information = b.information_gain * b.goal_relevance + frontier;
+            let info = raw_information / (1.0 + offers[b.action].max_cost as f64);
             let score = q + 0.2 * info - 0.01 * offers[b.action].max_cost as f64;
             let mut decisions = BTreeMap::<usize, f64>::new();
             for (target, p, terminal) in outcomes {
@@ -710,21 +762,23 @@ impl CausalMemory {
             } else {
                 0.0
             };
-            if best.is_none_or(|(v, _, _)| score > v) {
-                best = Some((score, b, decision_information))
+            if best.is_none_or(|(v, _, _, _, _)| score > v) {
+                best = Some((score, b, decision_information, q, raw_information))
             }
         }
-        let (score, b, decision_information) = best?;
+        let (_, b, decision_information, goal_value, raw_information) = best?;
         Some(CausalProposal {
             action: b.action,
-            value: (score + 0.01).clamp(0.0, 1.0),
-            information_gain: (b.information_gain * b.goal_relevance).max(decision_information),
+            value: goal_value.clamp(0.0, 1.0),
+            information_gain: raw_information.max(decision_information),
             confidence: b.support as f64 / (b.support as f64 + 2.0),
             expected: b
                 .outcomes
                 .iter()
                 .max_by(|a, b| a.1.total_cmp(&b.1))
                 .map(|(p, _)| p.clone()),
+            immediate_goals,
+            immediate_support,
         })
     }
     pub fn validate(
@@ -820,6 +874,36 @@ impl CausalMemory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn goal_parameter_information_decreases_while_noise_entropy_stays_high() {
+        let empty = goal_law_information(0, 0.5);
+        assert!((empty - (std::f64::consts::LN_2 - 0.5)).abs() < 1e-7);
+        assert!(empty > goal_law_information(10, 0.5));
+        assert!(goal_law_information(10, 0.5) > goal_law_information(1000, 0.5));
+        assert!(goal_law_information(1_000_000, 0.5) < 1e-5);
+    }
+    #[test]
+    fn an_unknown_law_can_be_tested_without_fabricating_goal_value() {
+        let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();
+        for _ in 0..30 {
+            fact(&mut m, 0, 0, 0, true);
+        }
+        let offers = [ActionOffer {
+            available: true,
+            max_cost: 1,
+        }; 2];
+        let p = m
+            .propose(&[0], &offers, Some(&[Some(9)]), 4, 100_000)
+            .0
+            .unwrap();
+        assert_eq!(p.action, 1);
+        assert_eq!(
+            p.value, 0.0,
+            "information is not evidence that the goal will be reached"
+        );
+        assert!(p.information_gain > 0.1);
+        assert_eq!(p.immediate_goals, vec![0.0, 0.0]);
+    }
     fn fact(m: &mut CausalMemory, pre: i64, action: usize, post: i64, restart: bool) {
         let t = Transition {
             id: m.events,

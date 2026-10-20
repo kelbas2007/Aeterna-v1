@@ -309,7 +309,8 @@ pub(crate) fn main()->Result<()>{
                     if offers.len()!=runtime.as_ref().ok_or("not loaded")?.construction_learner()
                         .ok_or("not constructing")?.action_count(){return Err("incorrect primitive action channels".into());}
                     let goal:Option<Vec<Option<i64>>>=serde_json::from_value(request.get("goal").cloned().unwrap_or(Value::Null))?;
-                    let step=runtime.as_mut().ok_or("not loaded")?.step_constructing(goal.as_deref(),&offers,safe,|action|{
+                    let remaining_actions=request.get("remaining_actions").map(|v|v.as_u64().ok_or("remaining_actions must be an unsigned integer").and_then(|n|usize::try_from(n).map_err(|_|"remaining_actions overflow"))).transpose()?;
+                    let step=runtime.as_mut().ok_or("not loaded")?.step_constructing_with_action_limit(goal.as_deref(),&offers,remaining_actions,safe,|action|{
                         let result:Result<UnifiedPost>=(||{
                             write(&mut out,&json!({"type":"action","action":action}))?;
                             let post=read(&mut input)?;
