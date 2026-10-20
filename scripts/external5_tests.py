@@ -1,15 +1,62 @@
 """Format and observation-boundary regressions using tiny generated fixtures."""
-import gzip,struct,tempfile,unittest,zipfile,json,hashlib
+import gzip,struct,tempfile,unittest,zipfile,json,hashlib,copy
 from unittest.mock import patch
 from pathlib import Path
 import numpy as np
-from external5_sensors import load_fashion,load_har,SENSOR_NAMES,MatchedKNN
+from external5_sensors import load_fashion,load_har,SENSOR_NAMES,MatchedKNN,blank,acquire
 from external5_arc import targets
 from run_external_continual5 import verify_data_files,dependency_versions,PINNED_VERSIONS
-from audit_external5_data import audit
+from audit_external5_data import audit,audit_trace
 import prepare_external5_data as prepare
 
 class ExternalInputs(unittest.TestCase):
+    def sensory_trace_fixture(self):
+        x=np.stack([np.zeros((28,28),dtype=np.uint8),np.full((28,28),17,dtype=np.uint8)])
+        datasets={('fashion',False):(x,np.array([0,1]),None)}
+        rows=[];seen=set();sequence=[('fashion',i,False) for i in range(2)]
+        def ref(frame):
+            key=hashlib.sha256(json.dumps(frame,separators=(',',':'),allow_nan=False).encode()).hexdigest()
+            if key not in seen:rows.append({'kind':'sensor_frame','id':key,'frame':frame});seen.add(key)
+            return key
+        for i in range(2):
+            current=blank('fashion');start=ref(current)
+            rows.append({'kind':'restart','frame_ref':start,'metadata':{'dataset':'fashion','index':i,'training':False}})
+            for step,action in enumerate([0,i+1]):
+                available=[False]*16
+                for motor in ([0] if step==0 else [1,2]):available[motor]=True
+                rows.append({'kind':'intent','index':2*i+step,'action':action,'remaining_actions':2-step,
+                    'offers':[{'available':v,'max_cost':1} for v in available],'pre_ref':ref(current)})
+                if step==0:current=acquire(current,0,x[i])
+                post=ref(current)
+                rows.append({'kind':'actual_post','index':2*i+step,'action':action,'frame_ref':post,'cost':1,'reward':float(step==1)})
+                rows.append({'kind':'commit','index':2*i+step,'step':{'action':action}})
+            rows.append({'kind':'graded_episode','dataset':'fashion','index':i,'training':False,
+                         'prediction':i,'target_after_response':i,'measurements':1})
+        return rows,{'fashion':([0],[1,2])},datasets,sequence
+    def run_trace_audit_fixture(self,rows,maps,datasets,sequence):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'trace.jsonl.gz'
+            with gzip.open(path,'wt') as stream:
+                for row in rows:stream.write(json.dumps(row)+'\n')
+            return audit_trace(path,maps,datasets,sequence,'full')
+    def test_serialized_sensory_audit_accepts_exact_coverage_and_actions(self):
+        result=self.run_trace_audit_fixture(*self.sensory_trace_fixture())
+        self.assertEqual(result,{'status':'PASS','actual_actions':4,'graded_windows':2})
+    def test_serialized_sensory_audit_rejects_invalid_actions_and_forged_coverage(self):
+        original,maps,datasets,sequence=self.sensory_trace_fixture()
+        for defect,error in [('unavailable','unavailable'),('duplicate_grade','completed active sample'),
+                             ('index_gap','sample sequence'),('missing_phase','sample sequence'),
+                             ('deadline','deadline'),('missing_commit','missing native factual commit')]:
+            with self.subTest(defect=defect):
+                rows=copy.deepcopy(original);expected=list(sequence)
+                if defect=='unavailable':next(r for r in rows if r['kind']=='intent')['action']=1
+                elif defect=='duplicate_grade':
+                    at=next(i for i,r in enumerate(rows) if r['kind']=='graded_episode');rows.insert(at+1,copy.deepcopy(rows[at]))
+                elif defect=='index_gap':next(r for r in rows if r['kind']=='restart' and r['metadata']['index']==1)['metadata']['index']=2
+                elif defect=='missing_phase':expected[1]=('har',0,False)
+                elif defect=='deadline':next(r for r in rows if r['kind']=='intent')['remaining_actions']=99
+                elif defect=='missing_commit':rows.pop(next(i for i,r in enumerate(rows) if r['kind']=='commit'))
+                with self.assertRaisesRegex(ValueError,error):self.run_trace_audit_fixture(rows,maps,datasets,expected)
     def test_idx_headers_never_become_pixels_or_feedback_labels(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);pixels=np.stack([np.zeros((28,28),dtype=np.uint8),np.full((28,28),17,dtype=np.uint8)])
