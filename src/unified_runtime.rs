@@ -848,7 +848,6 @@ impl ScientificRuntime {
     pub fn step_external_sensors<H,F>(&mut self,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<SensorPost> {
         let namespace=self.construction_learner().ok_or(UError::NoEvidence)?.current()[0];
-        if !self.organism.select_meta_context(namespace){return Err(UError::Capacity);}
         let mut encoder=self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_take_sensor_encoder()?;
         let result=self.step_constructing_with_action_limit(None,offers,remaining_actions,hazard,|action| {
             let post=execute(action)?;
@@ -1302,7 +1301,8 @@ impl ScientificRuntime {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;if !u.freeze_controller {return Err(UError::Busy);}
         let mut data:serde_json::Value=serde_json::from_slice(&self.organism.constructing_carrier_checkpoint().ok_or(UError::InvalidData)?).map_err(|_|UError::InvalidData)?;
         for s in data["synapses"].as_array_mut().ok_or(UError::InvalidData)? {s["weight"]=serde_json::json!(0.0);}
-        self.organism=EvoPhase::from_constructing_carrier_checkpoint(&serde_json::to_vec(&data).map_err(|_|UError::InvalidData)?).ok_or(UError::InvalidData)?;Ok(())
+        self.organism=EvoPhase::from_constructing_carrier_checkpoint(&serde_json::to_vec(&data).map_err(|_|UError::InvalidData)?).ok_or(UError::InvalidData)?;
+        self.organism.ablate_contextual_meta_weights();Ok(())
     }
     pub fn step_constructing<H,F>(&mut self,goal:Option<&[Option<i64>]>,offers:&[UOffer],hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
@@ -1314,6 +1314,8 @@ impl ScientificRuntime {
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
         if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
         if remaining_actions==Some(0){return Err(UError::Capacity)}
+        let namespace=self.constructing.as_ref().ok_or(UError::NoEvidence)?.current.learner.current()[0];
+        if !self.organism.select_meta_context(namespace){return Err(UError::Capacity);}
         let mut u=self.constructing.take().ok_or(UError::NoEvidence)?;
         let configured_depth=u.current.learner.carrier_config().planning_depth;
         if let Some(left)=remaining_actions {

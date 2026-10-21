@@ -138,6 +138,23 @@ impl EvoPhase {
         )
     }
 
+    pub(crate) fn ablate_contextual_meta_weights(&mut self) {
+        if let Some(c) = self
+            .phase_native
+            .as_mut()
+            .and_then(|n| n.meta_control.as_mut())
+            .and_then(|m| m.contextual.as_mut())
+        {
+            for row in
+                std::iter::once(&mut c.prior).chain(c.rows.values_mut().map(|r| &mut r.synapses))
+            {
+                for synapse in row {
+                    synapse.weight = 0.0;
+                }
+            }
+        }
+    }
+
     pub(crate) fn valid_current_meta_context(&self, context: i64, common: bool) -> bool {
         self.phase_native
             .as_ref()
@@ -210,5 +227,10 @@ mod contextual_meta_tests {
         assert_eq!(evo.phase_native_meta_weights().unwrap(), learned);
         assert!(evo.select_meta_context(123));
         assert_eq!(evo.phase_native_meta_weights().unwrap(), prior);
+        evo.ablate_contextual_meta_weights();
+        assert!(evo.select_meta_context(4));
+        assert_eq!(evo.phase_native_meta_weights().unwrap(), [0.0; 5]);
+        assert!(evo.select_meta_context(123));
+        assert_eq!(evo.phase_native_meta_weights().unwrap(), [0.0; 5]);
     }
 }

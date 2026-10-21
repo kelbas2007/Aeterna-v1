@@ -44,8 +44,8 @@
     "actual_action_ratio_max": 1.1
   },
   "interpretation": "prequential new training rows with ongoing feedback, not an IID blind test, not an official held-out benchmark or evidence of general intelligence; internal 64-outcome rule gates are predictive, not behavioral qualification",
-  "confirmation_policy": "freeze source and executable before decoding confirmation samples; one run per arm, no retuning on these confirmation outcomes; report failure as failure",
-  "protocol_clarification_before_confirmation": "Confirmation extends the two development lives through their own exact checkpoint exports. Its row ranges and acceptance criteria are unchanged; no confirmation sample has been decoded. This checks preservation and further learning in one life.",
+  "confirmation_policy": "freeze source and executable before exposing confirmation samples to the organism or scoring them; one run per arm, no retuning on these confirmation outcomes; report failure as failure",
+  "protocol_clarification_before_confirmation": "Confirmation extends the two development lives through their own exact checkpoint exports. Its row ranges and acceptance criteria are unchanged; no confirmation sample has been presented to the organism or scored; corpus archives have been integrity-checked in full. This checks preservation and further learning in one life.",
   "development_round_1": {
     "source": "eb2a50c",
     "pooled_first_answer_gain": -0.009290540540540541,
