@@ -1,0 +1,399 @@
+{
+  "date_utc": "2026-10-21",
+  "scope": "Targeted cross-framework architecture review, not an exhaustive or systematic review of neuroscience.",
+  "access": "GitHub original author repositories, open textbook and official eLife XML archive. Publisher/arXiv/PubMed endpoints were inaccessible from this environment.",
+  "sources": [
+    {
+      "repository": "Cogitate-consortium/cogitate-msp1",
+      "path": "README.md",
+      "blob_sha": "7d476e51294cdf3c24ffa4cf83ee17873ec768e8",
+      "sha256": "e55468c50a67179a51917f19eb05469ab0b06ab176b0fb871a243dd7669e730f",
+      "bytes": 1556,
+      "url": "https://github.com/Cogitate-consortium/cogitate-msp1/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/Cogitate-consortium/cogitate-msp1/git/blobs/7d476e51294cdf3c24ffa4cf83ee17873ec768e8",
+      "inspection": "Full README; preregistration/preprint identity only, no outcome claims."
+    },
+    {
+      "repository": "Cogitate-consortium/cogitate-msp1",
+      "path": "coglib/fmri/readme.md",
+      "blob_sha": "b0c7183c22656ec8d4cc4da237dffa6ce4d26050",
+      "sha256": "27e13152aaf323b8c7b26dd28dc4746ec2368278a6f29c1e0ab94039a9e882a3",
+      "bytes": 20732,
+      "url": "https://github.com/Cogitate-consortium/cogitate-msp1/blob/main/coglib/fmri/readme.md",
+      "immutable_content_api": "https://api.github.com/repos/Cogitate-consortium/cogitate-msp1/git/blobs/b0c7183c22656ec8d4cc4da237dffa6ce4d26050",
+      "inspection": "Downloaded, not used as evidence for theory outcomes."
+    },
+    {
+      "repository": "Cogitate-consortium/cogitate-msp1",
+      "path": "coglib/meeg/README.md",
+      "blob_sha": "fc6f1aeb0dc77cb935e681b9fbbd3f6a6a98133b",
+      "sha256": "937263befb334eeeefc4d0b45616c8e2a35a2f84119777cac1eae8e8bc13096b",
+      "bytes": 3674,
+      "url": "https://github.com/Cogitate-consortium/cogitate-msp1/blob/main/coglib/meeg/README.md",
+      "immutable_content_api": "https://api.github.com/repos/Cogitate-consortium/cogitate-msp1/git/blobs/fc6f1aeb0dc77cb935e681b9fbbd3f6a6a98133b",
+      "inspection": "Downloaded, not used as evidence for theory outcomes."
+    },
+    {
+      "repository": "IGITUGraz/eligibility_propagation",
+      "path": "README.md",
+      "blob_sha": "88549a7b0d07f84454a6172daf84248389390102",
+      "sha256": "681974cdcfeaab079fffcbf65ee07da8652d922784da70e319643b86295bea8b",
+      "bytes": 2911,
+      "url": "https://github.com/IGITUGraz/eligibility_propagation/blob/master/README.md",
+      "immutable_content_api": "https://api.github.com/repos/IGITUGraz/eligibility_propagation/git/blobs/88549a7b0d07f84454a6172daf84248389390102",
+      "inspection": "Full README; author code/method description, original paper not retrieved."
+    },
+    {
+      "repository": "SoarGroup/Soar",
+      "path": "Core/SoarKernel/src/episodic_memory/episodic_memory.h",
+      "blob_sha": "27d6500cfdfd06d3025f5e5fdae62d7e8674d9a2",
+      "sha256": "eaafd615c495c6c1f1de1edf611b7233daae831b0c6de83ee6a52a15cc73509f",
+      "bytes": 22789,
+      "url": "https://github.com/SoarGroup/Soar/blob/development/Core/SoarKernel/src/episodic_memory/episodic_memory.h",
+      "immutable_content_api": "https://api.github.com/repos/SoarGroup/Soar/git/blobs/27d6500cfdfd06d3025f5e5fdae62d7e8674d9a2",
+      "inspection": "Storage/retrieval, phases, query and working-memory interface declarations; first 12000 characters, not full implementation."
+    },
+    {
+      "repository": "SoarGroup/Soar",
+      "path": "README.md",
+      "blob_sha": "6db96c456c389ffcceeae67a64d4662af34eb946",
+      "sha256": "76c921c4e2940d92797b3b30a3a75bfcd8d76bad140dc29cffb9750f6a86c77e",
+      "bytes": 8838,
+      "url": "https://github.com/SoarGroup/Soar/blob/development/README.md",
+      "immutable_content_api": "https://api.github.com/repos/SoarGroup/Soar/git/blobs/6db96c456c389ffcceeae67a64d4662af34eb946",
+      "inspection": "README overview/build information; not an architecture manual."
+    },
+    {
+      "repository": "YunzheLiu/TDLM",
+      "path": "README.md",
+      "blob_sha": "d98e66aac6f3fc8b005b5afc72604f3195d26d9b",
+      "sha256": "d5b8daca20ee6e569e13e328cdb511f5cae2b59666a3cce0af14818886cedcf7",
+      "bytes": 175,
+      "url": "https://github.com/YunzheLiu/TDLM/blob/master/README.md",
+      "immutable_content_api": "https://api.github.com/repos/YunzheLiu/TDLM/git/blobs/d98e66aac6f3fc8b005b5afc72604f3195d26d9b",
+      "inspection": "Full short README; identifies author code accompanying eLife paper."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "README.md",
+      "blob_sha": "686f0ff957b5505c22bace8fc1eb49b424b769a8",
+      "sha256": "618fc359285eaab6fd92792f91db01a1440fa09e898496cba1d6af7dfc1e5fb4",
+      "bytes": 991,
+      "url": "https://github.com/compcogneuro/book/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/686f0ff957b5505c22bace8fc1eb49b424b769a8",
+      "inspection": "Repository identity and chapter map."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-01.md",
+      "blob_sha": "e964960a8b6e2d2b2640d62f0179eb55720a90fb",
+      "sha256": "6a72d20260ba3fdac1f90b2bd8b99d0ed9d3acc7664e7d3d7b79070d7b2cba48",
+      "bytes": 28890,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-01.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/e964960a8b6e2d2b2640d62f0179eb55720a90fb",
+      "inspection": "Headings only; background, not used as primary evidence."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-02.md",
+      "blob_sha": "e1902a6dad347c2537442822b83c5ab86652ebab",
+      "sha256": "39e92f5bb88c604c857fdd9438ccc857c2ddca1a92956b2843eb27ee76e7de34",
+      "bytes": 88772,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-02.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/e1902a6dad347c2537442822b83c5ab86652ebab",
+      "inspection": "Headings only; downloaded, not substantively reviewed."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-03.md",
+      "blob_sha": "f9cc8918d95d2bbf6834a4dada4348efebfd564d",
+      "sha256": "212c6c63f8c335c3951cdf859a00aafc2480761e4089c0bbf9fc30fb1ed2ff48",
+      "bytes": 62052,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-03.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/f9cc8918d95d2bbf6834a4dada4348efebfd564d",
+      "inspection": "Categorization and distributed representations, selected text."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-04.md",
+      "blob_sha": "d6ee3fe328e0d96710761b01fe9362bba6679ce4",
+      "sha256": "9ce3eb8c7f2be08a1f2361cf87a5c96c2060f7a6a1c9016d39e4d02fb9066f11",
+      "bytes": 115922,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-04.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/d6ee3fe328e0d96710761b01fe9362bba6679ce4",
+      "inspection": "Biology of synaptic plasticity and error-driven learning, selected text."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-05.md",
+      "blob_sha": "e6aca10b19a1eb88fe1791382b76a7c2cfd5fd01",
+      "sha256": "c62a3aaf8df707481f9f8a64bcb79d56d372cd07cc223b6e7059f707c71710f5",
+      "bytes": 34641,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-05.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/e6aca10b19a1eb88fe1791382b76a7c2cfd5fd01",
+      "inspection": "Headings only; downloaded, not substantively reviewed."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-06.md",
+      "blob_sha": "936ff60877daa935656d3368ad93b97215550155",
+      "sha256": "37cd960bbac888424cbe2ed15794baf5ad49e5ee29299814bc6bbb7a68e2101e",
+      "bytes": 37522,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-06.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/936ff60877daa935656d3368ad93b97215550155",
+      "inspection": "Headings only; downloaded, not substantively reviewed."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-07.md",
+      "blob_sha": "d4c849f92892e0692d9da3cc48800b0e797dab1c",
+      "sha256": "075b907fb4b8dfae6457b324ccc71f6f95f12f86e13f07df64584a35fb0e2b9d",
+      "bytes": 50036,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-07.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/d4c849f92892e0692d9da3cc48800b0e797dab1c",
+      "inspection": "Episodic memory and complementary learning systems, selected text."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-08.md",
+      "blob_sha": "a0635406d57de8aa16ea2cb55b5eede69ae08650",
+      "sha256": "874eaad01eecae810820ea039f8c5a24b02faacbd685fb33dcedad0dbf979502",
+      "bytes": 46805,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-08.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/a0635406d57de8aa16ea2cb55b5eede69ae08650",
+      "inspection": "Dopamine and temporal difference learning, selected text."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-09.md",
+      "blob_sha": "8db625f4e67e595641e67316b0040b735454c9ab",
+      "sha256": "65e4a941cc942989e50f1cf311c13fdde17164fa5d6da66b571529cdf63cdabf",
+      "bytes": 59149,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-09.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/8db625f4e67e595641e67316b0040b735454c9ab",
+      "inspection": "PFC/BG biology, hierarchical organization and alternative executive frameworks, selected text."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "chapter-10.md",
+      "blob_sha": "790c1fb3a33528cf741718dc94861b04d651da50",
+      "sha256": "b571c0394addeafc2057803155d6e3a818d8f8a332e33a1690d5dc138c8f9922",
+      "bytes": 43129,
+      "url": "https://github.com/compcogneuro/book/blob/main/chapter-10.md",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/790c1fb3a33528cf741718dc94861b04d651da50",
+      "inspection": "Headings and final next-steps discussion only; not a current language research survey."
+    },
+    {
+      "repository": "compcogneuro/book",
+      "path": "references.bib",
+      "blob_sha": "ccad4c48e64f4240c65d63d741352d89245d0156",
+      "sha256": "6bda711347f633de117307eb6a202e7beb6d520cca2f68ff451f76a60520b3f1",
+      "bytes": 63370,
+      "url": "https://github.com/compcogneuro/book/blob/main/references.bib",
+      "immutable_content_api": "https://api.github.com/repos/compcogneuro/book/git/blobs/ccad4c48e64f4240c65d63d741352d89245d0156",
+      "inspection": "Selected reference metadata for CLS, dopamine, PFC/BG and hierarchical transfer. Original articles not thereby read."
+    },
+    {
+      "repository": "danijar/dreamerv3",
+      "path": "README.md",
+      "blob_sha": "17bd6209a7d171aacab9d77c85ebfa057c77bb04",
+      "sha256": "a4d8e77c07a876a7f528aa204fbc910812c5ca96bcfb67709b366f8ff0d3ed6b",
+      "bytes": 4590,
+      "url": "https://github.com/danijar/dreamerv3/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/danijar/dreamerv3/git/blobs/17bd6209a7d171aacab9d77c85ebfa057c77bb04",
+      "inspection": "Full README; explicitly an independent reimplementation. Original Nature article not retrieved in this review."
+    },
+    {
+      "repository": "elifesciences/elife-article-xml",
+      "path": "articles/elife-04811-v1.xml",
+      "blob_sha": "b062e21c288715bcccb29d9e3e128ba8512e1261",
+      "sha256": "2778f0dde290b536efee41d7056253b5a159973042807814e35b30b8fe98985f",
+      "bytes": 280780,
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/master/articles/elife-04811-v1.xml",
+      "immutable_content_api": "https://api.github.com/repos/elifesciences/elife-article-xml/git/blobs/b062e21c288715bcccb29d9e3e128ba8512e1261",
+      "inspection": "Full text available; abstract, discussion and limitations read. Normative computational theory."
+    },
+    {
+      "repository": "elifesciences/elife-article-xml",
+      "path": "articles/elife-23871-v1.xml",
+      "blob_sha": "5bad1213b905744c6bd1ed70e0ebab3ae53568dd",
+      "sha256": "df69dffcdd0fedc02595de5bd412fcff5d19683cb5c2f89ab1690ac8f2fc570b",
+      "bytes": 10897,
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/master/articles/elife-23871-v1.xml",
+      "immutable_content_api": "https://api.github.com/repos/elifesciences/elife-article-xml/git/blobs/5bad1213b905744c6bd1ed70e0ebab3ae53568dd",
+      "inspection": "Abstract/front matter only. Superseded by full-text v2 for this review."
+    },
+    {
+      "repository": "elifesciences/elife-article-xml",
+      "path": "articles/elife-23871-v2.xml",
+      "blob_sha": "68aca056fd138114937b126a20d2b9376240b621",
+      "sha256": "35e18612b2aa202c489705a34a27bc5456c23b21bbbfeef452f3416538fb7a87",
+      "bytes": 290123,
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/master/articles/elife-23871-v2.xml",
+      "immutable_content_api": "https://api.github.com/repos/elifesciences/elife-article-xml/git/blobs/68aca056fd138114937b126a20d2b9376240b621",
+      "inspection": "Full text available; abstract, discussion including limitations, and subjects read. Human MEG/behavior plus computational model."
+    },
+    {
+      "repository": "elifesciences/elife-article-xml",
+      "path": "articles/elife-66917-v2.xml",
+      "blob_sha": "69c6018d7e236c7e2f838f79efb49b0e7e60e508",
+      "sha256": "01207916aa7ee8f0edf1e0e3ddc52066b1f3a8793cadb32c6e15b53751eaa849",
+      "bytes": 413922,
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/master/articles/elife-66917-v2.xml",
+      "immutable_content_api": "https://api.github.com/repos/elifesciences/elife-article-xml/git/blobs/69c6018d7e236c7e2f838f79efb49b0e7e60e508",
+      "inspection": "Full text available; abstract, introduction, discussion and human replay dataset methods read. Human/rodent replay measurement method."
+    },
+    {
+      "repository": "emer/axon",
+      "path": "Deep.md",
+      "blob_sha": "93657198b74d61a3af394d2726d800b63a9a83d9",
+      "sha256": "2b2b05c387f4086109359f83809328e517e429d461c9f2a630b0ecc4fc2bf7b8",
+      "bytes": 12848,
+      "url": "https://github.com/emer/axon/blob/main/Deep.md",
+      "immutable_content_api": "https://api.github.com/repos/emer/axon/git/blobs/93657198b74d61a3af394d2726d800b63a9a83d9",
+      "inspection": "Mechanistic predictive learning description and references, selected text."
+    },
+    {
+      "repository": "emer/axon",
+      "path": "Hip.md",
+      "blob_sha": "ac9ce31bb8a7e2096315c143d58a44b43154db68",
+      "sha256": "4b6f220aed54f277dceaf9cbd949a6ec52bc5b62a27762fe9b70e32536bd477a",
+      "bytes": 2159,
+      "url": "https://github.com/emer/axon/blob/main/Hip.md",
+      "immutable_content_api": "https://api.github.com/repos/emer/axon/git/blobs/ac9ce31bb8a7e2096315c143d58a44b43154db68",
+      "inspection": "Full short document."
+    },
+    {
+      "repository": "emer/axon",
+      "path": "PCoreBG.md",
+      "blob_sha": "a5dc02c6d23781e96958a5b5666ef529a4f92e6e",
+      "sha256": "52d7efb9c550b12d75acd3b8ff4353e5bd66066cac55f510e33e653e723309c0",
+      "bytes": 16302,
+      "url": "https://github.com/emer/axon/blob/main/PCoreBG.md",
+      "immutable_content_api": "https://api.github.com/repos/emer/axon/git/blobs/a5dc02c6d23781e96958a5b5666ef529a4f92e6e",
+      "inspection": "Introduction, headings and references; competing BG model."
+    },
+    {
+      "repository": "emer/axon",
+      "path": "README.md",
+      "blob_sha": "62cec5b764e6a201a6033588b5e2f22b92ebbe52",
+      "sha256": "eb73af49ce0b18f5679390f3138ba6ec3df60c1f0559a47724031140e3344e0b",
+      "bytes": 106229,
+      "url": "https://github.com/emer/axon/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/emer/axon/git/blobs/62cec5b764e6a201a6033588b5e2f22b92ebbe52",
+      "inspection": "Repository identity and selected overview, not full file."
+    },
+    {
+      "repository": "emer/axon",
+      "path": "RL.md",
+      "blob_sha": "8662f6cbad783749ac55446084d1f82a04148f3d",
+      "sha256": "f9b82a39a4abe4b41751bb5ea08502c844cc157fadf9a5f978408f99a6076622",
+      "bytes": 3629,
+      "url": "https://github.com/emer/axon/blob/main/RL.md",
+      "immutable_content_api": "https://api.github.com/repos/emer/axon/git/blobs/8662f6cbad783749ac55446084d1f82a04148f3d",
+      "inspection": "Full short document."
+    },
+    {
+      "repository": "emer/axon",
+      "path": "Rubicon.md",
+      "blob_sha": "f8e79cf676c5a776dc77b99b4be1eb2df39d5fec",
+      "sha256": "d5099bddf2ecdc2c5e504e562a64b809d41b75a1ccb7cc685ebdf8a96f265536",
+      "bytes": 68212,
+      "url": "https://github.com/emer/axon/blob/main/Rubicon.md",
+      "immutable_content_api": "https://api.github.com/repos/emer/axon/git/blobs/f8e79cf676c5a776dc77b99b4be1eb2df39d5fec",
+      "inspection": "Introduction, headings and references only; not full long document."
+    },
+    {
+      "repository": "emer/axon",
+      "path": "kinase/README.md",
+      "blob_sha": "8689aebffb66d9fcb1b3c2079e0a5bccfb0d82b4",
+      "sha256": "41b5ab44ab78dc8ba804ef611eedeb24f69ad2f2e8501fa5278f440f413d7a4a",
+      "bytes": 3995,
+      "url": "https://github.com/emer/axon/blob/main/kinase/README.md",
+      "immutable_content_api": "https://api.github.com/repos/emer/axon/git/blobs/8689aebffb66d9fcb1b3c2079e0a5bccfb0d82b4",
+      "inspection": "Selected plasticity overview."
+    },
+    {
+      "repository": "facebookresearch/vjepa2",
+      "path": "README.md",
+      "blob_sha": "18fab9146ff2499ee27721c9280f72537479141c",
+      "sha256": "55f8485d734a08d23170322cd13ad5ac2f4d63b3d1fd542b10ec0907042c5bb6",
+      "bytes": 21574,
+      "url": "https://github.com/facebookresearch/vjepa2/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/facebookresearch/vjepa2/git/blobs/18fab9146ff2499ee27721c9280f72537479141c",
+      "inspection": "Overview, real-robot scope and citation blocks. V-JEPA 2.1 incomplete citation not used."
+    },
+    {
+      "repository": "infer-actively/pymdp",
+      "path": "README.md",
+      "blob_sha": "cfef8b4e6006be81a5f63817ad04bab0a38899ed",
+      "sha256": "04732a4b25f394b1c67c18abcd7a7c95cc64f9ce85409240754224c18e6c5be1",
+      "bytes": 9239,
+      "url": "https://github.com/infer-actively/pymdp/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/infer-actively/pymdp/git/blobs/cfef8b4e6006be81a5f63817ad04bab0a38899ed",
+      "inspection": "Full relevant README and citation; library description, original paper not retrieved."
+    },
+    {
+      "repository": "marcelomattar/PrioritizedReplay",
+      "path": "README.md",
+      "blob_sha": "1277007c7a465e6bf30c7bed48479e30b9197e16",
+      "sha256": "dbea4ac4a4e6e29acf04a946fee7371f1d55710eaae996ddd4532b54efaaa34e",
+      "bytes": 1028,
+      "url": "https://github.com/marcelomattar/PrioritizedReplay/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/marcelomattar/PrioritizedReplay/git/blobs/1277007c7a465e6bf30c7bed48479e30b9197e16",
+      "inspection": "Full README; paper itself not retrieved."
+    },
+    {
+      "repository": "marcelomattar/PrioritizedReplay",
+      "path": "gainTerm.m",
+      "blob_sha": "ef6675e0923693a91ba1c280b902fc671a0f0867",
+      "sha256": "b7cf6b4620da0a707835e1d8f5b8f06c5b4dafb17d6406b200803a8c66e996e6",
+      "bytes": 1451,
+      "url": "https://github.com/marcelomattar/PrioritizedReplay/blob/master/gainTerm.m",
+      "immutable_content_api": "https://api.github.com/repos/marcelomattar/PrioritizedReplay/git/blobs/ef6675e0923693a91ba1c280b902fc671a0f0867",
+      "inspection": "Full source."
+    },
+    {
+      "repository": "marcelomattar/PrioritizedReplay",
+      "path": "needTerm.m",
+      "blob_sha": "42a96213ebbecdfe42e6b86ad1dbcabdb08cc204",
+      "sha256": "1c181df8d148477463c2ec9e875abe427e338f51d77a471cfa84b900cc718741",
+      "bytes": 874,
+      "url": "https://github.com/marcelomattar/PrioritizedReplay/blob/master/needTerm.m",
+      "immutable_content_api": "https://api.github.com/repos/marcelomattar/PrioritizedReplay/git/blobs/42a96213ebbecdfe42e6b86ad1dbcabdb08cc204",
+      "inspection": "Full source."
+    },
+    {
+      "repository": "marcelomattar/PrioritizedReplay",
+      "path": "replaySim.m",
+      "blob_sha": "84c36ce3c4fba0d1badb455a0ab19bddb3b3b1d0",
+      "sha256": "cc250c49c195f449cfde0c0ff317796cb43c1532e01f3b539ea4bcea31d4e9b4",
+      "bytes": 20324,
+      "url": "https://github.com/marcelomattar/PrioritizedReplay/blob/master/replaySim.m",
+      "immutable_content_api": "https://api.github.com/repos/marcelomattar/PrioritizedReplay/git/blobs/84c36ce3c4fba0d1badb455a0ab19bddb3b3b1d0",
+      "inspection": "Targeted gain/need/EVM selection and backup path, not full simulation."
+    },
+    {
+      "repository": "thousandbrainsproject/tbp.monty",
+      "path": "README.md",
+      "blob_sha": "9d786d59d351a7f2eb9a18f7fe2e558c203e60b8",
+      "sha256": "f21db19f2dc49686415e819cb5295944688c8f5f833c1da24de371c9c46f3f82",
+      "bytes": 5288,
+      "url": "https://github.com/thousandbrainsproject/tbp.monty/blob/main/README.md",
+      "immutable_content_api": "https://api.github.com/repos/thousandbrainsproject/tbp.monty/git/blobs/9d786d59d351a7f2eb9a18f7fe2e558c203e60b8",
+      "inspection": "Full README and 2026 citation metadata; original article and performance not independently evaluated."
+    }
+  ],
+  "excluded": [
+    {
+      "repository": "elifesciences/elife-article-xml",
+      "path": "articles/elife-83876-v1.xml",
+      "reason": "Air quality and infant cognition association; not evidence for a learning architecture mechanism."
+    },
+    {
+      "repository": "elifesciences/elife-article-xml",
+      "path": "articles/elife-66917-v1.xml",
+      "reason": "Abstract-only version; use full-text v2."
+    }
+  ]
+}

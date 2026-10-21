@@ -1,0 +1,119 @@
+{
+  "audited_main_commit": "21df0ba65ecce58f7fde79bdfe1a605c482087c5",
+  "runtime_source_changes_in_this_review": false,
+  "inspection_scope": "Active constructor, sensory path, checkpoint contract, meta-control and development task generation; selected native module APIs and text grounding. This is not a line-by-line audit of the whole repository.",
+  "files": [
+    {
+      "path": "src/construction/sensors.rs",
+      "sha256": "69180aa9ce6583907abae8dd2329356a00014984510c426efd6d686dd6baf202"
+    },
+    {
+      "path": "src/construction/external_port.rs",
+      "sha256": "d84855880caf2c5d10ac0945e6ab062e6fab9e809355bdcc0f5753c457d4ca24"
+    },
+    {
+      "path": "src/construction/runtime.rs",
+      "sha256": "3b5cd96d379d8a3479ece34fa73f7c3d40604601a8b02a97055317293447a5f1"
+    },
+    {
+      "path": "src/construction/external_reward.rs",
+      "sha256": "2a18f653c84eba43a5603365297e06ccbec62e5e6bd569b0684cb3d14a17a853"
+    },
+    {
+      "path": "src/construction/causal_memory.rs",
+      "sha256": "20cdc15fa458b60b5bb1ea9fc9f5c5f881f862a03b3571df07eecbd00ec20bda"
+    },
+    {
+      "path": "src/construction/curriculum.rs",
+      "sha256": "827f15adc84da7e7361af412d3fd8f4ac59914012ba6f9902b6228b039e7f6f2"
+    },
+    {
+      "path": "src/construction/search_policy.rs",
+      "sha256": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0"
+    },
+    {
+      "path": "src/construction/vm.rs",
+      "sha256": "c99ae33b67ba659e69281f54032a3ffb1f86e7cd7e40e3c859451a83c0d6e970"
+    },
+    {
+      "path": "src/unified_runtime.rs",
+      "sha256": "0f19baa3ac905445ae540fb9eb7c54e124cb4a15738cd3abcd6313edd94c90fa"
+    },
+    {
+      "path": "src/phase_constructing_control.rs",
+      "sha256": "0fcf968ae0e1d85e7637def73214925a1ee8a6ca175573081534e68dbd4f648c"
+    },
+    {
+      "path": "src/phase_native.rs",
+      "sha256": "bf6e0d0376051857ec49fa7a54adea9ddad41c58a2306080714abbbdfb50d7ab"
+    },
+    {
+      "path": "src/phase_meta_control.rs",
+      "sha256": "e11924da3b95b0bfb57214acf4a674c945d1f4a210d7d4850de83da46c6b5054"
+    },
+    {
+      "path": "src/phase_contextual_meta.rs",
+      "sha256": "bbc3277a3cb6762078310edae73124e2de7550afc451cd3397a5d98b41b0dce9"
+    },
+    {
+      "path": "src/organism_development.rs",
+      "sha256": "155192bbbf75d816c596b8df561bc250718e86fc002726231d4dac77581f6c81"
+    },
+    {
+      "path": "src/phase_perceptual.rs",
+      "sha256": "9207e52ae7a55b5126c379293d40b9c48d492223eeac5af9e16cffb4f4febd58"
+    },
+    {
+      "path": "src/phase_deep_abstraction.rs",
+      "sha256": "8f513f2f43f0fa66485aaa2ed54ef33650148d4dec11e1327eaf9de82a203311"
+    },
+    {
+      "path": "src/phase_drive.rs",
+      "sha256": "1f058c60a97cac00091487fb83b73e5f863c83ca84d2dd0e4d5e5a66fc806299"
+    },
+    {
+      "path": "src/phase_online.rs",
+      "sha256": "d44a60edf3608e65a6e90fbe9d7e558a8259e99eb889699c4a2c0cd9763fe8fa"
+    },
+    {
+      "path": "src/phase_temporal_evidence.rs",
+      "sha256": "8f7af4c1d1bf89cf28cfa22ad9f47c498389b37e4dc153bc466c4da7ba8660cf"
+    },
+    {
+      "path": "src/phase_compositional.rs",
+      "sha256": "9d7cc26faf5f13ea3408ec3c06f517425fa98e77523704177a0f28682a85f868"
+    },
+    {
+      "path": "src/phase_concept.rs",
+      "sha256": "b9f3f08cc71b5bba6ef979b46274e852fd308969707777b5a92b06134ef7fad6"
+    },
+    {
+      "path": "src/word_problems.rs",
+      "sha256": "4b166f972ce8b72dc48938abe7f35331c459d52cd877b131924dee87023f179f"
+    },
+    {
+      "path": "src/quantity_relations.rs",
+      "sha256": "457b4ffff0e072ccb4f5b0c8792d0688a1ef4bd45684577df9699c3a7c6a405f"
+    },
+    {
+      "path": "src/bin/aeterna-unified.rs",
+      "sha256": "d720aa0d73962edd72a8dd88e3820c5b769c7c9d4be52b1b611442eda0cac756"
+    },
+    {
+      "path": "scripts/external5_transport.py",
+      "sha256": "efb3fb7bc1cd90a8d71b5365636a773f9164a111f722cef94b3fb7afcde5f844"
+    },
+    {
+      "path": "docs/ARCHITECTURE_AUDIT_20261021.md",
+      "sha256": "8df247d32cc87f3efaed6847e37cfaf4105b6539a3b3d8005e0fa2b1ca55b17e"
+    },
+    {
+      "path": "src/carrier.rs",
+      "sha256": "18cea1254f5cda90351f67e5fb6923e2d46c0d11a4d3b65b9754051b83d1e222"
+    },
+    {
+      "path": "src/scientific_runtime.rs",
+      "sha256": "6e78805d8e7930518b8dd04a73d175010ca4d97dc45590c40c283a8d8872b1df"
+    }
+  ]
+}
