@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "purpose": "whole checkpoint enable/restore preflight; no external task or action",
+  "parent_sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+  "enabled_sha256": "919388889e40fcb0f822b8ab534cc096a721eecf7bd62052ef4d037a4b5437a1",
+  "only_policy_and_derived_checksum_changed": true,
+  "factual_events": 17798,
+  "new_external_actions": 0
+}

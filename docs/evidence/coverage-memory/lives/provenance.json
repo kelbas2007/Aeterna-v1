@@ -1,0 +1,272 @@
+{
+  "purpose": "paired development of one continuing organism; public reserved test rows; not invention of a learning algorithm",
+  "source_commit": "f329e7485ce025a4eaa502fab0c485a89663bb01",
+  "source_sha256": {
+    "src/authority.rs": "81934ff95b983b0568980c6e437eec36800cc93a52d1980383faff4d2edad84f",
+    "src/belief.rs": "daad09529a98263f3b602683aaec045c3d4b5ff62d5dc2bd5b3d34652c182f5b",
+    "src/bin/aeterna-construction.rs": "ef79fba8bcf592126a264050421a72226e638677a539641d8211cb6c975d0ded",
+    "src/bin/aeterna-unified.rs": "b68e4629ddb99901bbb0a384da8b6a41ed9e48c0f3b51690830d2e5908eead1d",
+    "src/bin/external_world_agent.rs": "d1c0b175b83936428436ac12a259b1906fc7575a08b5dadd56a6277c009c2482",
+    "src/bin/perception.rs": "7004182e3f5e180fec4182a15b35a9ab0c8e628727077e07ee6f6d4217af9190",
+    "src/carrier.rs": "18cea1254f5cda90351f67e5fb6923e2d46c0d11a4d3b65b9754051b83d1e222",
+    "src/concept.rs": "d7ce5379f9a8e613349122f9eb5d3669e28f54571b6a768d9943e76d066a2ecf",
+    "src/construction/acquired_rules.rs": "a891ef8ab6006fe97fca20ce78fc0801041bdff74176ba74d44ed9d3d89276ae",
+    "src/construction/autonomy.rs": "07a25662f08e0c85da9fcb33e9ab5dc6c63c138beecd31517e057ea17d429ebd",
+    "src/construction/causal_memory.rs": "20cdc15fa458b60b5bb1ea9fc9f5c5f881f862a03b3571df07eecbd00ec20bda",
+    "src/construction/causal_port.rs": "0fb473d8505d242c33c648ded4abf72581f07c585855a0f1965269ceb7d140fc",
+    "src/construction/constructors.rs": "7263ec0483c6a743576169969c0b51abf67975b2c0d58a9e4738095b2ad54470",
+    "src/construction/coverage_memory.rs": "662579f44f379c047feb85c12fc32c4a7656cde01d99e14056702db8c01fb593",
+    "src/construction/curriculum.rs": "827f15adc84da7e7361af412d3fd8f4ac59914012ba6f9902b6228b039e7f6f2",
+    "src/construction/epistemic.rs": "585d28034e7d197e55c6fae9713e143fd4b2f11a0c233b97e1f2127eb5f9b2b1",
+    "src/construction/exact_completion.rs": "13c9054243712b4a95252fa18665d98c84710ebcd4c0a2778d6dd7506c38b7fe",
+    "src/construction/experiential.rs": "977f91ccdad985f0908dc667f2b491491371a431525043d4fc35ec9453757494",
+    "src/construction/external_port.rs": "9afa5b23ce8d8a80ec23e98318ff25c1a80d1c1e74aa3e148d3e53b8cb202cb4",
+    "src/construction/external_reward.rs": "48afb53b4ff9204be524b6a23eac0bc9dadbbf98e7878675ee43b7a745a43b8d",
+    "src/construction/first_readout.rs": "99bf4fea76fde759e38ce1f579ed806441561236f3d63a4d7a092ac4e887488f",
+    "src/construction/induction.rs": "8c4453213461825793a53b1f65da0ca3e371c0e1b1e670260c878a48075a43bc",
+    "src/construction/mod.rs": "e48c6124c1b132c23a182e21d701faa38556a75c025bf56164e880c624ea9a6d",
+    "src/construction/recursive.rs": "6196f8d141265fbbac2d8e74dd417e743221999124c345b3d15b6cfd5111ee04",
+    "src/construction/recursive_search_port.rs": "aa3e897b82c2b968d439edb8b0e9cef6b436f4ee31eb4473547d97ea48731165",
+    "src/construction/requirements.rs": "3b871a43665f7e569d0acf04ae286a8b20644ffde5f7e5a3cbe73ac6733df4e8",
+    "src/construction/requirements_port.rs": "928db7423d9946a5e31821cf8e8f8bfb661f0d6648d42261f881f4eb1a3d202e",
+    "src/construction/runtime.rs": "3b5cd96d379d8a3479ece34fa73f7c3d40604601a8b02a97055317293447a5f1",
+    "src/construction/search_policy.rs": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0",
+    "src/construction/sensors.rs": "69180aa9ce6583907abae8dd2329356a00014984510c426efd6d686dd6baf202",
+    "src/construction/session.rs": "e73fb8119bcc9d97c17d636a07091a0126b9e000727be523fa0209b4a9f6063b",
+    "src/construction/synthesis.rs": "03673af7142dd002afea2d4840a2d8b847bca64093bf828bd01f5b03860d8abd",
+    "src/construction/unified_port.rs": "757ee35c4d9b1e6010eaeaefa26aa50f07c1eec74f43c70910fa593fe62975f2",
+    "src/construction/vm.rs": "c99ae33b67ba659e69281f54032a3ffb1f86e7cd7e40e3c859451a83c0d6e970",
+    "src/education.rs": "915ef3b122e474293487f588b4e0c351c170454eba12982b8e53d253430f44f0",
+    "src/education_runtime.rs": "72c086eef50936a28633ab357414dd4ee315265d48e8134548c45925dc0f8d19",
+    "src/epistemic.rs": "7abd0b3779664fc66c562abd412bf465f0bcd55693c2ee98e4c4da2add48d148",
+    "src/exploration.rs": "afe4780d0ff6dc3bc105ef7c93f0013414b0d538a7e30173d499508cb1f943ef",
+    "src/hdc.rs": "f2dbf7f9151ef996ecaa77b39c63a3bffb6b15338f7cab67fe798bb9f7747e85",
+    "src/hierarchy.rs": "2b0af42a558b96d754de85a77007f4d5c3563b90c7e7de42829b3138ad042674",
+    "src/human_protection.rs": "e8d66c846ab8b52afd5d787b36995c51d70166594c06e41388bf1ff52126f43e",
+    "src/lib.rs": "8b37210df6b9fe7f46c9be08262809df15d2188bd0e6ad6992e3f120124c58f1",
+    "src/macro_memory.rs": "b82e52ef2ca6ece887faf3052bb8a5b1a038035950472ffea90a3b0e871c7856",
+    "src/main.rs": "627a007b928d2ad136264052170a3b46a2ca1d9b430f05c5d1b1e8d6fddb6f8d",
+    "src/organism_development.rs": "06a600449348c03f3292fb8c00981e59c929fac3113887dd78e4b4c3c2f2e3b8",
+    "src/phase.rs": "409547e1df9a0f07f4157d8ab7fa091df5eebb706faa249a61e450c1bd6e14c2",
+    "src/phase_abstract_planning.rs": "b0e23e79b5bd41b80fc2e57037f28a300c9e9d240646ed9f08322fe3edf242cd",
+    "src/phase_adaptive_rules.rs": "f740ab0ed87d2e5a7753b6e59504f1302a6be1811d9b330584fb25123cea485a",
+    "src/phase_auto_abstraction.rs": "92ec558cbc78182ad117d3c39b8ca049d3e3d75ca40c64aadaa9a71af0815c71",
+    "src/phase_compositional.rs": "9d7cc26faf5f13ea3408ec3c06f517425fa98e77523704177a0f28682a85f868",
+    "src/phase_concept.rs": "b9f3f08cc71b5bba6ef979b46274e852fd308969707777b5a92b06134ef7fad6",
+    "src/phase_constructing_control.rs": "0fcf968ae0e1d85e7637def73214925a1ee8a6ca175573081534e68dbd4f648c",
+    "src/phase_contextual.rs": "bb8a4764b2142baffac258b8728f01b82989059da86c9eec43aa296443eada7e",
+    "src/phase_contextual_meta.rs": "bbc3277a3cb6762078310edae73124e2de7550afc451cd3397a5d98b41b0dce9",
+    "src/phase_deep_abstraction.rs": "8f513f2f43f0fa66485aaa2ed54ef33650148d4dec11e1327eaf9de82a203311",
+    "src/phase_drive.rs": "1f058c60a97cac00091487fb83b73e5f863c83ca84d2dd0e4d5e5a66fc806299",
+    "src/phase_factor_causality.rs": "b1b9119b05f8baf7ad2172e724f913b50cb54348c6952677ce8410dd8169e94d",
+    "src/phase_forward.rs": "cd02caeabc8f9da4c207b9423798d38936e800f39e25c8bf856acee4484496e1",
+    "src/phase_general_policy.rs": "ae5ef7b0eca40bf347378d3557ec48fcc7679158152cb98a6fb54ba7a5debd74",
+    "src/phase_general_value.rs": "64c7bbd483ed8abaf035cb9bdb2041be305c8510bd96c77c366025ffcad88012",
+    "src/phase_grounded_objects.rs": "1141f72d3790e6c55b73d0c103569f69238fff9524493e38e704393ef10fa184",
+    "src/phase_hypothesis_ecology.rs": "f8284d598663b98a4af86f4ed72867fbb2d07b229d67681803de39f1440538ee",
+    "src/phase_induction.rs": "e3396d92d2ca25edadea71cefeb5ca5e945eff214f1f5995fd551f8b7869c7ef",
+    "src/phase_innate_scaffold.rs": "cb0d3abc4b53d3f44f11d090b636920cd15e0c01b64819c9a91dc27dbebace18",
+    "src/phase_inverse_inference.rs": "ca1e97e110f42b6f2d2395b8dce50f74ffcc29f00334206099e96b339f9a8d26",
+    "src/phase_meta_control.rs": "e11924da3b95b0bfb57214acf4a674c945d1f4a210d7d4850de83da46c6b5054",
+    "src/phase_native.rs": "bf6e0d0376051857ec49fa7a54adea9ddad41c58a2306080714abbbdfb50d7ab",
+    "src/phase_online.rs": "d44a60edf3608e65a6e90fbe9d7e558a8259e99eb889699c4a2c0cd9763fe8fa",
+    "src/phase_online_checkpoint.rs": "6901fc1e8fae5160296d932f5506983c28cc4c924a82d4b6310e0a76a1093852",
+    "src/phase_online_rule_planning.rs": "b5736c04c54247e2b43cd4dff6675e4263ca1f3cc0bb4360a1de6d130539382f",
+    "src/phase_online_rules.rs": "cab8b454b37078539aa4cc586430074246c8536b3f1ee366139c320486c6fb52",
+    "src/phase_partial_observation.rs": "8e52e5515ec6cd27075dae9a14533ab24164bfe4282605106cffac925dc844f5",
+    "src/phase_partial_planning.rs": "66b86b2f5e127cfc0e6215b5f4ec33dcc014374331c87e43569fa69d20362ce9",
+    "src/phase_perceptual.rs": "9207e52ae7a55b5126c379293d40b9c48d492223eeac5af9e16cffb4f4febd58",
+    "src/phase_primitive_arguments.rs": "693a09a495893649d7263dfe6f0abb2766c36de9e3e3897bb68b727cd52dac42",
+    "src/phase_primitive_synaptic_competition.rs": "6b0115a8fe4bed5b8bd8524d14c07b41b89087f3348ceeeafacc00218c2516dd",
+    "src/phase_primitives.rs": "bd371c4d405247f34951116197f0cd17f72f3739fc46a0a0fcfc07bc8719d695",
+    "src/phase_recursive.rs": "b528e268ce7b7bfb3fc24d79fb407bb07219b8359ed12ab5292c2c7b67afb507",
+    "src/phase_refinement_fanout.rs": "e74ec74d943bf021f4069651b2b0cc89408a447df5de8ee1255203a0e149f1ba",
+    "src/phase_relational_workspace.rs": "2659808983bc110996e3051af59431408c6e27e2ac5315b3c99fe64c69fcf2f8",
+    "src/phase_temporal_evidence.rs": "8f7af4c1d1bf89cf28cfa22ad9f47c498389b37e4dc153bc466c4da7ba8660cf",
+    "src/phase_uncertain_observation.rs": "4b7f4df8666e5fb53c1a0d9315a2685b2b916fa55e3cdf46f0dd7aa9844f4e63",
+    "src/phase_uncertain_planning.rs": "93bb6ee9ad403d13235159ba14c141b83a824fc134e60eaf5f65140146a25db6",
+    "src/phase_unified_cognition.rs": "9faf47c9f0b40968f21c23d70a11688738c88c7b080d4f9e60264a79c63b805e",
+    "src/phase_unified_representation.rs": "b27abba6b64719638b19b1608e267375d40d2cbe6024321d9d2e75a6415cc32f",
+    "src/phase_value_abstraction.rs": "1c7a68a575cafcfd749758d4c5ee16cc4482f4680f1512e632f62900a118aaed",
+    "src/phase_vector_learning.rs": "bfd883409297d3b93cebdc24b13431a50c02f8c882216c75b2b816df7757fa51",
+    "src/planning.rs": "0861dfccfe59c87210d935bc763014ad67f9b28bfe741bea7272185aa7983984",
+    "src/quantity_relations.rs": "457b4ffff0e072ccb4f5b0c8792d0688a1ef4bd45684577df9699c3a7c6a405f",
+    "src/raster.rs": "ec6a79504b098056283408e6a550073639835a60f62547cd06fe87a1fd08d797",
+    "src/recursive_search_runtime.rs": "d898083209bddc8f4a1f084cca737768b90a6eea56c4d190988602f2250fe9de",
+    "src/scientific_runtime.rs": "6e78805d8e7930518b8dd04a73d175010ca4d97dc45590c40c283a8d8872b1df",
+    "src/semantic_grounding.rs": "ed9bfd44c87a31a7d12ac0ae981d0e14a868ebf4162aa56a95f9efd8764b8e2a",
+    "src/trace.rs": "1fff0b6242d2b1a3d1c362e62322b2f7166f738d6c4979fc76b32030ac724766",
+    "src/unified_runtime.rs": "0f19baa3ac905445ae540fb9eb7c54e124cb4a15738cd3abcd6313edd94c90fa",
+    "src/word_problems.rs": "4b166f972ce8b72dc48938abe7f35331c459d52cd877b131924dee87023f179f",
+    "scripts/apply_primitive_argument_transfer.py": "1f874ed7caff7f8871c84dc8641c771a58c227514b87b5041479598eeaa00eed",
+    "scripts/audit_coverage_memory.py": "63fe032a40766c6dad205fbceca6f6f7c52f8a0405d2c2cd299f94f26e080f45",
+    "scripts/audit_external5_data.py": "73db0b874c6bfe8489fb10b5bf747692b073dc4cc858e9d022d6beb1cea35cf3",
+    "scripts/audit_organism_lifetime.py": "75714d970fd7d9f1c005ff4208847a6c935a5838fc75fff8221b291f787c7b65",
+    "scripts/check_acquired_organism.py": "a66795fe2dfed369e0d9ce6b578d25a1ea4048832914b8b0a4f49fa21f8450b4",
+    "scripts/check_coverage_organism.py": "bbcbe2918ff6b28bdcb39ec06ef6bbf9b5384a72566c497679fcf263168b57e0",
+    "scripts/check_docs.py": "8e76106a47706acf9b32a8f09391ba8bd1d36efaace0254c5b6d32506baec24f",
+    "scripts/check_first_readout_organism.py": "561d405b4690c89d0bc73f012ef17cfb61c651f26047e838bf924a67bfe7ffa0",
+    "scripts/check_pr9_width.py": "8dccd06ec240405d834e59c11d91e55125615ad0fbda4ef9af46fb9be45a7e9f",
+    "scripts/check_project.py": "e341d3888880928c0255e1fdfa8f8580e6fad30af3c64013b4967af9f1099eca",
+    "scripts/check_saved_organism.py": "fe2e6e84f757852701da21ec9565da65cfd275c7b06d33eb8ddb351988e2e90b",
+    "scripts/compare_first_readout_lives.py": "59e8375b67f5499cdca148be94a7aa423bd51fe0a48cbf5816abd3351a6d732a",
+    "scripts/compare_organism_lives.py": "e58ff24bd302106868c9d6326fd62069662fcac3fbe64977a550de129f59bb00",
+    "scripts/construction_adapter_demo.py": "4f6202bf507e5ccd1b055c64fe54f8296b0bd8485758676376e588e594eff529",
+    "scripts/education_experiment.py": "d23e67ed307014ef6b6d2e75017bcfd862f6bdaa77a02b3a36702faa6644f4af",
+    "scripts/education_verify.py": "d9d609e965e84556fd1e2511d1c78aac1a5d7fa4bacbe1677b9fca02d684a35a",
+    "scripts/external5_arc.py": "c0d048e946ae881ad1ca7a8ef30e1f6e2dbe34f94227a6607384723af98ffd25",
+    "scripts/external5_sensors.py": "9d212879393fb87bca1207e95ab176386aa9ef6156bcaa3f877be0e50e4f62c1",
+    "scripts/external5_tests.py": "a5f41cc680974a430f4d461e3cbe51d1a875c5241260267c8c04affec2513acc",
+    "scripts/external5_transport.py": "efb3fb7bc1cd90a8d71b5365636a773f9164a111f722cef94b3fb7afcde5f844",
+    "scripts/external_context_value.py": "e565822c488cb90c3f040be82087a28eafb20f14b32208b2f29878d036aae723",
+    "scripts/external_crossworld_grounding.py": "78e87a6ae9cbc212fee62a55c90724183a4b711e4a521c06eec9df0af1b27127",
+    "scripts/external_cue_access_audit.py": "9c74fa5c58533e773e2dcfa307d87e2e33b30d57800730771b992c6b71b1dd8e",
+    "scripts/external_functional_crossworld.py": "8d0679415bb4a26cdf196abcd63282ad7cfa4e63e949c35f080cd6e40668a3c5",
+    "scripts/external_functional_grounding.py": "8e0d21538ae8dce5e86dba2cb05705c83666d2ac0dae526cc1ba19a15389ab87",
+    "scripts/external_memory_history.py": "b3f8d060b90e100bb38558eed6ba3406d1c8ffa2942b3a0509f3269cd6129d98",
+    "scripts/external_minigrid_benchmark.py": "df5e850f5a68ee8ea50930e63af53dbb89b0c6b4734b7de7fa706cd04574a17d",
+    "scripts/external_relational_hypothesis_pairs.py": "3108255f7174d969163187e190275e30d99b692447af60708209b7b879d85f1d",
+    "scripts/external_relational_pairs.py": "7e1bf59b76ccdd292a09e26e72290b707e0ebf8865d24fb4c1e0dccd12f2f448",
+    "scripts/external_self_affordances.py": "63f843fd27da0db22d7bccfdf0866bf55f55604be9fab101eae300e11fda874f",
+    "scripts/external_unstaged_world1.py": "32557eb7d0fec812dbd5d1a59ecddcd1b70aef0f2c2dea654fa5a2e4f195483a",
+    "scripts/external_value_transfer.py": "23c7615975abce431fc1a87a9c8dbac1351e37ff1d32874b871c80041e204f12",
+    "scripts/g21_statistical_crosscheck.py": "edb99f28fdf7c18901e38ec5ce450b109f54b72bfd599dbfa3344e02da738d15",
+    "scripts/lc1_joint_demo.py": "b003c8011b118466f81ed0b022f8f31db3f48786ca8ba0341228e4c738fd9657",
+    "scripts/prepare_external5_data.py": "3e8cab11c83c760820dafd34ae4a42d01f8f39dcae44636b79f898af3b9b97f5",
+    "scripts/project_audit.py": "f18f80c943213ae71ea06e3242eb4a76cd61bdc70cc92c973e798e1e35be978e",
+    "scripts/project_demo.py": "0b46c5c73d046aac251d9695eb912977bc99468c67fdd61234a0c9f840a7d240",
+    "scripts/recorded_value_rules.py": "926548237c1a980d2c7109d18c9cf0c5fb5d2faee7ae732ef0346cf15feda797",
+    "scripts/refine_primitive_binding_evidence.py": "ef26a87558035782be7774d19d0d99efe71456de99064dd5fc1c1259d8be618c",
+    "scripts/relational_external.py": "bf99abe58ece79d1c1190235568c89e179341271be6d4a8229478a2777f8b13c",
+    "scripts/relational_invariance.py": "113c2551342c348218b44274a709343b0a49b9c448c80ce4ef0ac372bad3821b",
+    "scripts/relational_posthoc.py": "a4a6603222955b433f82bc5cedba6d4df382b9181057751d9815fb657cf029e6",
+    "scripts/relational_prepare.py": "542fea91cc31fdaf4ab8e7060d5b1663e75e28513d4dc99a21d88ee2aa60d413",
+    "scripts/relational_tests.py": "6108c174abaf1e5a2a7a9d064fd1ac2b4943fe1a46b629f3fe3d2af1112bb7ad",
+    "scripts/relational_train.py": "50c6d42720933605b347f2aab0c68f4ed27eb52ed7d2d30607c76df0f1029e87",
+    "scripts/relational_verify.py": "f92ceb19522db2f37e74e4920aacef007c0039e02bf91e0ca69932bfb5b4efe9",
+    "scripts/replay_organism_lifetime.py": "17bb6e181060d3fef39daeb6fca9b17138b9decb57895e0ad8ee8cd52362452e",
+    "scripts/rsp1_external.py": "160911f34d811acc7a668791d4c86e271814c65656b65b2fd4e18859a31dd3b5",
+    "scripts/rsp1_external_test.py": "8ad25d8668cce1b18a41f6102255f43951781f739fd473270ab9e66b789e038d",
+    "scripts/run_causal_continual4.py": "fef89da03b771204191acd1457ef1595a72852237aee5a8c04cb5b40d3225869",
+    "scripts/run_coverage_memory_lifetime.py": "1754c930039915ff3e3919644b2467d36b11a31be17eabecbbda79f77a9f6275",
+    "scripts/run_external_continual5.py": "6ef92800e1d55e580be53c35e9d9df9707215f89c754d8e5c4b7f992459a3542",
+    "scripts/run_organism_lifetime.py": "81616c1695ab515ea10519b20b05214f748772b8f00ed92b36a6a6dea4caea99",
+    "scripts/semantic_experiment.py": "d922db828e2c0ba89658460e76d0d296afcc7303e68062341e5e13a62f99f19c",
+    "scripts/semantic_verify.py": "fd4c692fe8ecebcb1a36454f5c5b975d4edb17f80263750e60f4ef48c1ebaf53",
+    "scripts/test_check_project_target.py": "9d75de0145cdbd2986718ccee284b29b256ecfed32c8e11c19657ba134b3efbf",
+    "scripts/unified_arc3.py": "3470ee067a1764ff77b3c8493cbc132849e718ae2915cea024f992f0d4ca08ac",
+    "scripts/unified_arc3_test.py": "1f0250bd50b43192cf09b953d615076a0183c3eb66704429e77c7d41727d970b",
+    "scripts/unified_evidence.py": "d4ac2a8b71084045ced19fffe9d2cbcd747023e38b9d639f87fdda5f6b2f180b",
+    "scripts/unified_factual_autonomy_demo.py": "c62bd7504df9e596ca64c005894bb4591107d99d26ad2d765f739f64b8378375",
+    "scripts/unified_transport_smoke.py": "7cd48c6d5559083bee2d4e845d6a6ecd842358eaf3d58e7a2d952fda31ea656a",
+    "scripts/verify_organism_continuation.py": "e6d52599a70d9f7424e9be4d62578a532668888fbd6c9ef50e92c935ae95fc90",
+    "scripts/word_problem_coverage_audit.py": "09b29c1f1dcd502af812ddec9c1c98e42b4357fed22c0dbabcd448509164d30b",
+    "scripts/word_problem_external.py": "423e6a3ee7e457760310defb78b292745dceaa6d5dcfbd592633e29bc409347f",
+    "scripts/word_problem_test.py": "76474dd003d185abb4e45378efca02b117be5315c3af960b834585c3566bb43a",
+    "scripts/word_problem_train.py": "db6d8e184abc4b9dbefb5889bf01514a1724624d4c803e567b106eb41f71a061",
+    "scripts/word_problem_verify.py": "2e7b7e51f68e9a7e9e958159890954aace91bf0e1604f3edc4b300936cac8193",
+    "docs/PROJECT_STATE.json": "93f359971695bd6e057851ee6282cc2dea0eff5d0d84e8a4829df2f6662713a5",
+    "docs/COVERAGE_MEMORY_PROTOCOL.md": "47e19c09e78997ae865883f70ed2374c03805f037b0ac3f1be2af5548f84c1b1",
+    "docs/evidence/first-readout/run_frozen_probe.py": "b8c5bfa9d94f8a8da778bc34bdced69639741dc06c33bf7e666adb02cd709857"
+  },
+  "binary_sha256": "24d142caf1228eaeea995ec464dc431160ccc6dc1706d7cb018e724430c51316",
+  "frozen_binary": "frozen-aeterna-v1",
+  "registered_protocol_sha256": "d14e42719a5cda0f93fa2890a8685fd2fce3afddaf56b8171b63010ad7bb1aa7",
+  "data": {
+    "train-images-idx3-ubyte.gz": {
+      "bytes": 26421880,
+      "sha256": "3aede38d61863908ad78613f6a32ed271626dd12800ba2636569512369268a84"
+    },
+    "train-labels-idx1-ubyte.gz": {
+      "bytes": 29515,
+      "sha256": "a04f17134ac03560a47e3764e11b92fc97de4d1bfaf8ba1a3aa29af54cc90845"
+    },
+    "t10k-images-idx3-ubyte.gz": {
+      "bytes": 4422102,
+      "sha256": "346e55b948d973a97e58d2351dde16a484bd415d4595297633bb08f03db6a073"
+    },
+    "t10k-labels-idx1-ubyte.gz": {
+      "bytes": 5148,
+      "sha256": "67da17c76eaffca5446c3361aaab5c3cd6d1c2608764d35dfb1850b086bf8dd5"
+    },
+    "uci-har.zip": {
+      "bytes": 32964019,
+      "sha256": "ba235c5da70bc5de792aab7b0207326cb29eaf0941c3a44f1589c2ad023c752e"
+    }
+  },
+  "mnist_data": {
+    "train-images-idx3-ubyte.gz": {
+      "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+      "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+      "bytes": 9912422
+    },
+    "train-labels-idx1-ubyte.gz": {
+      "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+      "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+      "bytes": 28881
+    },
+    "t10k-images-idx3-ubyte.gz": {
+      "md5": "9fb629c4189551a2d022fa330f9573f3",
+      "sha256": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+      "bytes": 1648877
+    },
+    "t10k-labels-idx1-ubyte.gz": {
+      "md5": "ec29112dd5afa0611ce80d1b7f02629c",
+      "sha256": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6",
+      "bytes": 4542
+    }
+  },
+  "dependencies": {
+    "numpy": "2.3.5",
+    "gymnasium": "1.2.0",
+    "minigrid": "3.1.0"
+  },
+  "starting_checkpoints": {
+    "organism_coverage": {
+      "sha256": "919388889e40fcb0f822b8ab534cc096a721eecf7bd62052ef4d037a4b5437a1",
+      "events": 17798,
+      "cost": 17798,
+      "file": "organism_coverage/starting-organism.json.gz"
+    },
+    "organism_fifo": {
+      "sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+      "events": 17798,
+      "cost": 17798,
+      "file": "organism_fifo/starting-organism.json.gz"
+    }
+  },
+  "starting_checkpoint_sha256": null,
+  "variants": [
+    "organism_coverage",
+    "organism_fifo"
+  ],
+  "contextual_u1_requested": true,
+  "training_ranges": {
+    "har": [
+      6256,
+      6384
+    ],
+    "fashion": [
+      58256,
+      58384
+    ],
+    "mnist": [
+      2000,
+      2512
+    ]
+  },
+  "sensory_sources": {
+    "mnist": {
+      "2000": 512
+    },
+    "har": {
+      "6000": 256,
+      "6256": 128
+    },
+    "fashion": {
+      "58000": 256,
+      "58256": 128
+    }
+  },
+  "starting_events": 17798
+}

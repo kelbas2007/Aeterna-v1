@@ -1,0 +1,9 @@
+{
+  "source_commit": "f329e7485ce025a4eaa502fab0c485a89663bb01",
+  "source_published_before_collection": true,
+  "binary_sha256": "24d142caf1228eaeea995ec464dc431160ccc6dc1706d7cb018e724430c51316",
+  "all_registered_runtime_and_adapter_bytes_unchanged": true,
+  "subsequent_diagnostic": "Explicitly retrospective on consumed V1 test rows; no new whole-agent behavioral claim.",
+  "behavioral_criterion": "FAIL",
+  "selected_continuation": "published PR18 parent c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f"
+}
