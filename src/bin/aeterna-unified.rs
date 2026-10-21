@@ -51,6 +51,7 @@ pub(crate) fn main()->Result<()>{
             }));
             println!("{}",serde_json::to_string_pretty(&json!({"type":"checkpoint_inspection",
                 "organism":rt.unified_report(),"school":rt.school_report(),"recursive_search":recursive,
+                "development":rt.organism_development_report(),
                 "learned_requirements":rt.requirements_report(),
                 "read_only":true,"external_actions_executed":0}))?);
             return Ok(());
@@ -72,19 +73,21 @@ pub(crate) fn main()->Result<()>{
         let response:Result<Value>=(||{
             match request["op"].as_str().ok_or("missing op")? {
                 "project_status"=>Ok(json!({"type":"project_status","project":project_status()})),
-                "external_init"=>{
+                "external_init"|"organism_init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
+                    let whole=request["op"]=="organism_init";
                     let frame=serde_json::from_value(request["frame"].clone())?;
                     let (mut cfg,mut policy)=configuration();
                     cfg.actions=16;cfg.planning_depth=usize::try_from(request.get("planning_depth").map_or(Some(32),Value::as_u64).ok_or("invalid planning_depth")?)?;
                     cfg.planning_work=1_000_000;cfg.search_every=1_000_000;cfg.journal_capacity=512;
                     policy.max_external_cost=1_000_000;
-                    let mut rt=ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"external-continuous-v5")?;
+                    let mut rt=ScientificRuntime::new_constructing(cfg,policy,vec![0;32],if whole {"aeterna-organism-lifetime"}else{"external-continuous-v5"})?;
                     rt.enable_constructing_self_directed_control()?;rt.enable_constructing_agency_aware_credit()?;
                     rt.enable_constructing_causal_memory(aeterna_v1::construction::causal_memory::CausalConfig {
                         history_depth:3,model_entries:256,model_bytes:512*1024,outcomes_per_entry:4,planning_states:64})?;
-                    rt.enable_constructing_external_reward_memory(request.get("reward_memory").map_or(Some(true),Value::as_bool).ok_or("invalid reward_memory")?,
-                        request.get("adaptive").map_or(Some(true),Value::as_bool).ok_or("invalid adaptive")?)?;
+                    rt.enable_constructing_external_reward_memory(if whole {true}else{request.get("reward_memory").map_or(Some(true),Value::as_bool).ok_or("invalid reward_memory")?},
+                        if whole {false}else{request.get("adaptive").map_or(Some(true),Value::as_bool).ok_or("invalid adaptive")?})?;
+                    if whole {rt.enable_constructing_organism_development(request.get("recursive").map_or(Some(true),Value::as_bool).ok_or("invalid recursive")?)?;}
                     rt.observe_external_sensor_restart(&frame)?;runtime=Some(rt);
                     Ok(json!({"type":"initialized","action_authority":"protected_u1","learner":"one_joint_checkpoint"}))
                 },
@@ -99,6 +102,12 @@ pub(crate) fn main()->Result<()>{
                 },
                 "external_reward_report"=>Ok(json!({"type":"external_reward_report","report":runtime.as_ref().ok_or("not loaded")?
                     .construction_learner().ok_or("not constructing")?.external_reward_report()})),
+                "organism_report"=>{
+                    let rt=runtime.as_ref().ok_or("not loaded")?;
+                    Ok(json!({"type":"organism_report","organism":rt.unified_report(),
+                        "development":rt.organism_development_report(),
+                        "reward_memory":rt.construction_learner().ok_or("not constructing")?.external_reward_report()}))
+                },
                 "external_step"=>{
                     let offers:Vec<ActionOffer>=serde_json::from_value(request["offers"].clone())?;
                     let remaining=request.get("remaining_actions").map(|v|v.as_u64().ok_or("invalid remaining_actions").and_then(|n|usize::try_from(n).map_err(|_|"remaining_actions overflow"))).transpose()?;
@@ -485,6 +494,9 @@ const PROJECT_HELP:&str = "AETERNA-v1 — one application, explicit research cap
 
 The aeterna-unified binary is a compatibility alias of this same code.
 A learned checkpoint must be supplied explicitly; no pretrained state is invented.
+Whole sensory organism: organism_init(frame), external_reset(frame), external_step,
+external_episode_end, organism_report, checkpoint, load. One lifetime owns U1,
+sensory/causal memory, RSP2 and prospective trajectory evaluator development.
 RSP2: init, enable_recursive_search, improve_recursive_search(training, gate, seed),
 solve_synthesis, recursive_search_report, checkpoint, quit.
 Self-directed factual control: init(width<=32, actions<=16), enable_self_directed_control,

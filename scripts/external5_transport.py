@@ -38,7 +38,8 @@ class Native:
         try:
             if checkpoint is not None:self.command({'op':'load','checkpoint':checkpoint})
             else:
-                self.command({'op':'external_init','frame':frame,'reward_memory':variant!='legacy',
+                self.command({'op':'organism_init' if variant in ('organism','organism_fixed') else 'external_init',
+                    'frame':frame,'reward_memory':variant!='legacy','recursive':variant!='organism_fixed',
                     'adaptive':variant=='full','planning_depth':1 if variant=='one_step' else 32})
                 self.frame=frame;self.trace.write({'kind':'initial','frame_ref':self.trace.frame(frame),'variant':variant})
         except BaseException:

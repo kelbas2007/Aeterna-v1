@@ -17,7 +17,7 @@ impl ScientificRuntime {
     }
     pub fn improve_recursive_search(&mut self,training:&[crate::construction::search_policy::SynthesisTask],gate:&crate::construction::search_policy::AdmissionSuite,seed:u64)->UResult<crate::construction::search_policy::PolicyAudit>{
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
-        if u.freeze_controller{return Err(UError::Blocked);}
+        if u.freeze_controller || u.development.is_some(){return Err(UError::Blocked);}
         let before=u.current.learner.report().construction_work;
         let out=u.current.learner.improve_recursive_search(training,gate,seed);
         u.computation_work=u.computation_work.saturating_add(u.current.learner.report().construction_work-before);out

@@ -9,6 +9,21 @@ rsp3=binding.get('reviewed_rsp3_extension')
 lc1=binding.get('reviewed_lc1_extension')
 autonomous=binding.get('reviewed_autonomous_u1_extension')
 sha=lambda b:hashlib.sha256(b).hexdigest()
+organism=binding.get('implemented_organism_development_extension')
+organism_base={}
+if organism:
+ packed=(r/organism['base_archive']).read_bytes()
+ assert sha(packed)==organism['base_archive_sha256'],'organism base archive changed'
+ organism_base=json.loads(gzip.decompress(packed))
+ assert set(organism_base)==set(organism['modified']),'incomplete organism historical archive'
+ for name,d in organism['modified'].items():
+  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared organism source mutation'
+  assert sha(organism_base[name].encode())==d['before_sha256'],name+' organism historical source mismatch'
+ for name,digest in organism['added'].items():
+  assert sha((r/name).read_bytes())==digest,name+' organism source mismatch'
+def before_organism(path):
+ name=path.relative_to(r).as_posix()
+ return organism_base[name].encode() if name in organism_base else path.read_bytes()
 external=binding.get('implemented_external_reward_extension')
 external_base={}
 if external:
@@ -17,13 +32,13 @@ if external:
  external_base=json.loads(gzip.decompress(packed))
  assert set(external_base)==set(external['modified']),'incomplete external historical archive'
  for name,d in external['modified'].items():
-  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared external source mutation'
+  assert sha(before_organism(r/name))==d['after_sha256'],name+' undeclared external source mutation'
   assert sha(external_base[name].encode())==d['before_sha256'],name+' external historical source mismatch'
  for name,digest in external['added'].items():
-  assert sha((r/name).read_bytes())==digest,name+' external source mismatch'
+  assert sha(before_organism(r/name))==digest,name+' external source mismatch'
 def before_external(path):
  name=path.relative_to(r).as_posix()
- return external_base[name].encode() if name in external_base else path.read_bytes()
+ return external_base[name].encode() if name in external_base else before_organism(path)
 causal=binding.get('implemented_causal_continual_extension')
 base_sources={}
 if causal:
@@ -43,6 +58,7 @@ def git_blob(raw):
  return hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
 added=set(causal['added']) if causal else set()
 if external:added.update(external['added'])
+if organism:added.update(organism['added'])
 original_hashes={}
 if lc1:
  for path,expected in lc1['added'].items():
@@ -113,9 +129,10 @@ assert len(files)==binding['bound_cognitive_source_files'],len(files)
 assert count_untouched==binding['unchanged_cognitive_source_files'],(count_untouched,binding['unchanged_cognitive_source_files'])
 assert h.hexdigest()==binding['aggregate_sha256'],'original core changed unexpectedly'
 assert sha(source(r / 'src/construction/search_policy.rs'))==binding['search_policy_sha256'],'RSP2 engine changed'
-current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})
+current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})|set(organism['modified'] if organism else {})
 untouched=count_untouched-sum(p.relative_to(r).as_posix() in current_modified
  and p.relative_to(r).as_posix() not in original_hashes and p.relative_to(r).as_posix() not in changes for p in files)
 print(json.dumps({'status':'PASS','original_source_files':len(files),'historical_base_untouched':count_untouched,
  'untouched':untouched,'causal_extension_verified':bool(causal),'external_extension_verified':bool(external),
+ 'organism_extension_verified':bool(organism),
  'lc1_added_files':len(lc1['added']) if lc1 else 0,'original_aggregate':h.hexdigest(),'rsp2_search_policy_unchanged':True}))

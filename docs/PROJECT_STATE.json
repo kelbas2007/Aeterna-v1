@@ -41,7 +41,8 @@
     "configurable_jsonl_horizon_sensors_and_motors": true,
     "raw_sensor_reward_learning_in_joint_checkpoint_opt_in": true,
     "bounded_prequential_recursive_strategy_adaptation_opt_in": true,
-    "real_recorded_image_and_signal_continual_study_completed": true
+    "real_recorded_image_and_signal_continual_study_completed": true,
+    "joint_sensory_rsp2_trajectory_development_experimental": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -141,7 +142,8 @@
     "docs/CAUSAL_CONTINUAL4.md",
     "docs/EXTERNAL_CONTINUAL5.md",
     "docs/EXTERNAL_CONTINUAL5_RESULT.md",
-    "docs/EXTERNAL_CONTINUAL5_REVIEW.md"
+    "docs/EXTERNAL_CONTINUAL5_REVIEW.md",
+    "docs/ORGANISM_LIFETIME.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

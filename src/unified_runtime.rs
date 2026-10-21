@@ -38,6 +38,8 @@ struct UnifiedConstruction {
     education:Option<crate::education::School>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     self_revision:Option<MetaRevision>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    development:Option<OrganismDevelopment>,
     /// Credit native U1 utility ONLY if the executed motor was freely
     /// selected from at least two actually offered, affordable actions.
     /// Physical PRE/action/POST learning is NEVER gated by this option.
@@ -374,6 +376,10 @@ struct MetaRevision {
     rows:Vec<MetaWitness>,pending_steps:Vec<[i64;5]>,
     pending_goal:Option<Vec<Option<i64>>>,
     episodes:u64,attempts:u32,rejected:u32,work:u64,next_trial:u64,
+    #[serde(default,skip_serializing_if="meta_zero_u64")]
+    shared_searches:u64,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    shared_search_policy:Option<u64>,
     #[serde(default,skip_serializing_if="meta_zero_u32")]
     rollbacks:u32,
     receipts:Vec<MetaReceipt>,
@@ -600,7 +606,9 @@ impl MetaRevision {
     }
     fn validate(&self)->UResult<()>{
         if self.rows.len()>128 || self.pending_steps.len()>M_MAX_EPISODE ||
-            self.receipts.len()>3 || self.attempts>12 || self.rejected>self.attempts ||
+            self.receipts.len()>3 || self.attempts>(if self.shared_searches>0 {24}else{12}) || self.rejected>self.attempts ||
+            self.shared_searches>u64::from(self.attempts) ||
+            (self.shared_searches==0)!=self.shared_search_policy.is_none() ||
             (self.readout_ablated && self.active.is_none()) ||
             (!self.behavior_guard_enabled && (self.behavior_attempted || self.behavioral_audit.is_some())) ||
             (self.behavioral_audit.is_some() && !self.behavior_attempted) ||
@@ -711,8 +719,10 @@ impl MetaRevision {
             self.next_trial=self.episodes.saturating_add(6);
         }
     }
-    fn propose_from_own_error(&mut self){
-        if self.receipts.len()>=3||self.attempts>=12||self.episodes<self.next_trial{return}
+    fn propose_from_own_error(&mut self){self.propose_with_policy(None)}
+    fn propose_with_policy(&mut self,shared:Option<&MSearchPolicy>){
+        let attempt_limit=if shared.is_some(){24}else{12};
+        if self.receipts.len()>=3||self.attempts>=attempt_limit||self.episodes<self.next_trial{return}
         let training=&self.rows[self.rows.len().saturating_sub(96)..];
         let distinct=training.iter().map(|r|r.episode).collect::<std::collections::BTreeSet<_>>().len();
         if training.len()<24||distinct<8||!training.iter().any(|r|r.outcome==0)||
@@ -722,9 +732,9 @@ impl MetaRevision {
         self.attempts+=1;self.next_trial=self.episodes.saturating_add(6);
         let samples:Vec<MExample>=training.iter().map(|r|MExample{
             input:r.features.to_vec(),output:r.outcome}).collect();
-        let induced=crate::construction::induction::infer(
+        let induced=if shared.is_none(){crate::construction::induction::infer(
             &samples,&MLibrary::default(),
-            &MInductionConfig{max_nodes:7,max_terms:1024,work:100_000});
+            &MInductionConfig{max_nodes:7,max_terms:1024,work:100_000})}else{Err(UError::NoEvidence)};
         let mut program=None;
         if let Ok(out)=induced {self.work=self.work.saturating_add(out.work);program=out.expression;}
         if program.is_none(){
@@ -732,8 +742,12 @@ impl MetaRevision {
             let limits=MSearchLimits{work:150_000,evaluations:128,max_nodes:9,
                 frontier:256,edits_per_expansion:16};
             let seed=uword(self.episodes^self.work);
-            match crate::construction::search_policy::search(&MSearchPolicy::default(),
-                MExpr::Input(0),&mut objective,&limits,seed){
+            let default_policy=MSearchPolicy::default();
+            let driver=shared.unwrap_or(&default_policy);
+            if shared.is_some(){self.shared_searches+=1;self.shared_search_policy=Some(driver.fingerprint());}
+            let start=if shared.is_some(){self.active.clone().unwrap_or(MExpr::Input(0))}else{MExpr::Input(0)};
+            match crate::construction::search_policy::search(driver,
+                start,&mut objective,&limits,seed){
                 Ok(out)=>{self.work=self.work.saturating_add(out.work);program=Some(out.program);}
                 Err(_)=>{self.work=self.work.saturating_add(limits.work);}
             }
@@ -779,6 +793,9 @@ impl MetaRevision {
     }
 }
 
+fn meta_zero_u64(n:&u64)->bool{*n==0}
+include!("organism_development.rs");
+
 impl ScientificRuntime {
     pub fn new_constructing(config:UConfig,mut policy:UPolicy,initial:Vec<i64>,name:&str)->UResult<Self> {
         config.validate()?;
@@ -792,7 +809,7 @@ impl ScientificRuntime {
         evo.set_phase_native_meta_monotone_evidence(true);evo.observe_initial_real(&usensory(&initial),false);
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;
         rt.constructing=Some(UnifiedConstruction{current:UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None},
-            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,agency_credit:None,instrumental_credit:None,temporal_options:None});
+            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,development:None,agency_credit:None,instrumental_credit:None,temporal_options:None});
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
@@ -816,7 +833,9 @@ impl ScientificRuntime {
     }
     pub fn finish_external_episode(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.development.is_some() && u.current.learner.report().poisoned{return Err(UError::Blocked);}
         let credits=u.current.learner.carrier_finish_external_episode();
+        u.finish_development_episode()?;
         if !u.freeze_controller {for (fields,value) in credits {
             self.organism.observe_phase_native_meta_utility(fields,value as f32);
         }}
@@ -1200,6 +1219,7 @@ impl ScientificRuntime {
     // A new sensor contract does not reinterpret numeric variables as pixels.
     // U1 weights and complete old-domain cognitive checkpoints remain present.
     pub fn enter_constructing_domain(&mut self,name:&str,config:UConfig,mut policy:UPolicy,initial:Vec<i64>)->UResult<()> {
+        if self.constructing.as_ref().is_some_and(|u|u.development.is_some()){return Err(UError::Busy);}
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.archived.len()>=7 || u.freeze_controller || name.is_empty() || name.len()>128 || name==u.current.name
             || u.archived.iter().any(|d|d.name==name) || config.width!=self.organism.config().sensory_cells
@@ -1231,12 +1251,17 @@ impl ScientificRuntime {
         &mut self,observed:Vec<i64>
     )->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if let Some(dev)=&u.development{
+            let namespace=*observed.first().ok_or(UError::InvalidData)?;
+            if dev.domains.len()>=8 && !dev.domains.contains_key(&namespace){return Err(UError::Capacity);}
+        }
         u.current.learner.carrier_observe_external_restart(observed.clone())?;
         let credits=u.current.learner.carrier_take_causal_credits();
         if !u.freeze_controller {for (fields,utility) in credits {
             self.organism.observe_phase_native_meta_utility(fields,utility as f32);
         }}
         u.current.pending_credit=None;
+        if !u.freeze_controller {if let Some(dev)=u.development.as_mut(){dev.abandon();}}
         if let Some(revision)=u.self_revision.as_mut(){
             revision.pending_steps.clear();
             revision.pending_goal=None;
@@ -1707,7 +1732,16 @@ impl ScientificRuntime {
             // Only a prospectively admitted program can rewrite goal evidence.
             // The new VM expression has no actuator or safety authority.
             if let Some(revision)=&u.self_revision {
-                for c in &mut candidates {if c.kind==3 {revision.adjust(&mut c.p.fields);}}
+                if let Some(dev)=u.development.as_mut(){
+                    if !u.freeze_controller && dev.pending_actions==0 && dev.pending_arm.is_none(){
+                        dev.pending_arm=dev.open_trial().map(|t|t.assignment(u.current.learner.current()[0]));
+                    }
+                    for c in &mut candidates {if c.kind==3 {
+                        dev.adjust(revision,&mut c.p.fields,!u.freeze_controller);
+                    }}
+                }else{
+                    for c in &mut candidates {if c.kind==3 {revision.adjust(&mut c.p.fields);}}
+                }
             }
             let raw:Vec<_>=candidates.iter().map(|x|x.p).collect();u.nonce=u.nonce.checked_add(1).ok_or(UError::Capacity)?;
             let choice=self.organism.choose_phase_meta_exploratory(&raw,uword(u.nonce),!u.freeze_controller).ok_or(UError::NoEvidence)?;
@@ -1842,6 +1876,10 @@ impl ScientificRuntime {
         let external_reward=u.current.learner.external_reward_enabled();
         let factual_pre=u.current.learner.current().to_vec();
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
+        if !u.freeze_controller {if let Some(dev)=u.development.as_mut(){
+            dev.observe(u.current.learner.factual_event_count(),&factual_pre,a,original_fields,f64::from(post.reward),post.cost,native_credit_eligible);
+            if native_credit_eligible && (original_fields[0]-option.p.fields[0]).abs()>0.00001 {dev.pending_changed+=1;}
+        }}
         let reward_work=u.current.learner.carrier_external_feedback(factual_pre,a,post.observation.clone(),f64::from(post.reward),post.cost,
             if native_credit_eligible{Some(option.p.fields)}else{None});
         u.computation_work=u.computation_work.saturating_add(reward_work);
@@ -2068,7 +2106,7 @@ impl ScientificRuntime {
                 }
             }
         }
-        if !u.freeze_controller{
+        if !u.freeze_controller && u.development.is_none(){
             if let Some(revision)=u.self_revision.as_mut(){
                 if let Some(g)=goal{
                     // Exclusively an already committed, authorized REAL POST.
@@ -2103,6 +2141,9 @@ impl ScientificRuntime {
         if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
         if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
         if let Some(revision)=&s.cognition.self_revision{revision.validate()?;}
+        if let Some(dev)=&s.cognition.development{
+            dev.validate(&s.cognition.current.learner,s.cognition.self_revision.as_ref().ok_or(UError::InvalidData)?)?;
+        }
         if let Some(options)=&s.cognition.temporal_options{
             options.validate(&s.cognition)?;
         }
@@ -2146,6 +2187,7 @@ impl ScientificRuntime {
         if new.current.name!=old.current.name || new.current.learner.checkpoint()?!=old.current.learner.checkpoint()?
             || serde_json::to_vec(&old.education).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.education).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.self_revision).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.self_revision).map_err(|_|UError::InvalidData)?
+            || serde_json::to_vec(&old.development).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.development).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.temporal_options).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.temporal_options).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.agency_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.agency_credit).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.instrumental_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.instrumental_credit).map_err(|_|UError::InvalidData)?
