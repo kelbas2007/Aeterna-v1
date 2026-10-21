@@ -669,6 +669,15 @@ impl MetaRevision {
 }
 
 impl ScientificRuntime {
+    /// Opt in within the same existing life. A diagnostic control preserves
+    /// acquisition/evidence but bypasses conditional programs in action values.
+    pub fn enable_constructing_first_rule_readouts(&mut self, fixed_control: bool) -> UResult<()> {
+        let u = self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.development.as_ref().is_none_or(|d| d.pending_actions != 0) {
+            return Err(UError::Blocked);
+        }
+        u.current.learner.carrier_enable_first_rule_readouts(fixed_control)
+    }
     /// Context is an observed sensory interface, never a hidden task label.
     /// Keep one U1 and condition its five learned utility connections on it.
     pub fn enable_constructing_contextual_control(&mut self) -> UResult<()> {

@@ -1,0 +1,22 @@
+{
+  "main_source_commit": "4293be96597c7699b02fe4bd23e6fa7f704b0568",
+  "probe_source_commit": "5c463b0",
+  "same_study_and_probe_executable": true,
+  "binary_sha256": "b5b8d70bcc708597811c2ee633f5bf3014402da6de069642841a06762b132df4",
+  "all_cognitive_rust_and_compiled_manifest_unchanged": true,
+  "post_main_study_validation_only_changes": {
+    "scripts/audit_organism_lifetime.py": {
+      "registered": "9c139629cbd08a1daffa56905e4986927faeefea650c47e2cd295b5c1c818add",
+      "current": "75714d970fd7d9f1c005ff4208847a6c935a5838fc75fff8221b291f787c7b65"
+    },
+    "scripts/check_project.py": {
+      "registered": "9d2a4c4a92bc62cc56bbc4fd4f6eb04da033be53869842246c50ac1fb4cbe72d",
+      "current": "e341d3888880928c0255e1fdfa8f8580e6fad30af3c64013b4967af9f1099eca"
+    },
+    "scripts/replay_organism_lifetime.py": {
+      "registered": "d8046c0dcd6d8b93867710e03396157f38001ce74ea71477c0bc2d2921e31c79",
+      "current": "17bb6e181060d3fef39daeb6fca9b17138b9decb57895e0ad8ee8cd52362452e"
+    }
+  },
+  "explanation": "No cognitive Rust, action adapter, model setting, dataset range, admission threshold or registered success condition changed after results. Auditor recognizes the intentionally frozen reference; replay closes its final reward episode before freezing; CI also checks published new whole-organism checkpoints. Probe registration binds these validation changes before its test rows."
+}

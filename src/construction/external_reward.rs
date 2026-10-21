@@ -14,6 +14,7 @@ const FAILURE_WIDTH: usize = 2048;
 const FAILURE_DEPTH: usize = 4;
 
 include!("acquired_rules.rs");
+include!("first_readout.rs");
 
 fn zero(value: &f64) -> bool {
     *value == 0.0
@@ -323,6 +324,11 @@ pub struct ExternalRewardReport {
 }
 
 impl ExternalMemory {
+    pub(crate) fn enable_first_rule_readouts(&mut self, control: bool) -> Result<()> {
+        if !self.enabled || self.adaptive || !self.pending.is_empty() { return Err(Error::Busy); }
+        self.acquired_rules.as_mut().ok_or(Error::NoEvidence)?
+            .enable_first_readouts(self.events, &self.rows, control)
+    }
     pub(crate) fn enable_acquired_rules(&mut self) -> Result<()> {
         if !self.enabled || self.adaptive || self.acquired_rules.is_some() || !self.pending.is_empty() {
             return Err(Error::Busy);
@@ -486,7 +492,8 @@ impl ExternalMemory {
         omit: Option<u64>,
         meter: &mut Meter,
     ) -> (Vec<f64>, Vec<u64>) {
-        let program = self.acquired_rules.as_ref().and_then(|r| r.domains.get(&state[0])).and_then(|d| d.active.as_ref());
+        let program = self.acquired_rules.as_ref().filter(|r| !r.fixed_readout_control())
+            .and_then(|r| r.domains.get(&state[0])).and_then(|d| d.active.as_ref());
         self.immediate_with_program(state, actions, policy, omit, program, meter)
     }
     fn immediate_with_program(
@@ -676,18 +683,29 @@ impl ExternalMemory {
             return 0;
         }
         let mut work = 64;
-        if self.acquired_rules.is_some() && reward > 0.0 && pre[1] != 0 {
+        if self.acquired_rules.is_some() && pre[1] != 0 {
             // Score a future outcome before inserting or fitting it. The
             // authored 3NN is the fixed comparison; the active rule program
             // competes with the next acquired revision inside observe().
+            let first_mode = self.acquired_rules.as_ref().unwrap().first_readouts.is_some();
+            if first_mode { work += 128; } // bounded input hash/lookup and immutable receipt bookkeeping
+            let predict = if first_mode {
+                self.acquired_rules.as_mut().unwrap().needs_first_readout(&pre)
+            } else { reward > 0.0 };
             let mut meter = Meter::new(300_000);
             let rules = self.acquired_rules.as_ref().unwrap();
             let domain = rules.domains.get(&pre[0]);
-            let (baseline, _) = self.immediate_with_program(&pre, 16, &self.strategy.active, None, None, &mut meter);
-            let old = domain.and_then(|d| d.active.as_ref()).map_or_else(|| baseline.clone(), |p|
+            let baseline = if predict { self.immediate_with_program(&pre, 16, &self.strategy.active, None, None, &mut meter).0 }
+                else { vec![0.0; 16] };
+            let old = domain.filter(|_| predict).and_then(|d| d.active.as_ref()).map_or_else(|| baseline.clone(), |p|
                 self.immediate_with_program(&pre, 16, &self.strategy.active, None, Some(p), &mut meter).0);
-            let candidate = domain.and_then(|d| d.shadow.as_ref()).map(|t|
+            let candidate = domain.filter(|_| predict).and_then(|d| d.shadow.as_ref()).map(|t|
                 self.immediate_with_program(&pre, 16, &self.strategy.active, None, Some(&t.program), &mut meter).0);
+            if first_mode && predict {
+                work += 128;
+                self.acquired_rules.as_mut().unwrap().capture_first_readout(&pre, self.events,
+                    rule_normalize(&baseline), rule_normalize(&old), candidate.as_ref().map(|p| rule_normalize(p)));
+            }
             let row = Case { id: self.events, pre: pre.clone(), action, post: post.clone(), reward, cost, value: reward, distance: 1 };
             work += meter.spent + self.acquired_rules.as_mut().unwrap().observe(&row,
                 rule_normalize(&baseline), rule_normalize(&old), candidate.as_ref().map(|p| rule_normalize(p)), &self.rows);

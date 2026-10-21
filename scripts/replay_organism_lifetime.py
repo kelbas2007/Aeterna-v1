@@ -27,6 +27,8 @@ def replay(root,variant,output,binary_override=None):
         actions=0;commits=0;resumes=0
         agent=Native(binary,output/'before-resume.jsonl.gz',variant,checkpoint=saved)
         try:
+            mode=provenance.get('readout_modes',{}).get(variant)
+            if mode is not None:agent.command({'op':'organism_enable_first_readouts','fixed_readout_control':mode})
             report=agent.command({'op':'organism_report'})
             if provenance.get('contextual_u1_requested') and variant!='organism_previous' and report['organism'].get('contextual_namespaces') is None:
                 agent.command({'op':'organism_enable_contextual_control'})
@@ -51,7 +53,18 @@ def replay(root,variant,output,binary_override=None):
                         # every reset. Empty finish is idempotent; reports and
                         # checkpoint exports between these operations are read-only.
                         agent.finish()
+                        meta=row['metadata']
+                        if (meta.get('phase')=='mnist' and meta.get('index')==0 and not meta.get('corrective_retry')
+                            and variant!=provenance.get('frozen_before_mnist')):
+                            assert hashlib.sha256(agent.checkpoint().encode()).hexdigest()==summary['mnist_entry_checkpoint_sha256']
                         agent.reset(frames[row['frame_ref']],**row['metadata'])
+                    elif kind=='learning_frozen':
+                        assert variant==provenance.get('frozen_before_mnist') and row['before_phase']=='mnist'
+                        # The adapter closes its last HAR reward episode before
+                        # exporting the matched prefix and freezing learning.
+                        agent.finish()
+                        assert hashlib.sha256(agent.checkpoint().encode()).hexdigest()==summary['mnist_entry_checkpoint_sha256']
+                        agent.freeze()
                     elif kind=='intent':
                         assert pending is None
                         agent.send({'op':'external_step','offers':row['offers'],'remaining_actions':row['remaining_actions']})

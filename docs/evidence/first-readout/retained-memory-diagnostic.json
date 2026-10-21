@@ -1,0 +1,23 @@
+[
+  {
+    "method": "previous_standardized",
+    "source_retained_successes": 400,
+    "subsequent_retained_successes": 213,
+    "correct": 146,
+    "status": "retrospective diagnostic on already consumed selected memory; not a new performance exam"
+  },
+  {
+    "method": "fisher_diagonal",
+    "source_retained_successes": 400,
+    "subsequent_retained_successes": 213,
+    "correct": 146,
+    "status": "retrospective diagnostic on already consumed selected memory; not a new performance exam"
+  },
+  {
+    "method": "within_class_whitening",
+    "source_retained_successes": 400,
+    "subsequent_retained_successes": 213,
+    "correct": 148,
+    "status": "retrospective diagnostic on already consumed selected memory; not a new performance exam"
+  }
+]

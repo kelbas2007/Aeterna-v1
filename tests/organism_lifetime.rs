@@ -88,6 +88,8 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
     let cost = rt.unified_report().unwrap().total_external_cost;
     rt.enable_constructing_contextual_control().unwrap();
     rt.enable_constructing_acquired_sensory_rules().unwrap();
+    rt.enable_constructing_first_rule_readouts(false).unwrap();
+    assert_eq!(rt.enable_constructing_first_rule_readouts(false), Err(Error::Busy));
     assert_eq!(rt.unified_report().unwrap().total_external_cost, cost);
     assert_eq!(rt.organism_development_report().unwrap().episodes, 8);
     assert_eq!(rt.enable_constructing_acquired_sensory_rules(), Err(Error::Busy));
@@ -109,6 +111,7 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
     let rules = report.acquired_rules.unwrap();
     assert!(rules.proposals > 0);
     assert!(rules.work > 0);
+    assert!(rules.first_readouts.is_some());
     assert_eq!(rt.organism_development_report().unwrap().episodes, 408);
     assert_eq!(rt.organism_development_report().unwrap().namespaces, [4, 9]);
     assert_eq!(rt.unified_report().unwrap().contextual_namespaces, Some(vec![4, 9]));
@@ -117,6 +120,7 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
     episode(&mut rt, 0, 201);
     assert_eq!(frozen, rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint);
     assert_eq!(rt.enable_constructing_acquired_sensory_rules(), Err(Error::Blocked));
+    assert_eq!(rt.enable_constructing_first_rule_readouts(false), Err(Error::Blocked));
     ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
 }
 fn offers() -> Vec<ActionOffer> {

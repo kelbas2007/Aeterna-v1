@@ -1,20 +1,26 @@
 # AETERNA-v1 — project map and historical archive
 
-## Latest research update, pending PR12 merge (2026-10-20)
+## Current common organism and architecture audit (2026-10-21)
 
-Original protected `main` remains the single canonical branch;
-[PR12](https://github.com/kelbas2007/Aeterna-v1/pull/12)
-tests one new optional original-Learner observable graph readout,
-not a separate cognitive agent.
+The latest [whole-organism audit and result](docs/FIRST_READOUT_RESULT.md)
+publishes one living learner after 17,798 actions. New MNIST-class acquisition
+is confirmed on reserved test images, while old-task retention fails. The
+ordinary constructor has not run and VM.Library remains empty; the report
+identifies concrete control, curriculum and memory bottlenecks.
 
-[True-sensor negative](docs/OBSERVABILITY_LIMIT1_RESULT.md)
-487→194/864; [old strict graph negative](docs/OBSERVABILITY_LIMIT2_RESULT.md)
-194→188/864; [new actual observed-state graph ENGINEERING PASS](docs/OBSERVABLE_GRAPH1_RESULT.md)
-194→457/864 and 296 factual goal-reaching multi-action routes.
-The new sensor is external; no proof of autonomous sensor invention,
-general AGI or world transfer.
+`main` is canonical. [PR17](https://github.com/kelbas2007/Aeterna-v1/pull/17)
+is merged: one continuing learner, U1, RSP2, trajectory revision and acquired
+conditional programs share one checkpoint. The published life contains 11,174
+actual actions. It saved external actions but did not improve pooled first-answer
+accuracy; no new RSP2 policy was admitted.
+[Complete result](docs/ACQUIRED_RULES_RESULT.md).
 
-## Current canonical structure — 2026-10-20
+[Architecture audit before the next experiment](docs/ARCHITECTURE_AUDIT_20261021.md)
+identifies the first-forecast feedback mismatch, fixed sensory compression,
+ill-matched RSP2 tasks, exhausted lifetime search budget, and existing reusable
+work. It distinguishes the current organism from optional historical research.
+
+## Historical map after the PR9 integration — 2026-10-20
 
 [Current status](docs/CURRENT_STATUS_20261020.md) ·
 [Technical overview](docs/PROJECT_OVERVIEW.md) ·

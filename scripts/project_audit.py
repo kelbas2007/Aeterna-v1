@@ -9,6 +9,21 @@ rsp3=binding.get('reviewed_rsp3_extension')
 lc1=binding.get('reviewed_lc1_extension')
 autonomous=binding.get('reviewed_autonomous_u1_extension')
 sha=lambda b:hashlib.sha256(b).hexdigest()
+first=binding.get('implemented_first_readout_extension')
+first_base={}
+if first:
+ packed=(r/first['base_archive']).read_bytes()
+ assert sha(packed)==first['base_archive_sha256'],'first-readout base archive changed'
+ first_base=json.loads(gzip.decompress(packed))
+ assert set(first_base)==set(first['modified']),'incomplete first-readout historical archive'
+ for name,d in first['modified'].items():
+  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared first-readout mutation'
+  assert sha(first_base[name].encode())==d['before_sha256'],name+' first-readout historical mismatch'
+ for name,digest in first['added'].items():
+  assert sha((r/name).read_bytes())==digest,name+' first-readout source mismatch'
+def before_first(path):
+ name=path.relative_to(r).as_posix()
+ return first_base[name].encode() if name in first_base else path.read_bytes()
 rules=binding.get('implemented_acquired_rules_extension')
 rules_base={}
 if rules:
@@ -17,13 +32,13 @@ if rules:
  rules_base=json.loads(gzip.decompress(packed))
  assert set(rules_base)==set(rules['modified']),'incomplete acquired rules historical archive'
  for name,d in rules['modified'].items():
-  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared acquired rules mutation'
+  assert sha(before_first(r/name))==d['after_sha256'],name+' undeclared acquired rules mutation'
   assert sha(rules_base[name].encode())==d['before_sha256'],name+' acquired rules historical mismatch'
  for name,digest in rules['added'].items():
-  assert sha((r/name).read_bytes())==digest,name+' acquired rules source mismatch'
+  assert sha(before_first(r/name))==digest,name+' acquired rules source mismatch'
 def before_rules(path):
  name=path.relative_to(r).as_posix()
- return rules_base[name].encode() if name in rules_base else path.read_bytes()
+ return rules_base[name].encode() if name in rules_base else before_first(path)
 organism=binding.get('implemented_organism_development_extension')
 organism_base={}
 if organism:
@@ -75,6 +90,7 @@ added=set(causal['added']) if causal else set()
 if external:added.update(external['added'])
 if organism:added.update(organism['added'])
 if rules:added.update(rules['added'])
+if first:added.update(first['added'])
 original_hashes={}
 if lc1:
  for path,expected in lc1['added'].items():
@@ -145,11 +161,12 @@ assert len(files)==binding['bound_cognitive_source_files'],len(files)
 assert count_untouched==binding['unchanged_cognitive_source_files'],(count_untouched,binding['unchanged_cognitive_source_files'])
 assert h.hexdigest()==binding['aggregate_sha256'],'original core changed unexpectedly'
 assert sha(source(r / 'src/construction/search_policy.rs'))==binding['search_policy_sha256'],'RSP2 engine changed'
-current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})|set(organism['modified'] if organism else {})|set(rules['modified'] if rules else {})
+current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})|set(organism['modified'] if organism else {})|set(rules['modified'] if rules else {})|set(first['modified'] if first else {})
 untouched=count_untouched-sum(p.relative_to(r).as_posix() in current_modified
  and p.relative_to(r).as_posix() not in original_hashes and p.relative_to(r).as_posix() not in changes for p in files)
 print(json.dumps({'status':'PASS','original_source_files':len(files),'historical_base_untouched':count_untouched,
  'untouched':untouched,'causal_extension_verified':bool(causal),'external_extension_verified':bool(external),
  'organism_extension_verified':bool(organism),
  'acquired_rules_extension_verified':bool(rules),
+ 'first_readout_extension_verified':bool(first),
  'lc1_added_files':len(lc1['added']) if lc1 else 0,'original_aggregate':h.hexdigest(),'rsp2_search_policy_unchanged':True}))

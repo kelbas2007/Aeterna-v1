@@ -13,6 +13,7 @@ from run_external_continual5 import motors, scene, verify_data_files
 
 ROOT=Path(__file__).resolve().parents[1]
 VARIANTS=('organism','organism_fixed','full','organism_rules_fixed','organism_previous')
+READOUT_VARIANTS=('organism_late_readout','organism_first_readout','organism_fixed_readout','organism_no_new_learning')
 
 def save(path,value):
     Path(path).write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
@@ -27,10 +28,10 @@ def sensory_phase(agent,kind,data,training=True,source_offset=None):
         metadata={} if source_offset is None else {'source_offset':source_offset}
         frame=blank(kind);agent.reset(frame,phase=kind,index=index,development=True,**metadata)
         measured=set();failed=set();first=None;success=False
-        for left in range(11 if kind=='fashion' else 15,0,-1):
+        for left in range(15 if kind=='har' else 11,0,-1):
             available=[False]*16
             for a,axis in lookup.items():available[a]=axis not in measured and left>1
-            for a in answers:available[a]=a not in failed and (kind!='fashion' or bool(measured))
+            for a in answers:available[a]=a not in failed and (kind=='har' or bool(measured))
             def execute(action):
                 nonlocal frame,first,success,measurements
                 if action in lookup:
@@ -84,22 +85,57 @@ def run(args):
     original=Path(args.binary).resolve()
     frozen=out/('frozen-aeterna-v1'+('.exe' if original.suffix=='.exe' else ''))
     shutil.copy2(original,frozen);args.binary=str(frozen.resolve())
+    registered=None
+    if args.first_readout_checkpoint:
+        if not args.registered_protocol:raise ValueError('first-readout study requires an advance protocol')
+        if subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip():
+            raise ValueError('first-readout study requires committed clean source')
+        registered=json.loads(Path(args.registered_protocol).read_text())
+        if registered.get('status')!='registered before scoring':raise ValueError('protocol not registered')
+        configuration={name:getattr(args,name) for name in ('samples','fashion_offset','har_offset',
+            'mnist_samples','mnist_offset','grid_episodes','grid_seed','retention_offset','retention_samples')}
+        if registered['configuration']!=configuration or registered['variants']!=args.variants:
+            raise ValueError('run differs from advance protocol')
+        if registered['binary_sha256']!=digest(frozen.read_bytes()):raise ValueError('unregistered executable')
+        if registered['build_profile']!=args.build_profile:raise ValueError('unregistered build declaration')
+        if registered['starting_checkpoint_sha256']!=digest(gzip.decompress(Path(args.first_readout_checkpoint).read_bytes())):
+            raise ValueError('unregistered starting organism')
+        for name,expected in registered['source_sha256'].items():
+            if digest((ROOT/name).read_bytes())!=expected:raise ValueError('unregistered source: '+name)
+        (out/'registered-protocol.json').write_bytes(Path(args.registered_protocol).read_bytes())
     # Authenticate the training data before decoding, including canonical HAR
     # membership and original Fashion checksums. No test partition is decoded.
     data_proof=verify_data_files(args.data)
+    if registered and data_proof!=registered['data']:
+        raise ValueError('unregistered source data')
     datasets={
         'fashion':load_fashion(args.data,'train',args.fashion_offset,args.samples),
         'har':load_har(args.data,'train',args.har_offset,args.samples),
     }
+    mnist_proof=None
+    if args.mnist_samples:
+        files={'train-images-idx3-ubyte.gz':'f68b3c2dcbeaaa9fbdd348bbdeb94873',
+               'train-labels-idx1-ubyte.gz':'d53e105ee54ea40749a09fcbcd1e9432'}
+        mnist_proof={}
+        for name,expected in files.items():
+            raw=(Path(args.data)/'mnist'/name).read_bytes()
+            if hashlib.md5(raw).hexdigest()!=expected:raise ValueError('official MNIST checksum mismatch')
+            mnist_proof[name]={'md5':expected,'sha256':digest(raw),'bytes':len(raw)}
+        datasets['mnist']=load_fashion(Path(args.data)/'mnist','train',args.mnist_offset,args.mnist_samples)
     starting=None;starting_cost=0;starting_events=0
-    if args.checkpoint:
-        source=Path(args.checkpoint)
+    if args.checkpoint or args.first_readout_checkpoint:
+        source=Path(args.checkpoint or args.first_readout_checkpoint)
         starting=(gzip.decompress(source.read_bytes()).decode() if source.suffix=='.gz' else source.read_text())
         stored=json.loads(starting);cognition=stored['cognition']
         if cognition['freeze_controller'] or cognition.get('development') is None:raise ValueError('need a living common organism')
         memory=cognition['current']['learner']['external_memory']
-        if memory.get('acquired_rules') is not None:raise ValueError('starting controls must share the same state before rule acquisition')
-        if any(v not in ('organism','organism_rules_fixed','organism_previous') for v in args.variants):raise ValueError('continuation requires matched common-organism variants')
+        if args.first_readout_checkpoint:
+            if memory.get('acquired_rules') is None or memory['acquired_rules'].get('first_readouts') is not None:
+                raise ValueError('need the same existing rule-enabled organism before first-readout upgrade')
+            if tuple(args.variants)!=READOUT_VARIANTS:raise ValueError('first-readout study needs all four matched lives')
+        else:
+            if memory.get('acquired_rules') is not None:raise ValueError('starting controls must share the same state before rule acquisition')
+            if any(v not in ('organism','organism_rules_fixed','organism_previous') for v in args.variants):raise ValueError('continuation requires matched common-organism variants')
         starting_cost=cognition['total_external_cost'];starting_events=memory['events']
         gzip.open(out/'starting-organism.json.gz','wt').write(starting)
     starts={};start_proofs={}
@@ -136,6 +172,17 @@ def run(args):
     if args.retention_offset is not None:
         proof['sensory_sources']['fashion'][str(args.retention_offset)]=args.retention_samples
     proof['purpose']=args.purpose
+    if registered:
+        proof['first_readout_study']=True
+        proof['registered_protocol_sha256']=digest(Path(args.registered_protocol).read_bytes())
+        proof['readout_modes']={READOUT_VARIANTS[0]:None,READOUT_VARIANTS[1]:False,READOUT_VARIANTS[2]:True,READOUT_VARIANTS[3]:False}
+        proof['frozen_before_mnist']=READOUT_VARIANTS[3]
+    if mnist_proof:
+        proof['mnist_data']=mnist_proof
+        proof['max_actions_per_sensor']['mnist']=11
+        proof['training_ranges']['mnist']=[args.mnist_offset,args.mnist_offset+args.mnist_samples]
+        proof['sensory_sources']['mnist']={str(args.mnist_offset):args.mnist_samples}
+    proof['grid_seed']=args.grid_seed
     save(out/'provenance.json',proof)
     results={}
     for variant in args.variants:
@@ -143,11 +190,14 @@ def run(args):
         raw=starts.get(variant)
         if raw is not None:gzip.open(folder/'starting-organism.json.gz','wt').write(raw)
         agent=Native(args.binary,folder/'life-before-resume.jsonl.gz',variant,blank('fashion'),raw)
+        mode=proof.get('readout_modes',{}).get(variant)
+        if mode is not None:agent.command({'op':'organism_enable_first_readouts','fixed_readout_control':mode})
         if args.contextual_u1 and variant!='organism_previous' and agent.command({'op':'organism_report'})['organism'].get('contextual_namespaces') is None:
             agent.command({'op':'organism_enable_contextual_control'})
         if raw is not None and variant=='organism' and json.loads(raw)['cognition']['current']['learner']['external_memory'].get('acquired_rules') is None:
             agent.command({'op':'organism_enable_rules'})
         phases=[];previous_cost=start_proofs.get(variant,{}).get('cost',0);previous_events=start_proofs.get(variant,{}).get('events',0)
+        mnist_entry=None;frozen_knowledge=None
         def record(name,result):
             nonlocal previous_cost,previous_events
             if digest(Path(args.binary).read_bytes())!=proof['binary_sha256']:
@@ -171,8 +221,16 @@ def run(args):
             agent=Native(args.binary,folder/'life-after-resume.jsonl.gz',variant,blank('fashion'),saved)
             if agent.checkpoint()!=saved:raise AssertionError('resume changed the cognitive checkpoint')
             record('har',sensory_phase(agent,'har',datasets['har'],source_offset=args.har_offset))
+            if args.mnist_samples:
+                mnist_entry=agent.checkpoint()
+                gzip.open(folder/'before-mnist.json.gz','wt').write(mnist_entry)
+                if variant==proof.get('frozen_before_mnist'):
+                    agent.freeze()
+                    agent.trace.write({'kind':'learning_frozen','before_phase':'mnist'})
+                    frozen_knowledge=agent.command({'op':'organism_report'})['reward_memory']['learned_fingerprint']
+                record('mnist_new_task_classes',sensory_phase(agent,'mnist',datasets['mnist'],source_offset=args.mnist_offset))
             for index,game in enumerate(('MiniGrid-Empty-5x5-v0','MiniGrid-DoorKey-5x5-v0')):
-                record(game,navigation_phase(agent,game,20+index,range(850000,850000+args.grid_episodes)))
+                record(game,navigation_phase(agent,game,20+index,range(args.grid_seed,args.grid_seed+args.grid_episodes)))
             # Acquired, previously experienced images. Report as a revisit with
             # continuing feedback, never as a new blind retention exam.
             if args.retention_offset is None:
@@ -188,12 +246,17 @@ def run(args):
             report=agent.command({'op':'organism_report'})
             if variant.startswith('organism'):
                 dev=report['development']
-                if len(dev['namespaces'])!=4:raise AssertionError('not all four interfaces share development')
+                expected_domains=4 if frozen_knowledge is not None else 4+bool(args.mnist_samples)
+                if len(dev['namespaces'])!=expected_domains:raise AssertionError('not all learning interfaces share development')
+                if frozen_knowledge is not None and report['reward_memory']['learned_fingerprint']!=frozen_knowledge:
+                    raise AssertionError('frozen no-new-learning control acquired knowledge')
                 if report['reward_memory']['recursive_generations']!=0:raise AssertionError('parallel EXTERNAL5 mutator still active')
                 if variant=='organism' and not dev['recursive_attempts']:raise AssertionError('RSP2 never received factual experience')
                 if not dev['evaluator_searches']:raise AssertionError('shared RSP2 policy never drove evaluator search')
                 if dev['abandoned_episodes']:raise AssertionError('completed adapter episodes were lost')
             results[variant]={'resume_checkpoint_sha256':resume_sha,'final_checkpoint_sha256':digest(final.encode()),
+                'mnist_entry_checkpoint_sha256':None if mnist_entry is None else digest(mnist_entry.encode()),
+                'frozen_after_matched_prefix':frozen_knowledge is not None,
                 'continuing_checkpoint_sha256':digest(continuing.encode()),
                 'phases':phases,'final_report':report}
             save(folder/'summary.json',results[variant]);save(out/'summary.json',results)
@@ -205,16 +268,21 @@ if __name__=='__main__':
     parser.add_argument('--binary',required=True);parser.add_argument('--data',required=True)
     parser.add_argument('--output',required=True);parser.add_argument('--samples',type=int,default=240)
     parser.add_argument('--grid-episodes',type=int,default=4)
-    parser.add_argument('--variants',nargs='+',choices=VARIANTS,default=['organism','organism_fixed','full'])
+    parser.add_argument('--variants',nargs='+',choices=VARIANTS+READOUT_VARIANTS,default=['organism','organism_fixed','full'])
     parser.add_argument('--build-profile',default='unspecified; executable SHA256 recorded')
     resume=parser.add_mutually_exclusive_group()
     resume.add_argument('--checkpoint');resume.add_argument('--resume-lives')
+    resume.add_argument('--first-readout-checkpoint')
+    parser.add_argument('--registered-protocol')
     parser.add_argument('--previous-life',help='matched previous-U1 control export with the same completed development schedule')
     parser.add_argument('--fashion-offset',type=int,default=42000)
     parser.add_argument('--har-offset',type=int,default=4000)
+    parser.add_argument('--mnist-samples',type=int,default=0);parser.add_argument('--mnist-offset',type=int,default=0)
+    parser.add_argument('--grid-seed',type=int,default=850000)
     parser.add_argument('--retention-offset',type=int);parser.add_argument('--retention-samples',type=int,default=160)
     parser.add_argument('--purpose',default='development integration; no independent intelligence qualification')
     parser.add_argument('--contextual-u1',action='store_true',help='enable context-conditioned common U1 in loaded historical states, for both arms')
     args=parser.parse_args()
-    if not 64<=args.samples<=1000 or not 1<=args.grid_episodes<=16 or not 1<=args.retention_samples<=500:parser.error('bounded development budget exceeded')
+    if (not 64<=args.samples<=1000 or not 1<=args.grid_episodes<=16 or not 1<=args.retention_samples<=500
+        or not 0<=args.mnist_samples<=1000):parser.error('bounded development budget exceeded')
     run(args)

@@ -1,0 +1,77 @@
+{
+  "purpose": "retrospective whole-checkpoint/source-path audit; not a fresh performance experiment",
+  "coverage": {
+    "4": {
+      "successful_cases_before": 612,
+      "successful_cases_after": 437,
+      "action_mask_groups_before": 10,
+      "action_mask_groups_after": 10,
+      "groups_without_any_eligible_same_action_prototype_after": 0,
+      "lost_groups": [],
+      "normalization_unchanged": true
+    },
+    "9": {
+      "successful_cases_before": 613,
+      "successful_cases_after": 436,
+      "action_mask_groups_before": 226,
+      "action_mask_groups_after": 194,
+      "groups_without_any_eligible_same_action_prototype_after": 9,
+      "lost_groups": [
+        [
+          3,
+          132149311
+        ],
+        [
+          3,
+          117472831
+        ],
+        [
+          3,
+          16543751
+        ],
+        [
+          3,
+          16515079
+        ],
+        [
+          3,
+          133955591
+        ],
+        [
+          3,
+          1835015
+        ],
+        [
+          3,
+          117440519
+        ],
+        [
+          3,
+          119307783
+        ],
+        [
+          3,
+          133955647
+        ]
+      ],
+      "normalization_unchanged": true
+    }
+  },
+  "final_organism": {
+    "factual_events": 17798,
+    "external_cost": 17798,
+    "construction_search_interval": 1000000,
+    "external_cost_limit": 1000000,
+    "internal_operation_counts": [
+      0,
+      0,
+      3364,
+      17798
+    ],
+    "vm_library_functions": 0,
+    "program_promotions": 0,
+    "monotone_u1_already_enabled": true,
+    "recursive_attempts": 8
+  },
+  "interpretation": "Within these cost-one adapters the ordinary construction trigger of one million facts is beyond this life and reaches the external action limit. RSP2 has its separate finite coordinator, whose eight attempts are already consumed. Learned conditional trees are not VM.Library functions."
+}

@@ -1,0 +1,12 @@
+{
+  "study": {
+    "status": "PASS",
+    "protocol_sha256": "6d3af147617e5a36e802ac21036c3a3c773d961dcba627e6f8f2abd581840a0e",
+    "binary_sha256": "b5b8d70bcc708597811c2ee633f5bf3014402da6de069642841a06762b132df4"
+  },
+  "frozen-probe": {
+    "status": "PASS",
+    "protocol_sha256": "c9ec83da96a1bc1a2aa6c311efe51c46e752b966f315cdea38c90ac86c1a5854",
+    "binary_sha256": "b5b8d70bcc708597811c2ee633f5bf3014402da6de069642841a06762b132df4"
+  }
+}
