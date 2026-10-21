@@ -331,23 +331,23 @@
     "modified": {
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "d720aa0d73962edd72a8dd88e3820c5b769c7c9d4be52b1b611442eda0cac756",
-        "after_sha256": "8843f9b89b5b8663c06b6bf0a7f14664550dabfc7891de4edf7d6ef1d9728fbc"
+        "after_sha256": "d65196f0655a12a761a17192760e3601d232355f6474d9f86b9a3eb9e56dc566"
       },
       "src/construction/consolidated_memory.rs": {
         "before_sha256": "9ba0ea8bdd22b724d7ec2af2e15ebf782dcd103fa456ebfcc990923482815861",
-        "after_sha256": "3e32d2e133578df295981d7faf17c7f9d8aeae609468ba94a3be0eeadde8012c"
+        "after_sha256": "c61c74366f8bfa5046cdd8691a4939a69101d2cb9e2f0781c2141c70c777978b"
       },
       "src/construction/external_port.rs": {
         "before_sha256": "d84855880caf2c5d10ac0945e6ab062e6fab9e809355bdcc0f5753c457d4ca24",
-        "after_sha256": "88d504a03e51f94261b6513cf5e8385df713f0a908f071fe6f50f828b4801b5f"
+        "after_sha256": "cd08b22fe3a8cbb09739252a718778d2b977b4c4cd7f0487d6bccf9d0583ca01"
       },
       "src/construction/external_reward.rs": {
         "before_sha256": "2a18f653c84eba43a5603365297e06ccbec62e5e6bd569b0684cb3d14a17a853",
-        "after_sha256": "021bce0e9b1af5ef267854182cd1b172ddb946d15f6e920fe94e8b1390f7d3bd"
+        "after_sha256": "9ed9d41c8f05f733358dce15d66c24300180ba6bc170685f5714e8055487a47b"
       },
       "src/organism_development.rs": {
         "before_sha256": "155192bbbf75d816c596b8df561bc250718e86fc002726231d4dac77581f6c81",
-        "after_sha256": "a755a07a106678596e5d446a44eea2cfbc1482ba103eb99ae5b8736c078842e4"
+        "after_sha256": "8543dee992d882a52da47f345ec3810088e8ef7075457a70f0658d7971eb3f8b"
       },
       "src/unified_runtime.rs": {
         "before_sha256": "0f19baa3ac905445ae540fb9eb7c54e124cb4a15738cd3abcd6313edd94c90fa",
@@ -355,8 +355,9 @@
       }
     },
     "added": {
-      "src/construction/causal_readout.rs": "29f91413266f9874e365b87a19c4b398ef946e86a5c44b1f94045cc9af577caa"
+      "src/construction/causal_readout.rs": "0f1a780f4d0a6c15ce3c83bd374a9d4555880b10950d226b26ddf6fa7a28fdce",
+      "src/construction/partial_posterior.rs": "e83d60aa3fe5f554a9032a3d10275533584bb5cdccfefd034d26204e9a0eda22"
     },
-    "scope": "Actual whole-task randomized readout comparisons in the same Learner/U1, bounded monitoring and rollback; original RSP2 and historical states retained."
+    "scope": "Whole-task strategy trials and partial factual prototype posterior within the same Learner/U1; legacy revision replay, bounded monitoring and rollback; original RSP2 retained."
   }
 }

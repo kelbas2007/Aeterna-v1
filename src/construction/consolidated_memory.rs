@@ -131,6 +131,8 @@ struct ConsolidatedMemory {
     exhausted: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     causal_readout: Option<CausalReadout>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    partial_posterior: bool,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidatedDomainReport {
@@ -157,6 +159,8 @@ pub struct ConsolidatedMemoryReport {
     pub domains: BTreeMap<i64, ConsolidatedDomainReport>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub causal_readout: Option<CausalReadoutReport>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub partial_posterior: bool,
 }
 impl ConsolidatedMemory {
     fn seeded(events: u64, rows: &[Case]) -> Self {
@@ -174,6 +178,7 @@ impl ConsolidatedMemory {
             evicted: 0,
             exhausted: false,
             causal_readout: None,
+            partial_posterior: false,
         };
         for row in rows.iter().filter(|r| r.reward > 0.0) {
             if m.domains.contains_key(&row.pre[0]) || m.domains.len() < 8 {
@@ -188,7 +193,9 @@ impl ConsolidatedMemory {
         m
     }
     fn active(&self, namespace: i64) -> bool {
-        if let Some(policy)=&self.causal_readout { return policy.active(namespace); }
+        if let Some(policy) = &self.causal_readout {
+            return policy.active(namespace);
+        }
         self.domains.get(&namespace).is_some_and(|d| d.active)
     }
     fn needs_forecast(&mut self, pre: &[i64]) -> bool {
@@ -319,6 +326,7 @@ impl ConsolidatedMemory {
     }
     fn report(&self) -> ConsolidatedMemoryReport {
         ConsolidatedMemoryReport {
+            partial_posterior: self.partial_posterior,
             causal_readout: self.causal_readout.as_ref().map(CausalReadout::report),
             enabled_at: self.enabled_at,
             seeded_prototypes: self.seeded_prototypes,
@@ -354,7 +362,7 @@ impl ConsolidatedMemory {
         let mut keys = std::collections::BTreeSet::new();
         let probability = |v: f64| v.is_finite() && (0.0..=1.0).contains(&v);
         self.revision == 1
-            && self.causal_readout.as_ref().is_none_or(|p|p.valid(events))
+            && self.causal_readout.as_ref().is_none_or(|p| p.valid(events))
             && self.enabled_at <= events
             && self.seeded_prototypes <= CAPACITY
             && self.bootstrap_work <= self.seeded_prototypes as u64 * 1024
@@ -397,6 +405,17 @@ impl ConsolidatedMemory {
 }
 
 impl ExternalMemory {
+    pub(crate) fn enable_partial_posterior(&mut self) -> Result<()> {
+        if !self.pending.is_empty() {
+            return Err(Error::Busy);
+        }
+        let model = self.consolidated_memory.as_mut().ok_or(Error::NoEvidence)?;
+        if model.partial_posterior || model.causal_readout.is_some() {
+            return Err(Error::Busy);
+        }
+        model.partial_posterior = true;
+        Ok(())
+    }
     pub(crate) fn enable_consolidated_memory(&mut self) -> Result<u64> {
         if !self.enabled
             || self.adaptive
@@ -426,10 +445,12 @@ impl ExternalMemory {
         }
         let guard_work = actions as u64 * 64;
         meter.charge(guard_work).ok()?;
-        let (mut values, mut support) = self
-            .consolidated_memory
-            .as_ref()?
-            .predict(pre, actions, meter)?;
+        let model = self.consolidated_memory.as_ref()?;
+        let (mut values, mut support) = if model.partial_posterior {
+            model.predict_partial(pre, actions, &self.rows, meter)?
+        } else {
+            model.predict(pre, actions, meter)?
+        };
         self.factual_reward_guards(
             pre,
             &mut values,
@@ -464,6 +485,13 @@ impl ExternalMemory {
                 program,
                 &mut meter,
             );
+            if self.consolidated_memory.as_ref().unwrap().partial_posterior
+                && meter.remaining() == 0
+            {
+                let work = meter.spent + 128;
+                self.consolidated_memory.as_mut().unwrap().training_work += work;
+                return work;
+            }
             self.consolidated_memory.as_mut().unwrap().capture(
                 pre,
                 self.events,

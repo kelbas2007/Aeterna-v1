@@ -53,6 +53,10 @@ impl Learner {
         if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
         self.external_memory.as_mut().ok_or(Error::NoEvidence)?.enable_causal_readout()
     }
+    pub(crate) fn carrier_enable_partial_posterior(&mut self) -> Result<()> {
+        if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
+        self.external_memory.as_mut().ok_or(Error::NoEvidence)?.enable_partial_posterior()
+    }
     pub(crate) fn carrier_readout_task_open(&self)->bool {
         self.external_memory.as_ref().is_some_and(|m|m.readout_task_is_open())
     }

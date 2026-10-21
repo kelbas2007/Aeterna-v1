@@ -1,0 +1,34 @@
+{
+  "purpose": "One pre-specified kernel diagnostic on already consumed V2 rows; no new world actions.",
+  "new_external_actions": 0,
+  "fresh_behavioral_evidence": false,
+  "phases": {
+    "mnist": {
+      "samples": 512,
+      "eligible_frames": 512,
+      "recorded_whole_agent_correct": 364,
+      "prototype_posterior_raw_correct": 410,
+      "prototype_posterior_with_factual_guards_correct": 411,
+      "changed_raw_answers": 128,
+      "sensor_changes_and_U1_not_simulated": true
+    },
+    "har": {
+      "samples": 512,
+      "eligible_frames": 512,
+      "recorded_whole_agent_correct": 260,
+      "prototype_posterior_raw_correct": 302,
+      "prototype_posterior_with_factual_guards_correct": 297,
+      "changed_raw_answers": 156,
+      "sensor_changes_and_U1_not_simulated": true
+    },
+    "fashion": {
+      "samples": 512,
+      "eligible_frames": 512,
+      "recorded_whole_agent_correct": 356,
+      "prototype_posterior_raw_correct": 342,
+      "prototype_posterior_with_factual_guards_correct": 346,
+      "changed_raw_answers": 119,
+      "sensor_changes_and_U1_not_simulated": true
+    }
+  }
+}

@@ -153,6 +153,8 @@ def audit(root,data):
                             assert row['index']==local_event and row['step']['event']==global_event+1
                             assert row['step']['action']==pending['action']
                             actual_cost+=pending['post']['cost'];posts+=1;global_event+=1;local_event+=1;pending=None
+                        elif kind=='task_end':
+                            assert pending is None and context is not None and 'game' not in context
                         else:raise AssertionError('unexpected trace event: '+kind)
                 assert pending is None
             if 'continuing_checkpoint_sha256' in summary:

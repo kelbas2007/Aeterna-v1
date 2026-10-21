@@ -1,0 +1,27 @@
+{
+  "purpose": "Retrospective readout diagnosis on already consumed V2 rows; no fitting to test outcomes; not a new behavioral experiment",
+  "new_external_actions": 0,
+  "phases": {
+    "mnist": {
+      "samples": 512,
+      "recorded_whole_agent_correct": 364,
+      "raw_gaussian_argmax_correct_same_frames": 362,
+      "changed_predictions": 167,
+      "factual_guards_U1_and_sensor_changes_included": false
+    },
+    "har": {
+      "samples": 512,
+      "recorded_whole_agent_correct": 260,
+      "raw_gaussian_argmax_correct_same_frames": 286,
+      "changed_predictions": 180,
+      "factual_guards_U1_and_sensor_changes_included": false
+    },
+    "fashion": {
+      "samples": 512,
+      "recorded_whole_agent_correct": 356,
+      "raw_gaussian_argmax_correct_same_frames": 321,
+      "changed_predictions": 154,
+      "factual_guards_U1_and_sensor_changes_included": false
+    }
+  }
+}

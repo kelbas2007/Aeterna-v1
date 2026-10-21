@@ -115,6 +115,11 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"causal_readout_enabled","action_authority":"same_u1",
                         "learner":"same_living_checkpoint","evidence":"actual_complete_tasks"}))
                 },
+                "organism_enable_partial_posterior"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_partial_posterior()?;
+                    Ok(json!({"type":"partial_posterior_enabled","action_authority":"same_u1",
+                        "learner":"same_living_checkpoint","prototypes":"existing_factual_rows"}))
+                },
                 "external_task_end"=>{
                     runtime.as_mut().ok_or("not loaded")?.finish_external_sensor_task()?;
                     Ok(json!({"type":"external_task_finished"}))

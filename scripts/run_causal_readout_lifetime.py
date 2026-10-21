@@ -76,7 +76,7 @@ def check_model(raw):
 def register(args):
     parent=raw_state(args.parent);check_model(parent)
     assert not json.loads(parent)['cognition']['freeze_controller']
-    save(args.register,{'schema':'aeterna.causal-readout.v1','status':'registered before scoring',
+    save(args.register,{'schema':'aeterna.causal-readout.v2','status':'registered before scoring',
         'interpretation':'paired development of one continuing organism; public reserved test rows; not invention of a learning algorithm',
         'parent_sha256':sha(parent.encode()),'binary_sha256':sha(Path(args.binary).read_bytes()),
         'source_sha256':source_binding(),'data':verify_data_files(args.data),'mnist_data':mnist_files(args.data),
@@ -108,6 +108,7 @@ def lives(args,protocol,out):
         setup=Native(binary,folder/'setup.jsonl.gz',variant,checkpoint=parent)
         try:
             if variant!='organism_fifo':setup.command({'op':'organism_enable_consolidated_memory'})
+            if variant!='organism_fifo':setup.command({'op':'organism_enable_partial_posterior'})
             if variant=='organism_causal':setup.command({'op':'organism_enable_causal_readout'})
             entry=setup.checkpoint()
         finally:setup.close()

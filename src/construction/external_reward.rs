@@ -18,6 +18,7 @@ include!("first_readout.rs");
 include!("coverage_memory.rs");
 include!("consolidated_memory.rs");
 include!("causal_readout.rs");
+include!("partial_posterior.rs");
 
 fn zero(value: &f64) -> bool {
     *value == 0.0

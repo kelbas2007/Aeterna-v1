@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "external_actions": 0,
+  "original_checkpoint_exact": true,
+  "open_task_restore_exact": true,
+  "frozen_restore_exact": true,
+  "binary_sha256": "2b1f5a16c5e93d3e10850b5df73f37e0a877df875364fbfb6b014b8daba0dae6"
+}

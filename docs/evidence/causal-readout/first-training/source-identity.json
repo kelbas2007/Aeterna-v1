@@ -1,0 +1,7 @@
+{
+  "source_commit": "d1c2a40ac8534ad7893770b3b93a752d94af7277",
+  "binary_sha256": "a2a206c3785bc60431c66d9f1da13d210518652fe548a7dd9b265e292d71577a",
+  "test_opened": false,
+  "new_readout_admissions": 0,
+  "verdict": "FAIL: necessary behavioral adoption condition not met"
+}

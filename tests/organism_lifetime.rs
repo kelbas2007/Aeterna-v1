@@ -180,6 +180,8 @@ fn whole_task_policy_trials_restore_without_reassigning_or_relabeling_real_actio
         }
     }
     rt.enable_constructing_consolidated_memory().unwrap();
+    rt.enable_constructing_partial_posterior().unwrap();
+    assert!(rt.construction_learner().unwrap().external_reward_report().unwrap().consolidated_memory.unwrap().partial_posterior);
     rt.enable_constructing_causal_readout().unwrap();
     for index in 0..132 {
         let f=frame(index%2,index);

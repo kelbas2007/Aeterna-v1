@@ -47,14 +47,27 @@ struct ReadoutDomain {
     active: bool,
     admissions: u64,
     rollbacks: u64,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    settled: bool,
 }
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CausalReadout {
+    #[serde(
+        default = "readout_revision_one",
+        skip_serializing_if = "readout_is_revision_one"
+    )]
+    revision: u8,
     enabled_at: u64,
     frozen: bool,
     work: u64,
     domains: BTreeMap<i64, ReadoutDomain>,
     task: Option<ReadoutTask>,
+}
+fn readout_revision_one() -> u8 {
+    1
+}
+fn readout_is_revision_one(value: &u8) -> bool {
+    *value == 1
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CausalReadoutDomainReport {
@@ -114,7 +127,7 @@ impl ReadoutDomain {
                 .count(),
         )
     }
-    fn decide(&mut self) {
+    fn decide(&mut self, revision: u8) {
         self.decisions += 1;
         let (wins, losses) = self.wins();
         let alpha = 0.05 / (self.decisions as f64 * (self.decisions as f64 + 1.0));
@@ -132,8 +145,10 @@ impl ReadoutDomain {
         let previous = self.active;
         if affordable && wins > losses && readout_sign_tail(wins, losses) <= alpha {
             self.active = true;
+            self.settled = revision >= 2;
         } else if !affordable || (losses > wins && readout_sign_tail(losses, wins) <= alpha) {
             self.active = false;
+            self.settled = revision >= 2;
         }
         self.admissions += u64::from(self.active && !previous);
         self.rollbacks += u64::from(previous && !self.active);
@@ -142,6 +157,7 @@ impl ReadoutDomain {
 impl CausalReadout {
     fn new(events: u64) -> Self {
         Self {
+            revision: 2,
             enabled_at: events,
             ..Self::default()
         }
@@ -169,9 +185,14 @@ impl CausalReadout {
         }
         let d = self.domains.entry(namespace).or_default();
         let next = d.started.checked_add(1).ok_or(Error::Capacity)?;
-        // Once an actual comparison is available, use its incumbent on six
-        // of every eight tasks. The other two form a new randomized pair.
-        let experimental = d.decisions == 0 || d.started % 8 < 2;
+        // An inconclusive comparison does not justify suppressing exploration.
+        // Revision one is retained for exact replay of the first failed trial.
+        let unresolved = if self.revision == 1 {
+            d.decisions == 0
+        } else {
+            !d.settled
+        };
+        let experimental = unresolved || d.started % 8 < 2;
         let block = d.trials_started / 2;
         // Randomized AB/BA blocks; assigned before the first task action.
         // No feature, reward, class identity or future outcome enters this bit.
@@ -265,7 +286,7 @@ impl CausalReadout {
                 d.completed_pairs += 1;
                 work += 256;
                 if d.completed_pairs % 64 == 0 {
-                    d.decide();
+                    d.decide(self.revision);
                     work += 8192;
                 }
             } else {
@@ -317,7 +338,8 @@ impl CausalReadout {
     }
     fn valid(&self, events: u64) -> bool {
         let reward = |x: f64| x.is_finite() && (0.0..=1.0).contains(&x);
-        self.enabled_at <= events
+        (1..=2).contains(&self.revision)
+            && self.enabled_at <= events
             && self.domains.len() <= 8
             && (!self.frozen || self.task.is_none())
             && self.domains.iter().all(|(&n, d)| {
@@ -342,6 +364,7 @@ impl CausalReadout {
                         .is_some_and(|n| n <= d.trials_started)
                     && d.pairs.len() == (d.completed_pairs as usize).min(READOUT_PAIR_WINDOW)
                     && d.decisions == d.completed_pairs / 64
+                    && (!d.settled || (self.revision == 2 && d.decisions > 0))
                     && d.admissions <= d.decisions
                     && d.rollbacks <= d.admissions
                     && d.admissions.checked_sub(d.rollbacks) == Some(u64::from(d.active))
@@ -376,6 +399,25 @@ impl CausalReadout {
 #[cfg(test)]
 mod causal_readout_tests {
     use super::*;
+    #[test]
+    fn inconclusive_trials_keep_exploring_and_legacy_revision_replays() {
+        for revision in [1, 2] {
+            let mut p = CausalReadout::new(0);
+            p.revision = revision;
+            for _ in 0..256 {
+                p.begin(9, true).unwrap();
+                p.observe(9, true, 1.0, 1);
+                p.end();
+            }
+            assert_eq!(
+                p.domains[&9].completed_pairs,
+                if revision == 1 { 80 } else { 128 }
+            );
+            assert!(!p.domains[&9].settled);
+            assert!(!p.domains[&9].active);
+            assert!(p.valid(256));
+        }
+    }
     #[test]
     fn actual_zero_cost_actions_are_facts_and_empty_tasks_are_abandoned() {
         let mut p = CausalReadout::new(0);
