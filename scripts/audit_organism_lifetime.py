@@ -25,6 +25,7 @@ def audit(root,data):
         assert {n:importlib.metadata.version(n) for n in provenance['dependencies']}==provenance['dependencies']
     assert verify_data_files(data)==provenance['data'],'corpus provenance mismatch'
     datasets={}
+    partition=provenance.get('source_partition','train')
     loaders=[('fashion',load_fashion),('har',load_har)]
     if 'mnist_data' in provenance:
         for name,expected in provenance['mnist_data'].items():
@@ -34,11 +35,11 @@ def audit(root,data):
         loaders.append(('mnist',lambda root,part,offset,count:load_fashion(Path(root)/'mnist',part,offset,count)))
     for kind,loader in loaders:
         start,end=provenance['training_ranges'][kind]
-        datasets[kind]=loader(data,'train',start,end-start)
+        datasets[kind]=loader(data,partition,start,end-start)
     sources={}
     for kind,ranges in provenance.get('sensory_sources',{}).items():
         loader=dict(loaders)[kind]
-        for offset,count in ranges.items():sources[(kind,int(offset))]=loader(data,'train',int(offset),count)
+        for offset,count in ranges.items():sources[(kind,int(offset))]=loader(data,partition,int(offset),count)
     import gymnasium as gym
     import minigrid  # noqa: F401 -- registration
     summaries=json.loads((root/'summary.json').read_text());proof={}
@@ -95,7 +96,7 @@ def audit(root,data):
                                 modality=metadata['phase'];index=metadata['index']
                                 if not metadata.get('corrective_retry'):
                                     context={'modality':modality,'index':index,'frame':blank(modality),
-                                        'measured':set(),'failed':set(),'left':15 if modality=='har' else 11,
+                                        'measured':set(),'failed':set(),'left':provenance.get('probe_action_limits',{}).get(modality,15 if modality=='har' else 11),
                                         'source_offset':metadata.get('source_offset'),'answered':False}
                                 assert context['modality']==modality and context['index']==index
                                 assert observed==context['frame']
@@ -148,7 +149,9 @@ def audit(root,data):
                 continuing=gzip.decompress((folder/'one-organism.json.gz').read_bytes())
                 assert hashlib.sha256(continuing).hexdigest()==summary['continuing_checkpoint_sha256']
                 live=json.loads(continuing)
-                assert not live['cognition']['freeze_controller'],'published organism cannot keep learning'
+                intentionally_frozen=provenance.get('frozen_probe',False) or variant==provenance.get('frozen_before_mnist')
+                assert live['cognition']['freeze_controller']==intentionally_frozen,'wrong learning state for the registered arm'
+                assert summary.get('frozen_after_matched_prefix',False)==intentionally_frozen
                 assert live['cognition']['current']['learner']['external_memory']['events']==global_event
                 assert live['cognition']['total_external_cost']==actual_cost
                 checkpoint=gzip.decompress((folder/'frozen-organism.json.gz').read_bytes())
@@ -168,7 +171,7 @@ def audit(root,data):
                 modality=rows[0][0];assert all(r[0]==modality for r in rows)
                 assert metrics([r[2] for r in rows],[r[3] for r in rows],6 if modality=='har' else 10)==result['first_answer_prequential']
             assert cursor==len(answers_observed)
-            expected_interfaces=4+int('mnist_data' in provenance)
+            expected_interfaces=3 if provenance.get('frozen_probe') else 4+int('mnist_data' in provenance)
             assert initializations==(0 if start_sha else 1) and resumes==1 and len(namespaces)==expected_interfaces
             if start_sha:assert loads==2
             if provenance.get('contextual_u1_requested') and variant!='organism_previous':
