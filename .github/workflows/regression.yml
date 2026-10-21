@@ -61,6 +61,7 @@ jobs:
           suffix=''
           if test "$RUNNER_OS" = Windows; then suffix='.exe'; fi
           python scripts/check_coverage_organism.py --binary "target/release/aeterna-v1$suffix" 2>&1 | tee project-evidence/coverage-state-check.json
+          python scripts/check_consolidated_organism.py --binary "target/release/aeterna-v1$suffix" 2>&1 | tee project-evidence/consolidated-state-check.json
       - name: Existing broad causal regressions and separate-process demos
         if: runner.os == 'Linux'
         shell: bash

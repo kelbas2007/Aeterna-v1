@@ -135,6 +135,36 @@ fn offers() -> Vec<ActionOffer> {
         })
         .collect()
 }
+
+#[test]
+fn consolidated_knowledge_stays_in_the_same_life_across_modalities_restore_and_freeze() {
+    let mut rt=runtime(true);
+    for i in 0..8 { episode(&mut rt,0,i); }
+    let cost=rt.unified_report().unwrap().total_external_cost;
+    let work=rt.unified_report().unwrap().computation_work;
+    rt.enable_constructing_consolidated_memory().unwrap();
+    let book=rt.construction_learner().unwrap().external_reward_report().unwrap().consolidated_memory.unwrap();
+    assert!(book.seeded_prototypes>0);
+    assert_eq!(rt.unified_report().unwrap().total_external_cost,cost);
+    assert_eq!(rt.unified_report().unwrap().computation_work,work+book.bootstrap_work);
+    assert_eq!(rt.enable_constructing_consolidated_memory(),Err(Error::Busy));
+    assert_eq!(rt.enable_constructing_coverage_memory(),Err(Error::Busy));
+    for domain in 0..2 {
+        for index in 0..160 { episode(&mut rt,domain,index); }
+        let saved=rt.checkpoint_constructing().unwrap();
+        rt=ScientificRuntime::from_constructing_checkpoint(&saved).unwrap();
+        assert_eq!(saved,rt.checkpoint_constructing().unwrap());
+    }
+    let report=rt.construction_learner().unwrap().external_reward_report().unwrap();
+    assert_eq!(report.consolidated_memory.as_ref().unwrap().domains.len(),2);
+    assert!(report.consolidated_memory.as_ref().unwrap().training_work>0);
+    rt.freeze_constructing().unwrap();
+    let before=rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint;
+    episode(&mut rt,1,200);
+    assert_eq!(before,rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint);
+    assert_eq!(rt.enable_constructing_consolidated_memory(),Err(Error::Blocked));
+    ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
+}
 fn episode(rt: &mut ScientificRuntime, domain: usize, index: usize) {
     let input = frame(domain, index);
     rt.observe_external_sensor_restart(&input).unwrap();

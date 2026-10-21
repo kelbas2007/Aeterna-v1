@@ -59,6 +59,7 @@ impl ExternalMemory {
             || self.adaptive
             || !self.pending.is_empty()
             || self.coverage_memory.is_some()
+            || self.consolidated_memory.is_some()
         {
             return Err(Error::Busy);
         }

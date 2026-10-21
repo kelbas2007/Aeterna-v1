@@ -110,6 +110,11 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"first_rule_readouts_enabled","fixed_readout_control":control,
                         "action_authority":"same_u1","learner":"same_living_checkpoint"}))
                 },
+                "organism_enable_consolidated_memory"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_consolidated_memory()?;
+                    Ok(json!({"type":"consolidated_memory_enabled","action_authority":"same_u1",
+                        "learner":"same_living_checkpoint","bootstrap_work":"charged"}))
+                },
                 "organism_enable_coverage_memory"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_coverage_memory()?;
                     Ok(json!({"type":"coverage_memory_enabled","capacity":2048,
