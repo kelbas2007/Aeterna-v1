@@ -202,7 +202,7 @@
     "modified": {
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "9dd45c3879a45519deb6371b80e17f83b05d397ec63fe6a4d0e6a31d5093eaaf",
-        "after_sha256": "ddc5c1d64a6bfa620582ced5b345eb45bed8a33b88f416c994bf232a6de97c0e"
+        "after_sha256": "213f8db62aa2b1f1d9dead83923ffd6eef1ba233319ccb09d8425deba5a91568"
       },
       "src/construction/external_port.rs": {
         "before_sha256": "9c89860f6d675bfc5cbd9d658499a1f1a6811d011e71dd234d650943921909c2",

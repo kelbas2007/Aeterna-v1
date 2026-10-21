@@ -52,6 +52,7 @@ pub(crate) fn main()->Result<()>{
             println!("{}",serde_json::to_string_pretty(&json!({"type":"checkpoint_inspection",
                 "organism":rt.unified_report(),"school":rt.school_report(),"recursive_search":recursive,
                 "development":rt.organism_development_report(),
+                "reward_memory":rt.construction_learner().and_then(|l|l.external_reward_report()),
                 "learned_requirements":rt.requirements_report(),
                 "read_only":true,"external_actions_executed":0}))?);
             return Ok(());
