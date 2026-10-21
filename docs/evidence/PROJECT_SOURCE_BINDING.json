@@ -234,5 +234,36 @@
       "src/phase_contextual_meta.rs": "bbc3277a3cb6762078310edae73124e2de7550afc451cd3397a5d98b41b0dce9"
     },
     "scope": "acquired conditional sensory programs and context-conditioned projection of the same U1; one factual memory, physical action authority and checkpoint; original RSP2 unchanged"
+  },
+  "implemented_first_readout_extension": {
+    "base_commit": "fe2381db9f630b49c7d3ece06d00d6142773feb5",
+    "description": "Opt-in immutable first-observation forecasts within the same existing reward learner; historical source and RSP2 retained",
+    "base_archive": "docs/evidence/FIRST_READOUT_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "5b5f7dd5ab88a997eab6ef9ef99ca6d84360dd159f245ab60042ce1aaeb5ae5f",
+    "modified": {
+      "src/construction/acquired_rules.rs": {
+        "before_sha256": "387ea623544143094ffe6076a2b5b7a07f83690bd3d95ecd9526787fd3fc72f0",
+        "after_sha256": "a891ef8ab6006fe97fca20ce78fc0801041bdff74176ba74d44ed9d3d89276ae"
+      },
+      "src/construction/external_reward.rs": {
+        "before_sha256": "fce74428063797df319eef0088e99a96d6a3928fbb23c587dae4521bed5c5815",
+        "after_sha256": "79881ba0ddae208ab38d6099c88d8fdc3fc4fedc14e54c70e1575c4f039dbda2"
+      },
+      "src/construction/external_port.rs": {
+        "before_sha256": "ef595e51c79bbf43637c27b996bedddab1dbacc6ea7654dd721ff1b738850d4f",
+        "after_sha256": "e036b407cad9f89c6dd6408542981494321f10d80817002fbb5ce537f16a885e"
+      },
+      "src/organism_development.rs": {
+        "before_sha256": "1548776ff698281606d18236a4c8658001fb335ce258afd1e4561252e32608c3",
+        "after_sha256": "f95e4ca89cb915309713a21fed045131622aa9229823831e9bc206478bc36ee2"
+      },
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "213f8db62aa2b1f1d9dead83923ffd6eef1ba233319ccb09d8425deba5a91568",
+        "after_sha256": "e18d552af73c62d8e7ed17b19a8633da1468c91aac1010efad065de8ac30daf0"
+      }
+    },
+    "added": {
+      "src/construction/first_readout.rs": "99bf4fea76fde759e38ce1f579ed806441561236f3d63a4d7a092ac4e887488f"
+    }
   }
 }

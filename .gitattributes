@@ -12,3 +12,6 @@ src/construction/search_policy.rs whitespace=-blank-at-eol
 # Generated measurements remain downloadable; keep code review readable.
 docs/evidence/acquired-rules/** linguist-generated=true
 docs/evidence/acquired-rules/protocol.json linguist-generated=false
+docs/evidence/first-readout/** linguist-generated=true
+docs/evidence/first-readout/protocol.json linguist-generated=false
+docs/evidence/first-readout/internet-sources.json linguist-generated=false

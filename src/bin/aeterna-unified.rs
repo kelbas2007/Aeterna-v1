@@ -104,6 +104,12 @@ pub(crate) fn main()->Result<()>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_acquired_sensory_rules()?;
                     Ok(json!({"type":"acquired_rules_enabled","learner":"same_living_checkpoint"}))
                 },
+                "organism_enable_first_readouts"=>{
+                    let control=request.get("fixed_readout_control").map_or(Some(false),Value::as_bool).ok_or("invalid fixed_readout_control")?;
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_first_rule_readouts(control)?;
+                    Ok(json!({"type":"first_rule_readouts_enabled","fixed_readout_control":control,
+                        "action_authority":"same_u1","learner":"same_living_checkpoint"}))
+                },
                 "organism_enable_contextual_control"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_contextual_control()?;
                     Ok(json!({"type":"contextual_control_enabled","action_authority":"same_u1"}))

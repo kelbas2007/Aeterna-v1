@@ -1,6 +1,10 @@
-# Documentation index — current main integration, 20 October 2026
+# Documentation index — 21 October 2026
 
-Последний внешний результат: [EXTERNAL-CONTINUAL-5](EXTERNAL_CONTINUAL5_RESULT.md) — изображения 75.1% → 72.3%, сигналы 50.5% balanced accuracy, MiniGrid 3/48, ARC BLOCKED. [Общий сенсорный ученик и адаптация](EXTERNAL_CONTINUAL5.md) · [протокол](EXTERNAL_CONTINUAL5_PROTOCOL.md) · [ревью и происхождение данных](EXTERNAL_CONTINUAL5_REVIEW.md).
+[Аудит архитектуры](ARCHITECTURE_AUDIT_20261021.md) ·
+[Протокол первых прогнозов целого организма](FIRST_READOUT_PROTOCOL.md) ·
+[Последняя завершённая общая жизнь](ACQUIRED_RULES_RESULT.md).
+
+Прежняя формальная внешняя оценка: [EXTERNAL-CONTINUAL-5](EXTERNAL_CONTINUAL5_RESULT.md) — изображения 75.1% → 72.3%, сигналы 50.5% balanced accuracy, MiniGrid 3/48, ARC BLOCKED. [Общий сенсорный ученик и адаптация](EXTERNAL_CONTINUAL5.md) · [протокол](EXTERNAL_CONTINUAL5_PROTOCOL.md) · [ревью и происхождение данных](EXTERNAL_CONTINUAL5_REVIEW.md).
 
 [CAUSAL-CONTINUAL-4C](CAUSAL_CONTINUAL4C_RESULT.md): **ENGINEERING_PASS**, все 384 жизни на 32 новых перестановках.
 Десятишаговые цели **32/32** против **0/32**,

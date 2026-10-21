@@ -1,0 +1,26 @@
+[
+  {
+    "iteration": 0,
+    "correct": 143,
+    "samples": 213,
+    "status": "retrospective selected-memory diagnostic only"
+  },
+  {
+    "iteration": 10,
+    "correct": 141,
+    "samples": 213,
+    "status": "retrospective selected-memory diagnostic only"
+  },
+  {
+    "iteration": 20,
+    "correct": 147,
+    "samples": 213,
+    "status": "retrospective selected-memory diagnostic only"
+  },
+  {
+    "iteration": 40,
+    "correct": 150,
+    "samples": 213,
+    "status": "retrospective selected-memory diagnostic only"
+  }
+]

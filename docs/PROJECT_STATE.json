@@ -44,7 +44,8 @@
     "real_recorded_image_and_signal_continual_study_completed": true,
     "joint_sensory_rsp2_trajectory_development_experimental": true,
     "acquired_conditional_sensory_programs_in_common_memory_experimental": true,
-    "context_conditioned_single_u1_in_common_checkpoint_experimental": true
+    "context_conditioned_single_u1_in_common_checkpoint_experimental": true,
+    "immutable_first_rule_forecasts_in_common_checkpoint_opt_in": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -146,7 +147,10 @@
     "docs/EXTERNAL_CONTINUAL5_RESULT.md",
     "docs/EXTERNAL_CONTINUAL5_REVIEW.md",
     "docs/ORGANISM_LIFETIME.md",
-    "docs/ACQUIRED_RULES.md"
+    "docs/ACQUIRED_RULES.md",
+    "docs/ARCHITECTURE_AUDIT_20261021.md",
+    "docs/FIRST_READOUT_PROTOCOL.md",
+    "docs/FIRST_READOUT_RESULT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

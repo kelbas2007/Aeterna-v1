@@ -42,8 +42,8 @@ def dependency_versions(scoring):
     return actual
 
 def motors(kind):
-    rng=random.Random({'fashion':202610201,'har':202610202}[kind]);mapping=rng.sample(range(16),16)
-    n=1 if kind=='fashion' else 9;classes=10 if kind=='fashion' else 6
+    rng=random.Random({'fashion':202610201,'har':202610202,'mnist':202610213}[kind]);mapping=rng.sample(range(16),16)
+    n=9 if kind=='har' else 1;classes=6 if kind=='har' else 10
     return mapping[:n],mapping[n:n+classes]
 
 def commitment(args,out):

@@ -282,6 +282,8 @@ struct AcquiredRules {
     domains: BTreeMap<i64, RuleDomain>,
     work: u64,
     proposals: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    first_readouts: Option<FirstReadouts>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -294,6 +296,8 @@ pub struct AcquiredRulesReport {
     pub pending_programs: usize,
     pub rollbacks: u64,
     pub audits: BTreeMap<i64, Vec<AcquiredRuleAudit>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub first_readouts: Option<FirstReadoutReport>,
 }
 
 impl AcquiredRules {
@@ -328,6 +332,7 @@ impl AcquiredRules {
                 .iter()
                 .map(|(&n, d)| (n, d.audits.clone()))
                 .collect(),
+            first_readouts: self.first_readouts.as_ref().map(FirstReadouts::report),
         }
     }
 
@@ -342,21 +347,45 @@ impl AcquiredRules {
         if row.reward <= 0.0 || row.pre[1] == 0 {
             return 0;
         }
+        let first_mode = self.first_readouts.is_some();
+        let first = self.resolve_first_readout(row);
         if !self.domains.contains_key(&row.pre[0]) && self.domains.len() >= 8 {
             return 0;
         }
         let domain = self.domains.entry(row.pre[0]).or_default();
+        let same_incumbent = first.as_ref().is_some_and(|p|
+            p.incumbent == domain.active_program_id());
+        let may_monitor = !first_mode || same_incumbent;
+        let (fixed, old, candidate) = if first_mode {
+            first.map_or(([0.0; 16], [0.0; 16], None), |p| {
+                let same_candidate = same_incumbent && p.candidate.is_some()
+                    && p.candidate == domain.shadow.as_ref().map(|t| t.comparison.program_fingerprint);
+                (p.fixed, p.old, if same_candidate { p.proposed } else { None })
+            })
+        } else { (fixed, old, candidate) };
         let key = fingerprint(&row.pre);
         if domain.seen.len() >= RULE_KEYS || !domain.seen.insert(key) {
             return 0;
         }
         domain.successes += 1;
         let mut meter = Meter::new(RULE_WORK.min(RULE_LIFETIME_WORK.saturating_sub(self.work)));
-        if domain.active.is_some() {
+        if domain.active.is_some() && may_monitor {
             domain.monitoring += 1;
             domain.fixed_correct += usize::from(rule_best(&fixed) == row.action);
             domain.active_correct += usize::from(rule_best(&old) == row.action);
             if domain.monitoring == RULE_EXAM {
+                if let Some(readouts) = self.first_readouts.as_mut() {
+                    if readouts.windows.len() < 128 {
+                        readouts.windows.push(FirstReadoutWindow {
+                            namespace: row.pre[0],
+                            program: domain.active_program_id().unwrap(),
+                            closed_at: row.id, examples: domain.monitoring,
+                            fixed_correct: domain.fixed_correct,
+                            active_correct: domain.active_correct,
+                            rolled_back: domain.active_correct + 3 < domain.fixed_correct,
+                        });
+                    }
+                }
                 if domain.active_correct + 3 < domain.fixed_correct {
                     domain.active = None;
                     domain.rollbacks += 1;
@@ -442,6 +471,7 @@ impl AcquiredRules {
 
     fn validate(&self, events: u64) -> bool {
         self.work <= RULE_LIFETIME_WORK
+            && self.first_readouts.as_ref().is_none_or(|r| r.validate(events))
             && self.proposals
                 == self
                     .domains
@@ -456,6 +486,8 @@ impl AcquiredRules {
                     && d.successes <= d.seen.len() as u64
                     && d.audits.len() <= 8
                     && d.active.as_ref().is_none_or(|p| p.validate(events))
+                    && (self.first_readouts.is_none() || d.active.as_ref().is_none_or(|p|
+                        d.active_program_id() == Some(fingerprint(p))))
                     && d.monitoring < RULE_EXAM
                     && d.fixed_correct <= d.monitoring
                     && d.active_correct <= d.monitoring

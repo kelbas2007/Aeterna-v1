@@ -11,6 +11,12 @@ from run_external_continual5 import motors,scene,verify_data_files
 
 def audit(root,data):
     root=Path(root);provenance=json.loads((root/'provenance.json').read_text())
+    if provenance.get('first_readout_study'):
+        raw=(root/'registered-protocol.json').read_bytes()
+        assert hashlib.sha256(raw).hexdigest()==provenance['registered_protocol_sha256']
+        registered=json.loads(raw)
+        assert registered['binary_sha256']==provenance['binary_sha256']
+        assert registered['variants']==provenance['variants']
     if 'frozen_binary' in provenance:
         binary=root/provenance['frozen_binary']
         raw=binary.read_bytes() if binary.exists() else gzip.decompress(Path(str(binary)+'.gz').read_bytes())
@@ -19,12 +25,19 @@ def audit(root,data):
         assert {n:importlib.metadata.version(n) for n in provenance['dependencies']}==provenance['dependencies']
     assert verify_data_files(data)==provenance['data'],'corpus provenance mismatch'
     datasets={}
-    for kind,loader in [('fashion',load_fashion),('har',load_har)]:
+    loaders=[('fashion',load_fashion),('har',load_har)]
+    if 'mnist_data' in provenance:
+        for name,expected in provenance['mnist_data'].items():
+            raw=(Path(data)/'mnist'/name).read_bytes()
+            assert len(raw)==expected['bytes'] and hashlib.md5(raw).hexdigest()==expected['md5']
+            assert hashlib.sha256(raw).hexdigest()==expected['sha256']
+        loaders.append(('mnist',lambda root,part,offset,count:load_fashion(Path(root)/'mnist',part,offset,count)))
+    for kind,loader in loaders:
         start,end=provenance['training_ranges'][kind]
         datasets[kind]=loader(data,'train',start,end-start)
     sources={}
     for kind,ranges in provenance.get('sensory_sources',{}).items():
-        loader=load_fashion if kind=='fashion' else load_har
+        loader=dict(loaders)[kind]
         for offset,count in ranges.items():sources[(kind,int(offset))]=loader(data,'train',int(offset),count)
     import gymnasium as gym
     import minigrid  # noqa: F401 -- registration
@@ -66,6 +79,9 @@ def audit(root,data):
                             expected=start_sha if part==0 else summary['resume_checkpoint_sha256']
                             assert expected and row['checkpoint_sha256']==expected and row['variant']==variant
                             loads+=1
+                        elif kind=='learning_frozen':
+                            assert pending is None and variant==provenance.get('frozen_before_mnist')
+                            assert row['before_phase']=='mnist'
                         elif kind=='restart':
                             assert pending is None
                             metadata=row['metadata'];observed=frames[row['frame_ref']]
@@ -79,7 +95,7 @@ def audit(root,data):
                                 modality=metadata['phase'];index=metadata['index']
                                 if not metadata.get('corrective_retry'):
                                     context={'modality':modality,'index':index,'frame':blank(modality),
-                                        'measured':set(),'failed':set(),'left':11 if modality=='fashion' else 15,
+                                        'measured':set(),'failed':set(),'left':15 if modality=='har' else 11,
                                         'source_offset':metadata.get('source_offset'),'answered':False}
                                 assert context['modality']==modality and context['index']==index
                                 assert observed==context['frame']
@@ -92,7 +108,7 @@ def audit(root,data):
                             else:
                                 query,answers=motors(context['modality']);available=[False]*16
                                 for axis,a in enumerate(query):available[a]=axis not in context['measured'] and context['left']>1
-                                for a in answers:available[a]=a not in context['failed'] and (context['modality']!='fashion' or bool(context['measured']))
+                                for a in answers:available[a]=a not in context['failed'] and (context['modality']=='har' or bool(context['measured']))
                             assert row['offers']==[{'available':v,'max_cost':1} for v in available]
                             assert available[action]
                             pending={'action':action,'post':None}
@@ -150,12 +166,14 @@ def audit(root,data):
                 count=result['first_answer_prequential']['samples'];rows=answers_observed[cursor:cursor+count];cursor+=count
                 assert len(rows)==count and [r[1] for r in rows]==list(range(count))
                 modality=rows[0][0];assert all(r[0]==modality for r in rows)
-                assert metrics([r[2] for r in rows],[r[3] for r in rows],10 if modality=='fashion' else 6)==result['first_answer_prequential']
+                assert metrics([r[2] for r in rows],[r[3] for r in rows],6 if modality=='har' else 10)==result['first_answer_prequential']
             assert cursor==len(answers_observed)
-            assert initializations==(0 if start_sha else 1) and resumes==1 and len(namespaces)==4
+            expected_interfaces=4+int('mnist_data' in provenance)
+            assert initializations==(0 if start_sha else 1) and resumes==1 and len(namespaces)==expected_interfaces
             if start_sha:assert loads==2
             if provenance.get('contextual_u1_requested') and variant!='organism_previous':
-                assert summary['final_report']['organism']['contextual_namespaces']==[4,9,82,86]
+                expected_contexts=[4,9,12,82,86] if expected_interfaces==5 and variant!=provenance.get('frozen_before_mnist') else [4,9,82,86]
+                assert summary['final_report']['organism']['contextual_namespaces']==expected_contexts
             proof[variant]={'status':'PASS','initializations':initializations,'exact_checkpoint_resumes':resumes,
                 'factual_posts':posts,'actual_cost':actual_cost,'sensor_interfaces':len(namespaces),
                 'starting_factual_events':base_events,'initial_checkpoint_loads':int(bool(start_sha)),

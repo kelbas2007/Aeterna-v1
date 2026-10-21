@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-21",
+  "source_kind": "official public repositories and documentation; not full paper review",
+  "accessed": [
+    {
+      "file_read_locally": "dreamcoder_readme.txt",
+      "url": "https://raw.githubusercontent.com/ellisk42/ec/master/Readme.md",
+      "sha256": "56b3026c3e7b5259c2154f51a4d5ce2d60e5d342856b0615ff9bab3f34e08d7e",
+      "bytes": 11778
+    },
+    {
+      "file_read_locally": "dreamcoder_compression.txt",
+      "url": "https://raw.githubusercontent.com/ellisk42/ec/master/dreamcoder/fragmentGrammar.py",
+      "sha256": "018e9677996bbd9bad6d47ec62764442ad693ea6d266951be2a839a0dfdfe8dd",
+      "bytes": 19764
+    },
+    {
+      "file_read_locally": "dreamerv3_repo.txt",
+      "url": "https://raw.githubusercontent.com/danijar/dreamerv3/main/README.md",
+      "sha256": "a4d8e77c07a876a7f528aa204fbc910812c5ca96bcfb67709b366f8ff0d3ed6b",
+      "bytes": 4590
+    },
+    {
+      "file_read_locally": "dreamer_agent.txt",
+      "url": "https://raw.githubusercontent.com/danijar/dreamerv3/main/dreamerv3/agent.py",
+      "sha256": "adce8e4274bc098c218bf9a20fd3327545f0ad7d850b5fe328597382e91b5269",
+      "bytes": 18262
+    },
+    {
+      "file_read_locally": "nca_docs.txt",
+      "url": "https://raw.githubusercontent.com/scikit-learn/scikit-learn/main/doc/modules/neighbors.rst",
+      "sha256": "250a80c691d6ca6d8440b303e3cb862b66fa04d7132d195d3fd1a3f340a797b2",
+      "bytes": 38743
+    },
+    {
+      "file_read_locally": "gem_repo.txt",
+      "url": "https://raw.githubusercontent.com/facebookresearch/GradientEpisodicMemory/master/README.md",
+      "sha256": "c373a7436e8cb1c5d0342000c35bbc20dc282fe011b41e3df63a0cad5c018e11",
+      "bytes": 514
+    },
+    {
+      "file_read_locally": "river.txt",
+      "url": "https://raw.githubusercontent.com/online-ml/river/main/README.md",
+      "sha256": "92c6f56635966b25877a8661dc7652a10e27b980d879118f909e4019cb763c98",
+      "bytes": 8271
+    },
+    {
+      "file_read_locally": "river_arf.txt",
+      "url": "https://raw.githubusercontent.com/online-ml/river/main/river/forest/adaptive_random_forest.py",
+      "sha256": "db2fe3ba1657248bfa30e8a2b95b24bbd0b1ddc140f49da1b280e0265b3825e1",
+      "bytes": 38634
+    },
+    {
+      "file_read_locally": "vowpal_bandits.txt",
+      "url": "https://raw.githubusercontent.com/VowpalWabbit/vowpal_wabbit/master/README.md",
+      "sha256": "e5f3d25f33d87137756f3d0d34edf9443888005304a1d1c4369334ef318dbce5",
+      "bytes": 3527
+    }
+  ],
+  "blocked": [
+    {
+      "url": "https://arxiv.org/abs/2006.08381",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://arxiv.org/abs/2301.04104",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://arxiv.org/abs/1605.09674",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://arxiv.org/abs/1706.08840",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://arxiv.org/abs/1103.4601",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://jmlr.org/papers/v10/weinberger09a.html",
+      "reason": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  ]
+}

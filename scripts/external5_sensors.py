@@ -37,10 +37,11 @@ def load_har(root,part,offset,count):
 
 def blank(kind):
     if kind=='fashion':return {'kind':'image','namespace':1,'pixels':None}
+    if kind=='mnist':return {'kind':'image','namespace':3,'pixels':None}
     return {'kind':'signals','namespace':2,'channels':[None]*9}
 
 def acquire(frame,index,sample):
-    if frame['kind']=='image':return {'kind':'image','namespace':1,'pixels':sample.tolist()}
+    if frame['kind']=='image':return {'kind':'image','namespace':frame['namespace'],'pixels':sample.tolist()}
     channels=list(frame['channels']);channels[index]=sample[index].tolist()
     return {'kind':'signals','namespace':2,'channels':channels}
 
