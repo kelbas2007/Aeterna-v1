@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       CARGO_BUILD_JOBS: 2
       CARGO_TERM_COLOR: never
@@ -46,6 +46,12 @@ jobs:
           python scripts/check_project.py --release 2>&1 | tee project-evidence/integration.log
           python scripts/check_docs.py 2>&1 | tee project-evidence/docs.log
           python scripts/project_audit.py 2>&1 | tee project-evidence/source-binding.json
+      - name: Raw external sensor input boundaries without held-out data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.3.5 > project-evidence/external-python-install.log 2>&1
+          python scripts/external5_tests.py 2>&1 | tee project-evidence/external-input-tests.log
       - name: Existing broad causal regressions and separate-process demos
         if: runner.os == 'Linux'
         shell: bash

@@ -1,0 +1,472 @@
+[
+  {
+    "path": "sensor-study/sensors/fixed/continuous-training.jsonl.gz",
+    "intentions": 18270,
+    "actual_posts": 18270,
+    "native_commits": 18270,
+    "actual_cost": 18270,
+    "distinct_raw_frames": 8243,
+    "graded_windows": 6000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/fixed/fashion-after-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/fixed/fashion-before-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/fixed/har-after-har.jsonl.gz",
+    "intentions": 2334,
+    "actual_posts": 2334,
+    "native_commits": 2334,
+    "actual_cost": 2334,
+    "distinct_raw_frames": 1335,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/full/continuous-training.jsonl.gz",
+    "intentions": 18887,
+    "actual_posts": 18887,
+    "native_commits": 18887,
+    "actual_cost": 18887,
+    "distinct_raw_frames": 9194,
+    "graded_windows": 6000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/full/fashion-after-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/full/fashion-before-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/full/har-after-har.jsonl.gz",
+    "intentions": 2426,
+    "actual_posts": 2426,
+    "native_commits": 2426,
+    "actual_cost": 2426,
+    "distinct_raw_frames": 1427,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/legacy/continuous-training.jsonl.gz",
+    "intentions": 31497,
+    "actual_posts": 31497,
+    "native_commits": 31497,
+    "actual_cost": 31497,
+    "distinct_raw_frames": 6270,
+    "graded_windows": 6000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/legacy/fashion-after-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/legacy/fashion-before-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/legacy/har-after-har.jsonl.gz",
+    "intentions": 1006,
+    "actual_posts": 1006,
+    "native_commits": 1006,
+    "actual_cost": 1006,
+    "distinct_raw_frames": 7,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/one_step/continuous-training.jsonl.gz",
+    "intentions": 17652,
+    "actual_posts": 17652,
+    "native_commits": 17652,
+    "actual_cost": 17652,
+    "distinct_raw_frames": 4304,
+    "graded_windows": 6000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/one_step/fashion-after-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/one_step/fashion-before-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 2000,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/one_step/har-after-har.jsonl.gz",
+    "intentions": 1000,
+    "actual_posts": 1000,
+    "native_commits": 1000,
+    "actual_cost": 1000,
+    "distinct_raw_frames": 1,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/random/continuous-training.jsonl.gz",
+    "intentions": 43645,
+    "actual_posts": 43645,
+    "native_commits": 0,
+    "actual_cost": 43645,
+    "distinct_raw_frames": 16591,
+    "graded_windows": 6000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/random/fashion-after-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 0,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/random/fashion-before-har.jsonl.gz",
+    "intentions": 2000,
+    "actual_posts": 2000,
+    "native_commits": 0,
+    "actual_cost": 2000,
+    "distinct_raw_frames": 1001,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "sensor-study/sensors/random/har-after-har.jsonl.gz",
+    "intentions": 2162,
+    "actual_posts": 2162,
+    "native_commits": 0,
+    "actual_cost": 2162,
+    "distinct_raw_frames": 1163,
+    "graded_windows": 1000,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/fixed/held.jsonl.gz",
+    "intentions": 4096,
+    "actual_posts": 4096,
+    "native_commits": 4096,
+    "actual_cost": 4096,
+    "distinct_raw_frames": 484,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/fixed/training.jsonl.gz",
+    "intentions": 8192,
+    "actual_posts": 8192,
+    "native_commits": 8192,
+    "actual_cost": 8192,
+    "distinct_raw_frames": 654,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/full/held.jsonl.gz",
+    "intentions": 4096,
+    "actual_posts": 4096,
+    "native_commits": 4096,
+    "actual_cost": 4096,
+    "distinct_raw_frames": 484,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/full/training.jsonl.gz",
+    "intentions": 8192,
+    "actual_posts": 8192,
+    "native_commits": 8192,
+    "actual_cost": 8192,
+    "distinct_raw_frames": 654,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/legacy/held.jsonl.gz",
+    "intentions": 4096,
+    "actual_posts": 4096,
+    "native_commits": 4096,
+    "actual_cost": 4096,
+    "distinct_raw_frames": 498,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/legacy/training.jsonl.gz",
+    "intentions": 8192,
+    "actual_posts": 8192,
+    "native_commits": 8192,
+    "actual_cost": 8192,
+    "distinct_raw_frames": 687,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/one_step/held.jsonl.gz",
+    "intentions": 4096,
+    "actual_posts": 4096,
+    "native_commits": 4096,
+    "actual_cost": 4096,
+    "distinct_raw_frames": 484,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/one_step/training.jsonl.gz",
+    "intentions": 8192,
+    "actual_posts": 8192,
+    "native_commits": 8192,
+    "actual_cost": 8192,
+    "distinct_raw_frames": 654,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-DoorKey-8x8-v0/random/training.jsonl.gz",
+    "intentions": 12244,
+    "actual_posts": 12244,
+    "native_commits": 0,
+    "actual_cost": 12244,
+    "distinct_raw_frames": 1081,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/fixed/held.jsonl.gz",
+    "intentions": 640,
+    "actual_posts": 640,
+    "native_commits": 640,
+    "actual_cost": 640,
+    "distinct_raw_frames": 74,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/fixed/training.jsonl.gz",
+    "intentions": 1239,
+    "actual_posts": 1239,
+    "native_commits": 1239,
+    "actual_cost": 1239,
+    "distinct_raw_frames": 118,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/full/held.jsonl.gz",
+    "intentions": 640,
+    "actual_posts": 640,
+    "native_commits": 640,
+    "actual_cost": 640,
+    "distinct_raw_frames": 74,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/full/training.jsonl.gz",
+    "intentions": 1239,
+    "actual_posts": 1239,
+    "native_commits": 1239,
+    "actual_cost": 1239,
+    "distinct_raw_frames": 118,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/legacy/held.jsonl.gz",
+    "intentions": 630,
+    "actual_posts": 630,
+    "native_commits": 630,
+    "actual_cost": 630,
+    "distinct_raw_frames": 81,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/legacy/training.jsonl.gz",
+    "intentions": 1280,
+    "actual_posts": 1280,
+    "native_commits": 1280,
+    "actual_cost": 1280,
+    "distinct_raw_frames": 113,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/one_step/held.jsonl.gz",
+    "intentions": 636,
+    "actual_posts": 636,
+    "native_commits": 636,
+    "actual_cost": 636,
+    "distinct_raw_frames": 81,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/one_step/training.jsonl.gz",
+    "intentions": 1272,
+    "actual_posts": 1272,
+    "native_commits": 1272,
+    "actual_cost": 1272,
+    "distinct_raw_frames": 110,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-MultiRoom-N2-S4-v0/random/training.jsonl.gz",
+    "intentions": 1920,
+    "actual_posts": 1920,
+    "native_commits": 0,
+    "actual_cost": 1920,
+    "distinct_raw_frames": 154,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/fixed/held.jsonl.gz",
+    "intentions": 3886,
+    "actual_posts": 3886,
+    "native_commits": 3886,
+    "actual_cost": 3886,
+    "distinct_raw_frames": 423,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/fixed/training.jsonl.gz",
+    "intentions": 7884,
+    "actual_posts": 7884,
+    "native_commits": 7884,
+    "actual_cost": 7884,
+    "distinct_raw_frames": 789,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/full/held.jsonl.gz",
+    "intentions": 3815,
+    "actual_posts": 3815,
+    "native_commits": 3815,
+    "actual_cost": 3815,
+    "distinct_raw_frames": 445,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/full/training.jsonl.gz",
+    "intentions": 7884,
+    "actual_posts": 7884,
+    "native_commits": 7884,
+    "actual_cost": 7884,
+    "distinct_raw_frames": 808,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/legacy/held.jsonl.gz",
+    "intentions": 4096,
+    "actual_posts": 4096,
+    "native_commits": 4096,
+    "actual_cost": 4096,
+    "distinct_raw_frames": 518,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/legacy/training.jsonl.gz",
+    "intentions": 8177,
+    "actual_posts": 8177,
+    "native_commits": 8177,
+    "actual_cost": 8177,
+    "distinct_raw_frames": 751,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/one_step/held.jsonl.gz",
+    "intentions": 4096,
+    "actual_posts": 4096,
+    "native_commits": 4096,
+    "actual_cost": 4096,
+    "distinct_raw_frames": 449,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/one_step/training.jsonl.gz",
+    "intentions": 8057,
+    "actual_posts": 8057,
+    "native_commits": 8057,
+    "actual_cost": 8057,
+    "distinct_raw_frames": 807,
+    "graded_windows": 0,
+    "status": "PASS"
+  },
+  {
+    "path": "minigrid-study/minigrid/MiniGrid-Unlock-v0/random/training.jsonl.gz",
+    "intentions": 11911,
+    "actual_posts": 11911,
+    "native_commits": 0,
+    "actual_cost": 11911,
+    "distinct_raw_frames": 1355,
+    "graded_windows": 0,
+    "status": "PASS"
+  }
+]

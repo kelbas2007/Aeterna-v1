@@ -105,6 +105,8 @@ pub struct Learner {
     adaptive_history_suffix:bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
     causal_memory:Option<super::causal_memory::CausalMemory>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    external_memory:Option<super::external_reward::ExternalMemory>,
     /// Encoding cache only; never changes legacy checkpoint bytes or state.
     #[serde(skip)]
     journal_encoding:Option<(usize,usize)>,
@@ -491,7 +493,7 @@ impl Learner {
         if initial.len() != config.width { return Err(Error::InvalidData); }
         Ok(Self { active: Model { program: Program::identity(config.width),state: vec![],scale: vec![1.0;config.width] },
             config,previous: None,shadow: None,library: Library::default(),registry: Registry::default(),records: vec![],promotions: vec![],
-            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false,causal_memory:None,journal_encoding:None })
+            current: initial,next_id: 0,pending: false,poisoned: false,restart_next: true,last_trace: None,construction_work: 0,last_error: None,curriculum: None,epistemic: None,autonomy: None,frozen_at: None,carrier_managed:false,requirements:None,self_directed:false,certified_chains:false,predictive_history_states:false,active_pair_probes:false,adaptive_history_suffix:false,causal_memory:None,external_memory:None,journal_encoding:None })
     }
     /// Opt-in, no prefilled task list or preferred sensor indices.
     pub fn enable_curriculum(&mut self,mode: SelectionMode) -> Result<()> {
@@ -531,7 +533,7 @@ impl Learner {
     /// Irreversible freeze; facts and action costs continue, learning does not.
     pub fn freeze_learning(&mut self)->Result<()> {
         if self.pending || self.poisoned {return Err(Error::Busy);}
-        if self.frozen_at.is_none(){self.cancel_shadow();if let Some(m)=&mut self.causal_memory{m.finish_learning();}self.frozen_at=Some(self.next_id);}
+        if self.frozen_at.is_none(){self.cancel_shadow();if let Some(m)=&mut self.causal_memory{m.finish_learning();}if let Some(m)=&mut self.external_memory{m.finish();}self.frozen_at=Some(self.next_id);}
         self.freeze_recursive_search();if let Some(b)=&mut self.requirements{b.freeze();}Ok(())
     }
     pub fn program(&self) -> &Program { &self.active.program }
@@ -824,6 +826,7 @@ impl Learner {
         if self.pending || self.poisoned { return Err(Error::Busy); }
         if observation.len() != self.config.width { return Err(Error::InvalidData); }
         if let Some(memory)=&mut self.causal_memory {memory.reset(self.frozen_at.is_none());}
+        if let Some(memory)=&mut self.external_memory{if self.frozen_at.is_none(){memory.finish();}memory.clear_working();}
         self.current = observation; self.restart_next = true; self.active.state = self.active.program.initial_state();
         if let Some(s) = &mut self.shadow { s.model.state = s.model.program.initial_state(); }
         Ok(())
@@ -1037,6 +1040,10 @@ impl Learner {
             if c.pending_target() != state.shadow.as_ref().map(|s| s.trace.job.target) { return Err(Error::InvalidData); }
         }
         state.config.validate()?; state.library.validate(state.config.width)?; state.registry.validate(&state.library)?;
+        if let Some(m)=&state.external_memory {
+            if state.causal_memory.is_none() || state.config.width!=32 || state.config.actions!=16 {return Err(Error::InvalidData);}
+            m.validate(state.config.actions,state.next_id,state.frozen_at.is_some())?;
+        }
         if let Some(book)=&state.requirements {
             book.validate()?;
             let learned=book.report();
@@ -1433,6 +1440,7 @@ mod tests {
 fn carrier_unmanaged(v:&bool)->bool{!*v}
 include!("unified_port.rs");
 include!("causal_port.rs");
+include!("external_port.rs");
 
 include!("recursive_search_port.rs");
 

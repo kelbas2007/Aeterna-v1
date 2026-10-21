@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "comparison": "Frozen 2569bf5 vs reviewed ndmin loader; training partition only, first 3000 windows",
+  "arrays_identical": [
+    "raw_channels",
+    "class_feedback",
+    "subject_ids"
+  ],
+  "shape": [
+    3000,
+    9,
+    128
+  ]
+}

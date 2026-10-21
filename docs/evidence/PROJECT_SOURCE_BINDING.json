@@ -130,5 +130,38 @@
       "src/construction/causal_memory.rs": "20cdc15fa458b60b5bb1ea9fc9f5c5f881f862a03b3571df07eecbd00ec20bda",
       "src/construction/causal_port.rs": "3b866b966548d455c9f0aa9119f9432954b4ae89a555e52a64653ad152ecb052"
     }
+  },
+  "implemented_external_reward_extension": {
+    "base_commit": "10d411d0fd675a11b9007aee2cc2fdc0ebfef817",
+    "base_archive": "docs/evidence/EXTERNAL5_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "5e738ab7e1b5bd60ee1b7c960fe2601c3cb6c936df412c93c050fe5e78f82707",
+    "modified": {
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "7dc1f3597403d010b9c8a59063c5fa1404edb26f0ef5bf1a3730b10be5928248",
+        "after_sha256": "d64e70952dde8c80f3ab4438ff9fee809c8f005baacf964900b1ae77c7057f5b"
+      },
+      "src/construction/causal_port.rs": {
+        "before_sha256": "3b866b966548d455c9f0aa9119f9432954b4ae89a555e52a64653ad152ecb052",
+        "after_sha256": "0fb473d8505d242c33c648ded4abf72581f07c585855a0f1965269ceb7d140fc"
+      },
+      "src/construction/mod.rs": {
+        "before_sha256": "98fafb94182475a7a26840f95f0e697e0e4c043dd1b79a634985d1ad49f5f55a",
+        "after_sha256": "e48c6124c1b132c23a182e21d701faa38556a75c025bf56164e880c624ea9a6d"
+      },
+      "src/construction/runtime.rs": {
+        "before_sha256": "fdcc85e3c32015f811f6035487464234ea05b6fddb9d53958d11d8eaee692eca",
+        "after_sha256": "3b5cd96d379d8a3479ece34fa73f7c3d40604601a8b02a97055317293447a5f1"
+      },
+      "src/unified_runtime.rs": {
+        "before_sha256": "8b5a67e8a551d782273c716ede5214a6e887f7ea854ae30ef6602bc37f3d922b",
+        "after_sha256": "8fad7364b5bf7a5f3197dd7e65d62fb6ef6ce491deb30da296a87a860e8df036"
+      }
+    },
+    "added": {
+      "src/construction/external_port.rs": "c150a9679d91bd8447c1c482fabdf6bc16a8611bb6bfdeeb6c6e5bd659c06c61",
+      "src/construction/external_reward.rs": "86af566ccc01d9efc7e2fd68cb568329c6c1b69f27dac233455f219f3c2fc660",
+      "src/construction/sensors.rs": "69180aa9ce6583907abae8dd2329356a00014984510c426efd6d686dd6baf202"
+    },
+    "status": "implemented; external scoring is separate from historical CAUSAL-CONTINUAL-4C evidence"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "actions_executed": 0,
+  "published_checkpoint_restores_identical_knowledge": true,
+  "source_sha256": {
+    "src/construction/external_reward.rs": "86af566ccc01d9efc7e2fd68cb568329c6c1b69f27dac233455f219f3c2fc660",
+    "src/bin/aeterna-unified.rs": "d64e70952dde8c80f3ab4438ff9fee809c8f005baacf964900b1ae77c7057f5b"
+  },
+  "scope": "Post-review compatibility only; no fresh external evaluation."
+}

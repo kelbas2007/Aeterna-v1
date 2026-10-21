@@ -9,6 +9,21 @@ rsp3=binding.get('reviewed_rsp3_extension')
 lc1=binding.get('reviewed_lc1_extension')
 autonomous=binding.get('reviewed_autonomous_u1_extension')
 sha=lambda b:hashlib.sha256(b).hexdigest()
+external=binding.get('implemented_external_reward_extension')
+external_base={}
+if external:
+ packed=(r/external['base_archive']).read_bytes()
+ assert sha(packed)==external['base_archive_sha256'],'external base archive changed'
+ external_base=json.loads(gzip.decompress(packed))
+ assert set(external_base)==set(external['modified']),'incomplete external historical archive'
+ for name,d in external['modified'].items():
+  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared external source mutation'
+  assert sha(external_base[name].encode())==d['before_sha256'],name+' external historical source mismatch'
+ for name,digest in external['added'].items():
+  assert sha((r/name).read_bytes())==digest,name+' external source mismatch'
+def before_external(path):
+ name=path.relative_to(r).as_posix()
+ return external_base[name].encode() if name in external_base else path.read_bytes()
 causal=binding.get('implemented_causal_continual_extension')
 base_sources={}
 if causal:
@@ -17,16 +32,17 @@ if causal:
  base_sources=json.loads(gzip.decompress(packed))
  assert set(base_sources)==set(causal['modified']),'incomplete historical source archive'
  for name,d in causal['modified'].items():
-  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared causal source mutation'
+  assert sha(before_external(r/name))==d['after_sha256'],name+' undeclared causal source mutation'
   assert sha(base_sources[name].encode())==d['before_sha256'],name+' historical source mismatch'
  for name,digest in causal['added'].items():
-  assert sha((r/name).read_bytes())==digest,name+' new causal source mismatch'
+  assert sha(before_external(r/name))==digest,name+' new causal source mismatch'
 def source(path):
  name=path.relative_to(r).as_posix()
- return base_sources[name].encode() if name in base_sources else path.read_bytes()
+ return base_sources[name].encode() if name in base_sources else before_external(path)
 def git_blob(raw):
  return hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
 added=set(causal['added']) if causal else set()
+if external:added.update(external['added'])
 original_hashes={}
 if lc1:
  for path,expected in lc1['added'].items():
@@ -97,4 +113,9 @@ assert len(files)==binding['bound_cognitive_source_files'],len(files)
 assert count_untouched==binding['unchanged_cognitive_source_files'],(count_untouched,binding['unchanged_cognitive_source_files'])
 assert h.hexdigest()==binding['aggregate_sha256'],'original core changed unexpectedly'
 assert sha(source(r / 'src/construction/search_policy.rs'))==binding['search_policy_sha256'],'RSP2 engine changed'
-print(json.dumps({'status':'PASS','original_source_files':len(files),'historical_base_untouched':count_untouched,'untouched':count_untouched-sum(p not in original_hashes and p not in changes and p not in binding['exclusions'] for p in (causal['modified'] if causal else {})), 'causal_extension_verified':bool(causal),'lc1_added_files':len(lc1['added']) if lc1 else 0,'original_aggregate':h.hexdigest(),'rsp2_search_policy_unchanged':True}))
+current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})
+untouched=count_untouched-sum(p.relative_to(r).as_posix() in current_modified
+ and p.relative_to(r).as_posix() not in original_hashes and p.relative_to(r).as_posix() not in changes for p in files)
+print(json.dumps({'status':'PASS','original_source_files':len(files),'historical_base_untouched':count_untouched,
+ 'untouched':untouched,'causal_extension_verified':bool(causal),'external_extension_verified':bool(external),
+ 'lc1_added_files':len(lc1['added']) if lc1 else 0,'original_aggregate':h.hexdigest(),'rsp2_search_policy_unchanged':True}))

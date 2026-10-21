@@ -1,5 +1,7 @@
 # Documentation index — current main integration, 20 October 2026
 
+Последний внешний результат: [EXTERNAL-CONTINUAL-5](EXTERNAL_CONTINUAL5_RESULT.md) — изображения 75.1% → 72.3%, сигналы 50.5% balanced accuracy, MiniGrid 3/48, ARC BLOCKED. [Общий сенсорный ученик и адаптация](EXTERNAL_CONTINUAL5.md) · [протокол](EXTERNAL_CONTINUAL5_PROTOCOL.md) · [ревью и происхождение данных](EXTERNAL_CONTINUAL5_REVIEW.md).
+
 [CAUSAL-CONTINUAL-4C](CAUSAL_CONTINUAL4C_RESULT.md): **ENGINEERING_PASS**, все 384 жизни на 32 новых перестановках.
 Десятишаговые цели **32/32** против **0/32**,
 полезный шумный датчик **1877/2048** против **1140/2048**, простая цель **2048/2048**.

@@ -282,6 +282,8 @@ pub struct AgencyCreditReport {
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedPost {pub observation:Vec<i64>,pub cost:u64,pub reward:f32}
+#[derive(Debug,USerialize,UDeserialize)]
+pub struct SensorPost {pub frame:crate::construction::sensors::SensorFrame,pub cost:u64,pub reward:f32}
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedStep {
     pub action:usize,pub source:String,pub operations:Vec<String>,pub selected_fields:[f32;5],
@@ -801,6 +803,49 @@ impl ScientificRuntime {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.freeze_controller{return Err(UError::Busy)}
         u.current.learner.enable_causal_memory(config)
+    }
+    pub fn enable_constructing_external_reward_memory(&mut self,enabled:bool,adaptive:bool)->UResult<()> {
+        self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.enable_external_reward_memory(enabled,adaptive)
+    }
+    pub fn observe_external_sensor_restart(&mut self,frame:&crate::construction::sensors::SensorFrame)->UResult<()> {
+        let mut encoder=self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_take_sensor_encoder()?;
+        let old=encoder.clone();encoder.reset();
+        let result=encoder.observe(frame).and_then(|obs|self.observe_constructing_external_restart(obs));
+        self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_put_sensor_encoder(if result.is_ok(){encoder}else{old});
+        result
+    }
+    pub fn finish_external_episode(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        let credits=u.current.learner.carrier_finish_external_episode();
+        if !u.freeze_controller {for (fields,value) in credits {
+            self.organism.observe_phase_native_meta_utility(fields,value as f32);
+        }}
+        Ok(())
+    }
+    /// Raw sensory POSTs are encoded only after an actual protected action.
+    /// Encoder state and all acquired reward strategies share one checkpoint.
+    pub fn step_external_sensors<H,F>(&mut self,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
+    where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<SensorPost> {
+        let namespace=self.construction_learner().ok_or(UError::NoEvidence)?.current()[0];
+        let mut encoder=self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_take_sensor_encoder()?;
+        let result=self.step_constructing_with_action_limit(None,offers,remaining_actions,hazard,|action| {
+            let post=execute(action)?;
+            // Preserve a known actual cost even when the sensor result is
+            // invalid. The ordinary outer validator rejects the empty shape
+            // BEFORE commitment, charges this cost and latches the fault.
+            let observation=if !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[action].max_cost {
+                Vec::new()
+            }else{
+                let mut next=encoder.clone();
+                match next.observe(&post.frame) {
+                    Ok(v) if v[0]==namespace=>{encoder=next;v},
+                    _=>Vec::new(),
+                }
+            };
+            Ok(UnifiedPost{observation,cost:post.cost,reward:post.reward})
+        });
+        self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_put_sensor_encoder(encoder);
+        result
     }
     /// Decide before any experience whether the native action policy may be
     /// credited for outcomes of externally FORCED identification actions.
@@ -1584,7 +1629,8 @@ impl ScientificRuntime {
         if u.current.learner.causal_memory_enabled() && !is_option_continuation {
             let planning_offers=offers.iter().zip(&allowed).map(|(o,&available)|UOffer{available,max_cost:o.max_cost}).collect::<Vec<_>>();
             let remaining=u.max_external_cost.saturating_sub(u.total_external_cost);
-            let (proposal,work)=u.current.learner.carrier_causal_proposal(&planning_offers,goal,cfg.planning_work/2,cfg.planning_depth,remaining);
+            let causal_budget=if u.current.learner.external_reward_enabled(){cfg.planning_work.saturating_sub(4_000)}else{cfg.planning_work/2};
+            let (proposal,work)=u.current.learner.carrier_causal_proposal(&planning_offers,goal,causal_budget,cfg.planning_depth,remaining);
             base_factual_work=work;
             u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
             if let Some(p)=proposal {
@@ -1631,7 +1677,7 @@ impl ScientificRuntime {
                 operations.push("persisted-native-option".into());
                 selected=Some((approved,0.0));break
             }
-            if u.current.learner.causal_memory_enabled() && goal.is_some() {
+            if u.current.learner.causal_memory_enabled() && (goal.is_some() || u.current.learner.external_reward_enabled()) {
                 for candidate in &mut options {
                     if candidate.kind==3 && !candidate.source.starts_with("causal-belief-") {
                         // Sensor codes need not have an ordinal meaning. An
@@ -1776,7 +1822,8 @@ impl ScientificRuntime {
                 return Err(e)
             }
         };
-        if post.observation.len()!=cfg.width || !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[a].max_cost {
+        if post.observation.len()!=cfg.width || !u.current.learner.carrier_valid_external_state(&post.observation)
+            || !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[a].max_cost {
             if is_option_continuation{
                 if let Some(l)=u.temporal_options.as_mut(){l.reject_pending()}
             }
@@ -1792,14 +1839,19 @@ impl ScientificRuntime {
         let value=if u.current.learner.causal_memory_enabled(){post.reward.max(progress).max(0.0).clamp(0.0,1.0)}
             else{(0.8*post.reward.max(progress).max(0.0)+0.2*(if novel {1.0}else{0.0})).clamp(0.0,1.0)};
         let verdicts=u.current.learner.promotions().len();u.total_external_cost=u.total_external_cost.saturating_add(post.cost);
+        let external_reward=u.current.learner.external_reward_enabled();
+        let factual_pre=u.current.learner.current().to_vec();
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
-        let delayed_causal_decision=u.current.learner.causal_memory_enabled() &&
+        let reward_work=u.current.learner.carrier_external_feedback(factual_pre,a,post.observation.clone(),f64::from(post.reward),post.cost,
+            if native_credit_eligible{Some(option.p.fields)}else{None});
+        u.computation_work=u.computation_work.saturating_add(reward_work);
+        let delayed_causal_decision=external_reward || (u.current.learner.causal_memory_enabled() &&
             option.source.starts_with("causal-belief-") &&
             (option.source=="causal-belief-experiment" ||
-                option.p.fields[0]>causal_immediate_goals[a] as f32+0.03);
+                option.p.fields[0]>causal_immediate_goals[a] as f32+0.03));
         // An explicit reward settles this choice now; do not subsequently
         // replace it with zero merely because a different goal was unfinished.
-        let probe=if native_credit_eligible && delayed_causal_decision && post.reward==0.0 {Some(option.p.fields)}else{None};
+        let probe=if !external_reward && native_credit_eligible && delayed_causal_decision && post.reward==0.0 {Some(option.p.fields)}else{None};
         let credits=u.current.learner.carrier_causal_feedback(goal,&post.observation,post.cost,probe,policy_has_choice);
         if !u.freeze_controller {for (fields,utility) in credits {
             self.organism.observe_phase_native_meta_utility(fields,utility as f32);
@@ -1925,7 +1977,7 @@ impl ScientificRuntime {
         if !u.freeze_controller {
             // A real environment reward is already factual. Only predicted
             // future goal utility waits for a delayed causal/option outcome.
-            if native_credit_eligible && u.current.learner.causal_memory_enabled()
+            if !external_reward && native_credit_eligible && u.current.learner.causal_memory_enabled()
                 && post.reward!=0.0 && (delayed_causal_decision || selected_temporal_route
                     || u.instrumental_credit.is_some()) {
                 self.organism.observe_phase_native_meta_utility(option.p.fields,post.reward.clamp(0.0,1.0));

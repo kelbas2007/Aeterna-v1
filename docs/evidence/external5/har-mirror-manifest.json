@@ -1,0 +1,195 @@
+{
+  "transport": "two_pinned_matching_public_mirrors",
+  "official_origin": "https://archive.ics.uci.edu/static/public/240/human+activity+recognition+using+smartphones.zip",
+  "sources": [
+    {
+      "repository": "schakraborty369/UCI-HAR-Dataset",
+      "commit": "af2d3fbe51b5c317e34701225d5420d0d884d5ce",
+      "prefix": "data/"
+    },
+    {
+      "repository": "babarbashir/UCI-HAR-Dataset",
+      "commit": "9f4dca7e33c616fe78e8a51f371c2d2e33d48b4b",
+      "prefix": "UCI-HAR-Dataset/"
+    }
+  ],
+  "files": [
+    {
+      "path": "train/y_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/y_train.txt",
+      "bytes": 14704,
+      "git_blob_sha1": "6ff495a02c8d78aacf3ffade7c31846c5e5a3cac",
+      "sha256": "415b3357e2e2d5e70a45c781947c6bdd80e0410a579d862eedcd6bbce3c694ef",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/subject_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/subject_train.txt",
+      "bytes": 20152,
+      "git_blob_sha1": "ae745467665ef06918ee39dbfcfcc406c1a20a90",
+      "sha256": "66e1e2fbe9b396fa5155f531dc3348c803f503be663e2318772d49947db9153a",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/y_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/y_test.txt",
+      "bytes": 5894,
+      "git_blob_sha1": "e314f2b7e646b13411a8b78b2aa25b92ef1349f1",
+      "sha256": "2a94cb53ca46b956c1b2aebd4a09a72badd8a8e9ea9cdfe9f31b3306a08666bb",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/subject_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/subject_test.txt",
+      "bytes": 7934,
+      "git_blob_sha1": "fc57b3d7b5b34fd6b4ea12fefa5fe1b26427e5c3",
+      "sha256": "63b8c577f4a85431c06bd87f6384608c90a9f72f05c7956dd21255dc63515c07",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/body_acc_x_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/body_acc_x_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "929fde6b878e777f408626f624f836da08f4fe3a",
+      "sha256": "dd89179c0d562d19f5c9131a899a825672434c0fc599105f8a4bbc104a56e810",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/body_acc_y_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/body_acc_y_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "8176fab7248c2ed4f9f81ab269477bf382817ca7",
+      "sha256": "dce8807a24abc265413eb5566cc4903a4631f5c579833f6a65faf1aecb64ca9a",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/body_acc_z_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/body_acc_z_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "a39df0ded2436e9780bc5bd342aea3e600d8935d",
+      "sha256": "2ac9256ca4e874de1b0bd898326b67a3e8ff09c84e05c64f2973a877d7e1204d",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/body_gyro_x_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/body_gyro_x_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "03a8e30004b496a2dc4d3ae86d4780b17dea67c4",
+      "sha256": "92c8be470ea6d8d77071d6e77c85cc5df35ab08622f1f0a37430b6904e3efb6c",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/body_gyro_y_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/body_gyro_y_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "83c9bd1900438683f205be232fc3c9f4490cf1df",
+      "sha256": "431107e70a95d47ee5c8a8f5888730160d9082ce75cd97abf8d75ec9f2029354",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/body_gyro_z_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/body_gyro_z_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "27be709838197209bd9bbae0c718c537e4ea9052",
+      "sha256": "6a74066f947d810616ebd58d836ca82ff738219a31ef42bd855d3e26e9296d2f",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/total_acc_x_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/total_acc_x_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "b22467a24b422d35f7862e2049c4feeb78e3dd49",
+      "sha256": "a681842c3781f31a25b2dd555031c1e03c82e284a397b29a51bc0bbf2d3cbda7",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/total_acc_y_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/total_acc_y_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "e2b9ed7ba2a3b85cc0ecc3dd560b3fea845d926c",
+      "sha256": "03b2315fc46fceaf1d323524b4f8d5606b937a9067a3e7617dd33832cd41c1e9",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "train/Inertial Signals/total_acc_z_train.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/train/Inertial%20Signals/total_acc_z_train.txt",
+      "bytes": 15064248,
+      "git_blob_sha1": "939ca92650c1f9958343da1d5b0dc76544175ff5",
+      "sha256": "7f0623a3ccbc405ae1bbe6519945e7738e50ec75f0844ed1cf14ca016513bbef",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/body_acc_x_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/body_acc_x_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "43cc8b67728804ae0f47cdade4776bb4710b560f",
+      "sha256": "5c48d9be2023b0da72bd25f6c65a4a084ae06621f27744cbe89137f3c054bc22",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/body_acc_y_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/body_acc_y_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "798f707479b1e8b86d983d562f0da173540a28da",
+      "sha256": "2936e290d00cb1e4db13e7f5b6865ff89a3e09955c79d1f4ad7a150606bf127b",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/body_acc_z_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/body_acc_z_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "54995aa9d1bc13a1cb38e34b0f08eb4672d18d9b",
+      "sha256": "1d7f6bf28d36737c46fe9aebb32a595fece488672cb18894b646266bdb38b58f",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/body_gyro_x_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/body_gyro_x_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "19908204424d87d963d1d1319639428800234570",
+      "sha256": "79b1cb223da618fd0ff3ba51b8b1f35906fb8a65cf39a1eb0926f808b2553af5",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/body_gyro_y_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/body_gyro_y_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "f08e94b66e1f02abc984e994d9cbfde3c875072b",
+      "sha256": "0c7825532f5428a629f33210ba904be31d8e7264204e1e79d81d5d10894cceb0",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/body_gyro_z_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/body_gyro_z_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "8e0c93642c7fbe17f2b1c509909c89ea677c8e99",
+      "sha256": "67501a347afb417d102b7e861e692acd392f2cfe11b8822967cdb6d9f0c5e862",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/total_acc_x_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/total_acc_x_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "8aea0be2cecb04c78d79353d63f43bcc03f6eafe",
+      "sha256": "916a003dea2fa06b24105a3fc550210a50adaadb90361f02ffe77c02266780bb",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/total_acc_y_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/total_acc_y_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "ae51100d85dfe6228df72e22162b398b59c8577f",
+      "sha256": "d56bcf1e68c353690b745c6c9003498e5c75062f480c02eea61c1aab2f034f85",
+      "independent_mirrors_match": true
+    },
+    {
+      "path": "test/Inertial Signals/total_acc_z_test.txt",
+      "source_url": "https://raw.githubusercontent.com/schakraborty369/UCI-HAR-Dataset/af2d3fbe51b5c317e34701225d5420d0d884d5ce/data/test/Inertial%20Signals/total_acc_z_test.txt",
+      "bytes": 6038403,
+      "git_blob_sha1": "fe8c13f3ef7aa9e8d1d72135a55abda167ec9a3f",
+      "sha256": "342c6caa0de7914b26f06bb489ac5f9e44de42825a05718f16b571751c599468",
+      "independent_mirrors_match": true
+    }
+  ],
+  "note": "Archive repacked from raw inertial files and original partition metadata; no record decoded."
+}

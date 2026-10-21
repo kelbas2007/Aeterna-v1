@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "source_reference": "2569bf5",
+  "reviewed_loader": "ndmin and strict integer/subject validation",
+  "training_rows": 3000,
+  "raw_signals_labels_subject_ids_identical": true
+}

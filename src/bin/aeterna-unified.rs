@@ -1,6 +1,6 @@
 //! JSONL transport for a trusted VIRTUAL environment adapter.
 //! No browser, network, filesystem mutation, or physical-action driver.
-use aeterna_v1::scientific_runtime::{ScientificRuntime,UnifiedPost};
+use aeterna_v1::scientific_runtime::{ScientificRuntime,UnifiedPost,SensorPost};
 use aeterna_v1::construction::{Config,Error};
 use aeterna_v1::construction::synthesis::SearchConfig;
 use aeterna_v1::construction::autonomy::{ActionOffer,AutonomyPolicy};
@@ -18,6 +18,18 @@ fn read<R:BufRead>(input:&mut R)->Result<Value>{
 }
 fn write<W:Write>(out:&mut W,v:&Value)->Result<()>{serde_json::to_writer(&mut *out,v)?;out.write_all(b"\n")?;out.flush()?;Ok(())}
 fn safe(_:usize)->HumanProtectionEvidence{HumanProtectionEvidence{human_present:false,physical_effect_possible:false,predicted_harm_probability:0.0,hazard_confidence:1.0,emergency_stop:false}}
+fn decode_sensor_post(value:Value)->Result<SensorPost>{
+    // Recover the known cost before decoding sensor-specific content. An
+    // invalid frame/reward must reach the ordinary cost-bearing reject path.
+    let cost=value.get("cost").and_then(Value::as_u64).ok_or("unknown or invalid actual sensor cost")?;
+    let reward=serde_json::from_value::<f32>(value["reward"].clone());
+    let frame=serde_json::from_value(value["frame"].clone());
+    match (reward,frame) {
+        (Ok(reward),Ok(frame))=>Ok(SensorPost{frame,cost,reward}),
+        _=>Ok(SensorPost{cost,reward:f32::NAN,
+            frame:aeterna_v1::construction::sensors::SensorFrame::Image{namespace:0,pixels:Some(Vec::new())}}),
+    }
+}
 fn configuration()->(Config,AutonomyPolicy){
     let cfg=Config{width:32,actions:4,search:SearchConfig{work:100_000,max_expr_nodes:3,max_frontier:512,max_updates:4,max_state:0,deterministic:false},minimum_training:32,search_every:16,shadow_steps:12,journal_capacity:1024,planning_depth:2,planning_work:50_000};
     let policy=AutonomyPolicy{ceiling:SearchConfig{work:300_000,max_expr_nodes:5,max_frontier:2048,max_updates:8,max_state:1,deterministic:false},failures_per_expansion:2,max_external_cost:10000,evidence:Some(EvidencePolicy::default())};
@@ -60,6 +72,47 @@ pub(crate) fn main()->Result<()>{
         let response:Result<Value>=(||{
             match request["op"].as_str().ok_or("missing op")? {
                 "project_status"=>Ok(json!({"type":"project_status","project":project_status()})),
+                "external_init"=>{
+                    if runtime.is_some(){return Err("already initialized".into());}
+                    let frame=serde_json::from_value(request["frame"].clone())?;
+                    let (mut cfg,mut policy)=configuration();
+                    cfg.actions=16;cfg.planning_depth=usize::try_from(request.get("planning_depth").map_or(Some(32),Value::as_u64).ok_or("invalid planning_depth")?)?;
+                    cfg.planning_work=1_000_000;cfg.search_every=1_000_000;cfg.journal_capacity=512;
+                    policy.max_external_cost=1_000_000;
+                    let mut rt=ScientificRuntime::new_constructing(cfg,policy,vec![0;32],"external-continuous-v5")?;
+                    rt.enable_constructing_self_directed_control()?;rt.enable_constructing_agency_aware_credit()?;
+                    rt.enable_constructing_causal_memory(aeterna_v1::construction::causal_memory::CausalConfig {
+                        history_depth:3,model_entries:256,model_bytes:512*1024,outcomes_per_entry:4,planning_states:64})?;
+                    rt.enable_constructing_external_reward_memory(request.get("reward_memory").map_or(Some(true),Value::as_bool).ok_or("invalid reward_memory")?,
+                        request.get("adaptive").map_or(Some(true),Value::as_bool).ok_or("invalid adaptive")?)?;
+                    rt.observe_external_sensor_restart(&frame)?;runtime=Some(rt);
+                    Ok(json!({"type":"initialized","action_authority":"protected_u1","learner":"one_joint_checkpoint"}))
+                },
+                "external_reset"=>{
+                    let frame=serde_json::from_value(request["frame"].clone())?;
+                    runtime.as_mut().ok_or("not loaded")?.observe_external_sensor_restart(&frame)?;
+                    Ok(json!({"type":"external_restarted"}))
+                },
+                "external_episode_end"=>{
+                    runtime.as_mut().ok_or("not loaded")?.finish_external_episode()?;
+                    Ok(json!({"type":"external_episode_finished"}))
+                },
+                "external_reward_report"=>Ok(json!({"type":"external_reward_report","report":runtime.as_ref().ok_or("not loaded")?
+                    .construction_learner().ok_or("not constructing")?.external_reward_report()})),
+                "external_step"=>{
+                    let offers:Vec<ActionOffer>=serde_json::from_value(request["offers"].clone())?;
+                    let remaining=request.get("remaining_actions").map(|v|v.as_u64().ok_or("invalid remaining_actions").and_then(|n|usize::try_from(n).map_err(|_|"remaining_actions overflow"))).transpose()?;
+                    let step=runtime.as_mut().ok_or("not loaded")?.step_external_sensors(&offers,remaining,safe,|action|{
+                        let result:Result<SensorPost>=(||{
+                            write(&mut out,&json!({"type":"action","action":action}))?;
+                            let post=read(&mut input)?;
+                            if post["op"]!="post"{return Err("expected actual sensor POST, no retry permitted".into());}
+                            decode_sensor_post(post["result"].clone())
+                        })();
+                        result.map_err(|e|Error::Execution(e.to_string()))
+                    })?;
+                    Ok(json!({"type":"committed","step":step}))
+                },
                 "init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
                     let (mut cfg,mut policy)=configuration();
@@ -333,7 +386,14 @@ pub(crate) fn main()->Result<()>{
         })();
         match response {
             Ok(v)=>{write(&mut out,&v)?;if v["type"]=="bye"{break;}},
-            Err(e)=>{write(&mut out,&json!({"type":"error","message":e.to_string()}))?;return Err(e);}
+            Err(e)=>{
+                let mut diagnostic=json!({"type":"error","message":e.to_string()});
+                if request["op"]=="external_step" {
+                    diagnostic["report"]=json!(runtime.as_ref().and_then(|rt|rt.unified_report()));
+                    diagnostic["external_reward_report"]=json!(runtime.as_ref().and_then(|rt|rt.construction_learner()).and_then(|l|l.external_reward_report()));
+                }
+                write(&mut out,&diagnostic)?;return Err(e);
+            }
         }
     }
     Ok(())

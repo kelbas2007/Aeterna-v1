@@ -94,9 +94,11 @@ impl Learner {
         Ok(())
     }
     pub(crate) fn carrier_take_causal_credits(&mut self) -> Vec<([f32; 5], f64)> {
-        self.causal_memory
+        let mut credits=self.causal_memory
             .as_mut()
-            .map_or_else(Vec::new, |m| m.take_credits())
+            .map_or_else(Vec::new, |m| m.take_credits());
+        if let Some(m)=&mut self.external_memory{credits.extend(m.take_credits());}
+        credits
     }
     pub(crate) fn carrier_causal_waiting_for_restart(&self) -> bool {
         self.causal_memory.is_some()
@@ -131,6 +133,7 @@ impl Learner {
         if let Some(memory) = self.causal_memory.as_mut() {
             memory.finish_learning();
         }
+        if let Some(memory)=self.external_memory.as_mut(){memory.finish();}
         self.carrier_take_causal_credits()
     }
     fn compact_causal_prefix(&mut self, remove: usize) -> Result<()> {
@@ -228,6 +231,22 @@ impl Learner {
         horizon: usize,
         remaining_cost: u64,
     ) -> (Option<super::causal_memory::CausalProposal>, u64) {
+        if goal.is_none() {
+            if let Some(memory)=self.external_memory.as_ref().filter(|m|m.enabled) {
+                let (reward,work)=memory.propose(&self.current,offers,self.config.planning_depth.min(horizon),remaining_cost,budget);
+                if reward.as_ref().is_some_and(|p|p.value<=0.02) {
+                    if let Some(causal)=self.causal_memory.as_ref() {
+                        let (experiment,extra)=causal.propose_with_cost_limit(&self.current,offers,None,
+                            self.config.planning_depth.min(horizon),remaining_cost,budget.saturating_sub(work));
+                        if experiment.as_ref().is_some_and(|p|!memory.recently_tried(&self.current,p.action)) {
+                            return (experiment,work.saturating_add(extra));
+                        }
+                        return (reward,work.saturating_add(extra));
+                    }
+                }
+                return (reward,work);
+            }
+        }
         self.causal_memory.as_ref().map_or((None, 0), |m| {
             m.propose_with_cost_limit(
                 &self.current,
@@ -254,7 +273,7 @@ impl Learner {
         // outcome must still settle earlier freely selected experiments.
         let experiment = experiment.filter(|_| native_choice);
         memory.feedback(goal, post, cost, experiment, self.frozen_at.is_none());
-        memory.take_credits()
+        self.carrier_take_causal_credits()
     }
 }
 
