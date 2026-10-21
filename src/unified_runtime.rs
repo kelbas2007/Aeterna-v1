@@ -911,7 +911,7 @@ impl ScientificRuntime {
         });
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;u.raw_sensor_step=false;
         u.current.learner.carrier_put_sensor_encoder(encoder);
-        if u.current.learner.factual_event_count()==before+1 {
+        if before.checked_add(1)==Some(u.current.learner.factual_event_count()) {
             if let (Some(w),Some((a,frame,reward,cost)))=(u.learning_world.as_mut(),raw_post){
                 let selected=result.as_ref().is_ok_and(|s|s.source=="learned-world");
                 let work=w.committed(u.current.learner.factual_event_count() as u64,a,&frame,u.current.learner.current(),f64::from(reward),cost,u.freeze_controller,selected)?;

@@ -23,6 +23,81 @@ pub struct LearningWorldConfig {
     pub discount: f64,
     pub seed: u64,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn fixture() -> (LearningWorld, SensorFrame, Vec<i64>) {
+        let config = LearningWorldConfig {
+            latent: 4,
+            context_frames: 2,
+            max_coordinates: 16,
+            max_frame_values: 16,
+            memory_entries: 4,
+            memory_bytes: 16384,
+            work_per_step: 100_000,
+            reconstruction_targets: 8,
+            replay_updates: 1,
+            ..Default::default()
+        };
+        let frame = SensorFrame::Signals {
+            namespace: 1,
+            channels: std::iter::once(Some(vec![0.1, 0.2, 0.3, 0.4]))
+                .chain((0..8).map(|_| None))
+                .collect(),
+        };
+        let bridge = crate::construction::sensors::SensorEncoder::default()
+            .observe(&frame)
+            .unwrap();
+        let mut world = LearningWorld::new(config, 16, 0).unwrap();
+        world.restart(&frame, &bridge, false).unwrap();
+        (world, frame, bridge)
+    }
+    #[test]
+    fn terminal_feedback_does_not_replenish_an_exhausted_step_budget() {
+        let (mut w, frame, bridge) = fixture();
+        w.begin_decision(&[true; 16], Some(1));
+        w.committed(1, 3, &frame, &bridge, 0.2, 1, false, true)
+            .unwrap();
+        w.work += w.config.work_per_step - w.step_work;
+        w.step_work = w.config.work_per_step;
+        let before = w.report();
+        assert_eq!(w.finish_episode(false), 0);
+        assert!(w.memory[0].terminal);
+        let after = w.report();
+        assert_eq!(before.model_fingerprint, after.model_fingerprint);
+        assert_eq!(before.work, after.work);
+        assert_eq!(w.finish_episode(false), 0);
+        w.validate(&bridge, 1).unwrap();
+    }
+    #[test]
+    fn malformed_checkpoint_counters_fail_validation_without_integer_overflow() {
+        let (mut w, _, bridge) = fixture();
+        w.online_updates = u64::MAX;
+        w.consolidation_updates = 1;
+        w.representation_version = u64::MAX;
+        assert!(w.validate(&bridge, 0).is_err());
+        let (mut w, frame, bridge) = fixture();
+        let sample = Experience {
+            event: 0,
+            context: w.context.clone(),
+            post: ContextFrame {
+                frame,
+                previous_action: Some(3),
+            },
+            reward: 0.0,
+            cost: 1,
+            terminal: false,
+            context_key: 0,
+            reserved_bytes: usize::MAX,
+            last_loss: 0.0,
+            progress: 0.0,
+            replays: 0,
+        };
+        w.memory = vec![sample.clone(), sample];
+        assert!(w.validate(&bridge, 0).is_err());
+    }
+}
 impl Default for LearningWorldConfig {
     fn default() -> Self {
         Self {
@@ -568,7 +643,9 @@ impl LearningWorld {
             goal.as_deref(),
         );
         let key = context_key(&self.context, self.config.max_frame_values);
-        self.episodic_predictions += self.episodic_mix(key, &mut forecasts);
+        self.episodic_predictions = self
+            .episodic_predictions
+            .saturating_add(self.episodic_mix(key, &mut forecasts));
         self.belief = pass.last();
         self.belief_version = self.representation_version;
         self.predicted_actions = self
@@ -664,7 +741,7 @@ impl LearningWorld {
             {
                 let (sq, n) = self.network.sensor_error(&pre.pass.last(), action, &values);
                 self.sensor_squared_error += sq;
-                self.sensor_count += n;
+                self.sensor_count = self.sensor_count.saturating_add(n);
                 sample.last_loss = sq / n.max(1) as f64;
             }
         }
@@ -673,6 +750,7 @@ impl LearningWorld {
             self.selected_proposals += 1;
         }
         if !frozen {
+            self.last_experience = None;
             self.register(std::slice::from_ref(&sample.post), false);
             self.train(&sample, false);
             sample.reserved_bytes = sample.reserve();
@@ -707,11 +785,14 @@ impl LearningWorld {
         Ok(self.work - start)
     }
     fn train(&mut self, sample: &Experience, replay: bool) -> bool {
+        if self.representation_version == u64::MAX {
+            return false;
+        }
         let cost = self.network.training_cost(sample, &self.config);
         // Always leave enough for recomputing the largest live context.
         let reserve = self.refresh_reserve();
         if cost.saturating_add(reserve) > self.config.work_per_step.saturating_sub(self.step_work) {
-            self.budget_skipped_updates += 1;
+            self.budget_skipped_updates = self.budget_skipped_updates.saturating_add(1);
             return false;
         }
         if !self.charge(cost) {
@@ -783,19 +864,21 @@ impl LearningWorld {
             return 0;
         }
         let start = self.work;
-        self.step_work = 0;
+        // Closing a task is part of the preceding step's learning budget;
+        // repeated episode-end messages cannot mint more replay allowance.
         if let Some(event) = self.last_experience.take() {
             if let Some(index) = self.memory.iter().position(|s| s.event == event) {
                 self.memory[index].terminal = true;
                 let sample = self.memory[index].clone();
-                self.train(&sample, true);
-                let cost = self
-                    .network
-                    .encode_cost(&self.context, self.config.max_frame_values)
-                    + self.goal_cost();
-                self.work = self.work.saturating_add(cost);
-                self.step_work += cost;
-                self.refresh();
+                if self.train(&sample, true) {
+                    let cost = self
+                        .network
+                        .encode_cost(&self.context, self.config.max_frame_values)
+                        + self.goal_cost();
+                    self.work = self.work.saturating_add(cost);
+                    self.step_work += cost;
+                    self.refresh();
+                }
             }
         }
         self.work - start
@@ -809,7 +892,8 @@ impl LearningWorld {
             || self.bridge.len() != 32
             || self.belief.len() != self.config.latent
             || self.belief_version != self.representation_version
-            || self.representation_version != self.online_updates + self.consolidation_updates
+            || self.online_updates.checked_add(self.consolidation_updates)
+                != Some(self.representation_version)
             || self.online_updates > self.factual_updates
             || self.reward_count > self.factual_updates
             || self.selected_proposals > self.factual_updates
@@ -825,7 +909,7 @@ impl LearningWorld {
                 .memory
                 .iter()
                 .map(|s| s.reserved_bytes as u64)
-                .sum::<u64>()
+                .fold(0u64, u64::saturating_add)
                 > self.config.memory_bytes as u64
             || !self.reward_squared_error.is_finite()
             || self.reward_squared_error < 0.0
@@ -852,7 +936,14 @@ impl LearningWorld {
             return Err(Error::InvalidData);
         }
         if let Some(goal) = &self.goal {
-            self.check_frame(goal)?;
+            let input = raw(goal, self.config.max_frame_values)?;
+            if input.is_empty()
+                || input
+                    .iter()
+                    .any(|(key, _)| !self.network.coordinates.contains_key(key))
+            {
+                return Err(Error::InvalidData);
+            }
         }
         let mut events = std::collections::BTreeSet::new();
         for s in &self.memory {
@@ -864,6 +955,7 @@ impl LearningWorld {
                 || s.post.previous_action.is_none()
                 || s.reserved_bytes != s.reserve()
                 || s.context_key != context_key(&s.context, self.config.max_frame_values)
+                || s.replays > self.consolidation_updates
                 || !s.reward.is_finite()
                 || !(-1.0..=1.0).contains(&s.reward)
                 || !s.last_loss.is_finite()

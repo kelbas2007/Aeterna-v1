@@ -70,6 +70,7 @@ def main():
  run('cargo','check',*common,'--all-targets')
  flags=common+(['--release'] if a.release else [])
  run('cargo','test',*flags,'--lib','construction::')
+ run('cargo','test',*flags,'--lib','learning_world::')
  run('cargo','test',*flags,'--lib','causal_continuity_credit_tests')
  # Automatically synthesized trajectory evaluator, including prospective gates.
  run('cargo','test',*flags,'--lib','autonomous_temporal_revision_tests')
