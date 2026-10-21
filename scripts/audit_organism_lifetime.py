@@ -36,10 +36,20 @@ def audit(root,data):
     for kind,loader in loaders:
         start,end=provenance['training_ranges'][kind]
         datasets[kind]=loader(data,partition,start,end-start)
+        if kind in provenance.get('source_indices',{}):
+            import numpy as np
+            indices=provenance['source_indices'][kind]
+            assert len(indices)==len(set(indices)) and all(start<=i<end for i in indices)
+            take=np.asarray(indices)-start
+            datasets[kind]=tuple(None if x is None else x[take] for x in datasets[kind])
     sources={}
     for kind,ranges in provenance.get('sensory_sources',{}).items():
         loader=dict(loaders)[kind]
-        for offset,count in ranges.items():sources[(kind,int(offset))]=loader(data,partition,int(offset),count)
+        for offset,count in ranges.items():
+            if kind in provenance.get('source_indices',{}):
+                assert int(offset)==0 and count==len(provenance['source_indices'][kind])
+                sources[(kind,0)]=datasets[kind]
+            else:sources[(kind,int(offset))]=loader(data,partition,int(offset),count)
     import gymnasium as gym
     import minigrid  # noqa: F401 -- registration
     summaries=json.loads((root/'summary.json').read_text());proof={}

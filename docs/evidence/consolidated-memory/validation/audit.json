@@ -1,0 +1,75 @@
+{
+  "lives": {
+    "organism_consolidated": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 4303,
+      "actual_cost": 22101,
+      "sensor_interfaces": 5,
+      "starting_factual_events": 17798,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    },
+    "organism_fifo": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 4303,
+      "actual_cost": 22101,
+      "sensor_interfaces": 5,
+      "starting_factual_events": 17798,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    }
+  },
+  "probe": {
+    "organism_consolidated": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 3767,
+      "actual_cost": 25868,
+      "sensor_interfaces": 3,
+      "starting_factual_events": 22101,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    },
+    "organism_fifo": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 3767,
+      "actual_cost": 25868,
+      "sensor_interfaces": 3,
+      "starting_factual_events": 22101,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    },
+    "organism_entry": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 3712,
+      "actual_cost": 21510,
+      "sensor_interfaces": 3,
+      "starting_factual_events": 17798,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    }
+  },
+  "same_parent_except_model_and_charged_seed_work": true,
+  "one_learner_and_capacity_unchanged": true,
+  "legacy_failure_sketch_never_reset": true,
+  "all_frozen_learned_cores_unchanged": true
+}

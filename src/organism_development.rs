@@ -669,6 +669,24 @@ impl MetaRevision {
 }
 
 impl ScientificRuntime {
+    /// Compress only existing factual successes into the same learner's model.
+    /// Seeding work is charged without inventing external observations/actions.
+    pub fn enable_constructing_consolidated_memory(&mut self) -> UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.development.as_ref().is_none_or(|d|d.pending_actions!=0) { return Err(UError::Blocked); }
+        let work=u.current.learner.carrier_enable_consolidated_memory()?;
+        u.computation_work=u.computation_work.saturating_add(work);
+        Ok(())
+    }
+    /// Continue the same life with coverage-aware selection in its existing
+    /// bounded factual memory. No second learner, extra prototypes or actor.
+    pub fn enable_constructing_coverage_memory(&mut self) -> UResult<()> {
+        let u = self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.development.as_ref().is_none_or(|d| d.pending_actions != 0) {
+            return Err(UError::Blocked);
+        }
+        u.current.learner.carrier_enable_coverage_memory()
+    }
     /// Opt in within the same existing life. A diagnostic control preserves
     /// acquisition/evidence but bypasses conditional programs in action values.
     pub fn enable_constructing_first_rule_readouts(&mut self, fixed_control: bool) -> UResult<()> {

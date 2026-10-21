@@ -41,6 +41,14 @@ impl Learner {
         let memory = self.external_memory.as_mut().ok_or(Error::NoEvidence)?;
         memory.enable_first_rule_readouts(control)
     }
+    pub(crate) fn carrier_enable_coverage_memory(&mut self) -> Result<()> {
+        if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
+        self.external_memory.as_mut().ok_or(Error::NoEvidence)?.enable_coverage_memory()
+    }
+    pub(crate) fn carrier_enable_consolidated_memory(&mut self) -> Result<u64> {
+        if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
+        self.external_memory.as_mut().ok_or(Error::NoEvidence)?.enable_consolidated_memory()
+    }
     pub(crate) fn carrier_valid_external_state(&self, state: &[i64]) -> bool {
         self.external_memory.is_none()
             || (state.len() == 32

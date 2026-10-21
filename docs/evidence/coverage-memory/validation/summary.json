@@ -1,0 +1,15 @@
+{
+  "source_commit": "f329e74",
+  "binary_sha256": "24d142caf1228eaeea995ec464dc431160ccc6dc1706d7cb018e724430c51316",
+  "full_project_runner": "PASS",
+  "rust_successful_executions": 495,
+  "rust_invocations": 52,
+  "python_format_tests": 11,
+  "new_posts_audited": 14432,
+  "new_native_actions_replayed": 14432,
+  "old_native_actions_replayed": 6624,
+  "new_world_actions_from_replay": 0,
+  "all_joint_checkpoints_byte_identical": true,
+  "combined_behavioral_criterion": "FAIL",
+  "selected_continuation": "published_PR18_parent"
+}

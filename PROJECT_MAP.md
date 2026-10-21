@@ -2,7 +2,15 @@
 
 ## Current common organism and architecture audit (2026-10-21)
 
-The latest [whole-organism audit and result](docs/FIRST_READOUT_RESULT.md)
+The latest [whole-life memory comparison](docs/CONSOLIDATED_MEMORY_RESULT.md)
+continues the same parent to 22,101 actions in each arm. Retention passes on
+new reserved image and signal rows; statistical consolidation produces the
+same answers as FIFO at 10.88% extra computation and fails the improvement
+criterion. The main living state remains the PR18 parent. Both complete
+continuations and the [earlier failed coverage policy](docs/COVERAGE_MEMORY_RESULT.md)
+remain published, with their source fixed before collection.
+
+The preceding [whole-organism audit and result](docs/FIRST_READOUT_RESULT.md)
 publishes one living learner after 17,798 actions. New MNIST-class acquisition
 is confirmed on reserved test images, while old-task retention fails. The
 ordinary constructor has not run and VM.Library remains empty; the report

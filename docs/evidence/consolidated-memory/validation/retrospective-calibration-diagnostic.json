@@ -1,0 +1,36 @@
+{
+  "purpose": "retrospective calibration on consumed V1 FIFO first outcomes; no new agent or qualification",
+  "new_external_actions": 0,
+  "phases": {
+    "har": {
+      "mean_log_density": {
+        "factual_first_outcomes": 256,
+        "mean_brier": 0.23471608323026683
+      },
+      "joint_log_density": {
+        "factual_first_outcomes": 256,
+        "mean_brier": 0.20779151830939005
+      }
+    },
+    "mnist": {
+      "mean_log_density": {
+        "factual_first_outcomes": 256,
+        "mean_brier": 0.5833219274729311
+      },
+      "joint_log_density": {
+        "factual_first_outcomes": 256,
+        "mean_brier": 0.40944125274440896
+      }
+    },
+    "fashion": {
+      "mean_log_density": {
+        "factual_first_outcomes": 256,
+        "mean_brier": 0.5607210583981372
+      },
+      "joint_log_density": {
+        "factual_first_outcomes": 256,
+        "mean_brier": 0.41970239656568475
+      }
+    }
+  }
+}

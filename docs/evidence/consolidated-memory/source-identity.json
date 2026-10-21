@@ -1,0 +1,12 @@
+{
+  "source_commit": "6212fb7bef9f0d0b4a7a1f0011df687fd0411ce1",
+  "source_published_before_collection": true,
+  "binary_sha256": "909c2d71485029e48b29ede8de9d48d052580c01de1c80e0c6b591e2f8266dda",
+  "all_registered_runtime_and_adapter_bytes_unchanged": true,
+  "behavioral_criterion": "FAIL",
+  "selected_continuation": "published_PR18_parent",
+  "parent_sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+  "prior_negative_study": "../coverage-memory/comparison.json",
+  "algorithm_family_engineered": true,
+  "new_learning_algorithm_invention_established": false
+}

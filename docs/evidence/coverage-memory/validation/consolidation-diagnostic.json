@@ -1,0 +1,103 @@
+{
+  "purpose": "Retrospective diagnostic on consumed trial rows, never fresh qualification.\n\nFit a simple factorized Gaussian readout only to already retained successful\nfacts. Compare its coverage on the FIFO agent's recorded answer frames and\ncounterfactual fully measured copies of the SAME consumed examples. No U1,\nfactual frequency guards, tree program or new agent behavior is simulated.\n",
+  "new_external_actions": 0,
+  "fresh_behavioral_evidence": false,
+  "models": {
+    "parent": {
+      "checkpoint_sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+      "phases": {
+        "mnist": {
+          "samples": 256,
+          "positive_prototypes": 436,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 0,
+          "true_motor_without_eligible_prototype_at_full_mask": 0,
+          "eligible_prototypes_at_recorded_mask_mean": 436.0,
+          "gaussian_correct_on_recorded_masks": 168,
+          "gaussian_correct_full_information_diagnostic": 168
+        },
+        "har": {
+          "samples": 256,
+          "positive_prototypes": 436,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 112,
+          "true_motor_without_eligible_prototype_at_full_mask": 212,
+          "eligible_prototypes_at_recorded_mask_mean": 13.58984375,
+          "gaussian_correct_on_recorded_masks": 170,
+          "gaussian_correct_full_information_diagnostic": 182
+        },
+        "fashion": {
+          "samples": 256,
+          "positive_prototypes": 438,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 0,
+          "true_motor_without_eligible_prototype_at_full_mask": 0,
+          "eligible_prototypes_at_recorded_mask_mean": 438.0,
+          "gaussian_correct_on_recorded_masks": 188,
+          "gaussian_correct_full_information_diagnostic": 188
+        }
+      }
+    },
+    "fifo": {
+      "checkpoint_sha256": "67835dd0add1dd9ab004a7c2fb6eb0d757addfcf53171f594676d40227086f58",
+      "phases": {
+        "mnist": {
+          "samples": 256,
+          "positive_prototypes": 435,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 0,
+          "true_motor_without_eligible_prototype_at_full_mask": 0,
+          "eligible_prototypes_at_recorded_mask_mean": 435.0,
+          "gaussian_correct_on_recorded_masks": 164,
+          "gaussian_correct_full_information_diagnostic": 164
+        },
+        "har": {
+          "samples": 256,
+          "positive_prototypes": 435,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 88,
+          "true_motor_without_eligible_prototype_at_full_mask": 256,
+          "eligible_prototypes_at_recorded_mask_mean": 15.22265625,
+          "gaussian_correct_on_recorded_masks": 185,
+          "gaussian_correct_full_information_diagnostic": 211
+        },
+        "fashion": {
+          "samples": 256,
+          "positive_prototypes": 436,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 0,
+          "true_motor_without_eligible_prototype_at_full_mask": 0,
+          "eligible_prototypes_at_recorded_mask_mean": 436.0,
+          "gaussian_correct_on_recorded_masks": 170,
+          "gaussian_correct_full_information_diagnostic": 170
+        }
+      }
+    },
+    "coverage": {
+      "checkpoint_sha256": "93e733e786b7032435f1047c99e73ec99e7983c4fe0fd032d0ee99c3b3b412e4",
+      "phases": {
+        "mnist": {
+          "samples": 256,
+          "positive_prototypes": 435,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 0,
+          "true_motor_without_eligible_prototype_at_full_mask": 0,
+          "eligible_prototypes_at_recorded_mask_mean": 435.0,
+          "gaussian_correct_on_recorded_masks": 151,
+          "gaussian_correct_full_information_diagnostic": 151
+        },
+        "har": {
+          "samples": 256,
+          "positive_prototypes": 435,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 111,
+          "true_motor_without_eligible_prototype_at_full_mask": 154,
+          "eligible_prototypes_at_recorded_mask_mean": 20.3828125,
+          "gaussian_correct_on_recorded_masks": 217,
+          "gaussian_correct_full_information_diagnostic": 215
+        },
+        "fashion": {
+          "samples": 256,
+          "positive_prototypes": 436,
+          "true_motor_without_eligible_prototype_at_recorded_mask": 0,
+          "true_motor_without_eligible_prototype_at_full_mask": 0,
+          "eligible_prototypes_at_recorded_mask_mean": 436.0,
+          "gaussian_correct_on_recorded_masks": 168,
+          "gaussian_correct_full_information_diagnostic": 168
+        }
+      }
+    }
+  }
+}

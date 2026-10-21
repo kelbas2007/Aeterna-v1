@@ -2,7 +2,10 @@
 
 [Аудит архитектуры](ARCHITECTURE_AUDIT_20261021.md) ·
 [Протокол первых прогнозов целого организма](FIRST_READOUT_PROTOCOL.md) ·
-[Последний результат и живой организм](FIRST_READOUT_RESULT.md) ·
+[Сравнение памяти: удержание PASS, преимущество нового оценщика FAIL](CONSOLIDATED_MEMORY_RESULT.md) ·
+[Протокол консолидации](CONSOLIDATED_MEMORY_PROTOCOL.md) ·
+[Предыдущая неудача политики покрытия](COVERAGE_MEMORY_RESULT.md) ·
+[Основной живой организм PR18](FIRST_READOUT_RESULT.md) ·
 [Проверка при одинаковой заморозке](FROZEN_PROBE_PROTOCOL.md) ·
 [Предыдущая опубликованная жизнь](ACQUIRED_RULES_RESULT.md).
 

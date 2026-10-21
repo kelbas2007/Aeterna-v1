@@ -1,5 +1,14 @@
 # AETERNA-v1 — current status and dated historical records
 
+[Whole-organism memory result, 21 October](docs/CONSOLIDATED_MEMORY_RESULT.md):
+two continuations of the same PR18 parent each reach 22,101 factual actions.
+New frozen MNIST / HAR / Fashion scores are 364 / 260 / 356 out of 512 each.
+Retention against the parent passes, but consolidation matches FIFO exactly
+and costs 10.88% more work: improvement FAIL. The main living checkpoint remains
+the PR18 parent. [Earlier failed coverage policy](docs/COVERAGE_MEMORY_RESULT.md)
+and both complete new lives remain published. No new RSP2 generation or
+independent general-intelligence result is established.
+
 [CAUSAL-CONTINUAL-4C](docs/CAUSAL_CONTINUAL4C_RESULT.md): **ENGINEERING_PASS**, все 384 жизни на 32 новых перестановках.
 Десятишаговые цели **32/32** против **0/32**,
 полезный шумный датчик **1877/2048** против **1140/2048**, простая цель **2048/2048**.

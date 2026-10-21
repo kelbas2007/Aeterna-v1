@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "purpose": "Software and provenance verification; behavioral verdict is in comparison.json",
+  "rust_successful_executions": 500,
+  "rust_test_invocations": 52,
+  "python_input_boundary_tests": 11,
+  "native_replay_variants": 5,
+  "new_recorded_actions_and_commits_replayed": 19852,
+  "old_parent_actions_and_commits_replayed": 6624,
+  "new_external_actions_from_verification": 0,
+  "all_choices_and_full_checkpoints_identical": true,
+  "all_registered_source_files_identical": 170
+}
