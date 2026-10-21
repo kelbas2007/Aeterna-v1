@@ -1,0 +1,7 @@
+{
+  "source_commit": "8872f959f7a362e43c9c7634f55973605be9f8d0",
+  "binary_sha256": "2b1f5a16c5e93d3e10850b5df73f37e0a877df875364fbfb6b014b8daba0dae6",
+  "test_opened": false,
+  "new_readout_admissions": 0,
+  "verdict": "FAIL: no policy admitted despite a positive mean reward difference"
+}

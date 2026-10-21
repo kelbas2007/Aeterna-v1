@@ -2,7 +2,7 @@
 import argparse,gzip,json
 from pathlib import Path
 from audit_organism_lifetime import audit
-from run_causal_readout_lifetime import VARIANTS,compare,sha,raw_state,frozen
+from run_causal_readout_lifetime import VARIANTS,compare,sha,raw_state,frozen,learned_core
 from run_external_continual5 import motors
 from external5_sensors import features
 
@@ -57,14 +57,6 @@ def task_boundaries(folder,variant,model):
         'assignment_receipts_before_actions':True,'first_rewards_and_full_costs_match_actual_POSTs':True,
         'candidate_exploit_tasks_after_admission':candidate_exploits}
 
-def learned_core(raw):
-    state=json.loads(raw);learner=state['cognition']['current']['learner']
-    memory={k:v for k,v in learner['external_memory'].items() if k not in ('events','recent','encoder')}
-    causal={k:v for k,v in learner['causal_memory'].items()
-        if k not in ('compacted_cost','compactions','context','events','journal_digest','offset')}
-    return {'external_memory':memory,'causal_model':causal,
-        'programs':{k:learner[k] for k in ('active','library','registry','promotions','shadow')},
-        'synapses':frozen.learned_signature(raw)}
 
 def verify(root,data):
     root=Path(root);raw=(root/'registered-protocol.json').read_bytes();protocol=json.loads(raw)

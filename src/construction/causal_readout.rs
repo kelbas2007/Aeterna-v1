@@ -129,6 +129,25 @@ impl ReadoutDomain {
     }
     fn decide(&mut self, revision: u8) {
         self.decisions += 1;
+        if revision >= 3 {
+            // Choosing an action under uncertainty is different from claiming
+            // a statistically established improvement. Both arms retain a
+            // symmetric Beta(1,1) prior and receive ONLY actual trial rewards.
+            // Independent frozen evaluation decides promotion of the organism.
+            let baseline = (self.baseline.reward + 1.0) / (self.baseline.tasks + 2) as f64;
+            let candidate = (self.candidate.reward + 1.0) / (self.candidate.tasks + 2) as f64;
+            let affordable = self.candidate.cost as f64 <= 1.25 * self.baseline.cost as f64;
+            let previous = self.active;
+            if !affordable || candidate < baseline {
+                self.active = false;
+            } else if candidate > baseline {
+                self.active = true;
+            }
+            self.settled = true;
+            self.admissions += u64::from(self.active && !previous);
+            self.rollbacks += u64::from(previous && !self.active);
+            return;
+        }
         let (wins, losses) = self.wins();
         let alpha = 0.05 / (self.decisions as f64 * (self.decisions as f64 + 1.0));
         let baseline_cost = self
@@ -157,7 +176,7 @@ impl ReadoutDomain {
 impl CausalReadout {
     fn new(events: u64) -> Self {
         Self {
-            revision: 2,
+            revision: 3,
             enabled_at: events,
             ..Self::default()
         }
@@ -338,7 +357,7 @@ impl CausalReadout {
     }
     fn valid(&self, events: u64) -> bool {
         let reward = |x: f64| x.is_finite() && (0.0..=1.0).contains(&x);
-        (1..=2).contains(&self.revision)
+        (1..=3).contains(&self.revision)
             && self.enabled_at <= events
             && self.domains.len() <= 8
             && (!self.frozen || self.task.is_none())
@@ -364,7 +383,7 @@ impl CausalReadout {
                         .is_some_and(|n| n <= d.trials_started)
                     && d.pairs.len() == (d.completed_pairs as usize).min(READOUT_PAIR_WINDOW)
                     && d.decisions == d.completed_pairs / 64
-                    && (!d.settled || (self.revision == 2 && d.decisions > 0))
+                    && (!d.settled || (self.revision >= 2 && d.decisions > 0))
                     && d.admissions <= d.decisions
                     && d.rollbacks <= d.admissions
                     && d.admissions.checked_sub(d.rollbacks) == Some(u64::from(d.active))
@@ -399,6 +418,29 @@ impl CausalReadout {
 #[cfg(test)]
 mod causal_readout_tests {
     use super::*;
+    #[test]
+    fn provisional_expected_reward_choice_keeps_control_trials_without_faking_certainty() {
+        for revision in [2, 3] {
+            let mut p = CausalReadout::new(0);
+            p.revision = revision;
+            for i in 0..128 {
+                p.begin(9, true).unwrap();
+                let arm = p.active(9);
+                let pair = i / 2;
+                let reward = f64::from(if arm { pair % 8 == 0 } else { pair % 11 == 0 });
+                p.observe(9, true, reward, 1);
+                p.end();
+            }
+            assert_eq!(p.domains[&9].active, revision == 3);
+            for _ in 0..8 {
+                p.begin(9, true).unwrap();
+                p.observe(9, true, 1.0, 1);
+                p.end();
+            }
+            assert_eq!(p.domains[&9].exploited, if revision == 3 { 6 } else { 0 });
+            assert!(p.valid(136));
+        }
+    }
     #[test]
     fn inconclusive_trials_keep_exploring_and_legacy_revision_replays() {
         for revision in [1, 2] {

@@ -73,10 +73,19 @@ def check_model(raw):
     memory=state['current']['learner']['external_memory'];assert len(memory['rows'])<=2048
     assert memory['bytes']<=4*1024*1024
 
+def learned_core(raw):
+    state=json.loads(raw);learner=state['cognition']['current']['learner']
+    memory={k:v for k,v in learner['external_memory'].items() if k not in ('events','recent','encoder')}
+    causal={k:v for k,v in learner['causal_memory'].items()
+        if k not in ('compacted_cost','compactions','context','events','journal_digest','offset')}
+    return {'external_memory':memory,'causal_model':causal,
+        'programs':{k:learner[k] for k in ('active','library','registry','promotions','shadow')},
+        'synapses':frozen.learned_signature(raw)}
+
 def register(args):
     parent=raw_state(args.parent);check_model(parent)
     assert not json.loads(parent)['cognition']['freeze_controller']
-    save(args.register,{'schema':'aeterna.causal-readout.v2','status':'registered before scoring',
+    save(args.register,{'schema':'aeterna.causal-readout.v3','status':'registered before scoring',
         'interpretation':'paired development of one continuing organism; public reserved test rows; not invention of a learning algorithm',
         'parent_sha256':sha(parent.encode()),'binary_sha256':sha(Path(args.binary).read_bytes()),
         'source_sha256':source_binding(),'data':verify_data_files(args.data),'mnist_data':mnist_files(args.data),
@@ -249,9 +258,13 @@ def compare(protocol,training,test,out):
         'navigation_no_regression':costs[t]['navigation_successes']>=costs[u]['navigation_successes'],
         'action_cost':costs[t]['actions']/costs[u]['actions']<=c['training_action_ratio_max'],
         'computation_cost':costs[t]['work']/costs[u]['work']<=c['training_work_ratio_max'],
-        'actual_changed_answers':changed>0,'bounded_one_learner':True,'frozen_models_unchanged':True,
+        'actual_changed_answers':changed>0,
+        'bounded_one_learner':all(not json.loads(raw_state(out/'lives'/v/'one-organism.json.gz'))['cognition']['archived']
+            and not json.loads(raw_state(out/'lives'/v/'one-organism.json.gz'))['cognition']['freeze_controller']
+            and len(json.loads(raw_state(out/'lives'/v/'one-organism.json.gz'))['cognition']['current']['learner']['external_memory']['rows'])<=2048 for v in VARIANTS),
+        'frozen_models_unchanged':all(learned_core(raw_state(out/'probe'/v/'starting-organism.json.gz'))==learned_core(raw_state(out/'probe'/v/'one-organism.json.gz')) for v in test),
         'model_budget':all(p['report']['reward_memory']['model_bytes']<=4*1024*1024 for v in VARIANTS for p in training[v]['phases']),
-        'statistical_readout_selected':any(d['consolidated_active'] for k,d in training[t]['final_report']['reward_memory']['consolidated_memory']['causal_readout']['domains'].items() if k in ('4','9','12')),
+        'actual_readout_selected':any(d['consolidated_active'] for k,d in training[t]['final_report']['reward_memory']['consolidated_memory']['causal_readout']['domains'].items() if k in ('4','9','12')),
         'live_use_after_admission':exploited>0,
         'har_improvement_vs_brier':brier_gains['har']+1e-12>=c['har_gain_min'],
         'images_no_regression_vs_brier':all(brier_gains[k]+1e-12>=-c['other_drop_max'] for k in ('mnist','fashion')),

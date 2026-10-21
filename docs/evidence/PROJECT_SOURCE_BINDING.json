@@ -355,7 +355,7 @@
       }
     },
     "added": {
-      "src/construction/causal_readout.rs": "0f1a780f4d0a6c15ce3c83bd374a9d4555880b10950d226b26ddf6fa7a28fdce",
+      "src/construction/causal_readout.rs": "7af8c20064c1ffe86d5483a528b1887d0e00ecafe41f145e8f922ebc55428c2f",
       "src/construction/partial_posterior.rs": "e83d60aa3fe5f554a9032a3d10275533584bb5cdccfefd034d26204e9a0eda22"
     },
     "scope": "Whole-task strategy trials and partial factual prototype posterior within the same Learner/U1; legacy revision replay, bounded monitoring and rollback; original RSP2 retained."

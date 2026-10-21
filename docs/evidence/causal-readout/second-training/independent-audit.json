@@ -1,0 +1,69 @@
+{
+  "corpus_audit": {
+    "organism_causal": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 4446,
+      "actual_cost": 22244,
+      "sensor_interfaces": 5,
+      "starting_factual_events": 17798,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    },
+    "organism_consolidated": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 4377,
+      "actual_cost": 22175,
+      "sensor_interfaces": 5,
+      "starting_factual_events": 17798,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    },
+    "organism_fifo": {
+      "status": "PASS",
+      "initializations": 0,
+      "exact_checkpoint_resumes": 1,
+      "factual_posts": 4369,
+      "actual_cost": 22167,
+      "sensor_interfaces": 5,
+      "starting_factual_events": 17798,
+      "initial_checkpoint_loads": 1,
+      "reported_first_answer_metrics_recomputed": true,
+      "corpus_values_and_rewards_replayed": true,
+      "minigrid_transitions_replayed": true
+    }
+  },
+  "task_boundaries": {
+    "organism_causal": {
+      "status": "PASS",
+      "complete_tasks": 1280,
+      "factual_actions_inside_tasks": 4163,
+      "assignment_receipts_before_actions": true,
+      "first_rewards_and_full_costs_match_actual_POSTs": true,
+      "candidate_exploit_tasks_after_admission": 0
+    },
+    "organism_consolidated": {
+      "status": "PASS",
+      "complete_tasks": 1280,
+      "factual_actions_inside_tasks": 4094,
+      "assignment_receipts_before_actions": true,
+      "first_rewards_and_full_costs_match_actual_POSTs": true,
+      "candidate_exploit_tasks_after_admission": 0
+    },
+    "organism_fifo": {
+      "status": "PASS",
+      "complete_tasks": 1280,
+      "factual_actions_inside_tasks": 4086,
+      "assignment_receipts_before_actions": true,
+      "first_rewards_and_full_costs_match_actual_POSTs": true,
+      "candidate_exploit_tasks_after_admission": 0
+    }
+  }
+}
