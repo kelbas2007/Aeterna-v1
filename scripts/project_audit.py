@@ -9,6 +9,21 @@ rsp3=binding.get('reviewed_rsp3_extension')
 lc1=binding.get('reviewed_lc1_extension')
 autonomous=binding.get('reviewed_autonomous_u1_extension')
 sha=lambda b:hashlib.sha256(b).hexdigest()
+coverage=binding.get('implemented_coverage_memory_extension')
+coverage_base={}
+if coverage:
+ packed=(r/coverage['base_archive']).read_bytes()
+ assert sha(packed)==coverage['base_archive_sha256'],'coverage memory base archive changed'
+ coverage_base=json.loads(gzip.decompress(packed))
+ assert set(coverage_base)==set(coverage['modified']),'incomplete coverage memory historical archive'
+ for name,d in coverage['modified'].items():
+  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared coverage memory mutation'
+  assert sha(coverage_base[name].encode())==d['before_sha256'],name+' coverage memory historical mismatch'
+ for name,digest in coverage['added'].items():
+  assert sha((r/name).read_bytes())==digest,name+' coverage memory source mismatch'
+def before_coverage(path):
+ name=path.relative_to(r).as_posix()
+ return coverage_base[name].encode() if name in coverage_base else path.read_bytes()
 first=binding.get('implemented_first_readout_extension')
 first_base={}
 if first:
@@ -17,13 +32,13 @@ if first:
  first_base=json.loads(gzip.decompress(packed))
  assert set(first_base)==set(first['modified']),'incomplete first-readout historical archive'
  for name,d in first['modified'].items():
-  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared first-readout mutation'
+  assert sha(before_coverage(r/name))==d['after_sha256'],name+' undeclared first-readout mutation'
   assert sha(first_base[name].encode())==d['before_sha256'],name+' first-readout historical mismatch'
  for name,digest in first['added'].items():
-  assert sha((r/name).read_bytes())==digest,name+' first-readout source mismatch'
+  assert sha(before_coverage(r/name))==digest,name+' first-readout source mismatch'
 def before_first(path):
  name=path.relative_to(r).as_posix()
- return first_base[name].encode() if name in first_base else path.read_bytes()
+ return first_base[name].encode() if name in first_base else before_coverage(path)
 rules=binding.get('implemented_acquired_rules_extension')
 rules_base={}
 if rules:
@@ -91,6 +106,7 @@ if external:added.update(external['added'])
 if organism:added.update(organism['added'])
 if rules:added.update(rules['added'])
 if first:added.update(first['added'])
+if coverage:added.update(coverage['added'])
 original_hashes={}
 if lc1:
  for path,expected in lc1['added'].items():
@@ -161,7 +177,7 @@ assert len(files)==binding['bound_cognitive_source_files'],len(files)
 assert count_untouched==binding['unchanged_cognitive_source_files'],(count_untouched,binding['unchanged_cognitive_source_files'])
 assert h.hexdigest()==binding['aggregate_sha256'],'original core changed unexpectedly'
 assert sha(source(r / 'src/construction/search_policy.rs'))==binding['search_policy_sha256'],'RSP2 engine changed'
-current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})|set(organism['modified'] if organism else {})|set(rules['modified'] if rules else {})|set(first['modified'] if first else {})
+current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})|set(organism['modified'] if organism else {})|set(rules['modified'] if rules else {})|set(first['modified'] if first else {})|set(coverage['modified'] if coverage else {})
 untouched=count_untouched-sum(p.relative_to(r).as_posix() in current_modified
  and p.relative_to(r).as_posix() not in original_hashes and p.relative_to(r).as_posix() not in changes for p in files)
 print(json.dumps({'status':'PASS','original_source_files':len(files),'historical_base_untouched':count_untouched,
@@ -169,4 +185,5 @@ print(json.dumps({'status':'PASS','original_source_files':len(files),'historical
  'organism_extension_verified':bool(organism),
  'acquired_rules_extension_verified':bool(rules),
  'first_readout_extension_verified':bool(first),
+ 'coverage_memory_extension_verified':bool(coverage),
  'lc1_added_files':len(lc1['added']) if lc1 else 0,'original_aggregate':h.hexdigest(),'rsp2_search_policy_unchanged':True}))

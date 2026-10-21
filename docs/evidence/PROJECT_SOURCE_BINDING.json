@@ -265,5 +265,32 @@
     "added": {
       "src/construction/first_readout.rs": "99bf4fea76fde759e38ce1f579ed806441561236f3d63a4d7a092ac4e887488f"
     }
+  },
+  "implemented_coverage_memory_extension": {
+    "base_commit": "88aae009a25136983b2ea5f1638cc520e38b87b6",
+    "base_archive": "docs/evidence/COVERAGE_MEMORY_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "d13445ba9a9b474506104911f30e1ca7f3a47aaccae5e3888f3149b0571ba757",
+    "modified": {
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "e18d552af73c62d8e7ed17b19a8633da1468c91aac1010efad065de8ac30daf0",
+        "after_sha256": "b68e4629ddb99901bbb0a384da8b6a41ed9e48c0f3b51690830d2e5908eead1d"
+      },
+      "src/construction/external_port.rs": {
+        "before_sha256": "e036b407cad9f89c6dd6408542981494321f10d80817002fbb5ce537f16a885e",
+        "after_sha256": "9afa5b23ce8d8a80ec23e98318ff25c1a80d1c1e74aa3e148d3e53b8cb202cb4"
+      },
+      "src/construction/external_reward.rs": {
+        "before_sha256": "79881ba0ddae208ab38d6099c88d8fdc3fc4fedc14e54c70e1575c4f039dbda2",
+        "after_sha256": "48afb53b4ff9204be524b6a23eac0bc9dadbbf98e7878675ee43b7a745a43b8d"
+      },
+      "src/organism_development.rs": {
+        "before_sha256": "f95e4ca89cb915309713a21fed045131622aa9229823831e9bc206478bc36ee2",
+        "after_sha256": "06a600449348c03f3292fb8c00981e59c929fac3113887dd78e4b4c3c2f2e3b8"
+      }
+    },
+    "added": {
+      "src/construction/coverage_memory.rs": "662579f44f379c047feb85c12fc32c4a7656cde01d99e14056702db8c01fb593"
+    },
+    "scope": "Opt-in coverage/diversity selection in the existing bounded memory; no second learner; old state bytes, failure history and original RSP2 preserved."
   }
 }

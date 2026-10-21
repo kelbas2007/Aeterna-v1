@@ -15,6 +15,7 @@ const FAILURE_DEPTH: usize = 4;
 
 include!("acquired_rules.rs");
 include!("first_readout.rs");
+include!("coverage_memory.rs");
 
 fn zero(value: &f64) -> bool {
     *value == 0.0
@@ -298,6 +299,8 @@ pub(crate) struct ExternalMemory {
     credits: Vec<([f32; 5], f64)>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     acquired_rules: Option<AcquiredRules>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    coverage_memory: Option<CoverageMemory>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -321,6 +324,8 @@ pub struct ExternalRewardReport {
     pub acquired_kernel_exponent: f64,
     pub strategy_audits: Vec<StrategyAudit>,
     pub acquired_rules: Option<AcquiredRulesReport>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub coverage_memory: Option<CoverageMemoryReport>,
 }
 
 impl ExternalMemory {
@@ -359,6 +364,7 @@ impl ExternalMemory {
             evictions: 0,
             credits: Vec::new(),
             acquired_rules: None,
+            coverage_memory: None,
         }
     }
     pub fn report(&self) -> ExternalRewardReport {
@@ -372,6 +378,8 @@ impl ExternalMemory {
         ));
         let previous_fingerprint = self.acquired_rules.as_ref().map_or(previous_fingerprint,
             |rules| fingerprint(&(previous_fingerprint, rules)));
+        let previous_fingerprint = self.coverage_memory.as_ref().map_or(previous_fingerprint,
+            |policy| fingerprint(&(previous_fingerprint, policy)));
         ExternalRewardReport {
             enabled: self.enabled,
             factual_events: self.events,
@@ -384,6 +392,7 @@ impl ExternalMemory {
                 }),
             retained_cases: self.rows.len(),
             model_bytes: self.bytes
+                + self.coverage_memory.as_ref().map_or(0, |p| serde_json::to_vec(p).map_or(0, |b| b.len()))
                 + self.acquired_rules.as_ref().map_or(0, |r| serde_json::to_vec(r).map_or(0, |b| b.len()))
                 + serde_json::to_vec(&self.metrics).map_or(0, |b| b.len())
                 + serde_json::to_vec(&self.reward_rates).map_or(0, |b| b.len())
@@ -404,6 +413,7 @@ impl ExternalMemory {
             acquired_kernel_exponent: self.strategy.active.exponent,
             strategy_audits: self.strategy.audits.clone(),
             acquired_rules: self.acquired_rules.as_ref().map(AcquiredRules::report),
+            coverage_memory: self.coverage_memory.as_ref().map(|p| p.report(&self.rows)),
         }
     }
     pub fn take_credits(&mut self) -> Vec<([f32; 5], f64)> {
@@ -683,6 +693,7 @@ impl ExternalMemory {
             return 0;
         }
         let mut work = 64;
+        let coverage_work_before = self.coverage_memory.as_ref().map_or(0, |p| p.work);
         if self.acquired_rules.is_some() && pre[1] != 0 {
             // Score a future outcome before inserting or fitting it. The
             // authored 3NN is the fixed comparison; the active rule program
@@ -809,6 +820,7 @@ impl ExternalMemory {
         if reward > 0.0 {
             self.finish();
         }
+        work += self.coverage_memory.as_ref().map_or(0, |p| p.work) - coverage_work_before;
         work
     }
     fn insert(&mut self, row: Case) {
@@ -821,6 +833,21 @@ impl ExternalMemory {
             return;
         }
         while self.rows.len() >= CAPACITY || self.bytes.saturating_add(size) > MODEL_BYTES {
+            if self.coverage_memory.is_some() {
+                let (index, work, non_fifo) = self.coverage_victim(&row);
+                let policy = self.coverage_memory.as_mut().unwrap();
+                policy.decisions += 1;
+                policy.work += work;
+                policy.non_fifo_evictions += u64::from(non_fifo);
+                if index == self.rows.len() {
+                    policy.incoming_discards += 1;
+                    return;
+                }
+                self.bytes = self.bytes.saturating_sub(self.rows[index].bytes());
+                self.rows.remove(index);
+                self.evictions += 1;
+                continue;
+            }
             // Bounded stratification protects both older sensor interfaces and
             // rare actual rewards. Old facts stay owned by the same learner.
             let mut buckets = BTreeMap::<(i64, bool), usize>::new();
@@ -864,7 +891,8 @@ impl ExternalMemory {
             if let Some(fields) = step.fields {
                 self.credits.push((fields, value.max(0.0)));
             }
-            self.insert(step.row);
+            if self.coverage_memory.is_some() { self.coverage_update_return(step.row); }
+            else { self.insert(step.row); }
         }
     }
     pub fn validate(&self, actions: usize, events: u64, frozen: bool) -> Result<()> {
@@ -898,6 +926,7 @@ impl ExternalMemory {
             .map(|r| r.id)
             .collect::<std::collections::BTreeSet<_>>();
         if self.events != events
+            || self.coverage_memory.as_ref().is_some_and(|p| !self.enabled || self.adaptive || !p.validate(events))
             || self.acquired_rules.as_ref().is_some_and(|r| !self.enabled || self.adaptive || !r.validate(events))
             || self.learned > events
             || self.rows.len() > CAPACITY

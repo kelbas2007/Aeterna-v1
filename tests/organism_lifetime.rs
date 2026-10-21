@@ -89,6 +89,8 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
     rt.enable_constructing_contextual_control().unwrap();
     rt.enable_constructing_acquired_sensory_rules().unwrap();
     rt.enable_constructing_first_rule_readouts(false).unwrap();
+    rt.enable_constructing_coverage_memory().unwrap();
+    assert_eq!(rt.enable_constructing_coverage_memory(), Err(Error::Busy));
     assert_eq!(rt.enable_constructing_first_rule_readouts(false), Err(Error::Busy));
     assert_eq!(rt.unified_report().unwrap().total_external_cost, cost);
     assert_eq!(rt.organism_development_report().unwrap().episodes, 8);
@@ -108,6 +110,7 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
         assert_eq!(saved, rt.checkpoint_constructing().unwrap());
     }
     let report = rt.construction_learner().unwrap().external_reward_report().unwrap();
+    assert!(report.coverage_memory.is_some());
     let rules = report.acquired_rules.unwrap();
     assert!(rules.proposals > 0);
     assert!(rules.work > 0);
@@ -121,6 +124,7 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
     assert_eq!(frozen, rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint);
     assert_eq!(rt.enable_constructing_acquired_sensory_rules(), Err(Error::Blocked));
     assert_eq!(rt.enable_constructing_first_rule_readouts(false), Err(Error::Blocked));
+    assert_eq!(rt.enable_constructing_coverage_memory(), Err(Error::Blocked));
     ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
 }
 fn offers() -> Vec<ActionOffer> {

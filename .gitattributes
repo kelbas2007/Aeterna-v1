@@ -18,3 +18,5 @@ docs/evidence/first-readout/frozen-probe-protocol.json linguist-generated=false
 docs/evidence/first-readout/source-identity.json linguist-generated=false
 docs/evidence/first-readout/internet-sources.json linguist-generated=false
 docs/evidence/first-readout/*.py linguist-generated=false
+docs/evidence/coverage-memory/** linguist-generated=true
+docs/evidence/coverage-memory/protocol.json linguist-generated=false
