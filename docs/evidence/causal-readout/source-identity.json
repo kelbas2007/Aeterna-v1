@@ -1,0 +1,8 @@
+{
+  "source_commit": "ec36913c450fe6eb77f5d3bc33e52b8a8cf2e73c",
+  "binary_sha256": "a5b4dddb9839660fb28de9689d5367fdc3b648cf9ac15b2875cadf39f9af45b9",
+  "original_rsp2_unchanged": true,
+  "combined_criterion_passed": false,
+  "selected_continuation": "published_PR18_parent",
+  "status": "experimental classifier work stopped; architecture review follows"
+}

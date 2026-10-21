@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "variant": "organism_causal",
+  "recorded_actions_replayed": 4446,
+  "native_commits_matched": 4446,
+  "exact_checkpoint_resumes": 1,
+  "continuing_checkpoint_sha256": "2b07a4454525115e2560848ef3ef610fd6069b478363d8e5f595ca18d6544d82",
+  "frozen_checkpoint_sha256": "0201e2968986a2cd29e1307b179701eddd8737132ecd75864b47199ff834696f",
+  "study_binary_sha256": "2b1f5a16c5e93d3e10850b5df73f37e0a877df875364fbfb6b014b8daba0dae6",
+  "replay_binary_sha256": "a5b4dddb9839660fb28de9689d5367fdc3b648cf9ac15b2875cadf39f9af45b9",
+  "all_native_choices_matched": true,
+  "full_learned_state_byte_identical": true,
+  "new_external_world_actions": 0,
+  "purpose": "deterministic software replay of the complete recorded organism; not a fresh performance experiment"
+}
