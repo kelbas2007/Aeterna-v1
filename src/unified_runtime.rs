@@ -1278,6 +1278,7 @@ impl ScientificRuntime {
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         u.current.learner.freeze_learning()?;
+        if let Some(dev)=u.development.as_mut(){dev.freeze();}
         u.current.clear_canceled_causal_credit();
         let credits=u.current.learner.carrier_take_causal_credits();
         if !u.freeze_controller {for (fields,utility) in credits {
@@ -2145,7 +2146,7 @@ impl ScientificRuntime {
         if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
         if let Some(revision)=&s.cognition.self_revision{revision.validate()?;}
         if let Some(dev)=&s.cognition.development{
-            dev.validate(&s.cognition.current.learner,s.cognition.self_revision.as_ref().ok_or(UError::InvalidData)?)?;
+            dev.validate(&s.cognition.current.learner,s.cognition.self_revision.as_ref().ok_or(UError::InvalidData)?,s.cognition.freeze_controller)?;
         }
         if let Some(options)=&s.cognition.temporal_options{
             options.validate(&s.cognition)?;

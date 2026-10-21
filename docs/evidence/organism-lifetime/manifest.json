@@ -20,6 +20,14 @@
       "bytes": 1050,
       "sha256": "81f958b01cac2d23a5d7386135b671bc6131359d7e6b91296d51022b3292692c"
     },
+    "freeze-gates-validation.log.gz": {
+      "bytes": 1611,
+      "sha256": "3ce4b486a698cf8041ec637c14fb775bb8b0071ebedbc3bfab66d51947313aea"
+    },
+    "freeze-lifetime-validation.log.gz": {
+      "bytes": 1714,
+      "sha256": "f56be0d604199c7b1467a2f6be0da02d76bd405f8c50e4f41d80a4e1e5686d39"
+    },
     "frozen-aeterna-v1.gz": {
       "bytes": 1581996,
       "sha256": "61a90409531bbe833aca6a8e0d4667e5d4ee718eab419be6a44565ff794660bd"
@@ -124,22 +132,26 @@
       "bytes": 17028,
       "sha256": "a23d5bb6a15d72b008fc33401db7dd7ec66e56f437dd4f4e2bae3d3bda3ca866"
     },
+    "review-freeze-fix.json": {
+      "bytes": 586,
+      "sha256": "f04a7f5f7c9295ce429faac467b263f8653824777643580250a9e8e80871f06e"
+    },
     "saved-state-inspection.json": {
-      "bytes": 283,
-      "sha256": "5f7f3cb841738ee67821da0fe2b9f9112311557a52ca47c46a26a6588f9c984a"
+      "bytes": 341,
+      "sha256": "19a03b69fb23fa6bb3f6d7ec44f7911f18c402fd5ea97e828acab48caef3fe21"
     },
     "source-identity.json": {
-      "bytes": 230,
-      "sha256": "3dbc31c48ddfbcb11676f182ae5d9df1ea6cbec5beafd09fe25a9667bc44b0f5"
+      "bytes": 942,
+      "sha256": "61731cac455da89eeada3cf32a1e3db0281a5bf80aa7cb8c03e00edf7a7dfe26"
     },
     "summary.json": {
       "bytes": 88837,
       "sha256": "bede5b98349fdeeccc1bc1fefc033dfafc25171302d80a037a4fa63004ee79b2"
     },
     "validation.json": {
-      "bytes": 839,
-      "sha256": "047a6f1230daacbc3d1f26ee0f1c8b44bfe936a6b2d06852eed6e40e798a1f09"
+      "bytes": 1111,
+      "sha256": "db15bf87e40fb609baab94fb76100b22beef0d23e25ec488d135a712f3450c2c"
     }
   },
-  "bytes": 4414027
+  "bytes": 4418980
 }

@@ -223,6 +223,42 @@ fn unknown_post_cannot_become_a_development_episode_or_a_training_failure() {
 }
 
 #[test]
+fn freeze_abandons_unfinished_development_but_preserves_the_committed_fact() {
+    let mut rt = runtime(true);
+    rt.step_external_sensors(&offers(), Some(1), safe, |_| {
+        Ok(SensorPost {
+            frame: frame(0, 0),
+            cost: 1,
+            reward: 0.0,
+        })
+    })
+    .unwrap();
+    rt.freeze_constructing().unwrap();
+    let report = rt.organism_development_report().unwrap();
+    assert_eq!(report.episodes, 0, "freeze is not an observed task failure");
+    assert_eq!(report.abandoned_episodes, 1);
+    assert_eq!(report.retained_factual_examples, 0);
+    assert_eq!(
+        rt.construction_learner()
+            .unwrap()
+            .external_reward_report()
+            .unwrap()
+            .factual_events,
+        1
+    );
+    let bytes = rt.checkpoint_constructing().unwrap();
+    let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    let dev = &value["cognition"]["development"];
+    assert_eq!(dev["pending_actions"], 0);
+    assert_eq!(dev["pending"], serde_json::json!([]));
+    assert!(dev["pending_arm"].is_null());
+    let mut restored = ScientificRuntime::from_constructing_checkpoint(&bytes).unwrap();
+    assert_eq!(bytes, restored.checkpoint_constructing().unwrap());
+    restored.finish_external_episode().unwrap();
+    assert_eq!(restored.organism_development_report().unwrap().episodes, 0);
+}
+
+#[test]
 fn canonical_jsonl_entrypoint_owns_the_same_state_across_sensor_contracts() {
     use serde_json::{json, Value};
     use std::io::{BufRead, BufReader, Write};

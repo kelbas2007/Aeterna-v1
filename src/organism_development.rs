@@ -259,6 +259,19 @@ impl OrganismDevelopment {
         }
         self.reset_episode();
     }
+    fn freeze(&mut self) {
+        // Freezing is not an environment terminal observation. Preserve the
+        // committed world facts, but do not label an unfinished goal a failure.
+        self.abandon();
+        if let Some(trial) = self
+            .trials
+            .last_mut()
+            .filter(|t| t.qualified.is_none() && !t.revoked)
+        {
+            trial.interrupted = true;
+            trial.qualified = Some(false);
+        }
+    }
     fn adjust(&self, revision: &MetaRevision, fields: &mut [f32; 5], live: bool) -> bool {
         if revision.readout_ablated {
             return false;
@@ -388,7 +401,7 @@ impl OrganismDevelopment {
         }
         Ok(learner.report().construction_work.saturating_sub(before))
     }
-    fn validate(&self, learner: &ULearner, revision: &MetaRevision) -> UResult<()> {
+    fn validate(&self, learner: &ULearner, revision: &MetaRevision, frozen: bool) -> UResult<()> {
         let valid = |r: &DevelopmentFact| {
             r.event > 0
                 && r.event <= learner.factual_event_count()
@@ -434,6 +447,11 @@ impl OrganismDevelopment {
             || !self.pending_reward.is_finite()
             || self.pending_reward.abs() > self.pending_actions as f64
             || self.pending_changed > self.pending_actions
+            || (frozen
+                && (self.pending_actions != 0
+                    || !self.pending.is_empty()
+                    || self.pending_arm.is_some()
+                    || self.open_trial().is_some()))
             || self.episodes != revision.episodes
             || self.seen_rollbacks != revision.rollbacks
             || learner.recursive_search().is_none()
@@ -460,7 +478,7 @@ impl OrganismDevelopment {
                 || trial.required_domains.len() > 8
                 || trial.episodes.len() > 64
                 || trial.qualified != trial.verdict()
-                || (trial.interrupted && self.aborted_episodes == 0)
+                || (trial.interrupted && self.aborted_episodes == 0 && !frozen)
                 || (trial.revoked && !receipt.revoked)
                 || (trial.qualified.is_none() && !trial.revoked && i + 1 != self.trials.len())
             {
@@ -854,6 +872,19 @@ mod organism_development_tests {
         dev.abandon();
         assert_eq!(dev.trials[0].qualified, Some(false));
         assert!(dev.open_trial().is_none());
+        assert!(dev.facts.is_empty());
+    }
+    #[test]
+    fn freeze_closes_a_ready_canary_without_inventing_a_completed_episode() {
+        let revision = learned_revision();
+        let mut dev = OrganismDevelopment::new(true);
+        dev.trials.push(trial(&revision));
+        assert!(dev.open_trial().is_some());
+        dev.freeze();
+        assert!(dev.open_trial().is_none());
+        assert_eq!(dev.trials[0].qualified, Some(false));
+        assert_eq!(dev.episodes, 0);
+        assert_eq!(dev.aborted_episodes, 0);
         assert!(dev.facts.is_empty());
     }
 }

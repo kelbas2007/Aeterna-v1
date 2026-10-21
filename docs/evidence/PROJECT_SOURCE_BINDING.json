@@ -171,7 +171,7 @@
     "modified": {
       "src/unified_runtime.rs": {
         "before_sha256": "8fad7364b5bf7a5f3197dd7e65d62fb6ef6ce491deb30da296a87a860e8df036",
-        "after_sha256": "04ecd50b0cc6d28216d2d0cad9f5813df8e25303b067210e14fa25920bf7d85b"
+        "after_sha256": "d7ba0026fbfa66a1a67ed25108b8ac84881e5b6a5a6614b999738f79c0c2d006"
       },
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "d64e70952dde8c80f3ab4438ff9fee809c8f005baacf964900b1ae77c7057f5b",
@@ -191,7 +191,7 @@
       }
     },
     "added": {
-      "src/organism_development.rs": "66dbb1b9f18b926c61472f609a297126cfe3d7acf938ca8c876db5427a272a12"
+      "src/organism_development.rs": "287bdaaa6d0fbceedc84dbbd4c92a9e2de4ec0bd202cba12be6ad330a890c4cb"
     },
     "scope": "one factual sensory lifetime; existing unchanged RSP2 drives trajectory self-revision; actual chronological behavioral canaries"
   }

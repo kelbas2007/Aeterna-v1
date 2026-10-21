@@ -6,5 +6,6 @@
   "rsp2_attempts": 5,
   "evaluator_searches": 7,
   "learning_remains_enabled": true,
-  "external_actions_executed": 0
+  "external_actions_executed": 0,
+  "completed_lifetime_freeze_matches_frozen_study": true
 }

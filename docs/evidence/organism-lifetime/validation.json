@@ -2,7 +2,8 @@
   "project": {
     "passing_test_executions": 484,
     "test_binaries": 51,
-    "status": "PASS"
+    "status": "PASS",
+    "before_review_freeze_correction": true
   },
   "gates": {
     "passing_test_executions": 2,
@@ -24,6 +25,17 @@
     "rsp2_attempts": 5,
     "evaluator_searches": 7,
     "learning_remains_enabled": true,
-    "external_actions_executed": 0
+    "external_actions_executed": 0,
+    "completed_lifetime_freeze_matches_frozen_study": true
+  },
+  "review_freeze_correction": {
+    "gates": {
+      "passed": 3,
+      "status": "PASS"
+    },
+    "lifetime": {
+      "passed": 5,
+      "status": "PASS"
+    }
   }
 }

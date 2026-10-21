@@ -23,9 +23,17 @@ def check(binary):
     assert development['episodes']==1050 and development['namespaces']==[4,9,82,86]
     assert development['recursive_attempts']==5 and development['evaluator_searches']==7
     assert report['recursive_search']['attempts']==5 and not report['recursive_search']['frozen']
+    commands=[{'op':'load','checkpoint':raw.decode()},{'op':'freeze'},{'op':'checkpoint'},{'op':'quit'}]
+    request=''.join(json.dumps(c,separators=(',',':'))+'\n' for c in commands)
+    replies=subprocess.check_output([str(Path(binary).resolve()),'--jsonl'],input=request,text=True)
+    replies=[json.loads(line) for line in replies.splitlines()]
+    assert not any(r['type']=='error' for r in replies),replies[:2]
+    frozen=next(r['checkpoint'] for r in replies if r['type']=='checkpoint')
+    assert hashlib.sha256(frozen.encode()).hexdigest()==summary['final_checkpoint_sha256']
     return {'status':'PASS','checkpoint_sha256':hashlib.sha256(raw).hexdigest(),
         'factual_action_cost':2200,'interfaces':4,'rsp2_attempts':5,'evaluator_searches':7,
-        'learning_remains_enabled':True,'external_actions_executed':0}
+        'learning_remains_enabled':True,'external_actions_executed':0,
+        'completed_lifetime_freeze_matches_frozen_study':True}
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--binary',required=True)
