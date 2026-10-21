@@ -27,7 +27,14 @@
       850002,
       850003
     ],
-    "starting_state": "continue each matching development organism export, including acquired programs and all memory; no reinitialization"
+    "starting_state": "continue each matching development organism export, including acquired programs and all memory; no reinitialization",
+    "variants": [
+      "organism",
+      "organism_rules_fixed",
+      "organism_previous"
+    ],
+    "previous_control_start": "acquired-rules-development-eb2a50c/organism_rules_fixed/one-organism.json.gz; the same completed image/signal/navigation/retention schedule with the original global U1 and no acquired rules",
+    "comparisons": "Primary: full organism vs previous whole U1 architecture; secondary: full organism vs same contextual U1 without rule acquisition. Same new confirmation rows and action limits in all three complete lives."
   },
   "matched_action_limits": {
     "fashion": 11,
@@ -64,6 +71,27 @@
       850001,
       850002,
       850003
-    ]
+    ],
+    "observed": {
+      "image_first_correct": [
+        354,
+        339
+      ],
+      "signal_first_correct": [
+        389,
+        387
+      ],
+      "new_retention_first_correct": [
+        109,
+        105
+      ],
+      "actual_actions": [
+        3653,
+        3938
+      ],
+      "pooled_accuracy_gain": 0.017736486486486486,
+      "advance_criterion_passed": false,
+      "reason": "1.77 percentage points is below the predeclared 2-point threshold"
+    }
   }
 }

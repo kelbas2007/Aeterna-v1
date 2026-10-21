@@ -12,7 +12,7 @@ from external5_sensors import load_fashion, load_har, blank, acquire, metrics
 from run_external_continual5 import motors, scene, verify_data_files
 
 ROOT=Path(__file__).resolve().parents[1]
-VARIANTS=('organism','organism_fixed','full','organism_rules_fixed')
+VARIANTS=('organism','organism_fixed','full','organism_rules_fixed','organism_previous')
 
 def save(path,value):
     Path(path).write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
@@ -99,19 +99,20 @@ def run(args):
         if cognition['freeze_controller'] or cognition.get('development') is None:raise ValueError('need a living common organism')
         memory=cognition['current']['learner']['external_memory']
         if memory.get('acquired_rules') is not None:raise ValueError('starting controls must share the same state before rule acquisition')
-        if any(v not in ('organism','organism_rules_fixed') for v in args.variants):raise ValueError('continuation requires matched common-organism variants')
+        if any(v not in ('organism','organism_rules_fixed','organism_previous') for v in args.variants):raise ValueError('continuation requires matched common-organism variants')
         starting_cost=cognition['total_external_cost'];starting_events=memory['events']
         gzip.open(out/'starting-organism.json.gz','wt').write(starting)
     starts={};start_proofs={}
     for variant in args.variants:
         raw=starting
         if args.resume_lives:
-            if variant not in ('organism','organism_rules_fixed'):raise ValueError('resume complete common-organism lives only')
-            raw=gzip.decompress((Path(args.resume_lives)/variant/'one-organism.json.gz').read_bytes()).decode()
+            if variant not in ('organism','organism_rules_fixed','organism_previous'):raise ValueError('resume complete common-organism lives only')
+            path=Path(args.previous_life) if variant=='organism_previous' and args.previous_life else Path(args.resume_lives)/variant/'one-organism.json.gz'
+            raw=gzip.decompress(path.read_bytes()).decode()
         if raw is not None:
             state=json.loads(raw)['cognition'];memory=state['current']['learner']['external_memory']
             if state['freeze_controller'] or state.get('development') is None:raise ValueError('need a living common organism')
-            if variant=='organism_rules_fixed' and memory.get('acquired_rules') is not None:raise ValueError('control acquired rule programs')
+            if variant in ('organism_rules_fixed','organism_previous') and memory.get('acquired_rules') is not None:raise ValueError('control acquired rule programs')
             starts[variant]=raw
             start_proofs[variant]={'sha256':digest(raw.encode()),'events':memory['events'],'cost':state['total_external_cost'],
                 'file':variant+'/starting-organism.json.gz'}
@@ -142,7 +143,7 @@ def run(args):
         raw=starts.get(variant)
         if raw is not None:gzip.open(folder/'starting-organism.json.gz','wt').write(raw)
         agent=Native(args.binary,folder/'life-before-resume.jsonl.gz',variant,blank('fashion'),raw)
-        if args.contextual_u1 and agent.command({'op':'organism_report'})['organism'].get('contextual_namespaces') is None:
+        if args.contextual_u1 and variant!='organism_previous' and agent.command({'op':'organism_report'})['organism'].get('contextual_namespaces') is None:
             agent.command({'op':'organism_enable_contextual_control'})
         if raw is not None and variant=='organism' and json.loads(raw)['cognition']['current']['learner']['external_memory'].get('acquired_rules') is None:
             agent.command({'op':'organism_enable_rules'})
@@ -208,6 +209,7 @@ if __name__=='__main__':
     parser.add_argument('--build-profile',default='unspecified; executable SHA256 recorded')
     resume=parser.add_mutually_exclusive_group()
     resume.add_argument('--checkpoint');resume.add_argument('--resume-lives')
+    parser.add_argument('--previous-life',help='matched previous-U1 control export with the same completed development schedule')
     parser.add_argument('--fashion-offset',type=int,default=42000)
     parser.add_argument('--har-offset',type=int,default=4000)
     parser.add_argument('--retention-offset',type=int);parser.add_argument('--retention-samples',type=int,default=160)

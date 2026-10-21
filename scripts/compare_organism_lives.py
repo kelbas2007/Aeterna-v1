@@ -25,11 +25,11 @@ def responses(folder):
     return result
 
 
-def compare(root,protocol):
+def compare(root,protocol,control='organism_rules_fixed'):
     root=Path(root);protocol=json.loads(Path(protocol).read_text())
     summaries=json.loads((root/'summary.json').read_text())
-    learned=summaries['organism'];fixed=summaries['organism_rules_fixed']
-    a=responses(root/'organism');b=responses(root/'organism_rules_fixed')
+    learned=summaries['organism'];fixed=summaries[control]
+    a=responses(root/'organism');b=responses(root/control)
     assert a.keys()==b.keys(),'different sensory tasks or incomplete lives'
     changed=sum(a[k][0]!=b[k][0] for k in a)
     wins=sum(a[k][1] and not b[k][1] for k in a)
@@ -62,6 +62,7 @@ def compare(root,protocol):
     }
     result={
         'purpose':'whole-lifetime behavioral comparison, distinct from internal predictive rule admission',
+        'control':control,
         'advance_criterion_passed':all(checks.values()),'criterion_checks':checks,
         'sensor_tasks':len(a),'organism_correct':sum(v[1] for v in a.values()),
         'fixed_correct':sum(v[1] for v in b.values()),'accuracy_gain':sensor_gain,
@@ -82,7 +83,8 @@ def compare(root,protocol):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--results',required=True);parser.add_argument('--protocol',required=True)
+    parser.add_argument('--control',default='organism_rules_fixed',choices=['organism_rules_fixed','organism_previous'])
     parser.add_argument('--output',required=True);args=parser.parse_args()
-    result=compare(args.results,args.protocol)
+    result=compare(args.results,args.protocol,args.control)
     Path(args.output).write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
     print(json.dumps({k:v for k,v in result.items() if k not in ('acquired_programs','sensor_phases')},indent=2))

@@ -154,7 +154,7 @@ def audit(root,data):
             assert cursor==len(answers_observed)
             assert initializations==(0 if start_sha else 1) and resumes==1 and len(namespaces)==4
             if start_sha:assert loads==2
-            if provenance.get('contextual_u1_requested'):
+            if provenance.get('contextual_u1_requested') and variant!='organism_previous':
                 assert summary['final_report']['organism']['contextual_namespaces']==[4,9,82,86]
             proof[variant]={'status':'PASS','initializations':initializations,'exact_checkpoint_resumes':resumes,
                 'factual_posts':posts,'actual_cost':actual_cost,'sensor_interfaces':len(namespaces),
