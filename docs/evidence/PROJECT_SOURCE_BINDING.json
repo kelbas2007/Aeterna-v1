@@ -171,7 +171,7 @@
     "modified": {
       "src/unified_runtime.rs": {
         "before_sha256": "8fad7364b5bf7a5f3197dd7e65d62fb6ef6ce491deb30da296a87a860e8df036",
-        "after_sha256": "6bd978e651e1e06ede77b6f86b58a5d530e0b5018320a98c6b2c96cb2ef913d5"
+        "after_sha256": "04ecd50b0cc6d28216d2d0cad9f5813df8e25303b067210e14fa25920bf7d85b"
       },
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "d64e70952dde8c80f3ab4438ff9fee809c8f005baacf964900b1ae77c7057f5b",

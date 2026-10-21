@@ -1732,14 +1732,14 @@ impl ScientificRuntime {
             }
             // Only a prospectively admitted program can rewrite goal evidence.
             // The new VM expression has no actuator or safety authority.
-            let mut changed_readouts=Vec::new();
+            let mut changed_readouts=vec![false;candidates.len()];
             if let Some(revision)=&u.self_revision {
                 if let Some(dev)=u.development.as_mut(){
                     if !u.freeze_controller && dev.pending_actions==0 && dev.pending_arm.is_none(){
                         dev.pending_arm=dev.open_trial().map(|t|t.assignment(u.current.learner.current()[0]));
                     }
-                    for c in &mut candidates {if c.kind==3 {
-                        if dev.adjust(revision,&mut c.p.fields,!u.freeze_controller){changed_readouts.push(c.p.proposal_id);}
+                    for (index,c) in candidates.iter_mut().enumerate() {if c.kind==3 {
+                        changed_readouts[index]=dev.adjust(revision,&mut c.p.fields,!u.freeze_controller);
                     }}
                 }else{
                     for c in &mut candidates {if c.kind==3 {revision.adjust(&mut c.p.fields);}}
@@ -1747,9 +1747,10 @@ impl ScientificRuntime {
             }
             let raw:Vec<_>=candidates.iter().map(|x|x.p).collect();u.nonce=u.nonce.checked_add(1).ok_or(UError::Capacity)?;
             let choice=self.organism.choose_phase_meta_exploratory(&raw,uword(u.nonce),!u.freeze_controller).ok_or(UError::NoEvidence)?;
-            let chosen=candidates.into_iter().find(|p|p.p.proposal_id==choice.proposal_id).ok_or(UError::InvalidData)?;
+            let chosen_index=candidates.iter().position(|p|p.p.proposal_id==choice.proposal_id).ok_or(UError::InvalidData)?;
+            let chosen=candidates.into_iter().nth(chosen_index).ok_or(UError::InvalidData)?;
             u.operations[chosen.kind as usize]+=1;operations.push(chosen.source.to_string());
-            if chosen.kind==3 {selected_readout_changed=changed_readouts.contains(&chosen.p.proposal_id);selected=Some((chosen,choice.score));break;}
+            if chosen.kind==3 {selected_readout_changed=changed_readouts[chosen_index];selected=Some((chosen,choice.score));break;}
             tried[chosen.kind as usize]=true;
             match chosen.kind {
                 0=>{
