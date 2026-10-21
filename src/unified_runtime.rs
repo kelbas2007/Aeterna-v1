@@ -1695,6 +1695,7 @@ impl ScientificRuntime {
         // even when there is no qualifying factual graph proposal.
         let strict_graph_helper_budget=u.current.learner.causal_memory_enabled() || u.temporal_options.as_ref()
             .is_some_and(|lane|lane.observable_graph_enabled);
+        let mut selected_readout_changed=false;
         for round in 0..4 {
             if let Some(approved)=continuation.take(){
                 // Same native choice, bounded saved option, and no
@@ -1731,13 +1732,14 @@ impl ScientificRuntime {
             }
             // Only a prospectively admitted program can rewrite goal evidence.
             // The new VM expression has no actuator or safety authority.
+            let mut changed_readouts=Vec::new();
             if let Some(revision)=&u.self_revision {
                 if let Some(dev)=u.development.as_mut(){
                     if !u.freeze_controller && dev.pending_actions==0 && dev.pending_arm.is_none(){
                         dev.pending_arm=dev.open_trial().map(|t|t.assignment(u.current.learner.current()[0]));
                     }
                     for c in &mut candidates {if c.kind==3 {
-                        dev.adjust(revision,&mut c.p.fields,!u.freeze_controller);
+                        if dev.adjust(revision,&mut c.p.fields,!u.freeze_controller){changed_readouts.push(c.p.proposal_id);}
                     }}
                 }else{
                     for c in &mut candidates {if c.kind==3 {revision.adjust(&mut c.p.fields);}}
@@ -1747,7 +1749,7 @@ impl ScientificRuntime {
             let choice=self.organism.choose_phase_meta_exploratory(&raw,uword(u.nonce),!u.freeze_controller).ok_or(UError::NoEvidence)?;
             let chosen=candidates.into_iter().find(|p|p.p.proposal_id==choice.proposal_id).ok_or(UError::InvalidData)?;
             u.operations[chosen.kind as usize]+=1;operations.push(chosen.source.to_string());
-            if chosen.kind==3 {selected=Some((chosen,choice.score));break;}
+            if chosen.kind==3 {selected_readout_changed=changed_readouts.contains(&chosen.p.proposal_id);selected=Some((chosen,choice.score));break;}
             tried[chosen.kind as usize]=true;
             match chosen.kind {
                 0=>{
@@ -1878,7 +1880,7 @@ impl ScientificRuntime {
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
         if !u.freeze_controller {if let Some(dev)=u.development.as_mut(){
             dev.observe(u.current.learner.factual_event_count(),&factual_pre,a,original_fields,f64::from(post.reward),post.cost,native_credit_eligible);
-            if native_credit_eligible && (original_fields[0]-option.p.fields[0]).abs()>0.00001 {dev.pending_changed+=1;}
+            if native_credit_eligible && selected_readout_changed {dev.pending_changed+=1;}
         }}
         let reward_work=u.current.learner.carrier_external_feedback(factual_pre,a,post.observation.clone(),f64::from(post.reward),post.cost,
             if native_credit_eligible{Some(option.p.fields)}else{None});

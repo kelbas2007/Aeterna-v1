@@ -128,8 +128,10 @@ def run(args):
             # continuing feedback, never as a new blind retention exam.
             revisit=(datasets['fashion'][0][:64],datasets['fashion'][1][:64],None)
             record('fashion_revisit_with_feedback',sensory_phase(agent,'fashion',revisit))
+            continuing=agent.checkpoint()
+            gzip.open(folder/'one-organism.json.gz','wt').write(continuing)
             agent.freeze();final=agent.checkpoint()
-            gzip.open(folder/'one-organism.json.gz','wt').write(final)
+            gzip.open(folder/'frozen-organism.json.gz','wt').write(final)
             report=agent.command({'op':'organism_report'})
             if variant.startswith('organism'):
                 dev=report['development']
@@ -139,6 +141,7 @@ def run(args):
                 if not dev['evaluator_searches']:raise AssertionError('shared RSP2 policy never drove evaluator search')
                 if dev['abandoned_episodes']:raise AssertionError('completed adapter episodes were lost')
             results[variant]={'resume_checkpoint_sha256':resume_sha,'final_checkpoint_sha256':digest(final.encode()),
+                'continuing_checkpoint_sha256':digest(continuing.encode()),
                 'phases':phases,'final_report':report}
             save(folder/'summary.json',results[variant]);save(out/'summary.json',results)
         finally:agent.close()

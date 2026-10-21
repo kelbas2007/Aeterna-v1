@@ -259,10 +259,11 @@ impl OrganismDevelopment {
         }
         self.reset_episode();
     }
-    fn adjust(&self, revision: &MetaRevision, fields: &mut [f32; 5], live: bool) {
+    fn adjust(&self, revision: &MetaRevision, fields: &mut [f32; 5], live: bool) -> bool {
         if revision.readout_ablated {
-            return;
+            return false;
         }
+        let before = fields[0];
         let code = if let Some(trial) = self.open_trial().filter(|_| live) {
             if self.pending_arm == Some(true) {
                 Some(&trial.program)
@@ -274,13 +275,14 @@ impl OrganismDevelopment {
         };
         // Revoked predictive evidence can never keep controlling the organism.
         if self.seen_rollbacks != revision.rollbacks {
-            return;
+            return false;
         }
         if let Some(code) = code {
             if let Some(value) = MetaRevision::score(Some(code), &MetaRevision::features(*fields)) {
                 fields[0] = value as f32 / 100.0;
             }
         }
+        (fields[0] - before).abs() > 0.00001
     }
     fn curriculum(&self) -> Option<(Vec<SynthesisTask>, AdmissionSuite, BTreeSet<u64>, String)> {
         // Distinct measured inputs in every role; an exam input never returns
@@ -805,17 +807,21 @@ mod organism_development_tests {
         let revision = learned_revision();
         let mut dev = OrganismDevelopment::new(true);
         let mut fields = [0.0, 1.0, 0.0, 0.0, 0.5];
-        dev.adjust(&revision, &mut fields, true);
+        assert!(!dev.adjust(&revision, &mut fields, true));
         assert_eq!(
             fields[0], 0.0,
             "predictive success alone must not deploy a scorer"
         );
         dev.trials.push(trial(&revision));
         dev.pending_arm = Some(true);
-        dev.adjust(&revision, &mut fields, true);
+        assert!(dev.adjust(&revision, &mut fields, true));
         assert!(
             fields[0] >= 0.9,
             "registered canary must execute the learned scorer"
+        );
+        assert!(
+            !dev.adjust(&revision, &mut fields, true),
+            "an unchanged readout is not an intervention"
         );
         for _ in 0..23 {
             add(dev.trials.last_mut().unwrap(), true, false);

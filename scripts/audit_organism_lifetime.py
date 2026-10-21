@@ -100,7 +100,15 @@ def audit(root,data):
                             actual_cost+=pending['post']['cost'];posts+=1;global_event+=1;local_event+=1;pending=None
                         else:raise AssertionError('unexpected trace event: '+kind)
                 assert pending is None
-            checkpoint=gzip.decompress((folder/'one-organism.json.gz').read_bytes())
+            if 'continuing_checkpoint_sha256' in summary:
+                continuing=gzip.decompress((folder/'one-organism.json.gz').read_bytes())
+                assert hashlib.sha256(continuing).hexdigest()==summary['continuing_checkpoint_sha256']
+                live=json.loads(continuing)
+                assert not live['cognition']['freeze_controller'],'published organism cannot keep learning'
+                assert live['cognition']['current']['learner']['external_memory']['events']==global_event
+                assert live['cognition']['total_external_cost']==actual_cost
+                checkpoint=gzip.decompress((folder/'frozen-organism.json.gz').read_bytes())
+            else:checkpoint=gzip.decompress((folder/'one-organism.json.gz').read_bytes())
             assert hashlib.sha256(checkpoint).hexdigest()==summary['final_checkpoint_sha256']
             stored=json.loads(checkpoint);learner=stored['cognition']['current']['learner']
             assert learner['external_memory']['events']==global_event
