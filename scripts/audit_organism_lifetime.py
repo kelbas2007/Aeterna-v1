@@ -4,13 +4,17 @@ Verifies real sensor values/rewards, actual MiniGrid transitions, offered motor
 contracts, action budgets, unique commits, and the checkpoint resume boundary.
 Does not treat integration success as evidence of behavioral superiority.
 """
-import argparse,gzip,hashlib,json
+import argparse,gzip,hashlib,importlib.metadata,json
 from pathlib import Path
 from external5_sensors import load_fashion,load_har,blank,acquire
 from run_external_continual5 import motors,scene,verify_data_files
 
 def audit(root,data):
     root=Path(root);provenance=json.loads((root/'provenance.json').read_text())
+    if 'frozen_binary' in provenance:
+        assert hashlib.sha256((root/provenance['frozen_binary']).read_bytes()).hexdigest()==provenance['binary_sha256']
+    if 'dependencies' in provenance:
+        assert {n:importlib.metadata.version(n) for n in provenance['dependencies']}==provenance['dependencies']
     assert verify_data_files(data)==provenance['data'],'corpus provenance mismatch'
     datasets={}
     for kind,loader in [('fashion',load_fashion),('har',load_har)]:

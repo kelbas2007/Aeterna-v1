@@ -5,7 +5,7 @@ The environment adapter supplies actual frames/rewards, never candidate programs
 lessons for RSP2, success verdicts, policy IDs, or a motor action schedule.
 """
 from __future__ import annotations
-import argparse, gzip, hashlib, json, random, subprocess
+import argparse, gzip, hashlib, importlib.metadata, json, random, shutil, subprocess
 from pathlib import Path
 from external5_transport import Native
 from external5_sensors import load_fashion, load_har, blank, acquire, metrics
@@ -78,6 +78,11 @@ def navigation_phase(agent,game,namespace,seeds):
 
 def run(args):
     out=Path(args.output);out.mkdir(parents=True,exist_ok=False)
+    # Cargo may rebuild its normal output while regression tests run. Every
+    # lifetime and control must execute the same immutable copied binary.
+    original=Path(args.binary).resolve()
+    frozen=out/('frozen-aeterna-v1'+('.exe' if original.suffix=='.exe' else ''))
+    shutil.copy2(original,frozen);args.binary=str(frozen.resolve())
     # Authenticate the training data before decoding, including canonical HAR
     # membership and original Fashion checksums. No test partition is decoded.
     data_proof=verify_data_files(args.data)
@@ -92,6 +97,8 @@ def run(args):
         'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         'dirty':bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True).strip()),
         'source_sha256':binding,'binary_sha256':digest(Path(args.binary).read_bytes()),
+        'frozen_binary':frozen.name,
+        'dependencies':{name:importlib.metadata.version(name) for name in ('numpy','gymnasium','minigrid')},
         'data':data_proof,'training_ranges':{'fashion':[42000,42000+args.samples], 'har':[4000,4000+args.samples]},
         'variants':args.variants,'max_actions_per_sensor':{'fashion':11,'har':15},'grid_action_budget':64}
     proof['declared_build_profile']=args.build_profile
@@ -103,6 +110,8 @@ def run(args):
         phases=[];previous_cost=0;previous_events=0
         def record(name,result):
             nonlocal previous_cost,previous_events
+            if digest(Path(args.binary).read_bytes())!=proof['binary_sha256']:
+                raise AssertionError('frozen executable changed during the lifetime')
             report=agent.command({'op':'organism_report'})
             current=report['organism'];memory=report['reward_memory']
             if current['total_external_cost']!=previous_cost+result['actual_actions']:
