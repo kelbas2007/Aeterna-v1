@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "purpose": "read-only parent restore and in-place own-fact consolidation; no external action",
+  "parent_sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+  "enabled_sha256": "960e3959304acfaace66e2ecb127d763d49a53e77b9ebf9a8a565a066fc7ed90",
+  "seeded_prototypes": 1323,
+  "bootstrap_work_charged": 1002720,
+  "reward_model_bytes": 1198839,
+  "unchanged_except_model_seed_work_and_checksum": true,
+  "new_external_actions": 0
+}

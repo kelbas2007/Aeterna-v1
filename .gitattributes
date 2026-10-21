@@ -25,3 +25,4 @@ docs/evidence/consolidated-memory/** linguist-generated=true
 docs/evidence/consolidated-memory/protocol.json linguist-generated=false
 docs/evidence/consolidated-memory/source-identity.json linguist-generated=false
 docs/evidence/consolidated-memory/*.py linguist-generated=false
+docs/evidence/consolidated-memory/**/*.py linguist-generated=false

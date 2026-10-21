@@ -54,7 +54,7 @@ jobs:
           set -euo pipefail
           python -m pip install numpy==2.3.5 > project-evidence/external-python-install.log 2>&1
           python scripts/external5_tests.py 2>&1 | tee project-evidence/external-input-tests.log
-      - name: Published coverage-memory whole organisms, without new actions
+      - name: Published whole-organism memory states, without new actions
         shell: bash
         run: |
           set -euo pipefail

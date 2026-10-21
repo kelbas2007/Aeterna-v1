@@ -765,3 +765,15 @@ frozen, not rerun as fresh science.
 
 - [CAUSAL4C ENGINEERING_PASS](docs/CAUSAL_CONTINUAL4C_RESULT.md): source `a9588ec6fe5edadf8eff76503631fa81a1a89c69`, seeds 250000..250031, all 384 lives retained. Ten-step 32/32 vs 0/32; noisy sensing 1877/2048 vs 1140/2048; direct 2048/2048. All planners share deadline handling; actual costs remain disclosed.
 - Twenty-one findings from six review rounds addressed; 119 focused tests and [full Linux/Windows CI](https://github.com/kelbas2007/Aeterna-v1/actions/runs/39488724394) passed. PR14 merged to main. This is engineering evidence on known authored families; earlier negative results and B provenance remain unchanged.
+
+## 2026-10-21 — bounded memory in the same continuing organism
+
+Both studies start from the published PR18 living checkpoint. Each arm remains
+one Learner/U1 through signals, images, exact restore, navigation and return to
+old tasks. Full traces and negative outcomes are retained; software replay is
+not counted as new behavioral evidence.
+
+| Study | Source registered before collection | Verdict | Actually observed |
+|---|---|---|---|
+| [COVERAGE-MEMORY-1](docs/COVERAGE_MEMORY_RESULT.md) | `f329e7485ce025a4eaa502fab0c485a89663bb01` | **IMPROVEMENT FAIL / RETENTION FAIL** | New policy 462/768 versus FIFO 482/768 and parent 515/768; 14,432 factual POSTs audited and replayed exactly; no promotion |
+| [CONSOLIDATED-MEMORY-1](docs/CONSOLIDATED_MEMORY_RESULT.md) | `6212fb7bef9f0d0b4a7a1f0011df687fd0411ce1` | **IMPROVEMENT FAIL / RETENTION PASS** | Consolidation and FIFO both 980/1536, parent 959/1536; zero changed answers, +10.88% work; new model never selected by own feedback; 19,852 factual POSTs audited and replayed exactly; parent remains selected |
