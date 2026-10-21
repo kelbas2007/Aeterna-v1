@@ -89,6 +89,9 @@ pub(crate) fn main()->Result<()>{
                         if whole {false}else{request.get("adaptive").map_or(Some(true),Value::as_bool).ok_or("invalid adaptive")?})?;
                     if whole {
                         rt.enable_constructing_organism_development(request.get("recursive").map_or(Some(true),Value::as_bool).ok_or("invalid recursive")?)?;
+                        if request.get("contextual_u1").map_or(Some(true),Value::as_bool).ok_or("invalid contextual_u1")? {
+                            rt.enable_constructing_contextual_control()?;
+                        }
                         if request.get("acquired_rules").map_or(Some(true),Value::as_bool).ok_or("invalid acquired_rules")? {
                             rt.enable_constructing_acquired_sensory_rules()?;
                         }
@@ -99,6 +102,10 @@ pub(crate) fn main()->Result<()>{
                 "organism_enable_rules"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_acquired_sensory_rules()?;
                     Ok(json!({"type":"acquired_rules_enabled","learner":"same_living_checkpoint"}))
+                },
+                "organism_enable_contextual_control"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_contextual_control()?;
+                    Ok(json!({"type":"contextual_control_enabled","action_authority":"same_u1"}))
                 },
                 "external_reset"=>{
                     let frame=serde_json::from_value(request["frame"].clone())?;

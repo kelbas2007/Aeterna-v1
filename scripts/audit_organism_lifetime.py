@@ -26,18 +26,19 @@ def audit(root,data):
     for kind,ranges in provenance.get('sensory_sources',{}).items():
         loader=load_fashion if kind=='fashion' else load_har
         for offset,count in ranges.items():sources[(kind,int(offset))]=loader(data,'train',int(offset),count)
-    base_events=provenance.get('starting_events',0);base_cost=provenance.get('starting_cost',0)
-    start_sha=provenance.get('starting_checkpoint_sha256')
-    if start_sha:
-        raw=gzip.decompress((root/'starting-organism.json.gz').read_bytes())
-        assert hashlib.sha256(raw).hexdigest()==start_sha
-        starting=json.loads(raw)['cognition']
-        assert starting['total_external_cost']==base_cost
-        assert starting['current']['learner']['external_memory']['events']==base_events
     import gymnasium as gym
     import minigrid  # noqa: F401 -- registration
     summaries=json.loads((root/'summary.json').read_text());proof={}
     for variant,summary in summaries.items():
+        start=provenance.get('starting_checkpoints',{}).get(variant,{})
+        base_events=start.get('events',provenance.get('starting_events',0));base_cost=start.get('cost',provenance.get('starting_cost',0))
+        start_sha=start.get('sha256',provenance.get('starting_checkpoint_sha256'))
+        if start_sha:
+            raw=gzip.decompress((root/start.get('file','starting-organism.json.gz')).read_bytes())
+            assert hashlib.sha256(raw).hexdigest()==start_sha
+            starting=json.loads(raw)['cognition']
+            assert starting['total_external_cost']==base_cost
+            assert starting['current']['learner']['external_memory']['events']==base_events
         folder=root/variant;global_event=base_events;frames={};context=None;pending=None;env=None
         initializations=0;loads=0;resumes=0;posts=0;actual_cost=base_cost;namespaces=set();answers_observed=[]
         maps={p['result']['game']:p['result']['motor_map'] for p in summary['phases'] if 'game' in p['result']}
@@ -153,6 +154,8 @@ def audit(root,data):
             assert cursor==len(answers_observed)
             assert initializations==(0 if start_sha else 1) and resumes==1 and len(namespaces)==4
             if start_sha:assert loads==2
+            if provenance.get('contextual_u1_requested'):
+                assert summary['final_report']['organism']['contextual_namespaces']==[4,9,82,86]
             proof[variant]={'status':'PASS','initializations':initializations,'exact_checkpoint_resumes':resumes,
                 'factual_posts':posts,'actual_cost':actual_cost,'sensor_interfaces':len(namespaces),
                 'starting_factual_events':base_events,'initial_checkpoint_loads':int(bool(start_sha)),

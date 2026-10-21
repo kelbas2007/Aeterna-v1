@@ -86,6 +86,7 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
     let original = rt.checkpoint_constructing().unwrap();
     let mut rt = ScientificRuntime::from_constructing_checkpoint(&original).unwrap();
     let cost = rt.unified_report().unwrap().total_external_cost;
+    rt.enable_constructing_contextual_control().unwrap();
     rt.enable_constructing_acquired_sensory_rules().unwrap();
     assert_eq!(rt.unified_report().unwrap().total_external_cost, cost);
     assert_eq!(rt.organism_development_report().unwrap().episodes, 8);
@@ -110,6 +111,7 @@ fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory()
     assert!(rules.work > 0);
     assert_eq!(rt.organism_development_report().unwrap().episodes, 408);
     assert_eq!(rt.organism_development_report().unwrap().namespaces, [4, 9]);
+    assert_eq!(rt.unified_report().unwrap().contextual_namespaces, Some(vec![4, 9]));
     rt.freeze_constructing().unwrap();
     let frozen = rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint;
     episode(&mut rt, 0, 201);

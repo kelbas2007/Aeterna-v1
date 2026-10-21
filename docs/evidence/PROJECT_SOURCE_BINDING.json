@@ -198,11 +198,11 @@
   "implemented_acquired_rules_extension": {
     "base_commit": "ea4b40bf02cfb6c90f1ecf03cdb29140b7a785b8",
     "base_archive": "docs/evidence/ACQUIRED_RULES_BASE_SOURCES.json.gz",
-    "base_archive_sha256": "5ee4a0037055b11dc686ed78afc401f31662b24157d10a98284c4badc8a9fe9e",
+    "base_archive_sha256": "6aa9b77088788d3766324545f374190f877121449c0d1ccc21b772f86d3dde12",
     "modified": {
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "9dd45c3879a45519deb6371b80e17f83b05d397ec63fe6a4d0e6a31d5093eaaf",
-        "after_sha256": "e063c2a446ce923dae59224b93e301c292faf667de64d728843d16605fb30b48"
+        "after_sha256": "ddc5c1d64a6bfa620582ced5b345eb45bed8a33b88f416c994bf232a6de97c0e"
       },
       "src/construction/external_port.rs": {
         "before_sha256": "9c89860f6d675bfc5cbd9d658499a1f1a6811d011e71dd234d650943921909c2",
@@ -214,12 +214,25 @@
       },
       "src/organism_development.rs": {
         "before_sha256": "287bdaaa6d0fbceedc84dbbd4c92a9e2de4ec0bd202cba12be6ad330a890c4cb",
-        "after_sha256": "f0cff0f4d53af56c0eaaa0bd732a542c694f589fbde3acbd5f44e47223781392"
+        "after_sha256": "1548776ff698281606d18236a4c8658001fb335ce258afd1e4561252e32608c3"
+      },
+      "src/phase_meta_control.rs": {
+        "before_sha256": "06f14eaf1ef65c68f6de1e24d4ed67501ee855b42df21984beb9fbf28b5b93aa",
+        "after_sha256": "e11924da3b95b0bfb57214acf4a674c945d1f4a210d7d4850de83da46c6b5054"
+      },
+      "src/phase_constructing_control.rs": {
+        "before_sha256": "b329777d013d927fc0d02d2a6429e80a498220fb754a4d09dba2b176f590e801",
+        "after_sha256": "0fcf968ae0e1d85e7637def73214925a1ee8a6ca175573081534e68dbd4f648c"
+      },
+      "src/unified_runtime.rs": {
+        "before_sha256": "d7ba0026fbfa66a1a67ed25108b8ac84881e5b6a5a6614b999738f79c0c2d006",
+        "after_sha256": "7ea91d09ed6cbeb3225d6f95787a3564bea0ce6cf26a744ff6bbdc28d8f8cf8d"
       }
     },
     "added": {
-      "src/construction/acquired_rules.rs": "ad307b262e5d0ac41ba449bd7c535c4d1f7c4c44be27f617aeaa3ede5dc4ceb3"
+      "src/construction/acquired_rules.rs": "ad307b262e5d0ac41ba449bd7c535c4d1f7c4c44be27f617aeaa3ede5dc4ceb3",
+      "src/phase_contextual_meta.rs": "b6a1b0b4445e4d3275ea038866e69ac78970fc6d97d7e8b893cc3636f866b341"
     },
-    "scope": "bounded sensory predicate program induction in the existing factual reward memory; exact chronological predictive admission and continuing life; original RSP2 unchanged"
+    "scope": "acquired conditional sensory programs and context-conditioned projection of the same U1; one factual memory, physical action authority and checkpoint; original RSP2 unchanged"
   }
 }

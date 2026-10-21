@@ -15,19 +15,6 @@
     "DoorKey-5x5",
     "different new Fashion images"
   ],
-  "development": {
-    "fashion_train_offset": 48000,
-    "har_train_offset": 4500,
-    "samples_each": 512,
-    "retention_fashion_offset": 49000,
-    "retention_samples": 160,
-    "grid_seeds": [
-      850000,
-      850001,
-      850002,
-      850003
-    ]
-  },
   "confirmation": {
     "fashion_train_offset": 50000,
     "har_train_offset": 6000,
@@ -39,7 +26,8 @@
       850001,
       850002,
       850003
-    ]
+    ],
+    "starting_state": "continue each matching development organism export, including acquired programs and all memory; no reinitialization"
   },
   "matched_action_limits": {
     "fashion": 11,
@@ -56,5 +44,26 @@
     "actual_action_ratio_max": 1.1
   },
   "interpretation": "prequential new training rows with ongoing feedback, not an IID blind test, not an official held-out benchmark or evidence of general intelligence; internal 64-outcome rule gates are predictive, not behavioral qualification",
-  "confirmation_policy": "freeze source and executable before decoding confirmation samples; one run per arm, no retuning on these confirmation outcomes; report failure as failure"
+  "confirmation_policy": "freeze source and executable before decoding confirmation samples; one run per arm, no retuning on these confirmation outcomes; report failure as failure",
+  "protocol_clarification_before_confirmation": "Confirmation extends the two development lives through their own exact checkpoint exports. Its row ranges and acceptance criteria are unchanged; no confirmation sample has been decoded. This checks preservation and further learning in one life.",
+  "development_round_1": {
+    "source": "eb2a50c",
+    "pooled_first_answer_gain": -0.009290540540540541,
+    "failure": "HAR 407/512 vs 425/512 despite only image program admission; global U1 calibration/exploration remained coupled across interfaces",
+    "output": "acquired-rules-development-eb2a50c"
+  },
+  "contextual_u1": "enabled identically in both arms before continued learning; observed namespace conditions five U1 utility weights and exploration count; common fixed prior, no new actuator, no hidden role labels",
+  "development_round_2": {
+    "fashion_train_offset": 48000,
+    "har_train_offset": 4500,
+    "samples_each": 512,
+    "retention_fashion_offset": 49000,
+    "retention_samples": 160,
+    "grid_seeds": [
+      850000,
+      850001,
+      850002,
+      850003
+    ]
+  }
 }

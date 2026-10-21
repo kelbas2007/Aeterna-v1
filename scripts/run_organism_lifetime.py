@@ -102,6 +102,19 @@ def run(args):
         if any(v not in ('organism','organism_rules_fixed') for v in args.variants):raise ValueError('continuation requires matched common-organism variants')
         starting_cost=cognition['total_external_cost'];starting_events=memory['events']
         gzip.open(out/'starting-organism.json.gz','wt').write(starting)
+    starts={};start_proofs={}
+    for variant in args.variants:
+        raw=starting
+        if args.resume_lives:
+            if variant not in ('organism','organism_rules_fixed'):raise ValueError('resume complete common-organism lives only')
+            raw=gzip.decompress((Path(args.resume_lives)/variant/'one-organism.json.gz').read_bytes()).decode()
+        if raw is not None:
+            state=json.loads(raw)['cognition'];memory=state['current']['learner']['external_memory']
+            if state['freeze_controller'] or state.get('development') is None:raise ValueError('need a living common organism')
+            if variant=='organism_rules_fixed' and memory.get('acquired_rules') is not None:raise ValueError('control acquired rule programs')
+            starts[variant]=raw
+            start_proofs[variant]={'sha256':digest(raw.encode()),'events':memory['events'],'cost':state['total_external_cost'],
+                'file':variant+'/starting-organism.json.gz'}
     binding={p.relative_to(ROOT).as_posix():digest(p.read_bytes())
         for folder,extension in (('src','*.rs'),('scripts','*.py'))
         for p in sorted((ROOT/folder).rglob(extension))}
@@ -114,8 +127,10 @@ def run(args):
         'data':data_proof,'training_ranges':{'fashion':[args.fashion_offset,args.fashion_offset+args.samples], 'har':[args.har_offset,args.har_offset+args.samples]},
         'variants':args.variants,'max_actions_per_sensor':{'fashion':11,'har':15},'grid_action_budget':64}
     proof['declared_build_profile']=args.build_profile
+    proof['contextual_u1_requested']=args.contextual_u1
     proof['starting_checkpoint_sha256']=None if starting is None else digest(starting.encode())
     proof['starting_cost']=starting_cost;proof['starting_events']=starting_events
+    proof['starting_checkpoints']=start_proofs
     proof['sensory_sources']={'fashion':{str(args.fashion_offset):args.samples},'har':{str(args.har_offset):args.samples}}
     if args.retention_offset is not None:
         proof['sensory_sources']['fashion'][str(args.retention_offset)]=args.retention_samples
@@ -124,9 +139,14 @@ def run(args):
     results={}
     for variant in args.variants:
         folder=out/variant;folder.mkdir()
-        agent=Native(args.binary,folder/'life-before-resume.jsonl.gz',variant,blank('fashion'),starting)
-        if starting is not None and variant=='organism':agent.command({'op':'organism_enable_rules'})
-        phases=[];previous_cost=starting_cost;previous_events=starting_events
+        raw=starts.get(variant)
+        if raw is not None:gzip.open(folder/'starting-organism.json.gz','wt').write(raw)
+        agent=Native(args.binary,folder/'life-before-resume.jsonl.gz',variant,blank('fashion'),raw)
+        if args.contextual_u1 and agent.command({'op':'organism_report'})['organism'].get('contextual_namespaces') is None:
+            agent.command({'op':'organism_enable_contextual_control'})
+        if raw is not None and variant=='organism' and json.loads(raw)['cognition']['current']['learner']['external_memory'].get('acquired_rules') is None:
+            agent.command({'op':'organism_enable_rules'})
+        phases=[];previous_cost=start_proofs.get(variant,{}).get('cost',0);previous_events=start_proofs.get(variant,{}).get('events',0)
         def record(name,result):
             nonlocal previous_cost,previous_events
             if digest(Path(args.binary).read_bytes())!=proof['binary_sha256']:
@@ -186,10 +206,13 @@ if __name__=='__main__':
     parser.add_argument('--grid-episodes',type=int,default=4)
     parser.add_argument('--variants',nargs='+',choices=VARIANTS,default=['organism','organism_fixed','full'])
     parser.add_argument('--build-profile',default='unspecified; executable SHA256 recorded')
-    parser.add_argument('--checkpoint');parser.add_argument('--fashion-offset',type=int,default=42000)
+    resume=parser.add_mutually_exclusive_group()
+    resume.add_argument('--checkpoint');resume.add_argument('--resume-lives')
+    parser.add_argument('--fashion-offset',type=int,default=42000)
     parser.add_argument('--har-offset',type=int,default=4000)
     parser.add_argument('--retention-offset',type=int);parser.add_argument('--retention-samples',type=int,default=160)
     parser.add_argument('--purpose',default='development integration; no independent intelligence qualification')
+    parser.add_argument('--contextual-u1',action='store_true',help='enable context-conditioned common U1 in loaded historical states, for both arms')
     args=parser.parse_args()
     if not 64<=args.samples<=1000 or not 1<=args.grid_episodes<=16 or not 1<=args.retention_samples<=500:parser.error('bounded development budget exceeded')
     run(args)

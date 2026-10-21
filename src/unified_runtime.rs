@@ -323,6 +323,8 @@ pub struct UnifiedReport {
     pub native_meta_observations:u64,pub native_weights:[f32;5],pub operations:[u64;4],
     pub computation_work:u64,pub total_external_cost:u64,pub controller_frozen:bool,
     #[serde(default,skip_serializing_if="Option::is_none")]
+    pub contextual_namespaces:Option<Vec<i64>>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
     pub self_revision:Option<MetaRevisionReport>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub agency_credit:Option<AgencyCreditReport>,
@@ -846,6 +848,7 @@ impl ScientificRuntime {
     pub fn step_external_sensors<H,F>(&mut self,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<SensorPost> {
         let namespace=self.construction_learner().ok_or(UError::NoEvidence)?.current()[0];
+        if !self.organism.select_meta_context(namespace){return Err(UError::Capacity);}
         let mut encoder=self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_take_sensor_encoder()?;
         let result=self.step_constructing_with_action_limit(None,offers,remaining_actions,hazard,|action| {
             let post=execute(action)?;
@@ -1211,6 +1214,7 @@ impl ScientificRuntime {
         Some(UnifiedReport{domain:u.current.name.clone(),archived_domains:u.archived.iter().map(|d|d.name.clone()).collect(),learner:u.current.learner.report(),
             native_meta_observations:self.organism.phase_native_meta_observations(),native_weights:self.organism.phase_native_meta_weights()?,operations:u.operations,
             computation_work:u.computation_work,total_external_cost:u.total_external_cost,controller_frozen:u.freeze_controller,
+            contextual_namespaces:self.organism.contextual_meta_domains(),
             self_revision:u.self_revision.as_ref().map(MetaRevision::report),
             agency_credit:u.agency_credit.clone(),
             instrumental_credit:u.instrumental_credit.as_ref().map(InstrumentalCredit::report),
@@ -1250,6 +1254,9 @@ impl ScientificRuntime {
     pub fn observe_constructing_external_restart(
         &mut self,observed:Vec<i64>
     )->UResult<()> {
+        if let Some(&namespace)=observed.first(){
+            if !self.organism.can_select_meta_context(namespace){return Err(UError::Capacity);}
+        }
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if let Some(dev)=&u.development{
             let namespace=*observed.first().ok_or(UError::InvalidData)?;
@@ -1260,6 +1267,9 @@ impl ScientificRuntime {
         if !u.freeze_controller {for (fields,utility) in credits {
             self.organism.observe_phase_native_meta_utility(fields,utility as f32);
         }}
+        if let Some(&namespace)=observed.first(){
+            if !self.organism.select_meta_context(namespace){return Err(UError::Capacity);}
+        }
         u.current.pending_credit=None;
         if !u.freeze_controller {if let Some(dev)=u.development.as_mut(){dev.abandon();}}
         if let Some(revision)=u.self_revision.as_mut(){
@@ -1747,7 +1757,8 @@ impl ScientificRuntime {
                 }
             }
             let raw:Vec<_>=candidates.iter().map(|x|x.p).collect();u.nonce=u.nonce.checked_add(1).ok_or(UError::Capacity)?;
-            let choice=self.organism.choose_phase_meta_exploratory(&raw,uword(u.nonce),!u.freeze_controller).ok_or(UError::NoEvidence)?;
+            let entropy=self.organism.contextual_meta_entropy().map_or(u.nonce,|value|value);
+            let choice=self.organism.choose_phase_meta_exploratory(&raw,uword(entropy),!u.freeze_controller).ok_or(UError::NoEvidence)?;
             let chosen_index=candidates.iter().position(|p|p.p.proposal_id==choice.proposal_id).ok_or(UError::InvalidData)?;
             let chosen=candidates.into_iter().nth(chosen_index).ok_or(UError::InvalidData)?;
             u.operations[chosen.kind as usize]+=1;operations.push(chosen.source.to_string());
@@ -1880,6 +1891,7 @@ impl ScientificRuntime {
         let external_reward=u.current.learner.external_reward_enabled();
         let factual_pre=u.current.learner.current().to_vec();
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
+        self.organism.note_contextual_meta_action();
         if !u.freeze_controller {if let Some(dev)=u.development.as_mut(){
             dev.observe(u.current.learner.factual_event_count(),&factual_pre,a,original_fields,f64::from(post.reward),post.cost,native_credit_eligible);
             if native_credit_eligible && selected_readout_changed {dev.pending_changed+=1;}
@@ -2170,6 +2182,9 @@ impl ScientificRuntime {
             }
         }
         let evo=EvoPhase::from_constructing_carrier_checkpoint(&s.carrier).ok_or(UError::InvalidData)?;
+        if !evo.valid_current_meta_context(s.cognition.current.learner.current()[0],s.cognition.development.is_some()){
+            return Err(UError::InvalidData);
+        }
         let mut names=std::collections::BTreeSet::new();let mut costs=0u64;
         for d in s.cognition.archived.iter().chain(std::iter::once(&s.cognition.current)) {
             let _=ULearner::from_checkpoint(&d.learner.checkpoint()?)?;
