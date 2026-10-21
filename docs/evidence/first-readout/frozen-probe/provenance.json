@@ -1,0 +1,92 @@
+{
+  "purpose": "Post-development held-out evaluation of whole organisms with both learning and exploration disabled, after identifying the exploration confound. No model tuning, algorithm change, independent blind AGI qualification, or new computation invention claim.",
+  "frozen_probe": true,
+  "source_partition": "test",
+  "source_commit": "5c463b0336f4be18a93d8f9dd40a6e2b7f19b36b",
+  "binary_sha256": "b5b8d70bcc708597811c2ee633f5bf3014402da6de069642841a06762b132df4",
+  "frozen_binary": "frozen-aeterna-v1",
+  "registered_protocol_sha256": "c9ec83da96a1bc1a2aa6c311efe51c46e752b966f315cdea38c90ac86c1a5854",
+  "starting_checkpoint_sha256": null,
+  "starting_checkpoints": {
+    "organism_after_learning": {
+      "sha256": "94fc60589c2d89ca6033318cebf09e0c8c575e7ba0af7206e8d7d2f15995178f",
+      "events": 17254,
+      "cost": 17254,
+      "file": "organism_after_learning/starting-organism.json.gz"
+    },
+    "organism_before_learning": {
+      "sha256": "bcb6b64f50e1270bdf29a4abb3f4ccccefb0a5ed36403c6ee7e038ee5fd4c59e",
+      "events": 19801,
+      "cost": 19801,
+      "file": "organism_before_learning/starting-organism.json.gz"
+    }
+  },
+  "variants": [
+    "organism_after_learning",
+    "organism_before_learning"
+  ],
+  "data": {
+    "train-images-idx3-ubyte.gz": {
+      "bytes": 26421880,
+      "sha256": "3aede38d61863908ad78613f6a32ed271626dd12800ba2636569512369268a84"
+    },
+    "train-labels-idx1-ubyte.gz": {
+      "bytes": 29515,
+      "sha256": "a04f17134ac03560a47e3764e11b92fc97de4d1bfaf8ba1a3aa29af54cc90845"
+    },
+    "t10k-images-idx3-ubyte.gz": {
+      "bytes": 4422102,
+      "sha256": "346e55b948d973a97e58d2351dde16a484bd415d4595297633bb08f03db6a073"
+    },
+    "t10k-labels-idx1-ubyte.gz": {
+      "bytes": 5148,
+      "sha256": "67da17c76eaffca5446c3361aaab5c3cd6d1c2608764d35dfb1850b086bf8dd5"
+    },
+    "uci-har.zip": {
+      "bytes": 32964019,
+      "sha256": "ba235c5da70bc5de792aab7b0207326cb29eaf0941c3a44f1589c2ad023c752e"
+    }
+  },
+  "mnist_data": {
+    "t10k-images-idx3-ubyte.gz": {
+      "md5": "9fb629c4189551a2d022fa330f9573f3",
+      "sha256": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+      "bytes": 1648877
+    },
+    "t10k-labels-idx1-ubyte.gz": {
+      "md5": "ec29112dd5afa0611ce80d1b7f02629c",
+      "sha256": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6",
+      "bytes": 4542
+    }
+  },
+  "training_ranges": {
+    "mnist": [
+      1000,
+      1256
+    ],
+    "har": [
+      2000,
+      2256
+    ],
+    "fashion": [
+      9000,
+      9256
+    ]
+  },
+  "sensory_sources": {
+    "mnist": {
+      "1000": 256
+    },
+    "har": {
+      "2000": 256
+    },
+    "fashion": {
+      "9000": 256
+    }
+  },
+  "probe_action_limits": {
+    "mnist": 2,
+    "har": 5,
+    "fashion": 2
+  }
+}

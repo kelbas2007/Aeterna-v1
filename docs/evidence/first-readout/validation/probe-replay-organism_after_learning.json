@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "variant": "organism_after_learning",
+  "recorded_actions_replayed": 1882,
+  "native_commits_matched": 1882,
+  "exact_checkpoint_resumes": 1,
+  "continuing_checkpoint_sha256": "30bbded562c1ab230777cba41777af35c69e4053f56f31fc8cabcbe15ae6753d",
+  "frozen_checkpoint_sha256": "30bbded562c1ab230777cba41777af35c69e4053f56f31fc8cabcbe15ae6753d",
+  "study_binary_sha256": "b5b8d70bcc708597811c2ee633f5bf3014402da6de069642841a06762b132df4",
+  "replay_binary_sha256": "b5b8d70bcc708597811c2ee633f5bf3014402da6de069642841a06762b132df4",
+  "all_native_choices_matched": true,
+  "full_learned_state_byte_identical": true,
+  "new_external_world_actions": 0,
+  "purpose": "deterministic software replay of the complete recorded organism; not a fresh performance experiment"
+}

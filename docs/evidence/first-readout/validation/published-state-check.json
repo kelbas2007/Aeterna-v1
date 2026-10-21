@@ -1,0 +1,24 @@
+{
+  "organism_first_readout": {
+    "status": "PASS",
+    "learning_enabled": true,
+    "one_learner": true,
+    "checkpoint_sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+    "factual_actions": 17798,
+    "completed_episodes": 9067,
+    "raw_checkpoint_bytes": 1852716,
+    "immutable_forecasts": 1056,
+    "external_actions_executed": 0
+  },
+  "organism_no_new_learning": {
+    "status": "PASS",
+    "learning_enabled": false,
+    "one_learner": true,
+    "checkpoint_sha256": "f0754d39dba3b44dd47ba5fca306eaa324e7b503ae44306d9f201d7f442cc870",
+    "factual_actions": 20305,
+    "completed_episodes": 7131,
+    "raw_checkpoint_bytes": 1722119,
+    "immutable_forecasts": 512,
+    "external_actions_executed": 0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "purpose": "Post-development held-out evaluation of whole organisms with both learning and exploration disabled, after identifying the exploration confound. No model tuning, algorithm change, independent blind AGI qualification, or new computation invention claim.",
+  "accuracy_gains": {
+    "mnist": 0.51953125,
+    "har": -0.18359375,
+    "fashion": -0.03125
+  },
+  "checks": {
+    "new_mnist_skill": true,
+    "fashion_retention": false,
+    "har_retention": false
+  },
+  "criterion_passed": false,
+  "same_frozen_exploration_policy": true,
+  "new_learning_during_probe": false,
+  "new_algorithm_invention_established": false
+}

@@ -2,6 +2,12 @@
 
 ## Current common organism and architecture audit (2026-10-21)
 
+The latest [whole-organism audit and result](docs/FIRST_READOUT_RESULT.md)
+publishes one living learner after 17,798 actions. New MNIST-class acquisition
+is confirmed on reserved test images, while old-task retention fails. The
+ordinary constructor has not run and VM.Library remains empty; the report
+identifies concrete control, curriculum and memory bottlenecks.
+
 `main` is canonical. [PR17](https://github.com/kelbas2007/Aeterna-v1/pull/17)
 is merged: one continuing learner, U1, RSP2, trajectory revision and acquired
 conditional programs share one checkpoint. The published life contains 11,174

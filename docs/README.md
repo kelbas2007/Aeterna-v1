@@ -2,7 +2,9 @@
 
 [Аудит архитектуры](ARCHITECTURE_AUDIT_20261021.md) ·
 [Протокол первых прогнозов целого организма](FIRST_READOUT_PROTOCOL.md) ·
-[Последняя завершённая общая жизнь](ACQUIRED_RULES_RESULT.md).
+[Последний результат и живой организм](FIRST_READOUT_RESULT.md) ·
+[Проверка при одинаковой заморозке](FROZEN_PROBE_PROTOCOL.md) ·
+[Предыдущая опубликованная жизнь](ACQUIRED_RULES_RESULT.md).
 
 Прежняя формальная внешняя оценка: [EXTERNAL-CONTINUAL-5](EXTERNAL_CONTINUAL5_RESULT.md) — изображения 75.1% → 72.3%, сигналы 50.5% balanced accuracy, MiniGrid 3/48, ARC BLOCKED. [Общий сенсорный ученик и адаптация](EXTERNAL_CONTINUAL5.md) · [протокол](EXTERNAL_CONTINUAL5_PROTOCOL.md) · [ревью и происхождение данных](EXTERNAL_CONTINUAL5_REVIEW.md).
 

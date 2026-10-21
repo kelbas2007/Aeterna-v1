@@ -1,0 +1,21 @@
+{
+  "schema": "aeterna.first-readout.validation.v1",
+  "full_project_runner_status": "PASS",
+  "rust_successful_executions": 492,
+  "rust_test_invocations": 52,
+  "full_project_suite_scope": "Full suite; the final low-coverage and incumbent-identity validation clarification was additionally checked by current focused tests and complete native replays. Final-head CI reruns the suite.",
+  "final_focused_rule_evidence_tests": 2,
+  "final_whole_lifetime_tests": 6,
+  "python_external_format_tests": 11,
+  "primary_posts_audited": 29299,
+  "frozen_probe_posts_audited": 3657,
+  "native_replays": 7,
+  "native_actions_and_commits_replayed": 38277,
+  "all_replayed_joint_checkpoints_byte_identical": true,
+  "new_world_actions_from_native_replay": 0,
+  "criterion_outcomes": {
+    "first_readout_behavioral_advance": "FAIL",
+    "new_test_mnist_skill": "PASS",
+    "new_skill_with_old_skill_retention": "FAIL"
+  }
+}

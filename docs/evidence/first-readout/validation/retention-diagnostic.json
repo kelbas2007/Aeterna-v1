@@ -1,0 +1,59 @@
+{
+  "purpose": "retrospective diagnosis on consumed data, not fresh behavioral evidence",
+  "checkpoint_sha256": {
+    "before": "70ed1ad9a4e8ed49f3761e7439544f7ab53e22c9037c7b29babbbe0124e6a596",
+    "after": "467b68cb35b26ed02dc584e88c210bf6b35998cb243367522c9b260194cf4aee"
+  },
+  "fashion_normalization_unchanged": true,
+  "conditional_program_unchanged": true,
+  "retained_fashion_after_is_subset_of_before": true,
+  "before_new_worlds": {
+    "retained_successful_fashion_cases": 612,
+    "positive_motor_counts": {
+      "4": 54,
+      "14": 74,
+      "5": 77,
+      "2": 65,
+      "3": 43,
+      "10": 57,
+      "8": 61,
+      "7": 63,
+      "6": 63,
+      "9": 55
+    },
+    "retained_known_fashion_input_hashes": 2352,
+    "new_inputs_not_in_known_hashes": 192,
+    "answer_keys_with_exact_reward_rate": 0,
+    "new_answer_keys_examined": 1920,
+    "new_answer_keys_with_nonzero_approximate_failure_penalty": 1254,
+    "inputs_with_different_penalties_across_answer_motors": 191,
+    "approximate_failure_mean": 0.8590979166639348,
+    "nonzero_summary_buckets": 7379,
+    "summary_bucket_count": 8192
+  },
+  "after_new_worlds_before_fashion_return": {
+    "retained_successful_fashion_cases": 437,
+    "positive_motor_counts": {
+      "14": 54,
+      "2": 44,
+      "6": 46,
+      "9": 39,
+      "3": 35,
+      "8": 39,
+      "5": 57,
+      "7": 49,
+      "10": 35,
+      "4": 39
+    },
+    "retained_known_fashion_input_hashes": 2352,
+    "new_inputs_not_in_known_hashes": 192,
+    "answer_keys_with_exact_reward_rate": 0,
+    "new_answer_keys_examined": 1920,
+    "new_answer_keys_with_nonzero_approximate_failure_penalty": 1493,
+    "inputs_with_different_penalties_across_answer_motors": 192,
+    "approximate_failure_mean": 1.1992020833306014,
+    "nonzero_summary_buckets": 7710,
+    "summary_bucket_count": 8192
+  },
+  "interpretation": "FIFO within namespace/reward strata removes old successful examples. Shared count-min failure estimates also penalize keys without exact rates and absent from retained known inputs; collisions may change relative action values. This does not isolate how many of the 21 lost actual first answers come from each mechanism."
+}
