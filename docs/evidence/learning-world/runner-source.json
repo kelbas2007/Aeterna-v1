@@ -1,0 +1,13 @@
+{
+  "native_source_commit": "b6468406ca7b1ad700638dcf16ec9661ec3ead15",
+  "files": {
+    "scripts/learning_world_stream.py": "e65cad4530009816329f01f45bdf0c28dd9016acebc97e7e5ac034646a7db43d",
+    "scripts/prepare_learning_world_signals.py": "7633744a1f605cfcff54722e171aa419f51d0af8da40bfb494a0cabad61abbce",
+    "scripts/run_learning_world_environment.py": "253e397b5ca1c1457886546c8cead3731c6c419210c8342abe61bc689c5e0307",
+    "scripts/replay_learning_world.py": "70ba666bf89166e5147821e0670733aab30f29af39028f450c7f530940aa4491",
+    "scripts/summarize_learning_world_evidence.py": "abef19c0bddd7591c17e38ec25d65b109d83afca427fab10ce35b8095042893e",
+    "scripts/external5_transport.py": "efb3fb7bc1cd90a8d71b5365636a773f9164a111f722cef94b3fb7afcde5f844",
+    "scripts/external5_sensors.py": "9d212879393fb87bca1207e95ab176386aa9ef6156bcaa3f877be0e50e4f62c1",
+    "scripts/prepare_external5_data.py": "3e8cab11c83c760820dafd34ae4a42d01f8f39dcae44636b79f898af3b9b97f5"
+  }
+}

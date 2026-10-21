@@ -1,0 +1,19 @@
+{
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "packages": {
+    "numpy": "2.3.5",
+    "gymnasium": "1.2.0",
+    "minigrid": "3.1.0",
+    "pygame_module": "2.5.8",
+    "pygame_distribution": [
+      [
+        "pygame-ce",
+        "2.5.8"
+      ]
+    ]
+  },
+  "seed": 20261021,
+  "source_data": "UCI HAR training raw inertial recordings; no labels/subjects accessed"
+}
