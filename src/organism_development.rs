@@ -669,6 +669,15 @@ impl MetaRevision {
 }
 
 impl ScientificRuntime {
+    /// Enable acquisition in this existing living learner, including a loaded
+    /// historical checkpoint. No state reset, host labels or supplied program.
+    pub fn enable_constructing_acquired_sensory_rules(&mut self) -> UResult<()> {
+        let u = self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.development.is_none() {
+            return Err(UError::Blocked);
+        }
+        u.current.learner.carrier_acquire_sensory_rules()
+    }
     /// One owner, one factual journal and one U1. RSP2 admission is unchanged;
     /// evaluator promotion additionally needs real future randomized canaries.
     pub fn enable_constructing_organism_development(&mut self, recursive: bool) -> UResult<()> {

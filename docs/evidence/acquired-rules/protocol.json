@@ -1,0 +1,60 @@
+{
+  "purpose": "one continuing organism; prospective development followed by one locked-source continuation comparison on different public training rows",
+  "starting_checkpoint": "docs/evidence/organism-lifetime/organism/one-organism.json.gz",
+  "starting_checkpoint_sha256": "c05cc2bc70c1525d9990dea81838dc25cc14498d6a68610f63f6cf3020e7fe8d",
+  "variants": [
+    "organism",
+    "organism_rules_fixed"
+  ],
+  "difference": "acquisition and prospective admission of conditional sensory reward programs inside the same ExternalMemory; common U1, memories, RSP2 and trajectory development retained",
+  "schedule": [
+    "new Fashion images",
+    "exact checkpoint save, process close and restore",
+    "new UCI HAR raw windows",
+    "Empty-5x5",
+    "DoorKey-5x5",
+    "different new Fashion images"
+  ],
+  "development": {
+    "fashion_train_offset": 48000,
+    "har_train_offset": 4500,
+    "samples_each": 512,
+    "retention_fashion_offset": 49000,
+    "retention_samples": 160,
+    "grid_seeds": [
+      850000,
+      850001,
+      850002,
+      850003
+    ]
+  },
+  "confirmation": {
+    "fashion_train_offset": 50000,
+    "har_train_offset": 6000,
+    "samples_each": 768,
+    "retention_fashion_offset": 52000,
+    "retention_samples": 160,
+    "grid_seeds": [
+      850000,
+      850001,
+      850002,
+      850003
+    ]
+  },
+  "matched_action_limits": {
+    "fashion": 11,
+    "har": 15,
+    "navigation": 64
+  },
+  "resource_disclosure": "same permitted action/planning budgets; rule search adds up to 64 million metered work plus metered forecasts; actual computation for each arm is reported and may differ",
+  "advance_criterion": {
+    "at_least_one_program_admitted": true,
+    "changed_first_answers": true,
+    "pooled_sensor_accuracy_gain_min": 0.02,
+    "per_sensor_phase_accuracy_drop_max": 0.02,
+    "navigation_success_drop_max": 0,
+    "actual_action_ratio_max": 1.1
+  },
+  "interpretation": "prequential new training rows with ongoing feedback, not an IID blind test, not an official held-out benchmark or evidence of general intelligence; internal 64-outcome rule gates are predictive, not behavioral qualification",
+  "confirmation_policy": "freeze source and executable before decoding confirmation samples; one run per arm, no retuning on these confirmation outcomes; report failure as failure"
+}

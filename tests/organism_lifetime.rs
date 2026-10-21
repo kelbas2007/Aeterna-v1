@@ -78,6 +78,45 @@ fn runtime(recursive: bool) -> ScientificRuntime {
     rt.observe_external_sensor_restart(&frame(0, 0)).unwrap();
     rt
 }
+
+#[test]
+fn acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory() {
+    let mut rt = runtime(true);
+    for i in 0..8 { episode(&mut rt, 0, i); }
+    let original = rt.checkpoint_constructing().unwrap();
+    let mut rt = ScientificRuntime::from_constructing_checkpoint(&original).unwrap();
+    let cost = rt.unified_report().unwrap().total_external_cost;
+    rt.enable_constructing_acquired_sensory_rules().unwrap();
+    assert_eq!(rt.unified_report().unwrap().total_external_cost, cost);
+    assert_eq!(rt.organism_development_report().unwrap().episodes, 8);
+    assert_eq!(rt.enable_constructing_acquired_sensory_rules(), Err(Error::Busy));
+    // Actual protected feedback through two interfaces, without model injection.
+    for domain in 0..2 {
+        for index in 0..200 {
+            let input = frame(domain, index);
+            rt.observe_external_sensor_restart(&input).unwrap();
+            rt.step_external_sensors(&offers(), Some(1), safe, |_| Ok(SensorPost {
+                frame: input.clone(), reward: 1.0, cost: 1,
+            })).unwrap();
+            rt.finish_external_episode().unwrap();
+        }
+        let saved = rt.checkpoint_constructing().unwrap();
+        rt = ScientificRuntime::from_constructing_checkpoint(&saved).unwrap();
+        assert_eq!(saved, rt.checkpoint_constructing().unwrap());
+    }
+    let report = rt.construction_learner().unwrap().external_reward_report().unwrap();
+    let rules = report.acquired_rules.unwrap();
+    assert!(rules.proposals > 0);
+    assert!(rules.work > 0);
+    assert_eq!(rt.organism_development_report().unwrap().episodes, 408);
+    assert_eq!(rt.organism_development_report().unwrap().namespaces, [4, 9]);
+    rt.freeze_constructing().unwrap();
+    let frozen = rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint;
+    episode(&mut rt, 0, 201);
+    assert_eq!(frozen, rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint);
+    assert_eq!(rt.enable_constructing_acquired_sensory_rules(), Err(Error::Blocked));
+    ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
+}
 fn offers() -> Vec<ActionOffer> {
     (0..16)
         .map(|a| ActionOffer {

@@ -27,6 +27,13 @@ impl Learner {
         self.external_memory.as_mut().ok_or(Error::NoEvidence)?.use_shared_development();
         Ok(())
     }
+    pub(crate) fn carrier_acquire_sensory_rules(&mut self) -> Result<()> {
+        if self.pending || self.poisoned || self.frozen_at.is_some() {
+            return Err(Error::Busy);
+        }
+        let memory = self.external_memory.as_mut().ok_or(Error::NoEvidence)?;
+        memory.enable_acquired_rules()
+    }
     pub(crate) fn carrier_valid_external_state(&self, state: &[i64]) -> bool {
         self.external_memory.is_none()
             || (state.len() == 32

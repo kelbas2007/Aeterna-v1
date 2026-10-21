@@ -42,7 +42,8 @@
     "raw_sensor_reward_learning_in_joint_checkpoint_opt_in": true,
     "bounded_prequential_recursive_strategy_adaptation_opt_in": true,
     "real_recorded_image_and_signal_continual_study_completed": true,
-    "joint_sensory_rsp2_trajectory_development_experimental": true
+    "joint_sensory_rsp2_trajectory_development_experimental": true,
+    "acquired_conditional_sensory_programs_in_common_memory_experimental": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -143,7 +144,8 @@
     "docs/EXTERNAL_CONTINUAL5.md",
     "docs/EXTERNAL_CONTINUAL5_RESULT.md",
     "docs/EXTERNAL_CONTINUAL5_REVIEW.md",
-    "docs/ORGANISM_LIFETIME.md"
+    "docs/ORGANISM_LIFETIME.md",
+    "docs/ACQUIRED_RULES.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

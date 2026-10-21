@@ -12,19 +12,20 @@ from external5_sensors import load_fashion, load_har, blank, acquire, metrics
 from run_external_continual5 import motors, scene, verify_data_files
 
 ROOT=Path(__file__).resolve().parents[1]
-VARIANTS=('organism','organism_fixed','full')
+VARIANTS=('organism','organism_fixed','full','organism_rules_fixed')
 
 def save(path,value):
     Path(path).write_text(json.dumps(value,indent=2,allow_nan=False)+'\n')
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 
-def sensory_phase(agent,kind,data,training=True):
+def sensory_phase(agent,kind,data,training=True,source_offset=None):
     x,y,_=data;queries,answers=motors(kind)
     lookup={a:i for i,a in enumerate(queries)};classes={a:i for i,a in enumerate(answers)}
     targets=[];first_predictions=[];solved=0;actions=0;measurements=0
     for index,(sample,target) in enumerate(zip(x,y)):
-        frame=blank(kind);agent.reset(frame,phase=kind,index=index,development=True)
+        metadata={} if source_offset is None else {'source_offset':source_offset}
+        frame=blank(kind);agent.reset(frame,phase=kind,index=index,development=True,**metadata)
         measured=set();failed=set();first=None;success=False
         for left in range(11 if kind=='fashion' else 15,0,-1):
             available=[False]*16
@@ -45,7 +46,7 @@ def sensory_phase(agent,kind,data,training=True):
             if action in classes:
                 agent.finish()
                 if success:break
-                if left>1:agent.reset(frame,phase=kind,index=index,corrective_retry=True,development=True)
+                if left>1:agent.reset(frame,phase=kind,index=index,corrective_retry=True,development=True,**metadata)
         agent.finish()
         if first is None:raise AssertionError('no response before action budget expired')
         targets.append(int(target));first_predictions.append(first);solved+=success
@@ -87,9 +88,20 @@ def run(args):
     # membership and original Fashion checksums. No test partition is decoded.
     data_proof=verify_data_files(args.data)
     datasets={
-        'fashion':load_fashion(args.data,'train',42000,args.samples),
-        'har':load_har(args.data,'train',4000,args.samples),
+        'fashion':load_fashion(args.data,'train',args.fashion_offset,args.samples),
+        'har':load_har(args.data,'train',args.har_offset,args.samples),
     }
+    starting=None;starting_cost=0;starting_events=0
+    if args.checkpoint:
+        source=Path(args.checkpoint)
+        starting=(gzip.decompress(source.read_bytes()).decode() if source.suffix=='.gz' else source.read_text())
+        stored=json.loads(starting);cognition=stored['cognition']
+        if cognition['freeze_controller'] or cognition.get('development') is None:raise ValueError('need a living common organism')
+        memory=cognition['current']['learner']['external_memory']
+        if memory.get('acquired_rules') is not None:raise ValueError('starting controls must share the same state before rule acquisition')
+        if any(v not in ('organism','organism_rules_fixed') for v in args.variants):raise ValueError('continuation requires matched common-organism variants')
+        starting_cost=cognition['total_external_cost'];starting_events=memory['events']
+        gzip.open(out/'starting-organism.json.gz','wt').write(starting)
     binding={p.relative_to(ROOT).as_posix():digest(p.read_bytes())
         for folder,extension in (('src','*.rs'),('scripts','*.py'))
         for p in sorted((ROOT/folder).rglob(extension))}
@@ -99,15 +111,22 @@ def run(args):
         'source_sha256':binding,'binary_sha256':digest(Path(args.binary).read_bytes()),
         'frozen_binary':frozen.name,
         'dependencies':{name:importlib.metadata.version(name) for name in ('numpy','gymnasium','minigrid')},
-        'data':data_proof,'training_ranges':{'fashion':[42000,42000+args.samples], 'har':[4000,4000+args.samples]},
+        'data':data_proof,'training_ranges':{'fashion':[args.fashion_offset,args.fashion_offset+args.samples], 'har':[args.har_offset,args.har_offset+args.samples]},
         'variants':args.variants,'max_actions_per_sensor':{'fashion':11,'har':15},'grid_action_budget':64}
     proof['declared_build_profile']=args.build_profile
+    proof['starting_checkpoint_sha256']=None if starting is None else digest(starting.encode())
+    proof['starting_cost']=starting_cost;proof['starting_events']=starting_events
+    proof['sensory_sources']={'fashion':{str(args.fashion_offset):args.samples},'har':{str(args.har_offset):args.samples}}
+    if args.retention_offset is not None:
+        proof['sensory_sources']['fashion'][str(args.retention_offset)]=args.retention_samples
+    proof['purpose']=args.purpose
     save(out/'provenance.json',proof)
     results={}
     for variant in args.variants:
         folder=out/variant;folder.mkdir()
-        agent=Native(args.binary,folder/'life-before-resume.jsonl.gz',variant,blank('fashion'))
-        phases=[];previous_cost=0;previous_events=0
+        agent=Native(args.binary,folder/'life-before-resume.jsonl.gz',variant,blank('fashion'),starting)
+        if starting is not None and variant=='organism':agent.command({'op':'organism_enable_rules'})
+        phases=[];previous_cost=starting_cost;previous_events=starting_events
         def record(name,result):
             nonlocal previous_cost,previous_events
             if digest(Path(args.binary).read_bytes())!=proof['binary_sha256']:
@@ -124,19 +143,23 @@ def run(args):
             print(json.dumps({'variant':variant,'phase':name,'actions':previous_cost,
                 'development':report['development']},allow_nan=False),flush=True)
         try:
-            record('fashion',sensory_phase(agent,'fashion',datasets['fashion']))
+            record('fashion',sensory_phase(agent,'fashion',datasets['fashion'],source_offset=args.fashion_offset))
             saved=agent.checkpoint();resume_sha=digest(saved.encode())
             gzip.open(folder/'resume.json.gz','wt').write(saved)
             agent.close()
             agent=Native(args.binary,folder/'life-after-resume.jsonl.gz',variant,blank('fashion'),saved)
             if agent.checkpoint()!=saved:raise AssertionError('resume changed the cognitive checkpoint')
-            record('har',sensory_phase(agent,'har',datasets['har']))
+            record('har',sensory_phase(agent,'har',datasets['har'],source_offset=args.har_offset))
             for index,game in enumerate(('MiniGrid-Empty-5x5-v0','MiniGrid-DoorKey-5x5-v0')):
                 record(game,navigation_phase(agent,game,20+index,range(850000,850000+args.grid_episodes)))
             # Acquired, previously experienced images. Report as a revisit with
             # continuing feedback, never as a new blind retention exam.
-            revisit=(datasets['fashion'][0][:64],datasets['fashion'][1][:64],None)
-            record('fashion_revisit_with_feedback',sensory_phase(agent,'fashion',revisit))
+            if args.retention_offset is None:
+                revisit=(datasets['fashion'][0][:64],datasets['fashion'][1][:64],None)
+                record('fashion_revisit_with_feedback',sensory_phase(agent,'fashion',revisit,source_offset=args.fashion_offset))
+            else:
+                retention=load_fashion(args.data,'train',args.retention_offset,args.retention_samples)
+                record('fashion_new_after_other_worlds',sensory_phase(agent,'fashion',retention,source_offset=args.retention_offset))
             continuing=agent.checkpoint()
             gzip.open(folder/'one-organism.json.gz','wt').write(continuing)
             agent.freeze();final=agent.checkpoint()
@@ -161,8 +184,12 @@ if __name__=='__main__':
     parser.add_argument('--binary',required=True);parser.add_argument('--data',required=True)
     parser.add_argument('--output',required=True);parser.add_argument('--samples',type=int,default=240)
     parser.add_argument('--grid-episodes',type=int,default=4)
-    parser.add_argument('--variants',nargs='+',choices=VARIANTS,default=list(VARIANTS))
+    parser.add_argument('--variants',nargs='+',choices=VARIANTS,default=['organism','organism_fixed','full'])
     parser.add_argument('--build-profile',default='unspecified; executable SHA256 recorded')
+    parser.add_argument('--checkpoint');parser.add_argument('--fashion-offset',type=int,default=42000)
+    parser.add_argument('--har-offset',type=int,default=4000)
+    parser.add_argument('--retention-offset',type=int);parser.add_argument('--retention-samples',type=int,default=160)
+    parser.add_argument('--purpose',default='development integration; no independent intelligence qualification')
     args=parser.parse_args()
-    if not 64<=args.samples<=500 or not 1<=args.grid_episodes<=16:parser.error('bounded development budget exceeded')
+    if not 64<=args.samples<=1000 or not 1<=args.grid_episodes<=16 or not 1<=args.retention_samples<=500:parser.error('bounded development budget exceeded')
     run(args)

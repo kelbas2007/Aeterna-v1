@@ -194,5 +194,32 @@
       "src/organism_development.rs": "287bdaaa6d0fbceedc84dbbd4c92a9e2de4ec0bd202cba12be6ad330a890c4cb"
     },
     "scope": "one factual sensory lifetime; existing unchanged RSP2 drives trajectory self-revision; actual chronological behavioral canaries"
+  },
+  "implemented_acquired_rules_extension": {
+    "base_commit": "ea4b40bf02cfb6c90f1ecf03cdb29140b7a785b8",
+    "base_archive": "docs/evidence/ACQUIRED_RULES_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "5ee4a0037055b11dc686ed78afc401f31662b24157d10a98284c4badc8a9fe9e",
+    "modified": {
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "9dd45c3879a45519deb6371b80e17f83b05d397ec63fe6a4d0e6a31d5093eaaf",
+        "after_sha256": "e063c2a446ce923dae59224b93e301c292faf667de64d728843d16605fb30b48"
+      },
+      "src/construction/external_port.rs": {
+        "before_sha256": "9c89860f6d675bfc5cbd9d658499a1f1a6811d011e71dd234d650943921909c2",
+        "after_sha256": "ef595e51c79bbf43637c27b996bedddab1dbacc6ea7654dd721ff1b738850d4f"
+      },
+      "src/construction/external_reward.rs": {
+        "before_sha256": "dd716a145fed106c69b8ece7b38e3278b91902ac4594842291b84da6bb6bca80",
+        "after_sha256": "fce74428063797df319eef0088e99a96d6a3928fbb23c587dae4521bed5c5815"
+      },
+      "src/organism_development.rs": {
+        "before_sha256": "287bdaaa6d0fbceedc84dbbd4c92a9e2de4ec0bd202cba12be6ad330a890c4cb",
+        "after_sha256": "f0cff0f4d53af56c0eaaa0bd732a542c694f589fbde3acbd5f44e47223781392"
+      }
+    },
+    "added": {
+      "src/construction/acquired_rules.rs": "ad307b262e5d0ac41ba449bd7c535c4d1f7c4c44be27f617aeaa3ede5dc4ceb3"
+    },
+    "scope": "bounded sensory predicate program induction in the existing factual reward memory; exact chronological predictive admission and continuing life; original RSP2 unchanged"
   }
 }
