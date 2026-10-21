@@ -77,6 +77,13 @@ pub(crate) fn main()->Result<()>{
                 "external_init"|"organism_init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
                     let whole=request["op"]=="organism_init";
+                    let learning_world=match request.get("learning_world") {
+                        None|Some(Value::Null)|Some(Value::Bool(false))=>None,
+                        Some(Value::Bool(true))=>Some(aeterna_v1::learning_world::LearningWorldConfig::default()),
+                        Some(value) if value.is_object()=>Some(serde_json::from_value(value.clone())?),
+                        _=>return Err("learning_world must be an object or boolean".into()),
+                    };
+                    if learning_world.is_some()&&!whole{return Err("learning_world requires organism_init".into());}
                     let frame=serde_json::from_value(request["frame"].clone())?;
                     let (mut cfg,mut policy)=configuration();
                     cfg.actions=16;cfg.planning_depth=usize::try_from(request.get("planning_depth").map_or(Some(32),Value::as_u64).ok_or("invalid planning_depth")?)?;
@@ -97,8 +104,25 @@ pub(crate) fn main()->Result<()>{
                             rt.enable_constructing_acquired_sensory_rules()?;
                         }
                     }
-                    rt.observe_external_sensor_restart(&frame)?;runtime=Some(rt);
+                    if let Some(config)=learning_world {rt.enable_constructing_learning_world(config,&frame)?;}
+                    else{rt.observe_external_sensor_restart(&frame)?;}
+                    runtime=Some(rt);
                     Ok(json!({"type":"initialized","action_authority":"protected_u1","learner":"one_joint_checkpoint"}))
+                },
+                "organism_enable_learning_world"=>{
+                    let config=serde_json::from_value(request.get("config").cloned().unwrap_or(json!({})))?;
+                    let frame=serde_json::from_value(request["frame"].clone())?;
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_learning_world(config,&frame)?;
+                    Ok(json!({"type":"learning_world_enabled","checkpoint_version":2,
+                        "action_authority":"same_u1","prior_experience":"preserved_without_inventing_raw_observations"}))
+                },
+                "learning_world_report"=>Ok(json!({"type":"learning_world_report",
+                    "report":runtime.as_ref().ok_or("not loaded")?.learning_world_report()})),
+                "set_learning_world_goal"=>{
+                    let frame=match request.get("frame"){None|Some(Value::Null)=>None,Some(v)=>Some(serde_json::from_value(v.clone())?)};
+                    let tolerance=request.get("tolerance").map_or(Some(0.01),Value::as_f64).ok_or("invalid tolerance")?;
+                    runtime.as_mut().ok_or("not loaded")?.set_learning_world_goal(frame,tolerance)?;
+                    Ok(json!({"type":"learning_world_goal_updated","authority":"goal_only_not_factual_experience"}))
                 },
                 "organism_enable_rules"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_acquired_sensory_rules()?;

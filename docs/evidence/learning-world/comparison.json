@@ -1,0 +1,69 @@
+{
+  "status": "ENGINEERING_LOOP_IMPLEMENTED_BEHAVIORAL_ADVANTAGE_NOT_ESTABLISHED",
+  "independent_intelligence_qualification": false,
+  "source_commit": "b6468406ca7b1ad700638dcf16ec9661ec3ead15",
+  "binary_sha256": "e9649679cf8a46d9548109dd410160952048dbd2bcf94f62165e9ff99e69361f",
+  "primary_life": {
+    "parent_events": 17798,
+    "after_real_first": 17830,
+    "after_real_resumed": 17862,
+    "after_simulator": 17990,
+    "original_physical_experiments": 0,
+    "recorded_sensor_ingestions": 64,
+    "self_selected_simulator_actions": 128,
+    "online_updates": 192,
+    "consolidation_updates": 334,
+    "retained_experiences": 128,
+    "reserved_memory_bytes": 3355581,
+    "budget_skipped_updates": 50,
+    "recursive_generations": 0
+  },
+  "real_signal_forecast": {
+    "records": 64,
+    "normalized_target_samples": 36864,
+    "normalization": "x / (1 + abs(x)); error measured before each POST update",
+    "learned_mse": 0.03567201889481879,
+    "frozen_mse": 0.03611374988275206,
+    "relative_reduction_vs_frozen": 0.012231656622959663,
+    "simple_pre_only_baseline_mse": {
+      "zero": 0.03594509691030381,
+      "repeat_first_half": 0.0014513639019402681,
+      "last_sample": 0.0007320109195236126,
+      "mean_pre": 0.0009243419389080568
+    },
+    "learned_to_last_sample_error_ratio": 48.731539302765974,
+    "new_whole_organism_work": 118683305,
+    "frozen_new_whole_organism_work": 34840064,
+    "work_ratio": 3.4065179960633825,
+    "work_unit": "native algorithm ledger, not CPU instructions or elapsed time",
+    "advantage_over_simple_forecasting": false,
+    "independent_samples_or_statistical_significance_claimed": false
+  },
+  "external_simulator_control": {
+    "environment": "Gymnasium Pendulum-v1; 32x32 rendered camera and three public signals",
+    "seeds": [
+      20261021,
+      20261022
+    ],
+    "learned_original_returns": [
+      -419.3982159783352,
+      -316.9927936120089
+    ],
+    "frozen_original_returns": [
+      -500.24734644607133,
+      -325.3706624990059
+    ],
+    "new_whole_organism_work": 1170381722,
+    "frozen_new_whole_organism_work": 259983836,
+    "work_ratio": 4.501748031750712,
+    "freeze_ablation": "all organism learning frozen, not an isolated ablation of the new model",
+    "comparison_scope": "post-hoc open engineering reference; two episodes; no equal-compute or generalization claim",
+    "cross_modality_sensor_mse_comparable": false,
+    "sensor_metric_note": "frozen model does not register new camera coordinates; no comparison over different coordinate sets"
+  },
+  "replay": {
+    "native_commits_matched": 384,
+    "full_states_byte_identical": true,
+    "new_environment_or_physical_experiments": 0
+  }
+}

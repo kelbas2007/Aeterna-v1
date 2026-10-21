@@ -47,7 +47,11 @@
     "context_conditioned_single_u1_in_common_checkpoint_experimental": true,
     "immutable_first_rule_forecasts_in_common_checkpoint_opt_in": true,
     "coverage_aware_bounded_prototype_memory_opt_in": true,
-    "consolidated_feature_statistics_in_common_checkpoint_opt_in": true
+    "consolidated_feature_statistics_in_common_checkpoint_opt_in": true,
+    "shared_raw_recurrent_world_model_in_joint_checkpoint_opt_in": true,
+    "simultaneous_multimodal_observation_learning_opt_in": true,
+    "bounded_raw_episodic_replay_and_goal_state_opt_in": true,
+    "v1_to_v2_whole_organism_checkpoint_migration": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -156,7 +160,9 @@
     "docs/COVERAGE_MEMORY_PROTOCOL.md",
     "docs/COVERAGE_MEMORY_RESULT.md",
     "docs/CONSOLIDATED_MEMORY_PROTOCOL.md",
-    "docs/CONSOLIDATED_MEMORY_RESULT.md"
+    "docs/CONSOLIDATED_MEMORY_RESULT.md",
+    "docs/LEARNING_ORGANISM.md",
+    "docs/LEARNING_ORGANISM_RESULT.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",
@@ -283,5 +289,6 @@
     "max_self_directed_sensors": 32,
     "max_self_directed_motors": 16,
     "infinite_retention": false
-  }
+  },
+  "learning_organism_implementation": "2026-10-21"
 }

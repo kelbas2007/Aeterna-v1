@@ -1,0 +1,423 @@
+{
+  "source_commit": "b6468406ca7b1ad700638dcf16ec9661ec3ead15",
+  "binary_sha256": "e9649679cf8a46d9548109dd410160952048dbd2bcf94f62165e9ff99e69361f",
+  "profile": {
+    "release": true,
+    "lto": false,
+    "codegen_units": 16
+  },
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "23c1c175fdeb2353d30f082d3ef3a65bbb784634f729233716bf91bbee98bc62"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "e2eb05f7d26e1588285fabf40a8f69625ed4f5d48e8941436be129c85eaae16b"
+    },
+    {
+      "path": "docs/PROJECT_STATE.json",
+      "sha256": "863713c6a42a90ccde01d9960a11720858418a861a7ddd220cc2d665bb47b12e"
+    },
+    {
+      "path": "src/authority.rs",
+      "sha256": "81934ff95b983b0568980c6e437eec36800cc93a52d1980383faff4d2edad84f"
+    },
+    {
+      "path": "src/belief.rs",
+      "sha256": "daad09529a98263f3b602683aaec045c3d4b5ff62d5dc2bd5b3d34652c182f5b"
+    },
+    {
+      "path": "src/bin/aeterna-construction.rs",
+      "sha256": "ef79fba8bcf592126a264050421a72226e638677a539641d8211cb6c975d0ded"
+    },
+    {
+      "path": "src/bin/aeterna-unified.rs",
+      "sha256": "ad9975690e1e7146b86f5355a52fd5319245c97180e62fc887ca93fd61a15bb5"
+    },
+    {
+      "path": "src/bin/external_world_agent.rs",
+      "sha256": "d1c0b175b83936428436ac12a259b1906fc7575a08b5dadd56a6277c009c2482"
+    },
+    {
+      "path": "src/bin/perception.rs",
+      "sha256": "7004182e3f5e180fec4182a15b35a9ab0c8e628727077e07ee6f6d4217af9190"
+    },
+    {
+      "path": "src/carrier.rs",
+      "sha256": "18cea1254f5cda90351f67e5fb6923e2d46c0d11a4d3b65b9754051b83d1e222"
+    },
+    {
+      "path": "src/concept.rs",
+      "sha256": "d7ce5379f9a8e613349122f9eb5d3669e28f54571b6a768d9943e76d066a2ecf"
+    },
+    {
+      "path": "src/construction/acquired_rules.rs",
+      "sha256": "a891ef8ab6006fe97fca20ce78fc0801041bdff74176ba74d44ed9d3d89276ae"
+    },
+    {
+      "path": "src/construction/autonomy.rs",
+      "sha256": "07a25662f08e0c85da9fcb33e9ab5dc6c63c138beecd31517e057ea17d429ebd"
+    },
+    {
+      "path": "src/construction/causal_memory.rs",
+      "sha256": "20cdc15fa458b60b5bb1ea9fc9f5c5f881f862a03b3571df07eecbd00ec20bda"
+    },
+    {
+      "path": "src/construction/causal_port.rs",
+      "sha256": "0fb473d8505d242c33c648ded4abf72581f07c585855a0f1965269ceb7d140fc"
+    },
+    {
+      "path": "src/construction/consolidated_memory.rs",
+      "sha256": "9ba0ea8bdd22b724d7ec2af2e15ebf782dcd103fa456ebfcc990923482815861"
+    },
+    {
+      "path": "src/construction/constructors.rs",
+      "sha256": "7263ec0483c6a743576169969c0b51abf67975b2c0d58a9e4738095b2ad54470"
+    },
+    {
+      "path": "src/construction/coverage_memory.rs",
+      "sha256": "ede1dcb48ef0cd5dc2d12448181ad5fd8fc2d4a8deb14bcd069a0e1c3d4a9cf6"
+    },
+    {
+      "path": "src/construction/curriculum.rs",
+      "sha256": "827f15adc84da7e7361af412d3fd8f4ac59914012ba6f9902b6228b039e7f6f2"
+    },
+    {
+      "path": "src/construction/epistemic.rs",
+      "sha256": "585d28034e7d197e55c6fae9713e143fd4b2f11a0c233b97e1f2127eb5f9b2b1"
+    },
+    {
+      "path": "src/construction/exact_completion.rs",
+      "sha256": "13c9054243712b4a95252fa18665d98c84710ebcd4c0a2778d6dd7506c38b7fe"
+    },
+    {
+      "path": "src/construction/experiential.rs",
+      "sha256": "977f91ccdad985f0908dc667f2b491491371a431525043d4fc35ec9453757494"
+    },
+    {
+      "path": "src/construction/external_port.rs",
+      "sha256": "d84855880caf2c5d10ac0945e6ab062e6fab9e809355bdcc0f5753c457d4ca24"
+    },
+    {
+      "path": "src/construction/external_reward.rs",
+      "sha256": "2a18f653c84eba43a5603365297e06ccbec62e5e6bd569b0684cb3d14a17a853"
+    },
+    {
+      "path": "src/construction/first_readout.rs",
+      "sha256": "99bf4fea76fde759e38ce1f579ed806441561236f3d63a4d7a092ac4e887488f"
+    },
+    {
+      "path": "src/construction/induction.rs",
+      "sha256": "8c4453213461825793a53b1f65da0ca3e371c0e1b1e670260c878a48075a43bc"
+    },
+    {
+      "path": "src/construction/mod.rs",
+      "sha256": "e48c6124c1b132c23a182e21d701faa38556a75c025bf56164e880c624ea9a6d"
+    },
+    {
+      "path": "src/construction/recursive.rs",
+      "sha256": "6196f8d141265fbbac2d8e74dd417e743221999124c345b3d15b6cfd5111ee04"
+    },
+    {
+      "path": "src/construction/recursive_search_port.rs",
+      "sha256": "aa3e897b82c2b968d439edb8b0e9cef6b436f4ee31eb4473547d97ea48731165"
+    },
+    {
+      "path": "src/construction/requirements.rs",
+      "sha256": "3b871a43665f7e569d0acf04ae286a8b20644ffde5f7e5a3cbe73ac6733df4e8"
+    },
+    {
+      "path": "src/construction/requirements_port.rs",
+      "sha256": "928db7423d9946a5e31821cf8e8f8bfb661f0d6648d42261f881f4eb1a3d202e"
+    },
+    {
+      "path": "src/construction/runtime.rs",
+      "sha256": "3b5cd96d379d8a3479ece34fa73f7c3d40604601a8b02a97055317293447a5f1"
+    },
+    {
+      "path": "src/construction/search_policy.rs",
+      "sha256": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0"
+    },
+    {
+      "path": "src/construction/sensors.rs",
+      "sha256": "5c3c285139044ddb6bb7969a58b4fbf06dfa4f6ae55a6722cfe0f5f5fe066f86"
+    },
+    {
+      "path": "src/construction/session.rs",
+      "sha256": "e73fb8119bcc9d97c17d636a07091a0126b9e000727be523fa0209b4a9f6063b"
+    },
+    {
+      "path": "src/construction/synthesis.rs",
+      "sha256": "03673af7142dd002afea2d4840a2d8b847bca64093bf828bd01f5b03860d8abd"
+    },
+    {
+      "path": "src/construction/unified_port.rs",
+      "sha256": "757ee35c4d9b1e6010eaeaefa26aa50f07c1eec74f43c70910fa593fe62975f2"
+    },
+    {
+      "path": "src/construction/vm.rs",
+      "sha256": "c99ae33b67ba659e69281f54032a3ffb1f86e7cd7e40e3c859451a83c0d6e970"
+    },
+    {
+      "path": "src/education.rs",
+      "sha256": "915ef3b122e474293487f588b4e0c351c170454eba12982b8e53d253430f44f0"
+    },
+    {
+      "path": "src/education_runtime.rs",
+      "sha256": "72c086eef50936a28633ab357414dd4ee315265d48e8134548c45925dc0f8d19"
+    },
+    {
+      "path": "src/epistemic.rs",
+      "sha256": "7abd0b3779664fc66c562abd412bf465f0bcd55693c2ee98e4c4da2add48d148"
+    },
+    {
+      "path": "src/exploration.rs",
+      "sha256": "afe4780d0ff6dc3bc105ef7c93f0013414b0d538a7e30173d499508cb1f943ef"
+    },
+    {
+      "path": "src/hdc.rs",
+      "sha256": "f2dbf7f9151ef996ecaa77b39c63a3bffb6b15338f7cab67fe798bb9f7747e85"
+    },
+    {
+      "path": "src/hierarchy.rs",
+      "sha256": "2b0af42a558b96d754de85a77007f4d5c3563b90c7e7de42829b3138ad042674"
+    },
+    {
+      "path": "src/human_protection.rs",
+      "sha256": "e8d66c846ab8b52afd5d787b36995c51d70166594c06e41388bf1ff52126f43e"
+    },
+    {
+      "path": "src/learning_world.rs",
+      "sha256": "e464196e090ae05587e9c666981dac5c662320186010071a89e8a7ea2b4487b0"
+    },
+    {
+      "path": "src/learning_world/network.rs",
+      "sha256": "82c3de5e44004a30c82abecd4e2716526f3970c3985ace9cdd482e2a993db4e8"
+    },
+    {
+      "path": "src/lib.rs",
+      "sha256": "c1e4d07eda39c93103604d50d8b6b5e2dbdef70f4715a47b7196559efb618414"
+    },
+    {
+      "path": "src/macro_memory.rs",
+      "sha256": "b82e52ef2ca6ece887faf3052bb8a5b1a038035950472ffea90a3b0e871c7856"
+    },
+    {
+      "path": "src/main.rs",
+      "sha256": "627a007b928d2ad136264052170a3b46a2ca1d9b430f05c5d1b1e8d6fddb6f8d"
+    },
+    {
+      "path": "src/organism_development.rs",
+      "sha256": "a1344ad7632af80fd9559332bf9cb9e36c91acfc828cc41cb0cf535e38084d5a"
+    },
+    {
+      "path": "src/phase.rs",
+      "sha256": "409547e1df9a0f07f4157d8ab7fa091df5eebb706faa249a61e450c1bd6e14c2"
+    },
+    {
+      "path": "src/phase_abstract_planning.rs",
+      "sha256": "b0e23e79b5bd41b80fc2e57037f28a300c9e9d240646ed9f08322fe3edf242cd"
+    },
+    {
+      "path": "src/phase_adaptive_rules.rs",
+      "sha256": "f740ab0ed87d2e5a7753b6e59504f1302a6be1811d9b330584fb25123cea485a"
+    },
+    {
+      "path": "src/phase_auto_abstraction.rs",
+      "sha256": "92ec558cbc78182ad117d3c39b8ca049d3e3d75ca40c64aadaa9a71af0815c71"
+    },
+    {
+      "path": "src/phase_compositional.rs",
+      "sha256": "9d7cc26faf5f13ea3408ec3c06f517425fa98e77523704177a0f28682a85f868"
+    },
+    {
+      "path": "src/phase_concept.rs",
+      "sha256": "b9f3f08cc71b5bba6ef979b46274e852fd308969707777b5a92b06134ef7fad6"
+    },
+    {
+      "path": "src/phase_constructing_control.rs",
+      "sha256": "0fcf968ae0e1d85e7637def73214925a1ee8a6ca175573081534e68dbd4f648c"
+    },
+    {
+      "path": "src/phase_contextual.rs",
+      "sha256": "bb8a4764b2142baffac258b8728f01b82989059da86c9eec43aa296443eada7e"
+    },
+    {
+      "path": "src/phase_contextual_meta.rs",
+      "sha256": "bbc3277a3cb6762078310edae73124e2de7550afc451cd3397a5d98b41b0dce9"
+    },
+    {
+      "path": "src/phase_deep_abstraction.rs",
+      "sha256": "8f513f2f43f0fa66485aaa2ed54ef33650148d4dec11e1327eaf9de82a203311"
+    },
+    {
+      "path": "src/phase_drive.rs",
+      "sha256": "1f058c60a97cac00091487fb83b73e5f863c83ca84d2dd0e4d5e5a66fc806299"
+    },
+    {
+      "path": "src/phase_factor_causality.rs",
+      "sha256": "b1b9119b05f8baf7ad2172e724f913b50cb54348c6952677ce8410dd8169e94d"
+    },
+    {
+      "path": "src/phase_forward.rs",
+      "sha256": "cd02caeabc8f9da4c207b9423798d38936e800f39e25c8bf856acee4484496e1"
+    },
+    {
+      "path": "src/phase_general_policy.rs",
+      "sha256": "ae5ef7b0eca40bf347378d3557ec48fcc7679158152cb98a6fb54ba7a5debd74"
+    },
+    {
+      "path": "src/phase_general_value.rs",
+      "sha256": "64c7bbd483ed8abaf035cb9bdb2041be305c8510bd96c77c366025ffcad88012"
+    },
+    {
+      "path": "src/phase_grounded_objects.rs",
+      "sha256": "1141f72d3790e6c55b73d0c103569f69238fff9524493e38e704393ef10fa184"
+    },
+    {
+      "path": "src/phase_hypothesis_ecology.rs",
+      "sha256": "f8284d598663b98a4af86f4ed72867fbb2d07b229d67681803de39f1440538ee"
+    },
+    {
+      "path": "src/phase_induction.rs",
+      "sha256": "e3396d92d2ca25edadea71cefeb5ca5e945eff214f1f5995fd551f8b7869c7ef"
+    },
+    {
+      "path": "src/phase_innate_scaffold.rs",
+      "sha256": "cb0d3abc4b53d3f44f11d090b636920cd15e0c01b64819c9a91dc27dbebace18"
+    },
+    {
+      "path": "src/phase_inverse_inference.rs",
+      "sha256": "ca1e97e110f42b6f2d2395b8dce50f74ffcc29f00334206099e96b339f9a8d26"
+    },
+    {
+      "path": "src/phase_meta_control.rs",
+      "sha256": "e11924da3b95b0bfb57214acf4a674c945d1f4a210d7d4850de83da46c6b5054"
+    },
+    {
+      "path": "src/phase_native.rs",
+      "sha256": "bf6e0d0376051857ec49fa7a54adea9ddad41c58a2306080714abbbdfb50d7ab"
+    },
+    {
+      "path": "src/phase_online.rs",
+      "sha256": "d44a60edf3608e65a6e90fbe9d7e558a8259e99eb889699c4a2c0cd9763fe8fa"
+    },
+    {
+      "path": "src/phase_online_checkpoint.rs",
+      "sha256": "6901fc1e8fae5160296d932f5506983c28cc4c924a82d4b6310e0a76a1093852"
+    },
+    {
+      "path": "src/phase_online_rule_planning.rs",
+      "sha256": "b5736c04c54247e2b43cd4dff6675e4263ca1f3cc0bb4360a1de6d130539382f"
+    },
+    {
+      "path": "src/phase_online_rules.rs",
+      "sha256": "cab8b454b37078539aa4cc586430074246c8536b3f1ee366139c320486c6fb52"
+    },
+    {
+      "path": "src/phase_partial_observation.rs",
+      "sha256": "8e52e5515ec6cd27075dae9a14533ab24164bfe4282605106cffac925dc844f5"
+    },
+    {
+      "path": "src/phase_partial_planning.rs",
+      "sha256": "66b86b2f5e127cfc0e6215b5f4ec33dcc014374331c87e43569fa69d20362ce9"
+    },
+    {
+      "path": "src/phase_perceptual.rs",
+      "sha256": "9207e52ae7a55b5126c379293d40b9c48d492223eeac5af9e16cffb4f4febd58"
+    },
+    {
+      "path": "src/phase_primitive_arguments.rs",
+      "sha256": "693a09a495893649d7263dfe6f0abb2766c36de9e3e3897bb68b727cd52dac42"
+    },
+    {
+      "path": "src/phase_primitive_synaptic_competition.rs",
+      "sha256": "6b0115a8fe4bed5b8bd8524d14c07b41b89087f3348ceeeafacc00218c2516dd"
+    },
+    {
+      "path": "src/phase_primitives.rs",
+      "sha256": "bd371c4d405247f34951116197f0cd17f72f3739fc46a0a0fcfc07bc8719d695"
+    },
+    {
+      "path": "src/phase_recursive.rs",
+      "sha256": "b528e268ce7b7bfb3fc24d79fb407bb07219b8359ed12ab5292c2c7b67afb507"
+    },
+    {
+      "path": "src/phase_refinement_fanout.rs",
+      "sha256": "e74ec74d943bf021f4069651b2b0cc89408a447df5de8ee1255203a0e149f1ba"
+    },
+    {
+      "path": "src/phase_relational_workspace.rs",
+      "sha256": "2659808983bc110996e3051af59431408c6e27e2ac5315b3c99fe64c69fcf2f8"
+    },
+    {
+      "path": "src/phase_temporal_evidence.rs",
+      "sha256": "8f7af4c1d1bf89cf28cfa22ad9f47c498389b37e4dc153bc466c4da7ba8660cf"
+    },
+    {
+      "path": "src/phase_uncertain_observation.rs",
+      "sha256": "4b7f4df8666e5fb53c1a0d9315a2685b2b916fa55e3cdf46f0dd7aa9844f4e63"
+    },
+    {
+      "path": "src/phase_uncertain_planning.rs",
+      "sha256": "93bb6ee9ad403d13235159ba14c141b83a824fc134e60eaf5f65140146a25db6"
+    },
+    {
+      "path": "src/phase_unified_cognition.rs",
+      "sha256": "9faf47c9f0b40968f21c23d70a11688738c88c7b080d4f9e60264a79c63b805e"
+    },
+    {
+      "path": "src/phase_unified_representation.rs",
+      "sha256": "b27abba6b64719638b19b1608e267375d40d2cbe6024321d9d2e75a6415cc32f"
+    },
+    {
+      "path": "src/phase_value_abstraction.rs",
+      "sha256": "1c7a68a575cafcfd749758d4c5ee16cc4482f4680f1512e632f62900a118aaed"
+    },
+    {
+      "path": "src/phase_vector_learning.rs",
+      "sha256": "bfd883409297d3b93cebdc24b13431a50c02f8c882216c75b2b816df7757fa51"
+    },
+    {
+      "path": "src/planning.rs",
+      "sha256": "0861dfccfe59c87210d935bc763014ad67f9b28bfe741bea7272185aa7983984"
+    },
+    {
+      "path": "src/quantity_relations.rs",
+      "sha256": "457b4ffff0e072ccb4f5b0c8792d0688a1ef4bd45684577df9699c3a7c6a405f"
+    },
+    {
+      "path": "src/raster.rs",
+      "sha256": "ec6a79504b098056283408e6a550073639835a60f62547cd06fe87a1fd08d797"
+    },
+    {
+      "path": "src/recursive_search_runtime.rs",
+      "sha256": "d898083209bddc8f4a1f084cca737768b90a6eea56c4d190988602f2250fe9de"
+    },
+    {
+      "path": "src/scientific_runtime.rs",
+      "sha256": "6e78805d8e7930518b8dd04a73d175010ca4d97dc45590c40c283a8d8872b1df"
+    },
+    {
+      "path": "src/semantic_grounding.rs",
+      "sha256": "ed9bfd44c87a31a7d12ac0ae981d0e14a868ebf4162aa56a95f9efd8764b8e2a"
+    },
+    {
+      "path": "src/trace.rs",
+      "sha256": "1fff0b6242d2b1a3d1c362e62322b2f7166f738d6c4979fc76b32030ac724766"
+    },
+    {
+      "path": "src/unified_runtime.rs",
+      "sha256": "94689342a349699a49449884be6bab50d1b68960bffb4e698597d2379cc24417"
+    },
+    {
+      "path": "src/word_problems.rs",
+      "sha256": "4b166f972ce8b72dc48938abe7f35331c459d52cd877b131924dee87023f179f"
+    }
+  ],
+  "parent_checkpoint": "docs/evidence/first-readout/study/organism_first_readout/one-organism.json.gz",
+  "parent_checkpoint_sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+  "purpose": "open engineering integration; no independent intelligence qualification"
+}

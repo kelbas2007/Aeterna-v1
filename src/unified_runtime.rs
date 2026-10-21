@@ -52,6 +52,11 @@ struct UnifiedConstruction {
     /// temporally extended choice, never a new physical action authority.
     #[serde(default,skip_serializing_if="Option::is_none")]
     temporal_options:Option<TemporalOptionLane>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    learning_world:Option<crate::learning_world::LearningWorld>,
+    /// Transaction-local sensor adapter marker; never restored as authority.
+    #[serde(skip)]
+    raw_sensor_step:bool,
 }
 
 
@@ -332,6 +337,8 @@ pub struct UnifiedReport {
     pub instrumental_credit:Option<InstrumentalCreditReport>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub temporal_options:Option<TemporalOptionReport>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub learning_world:Option<crate::learning_world::LearningWorldReport>,
 }
 #[derive(USerialize,UDeserialize)]
 #[serde(deny_unknown_fields)]
@@ -811,7 +818,7 @@ impl ScientificRuntime {
         evo.set_phase_native_meta_monotone_evidence(true);evo.observe_initial_real(&usensory(&initial),false);
         let mut rt=Self::new(evo).map_err(|_|UError::InvalidData)?;
         rt.constructing=Some(UnifiedConstruction{current:UnifiedDomain{name:name.into(),learner,last_construction:0,pending_credit:None},
-            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,development:None,agency_credit:None,instrumental_credit:None,temporal_options:None});
+            archived:Vec::new(),nonce:0,operations:[0;4],computation_work:0,total_external_cost:0,max_external_cost:policy.max_external_cost,freeze_controller:false,education:None,self_revision:None,development:None,agency_credit:None,instrumental_credit:None,temporal_options:None,learning_world:None,raw_sensor_step:false});
         rt.fresh_observation_required=false;Ok(rt)
     }
     pub fn construction_learner(&self)->Option<&ULearner>{Some(&self.constructing.as_ref()?.current.learner)}
@@ -827,17 +834,47 @@ impl ScientificRuntime {
         self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.enable_external_reward_memory(enabled,adaptive)
     }
     pub fn observe_external_sensor_restart(&mut self,frame:&crate::construction::sensors::SensorFrame)->UResult<()> {
+        if let Some(w)=self.constructing.as_ref().and_then(|u|u.learning_world.as_ref()){w.check_frame(frame)?;}
         let mut encoder=self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_take_sensor_encoder()?;
         let old=encoder.clone();encoder.reset();
+        self.constructing.as_mut().ok_or(UError::NoEvidence)?.raw_sensor_step=true;
         let result=encoder.observe(frame).and_then(|obs|self.observe_constructing_external_restart(obs));
-        self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_put_sensor_encoder(if result.is_ok(){encoder}else{old});
-        result
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;u.raw_sensor_step=false;
+        u.current.learner.carrier_put_sensor_encoder(if result.is_ok(){encoder}else{old});
+        result?;
+        if let Some(w)=u.learning_world.as_mut(){
+            let work=w.restart(frame,u.current.learner.current(),u.freeze_controller)?;
+            u.computation_work=u.computation_work.saturating_add(work);
+        }Ok(())
+    }
+    /// Attach to the SAME existing life, preserving its factual journal, U1,
+    /// skills and RSP2. Old compressed experience is not invented as raw data.
+    pub fn enable_constructing_learning_world(&mut self,config:crate::learning_world::LearningWorldConfig,frame:&crate::construction::sensors::SensorFrame)->UResult<()> {
+        let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller||u.learning_world.is_some()||u.current.learner.report().poisoned
+            ||!u.current.learner.external_reward_enabled(){return Err(UError::Busy)}
+        let mut w=crate::learning_world::LearningWorld::new(config,u.current.learner.action_count(),u.current.learner.factual_event_count() as u64)?;
+        let mut encoder=crate::construction::sensors::SensorEncoder::default();let bridge=encoder.observe(frame)?;
+        let work=w.restart(frame,&bridge,false)?;
+        self.observe_external_sensor_restart(frame)?;
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        u.computation_work=u.computation_work.saturating_add(work);u.learning_world=Some(w);Ok(())
+    }
+    pub fn learning_world_report(&self)->Option<crate::learning_world::LearningWorldReport>{
+        self.constructing.as_ref()?.learning_world.as_ref().map(|w|w.report())
+    }
+    /// A desired observation is a goal, not a fabricated factual example.
+    pub fn set_learning_world_goal(&mut self,frame:Option<crate::construction::sensors::SensorFrame>,tolerance:f64)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        let work=u.learning_world.as_mut().ok_or(UError::NoEvidence)?.set_goal(frame,tolerance)?;
+        u.computation_work=u.computation_work.saturating_add(work);Ok(())
     }
     pub fn finish_external_episode(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.development.is_some() && u.current.learner.report().poisoned{return Err(UError::Blocked);}
         let credits=u.current.learner.carrier_finish_external_episode();
         u.finish_development_episode()?;
+        if let Some(w)=u.learning_world.as_mut(){u.computation_work=u.computation_work.saturating_add(w.finish_episode(u.freeze_controller));}
         if !u.freeze_controller {for (fields,value) in credits {
             self.organism.observe_phase_native_meta_utility(fields,value as f32);
         }}
@@ -848,24 +885,45 @@ impl ScientificRuntime {
     pub fn step_external_sensors<H,F>(&mut self,offers:&[UOffer],remaining_actions:Option<usize>,hazard:H,execute:F)->UResult<UnifiedStep>
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<SensorPost> {
         let namespace=self.construction_learner().ok_or(UError::NoEvidence)?.current()[0];
+        let world_limit=self.constructing.as_ref().and_then(|u|u.learning_world.as_ref()).map(|w|w.frame_limit());
+        let before=self.construction_learner().ok_or(UError::NoEvidence)?.factual_event_count();
+        let credit_eligible={let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;
+            u.agency_credit.is_none()||offers.iter().filter(|o|o.available&&o.max_cost<=u.max_external_cost.saturating_sub(u.total_external_cost)).count()>=2};
+        let mut raw_post=None;
         let mut encoder=self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_take_sensor_encoder()?;
-        let result=self.step_constructing_with_action_limit(None,offers,remaining_actions,hazard,|action| {
+        self.constructing.as_mut().ok_or(UError::NoEvidence)?.raw_sensor_step=true;
+        let mut result=self.step_constructing_with_action_limit(None,offers,remaining_actions,hazard,|action| {
             let post=execute(action)?;
             // Preserve a known actual cost even when the sensor result is
             // invalid. The ordinary outer validator rejects the empty shape
             // BEFORE commitment, charges this cost and latches the fault.
-            let observation=if !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[action].max_cost {
+            let observation=if !post.reward.is_finite() || !(-1.0..=1.0).contains(&post.reward) || post.cost>offers[action].max_cost
+                || world_limit.is_some_and(|max|crate::learning_world::admit_frame(&post.frame,max).is_err()) {
                 Vec::new()
             }else{
                 let mut next=encoder.clone();
                 match next.observe(&post.frame) {
-                    Ok(v) if v[0]==namespace=>{encoder=next;v},
+                    Ok(v) if v[0]==namespace=>{raw_post=Some((action,post.frame,post.reward,post.cost));encoder=next;v},
                     _=>Vec::new(),
                 }
             };
             Ok(UnifiedPost{observation,cost:post.cost,reward:post.reward})
         });
-        self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.carrier_put_sensor_encoder(encoder);
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;u.raw_sensor_step=false;
+        u.current.learner.carrier_put_sensor_encoder(encoder);
+        if before.checked_add(1)==Some(u.current.learner.factual_event_count()) {
+            if let (Some(w),Some((a,frame,reward,cost)))=(u.learning_world.as_mut(),raw_post){
+                let selected=result.as_ref().is_ok_and(|s|s.source=="learned-world");
+                let work=w.committed(u.current.learner.factual_event_count() as u64,a,&frame,u.current.learner.current(),f64::from(reward),cost,u.freeze_controller,selected)?;
+                u.computation_work=u.computation_work.saturating_add(work);
+                if let Ok(step)=result.as_mut(){step.computation_work=u.computation_work;}
+                if !u.freeze_controller&&credit_eligible{
+                    if let (Some(utility),Ok(step))=(w.goal_utility(),result.as_ref()){
+                        self.organism.observe_phase_native_meta_utility(step.selected_fields,utility);
+                    }
+                }
+            }
+        }else if let Some(w)=u.learning_world.as_mut(){w.cancel_decision();}
         result
     }
     /// Decide before any experience whether the native action policy may be
@@ -1217,12 +1275,13 @@ impl ScientificRuntime {
             self_revision:u.self_revision.as_ref().map(MetaRevision::report),
             agency_credit:u.agency_credit.clone(),
             instrumental_credit:u.instrumental_credit.as_ref().map(InstrumentalCredit::report),
-            temporal_options:u.temporal_options.as_ref().map(TemporalOptionLane::report)})
+            temporal_options:u.temporal_options.as_ref().map(TemporalOptionLane::report),
+            learning_world:u.learning_world.as_ref().map(|w|w.report())})
     }
     // A new sensor contract does not reinterpret numeric variables as pixels.
     // U1 weights and complete old-domain cognitive checkpoints remain present.
     pub fn enter_constructing_domain(&mut self,name:&str,config:UConfig,mut policy:UPolicy,initial:Vec<i64>)->UResult<()> {
-        if self.constructing.as_ref().is_some_and(|u|u.development.is_some()){return Err(UError::Busy);}
+        if self.constructing.as_ref().is_some_and(|u|u.development.is_some()||u.learning_world.is_some()){return Err(UError::Busy);}
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         if u.archived.len()>=7 || u.freeze_controller || name.is_empty() || name.len()>128 || name==u.current.name
             || u.archived.iter().any(|d|d.name==name) || config.width!=self.organism.config().sensory_cells
@@ -1257,6 +1316,7 @@ impl ScientificRuntime {
             if !self.organism.can_select_meta_context(namespace){return Err(UError::Capacity);}
         }
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.learning_world.is_some()&&!u.raw_sensor_step{return Err(UError::Blocked)}
         if let Some(dev)=&u.development{
             let namespace=*observed.first().ok_or(UError::InvalidData)?;
             if dev.domains.len()>=8 && !dev.domains.contains_key(&namespace){return Err(UError::Capacity);}
@@ -1286,6 +1346,7 @@ impl ScientificRuntime {
     }
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if let Some(w)=u.learning_world.as_mut(){w.cancel_decision();}
         u.current.learner.freeze_learning()?;
         if let Some(dev)=u.development.as_mut(){dev.freeze();}
         u.current.clear_canceled_causal_credit();
@@ -1314,6 +1375,7 @@ impl ScientificRuntime {
     where H:FnOnce(usize)->HumanProtectionEvidence,F:FnOnce(usize)->UResult<UnifiedPost> {
         if self.protection.emergency_stop_latched(){return Err(UError::Blocked);}
         if remaining_actions==Some(0){return Err(UError::Capacity)}
+        if self.constructing.as_ref().is_some_and(|u|u.learning_world.is_some()&&!u.raw_sensor_step){return Err(UError::Blocked)}
         let namespace=self.constructing.as_ref().ok_or(UError::NoEvidence)?.current.learner.current()[0];
         if !self.organism.select_meta_context(namespace){return Err(UError::Capacity);}
         let mut u=self.constructing.take().ok_or(UError::NoEvidence)?;
@@ -1681,6 +1743,16 @@ impl ScientificRuntime {
                     kind:3,source:if information>0.0{"causal-belief-experiment"}else{"causal-belief-plan"},output:p.expected});
             }
         }
+        if let Some(w)=u.learning_world.as_mut(){
+            let (forecasts,work)=w.begin_decision(&allowed,remaining_actions);
+            u.computation_work=u.computation_work.saturating_add(work);
+            for p in forecasts{
+                options.push(UnifiedOption{p:PhaseCognitiveProposal{proposal_id:0xc00+p.action as u64,action:p.action,
+                    fields:[((p.value+1.0)*0.5).clamp(0.0,1.0) as f32,p.epistemic as f32,
+                        (p.epistemic/(1.0+p.outcome_noise)) as f32,(p.support as f64/(p.support as f64+8.0)) as f32,
+                        1.0/(1.0+(offers[p.action].max_cost as f32).ln_1p())]},kind:3,source:"learned-world",output:None});
+            }
+        }
         let certified_chain_proposed=options.iter().any(|o|o.source=="factual-chain");
         let predictive_history_plan_proposed=options.iter().any(|o|
             o.source=="predictive-history" || o.source=="predictive-suffix");
@@ -1718,7 +1790,7 @@ impl ScientificRuntime {
             }
             if u.current.learner.causal_memory_enabled() && (goal.is_some() || u.current.learner.external_reward_enabled()) {
                 for candidate in &mut options {
-                    if candidate.kind==3 && !candidate.source.starts_with("causal-belief-") {
+                    if candidate.kind==3 && !candidate.source.starts_with("causal-belief-") && candidate.source!="learned-world" {
                         // Sensor codes need not have an ordinal meaning. An
                         // old recall/VM proposal cannot turn arbitrary numeric
                         // proximity into a goal forecast. Calibrate its motor
@@ -2145,8 +2217,9 @@ impl ScientificRuntime {
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;
         let carrier=self.organism.constructing_carrier_checkpoint().ok_or(UError::InvalidData)?;
-        let hash=uhash(&serde_json::to_vec(&(1u32,&carrier,u,self.sequence,self.emergency_latched(),self.protection.audit_position().0)).map_err(|_|UError::InvalidData)?);
-        let value=serde_json::json!({"version":1,"carrier":carrier,"cognition":u,"sequence":self.sequence,"emergency":self.emergency_latched(),"protection_sequence":self.protection.audit_position().0,"hash":hash});
+        let version=if u.learning_world.is_some(){2u32}else{1u32};
+        let hash=uhash(&serde_json::to_vec(&(version,&carrier,u,self.sequence,self.emergency_latched(),self.protection.audit_position().0)).map_err(|_|UError::InvalidData)?);
+        let value=serde_json::json!({"version":version,"carrier":carrier,"cognition":u,"sequence":self.sequence,"emergency":self.emergency_latched(),"protection_sequence":self.protection.audit_position().0,"hash":hash});
         let bytes=serde_json::to_vec(&value).map_err(|_|UError::InvalidData)?;
         if bytes.len()>32*1024*1024{return Err(UError::Capacity)}
         Ok(bytes)
@@ -2156,7 +2229,11 @@ impl ScientificRuntime {
         if bytes.len()>32*1024*1024{return Err(UError::Capacity);}
         let s:UnifiedStored=serde_json::from_slice(bytes).map_err(|_|UError::InvalidData)?;
         let hash=uhash(&serde_json::to_vec(&(s.version,&s.carrier,&s.cognition,s.sequence,s.emergency,s.protection_sequence)).map_err(|_|UError::InvalidData)?);
-        if s.version!=1 || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
+        if !((s.version==1&&s.cognition.learning_world.is_none())||(s.version==2&&s.cognition.learning_world.is_some())) || s.hash!=hash || s.cognition.archived.len()>7 {return Err(UError::InvalidData);}
+        if let Some(w)=&s.cognition.learning_world{
+            w.validate(s.cognition.current.learner.current(),s.cognition.current.learner.factual_event_count() as u64)?;
+            if w.total_work()>s.cognition.computation_work{return Err(UError::InvalidData)}
+        }
         if let Some(school)=&s.cognition.education {school.validate()?; if s.cognition.freeze_controller && !school.is_frozen(){return Err(UError::InvalidData);}}
         if let Some(revision)=&s.cognition.self_revision{revision.validate()?;}
         if let Some(dev)=&s.cognition.development{
@@ -2212,6 +2289,7 @@ impl ScientificRuntime {
             || serde_json::to_vec(&old.temporal_options).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.temporal_options).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.agency_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.agency_credit).map_err(|_|UError::InvalidData)?
             || serde_json::to_vec(&old.instrumental_credit).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.instrumental_credit).map_err(|_|UError::InvalidData)?
+            || serde_json::to_vec(&old.learning_world).map_err(|_|UError::InvalidData)?!=serde_json::to_vec(&new.learning_world).map_err(|_|UError::InvalidData)?
             || new.nonce<old.nonce || new.computation_work<old.computation_work || new.total_external_cost!=old.total_external_cost {return Err(UError::Stale);}
         if candidate.emergency_latched(){let mut e=Self::absent_evidence();e.emergency_stop=true;self.protection.screen(0,e);}
         self.organism=candidate.organism;self.constructing=candidate.constructing.take();Ok(())

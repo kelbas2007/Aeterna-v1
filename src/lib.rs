@@ -14,6 +14,7 @@ pub mod raster;
 pub mod scientific_runtime;
 pub mod trace;
 pub mod construction;
+pub mod learning_world;
 
 pub use authority::Authority;
 pub use belief::{BeliefConfig, EvoBeliefState};
