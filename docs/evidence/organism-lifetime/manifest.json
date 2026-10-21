@@ -64,6 +64,10 @@
       "bytes": 1570,
       "sha256": "b1743984fd1b6cf5443df28d9e3bd8302cf0660aa273160efed451f45cd93132"
     },
+    "lifecycle-validation.log.gz": {
+      "bytes": 2981,
+      "sha256": "f1782d080aad85dea22c2de6ff790439e4121980f515f44a694fb5a17844f59e"
+    },
     "lifetime-validation.log.gz": {
       "bytes": 2076,
       "sha256": "dc9028da65f079328bcc40fe23a4c61470025ab465b6322c5835c3de8707ee03"
@@ -136,22 +140,26 @@
       "bytes": 586,
       "sha256": "f04a7f5f7c9295ce429faac467b263f8653824777643580250a9e8e80871f06e"
     },
+    "review-lifecycle-fix.json": {
+      "bytes": 939,
+      "sha256": "da6e8709c9dbfd8489d63ef0e534ff39147b668e83c149ac37c711aa2c9b0c25"
+    },
     "saved-state-inspection.json": {
       "bytes": 341,
       "sha256": "19a03b69fb23fa6bb3f6d7ec44f7911f18c402fd5ea97e828acab48caef3fe21"
     },
     "source-identity.json": {
-      "bytes": 942,
-      "sha256": "61731cac455da89eeada3cf32a1e3db0281a5bf80aa7cb8c03e00edf7a7dfe26"
+      "bytes": 1233,
+      "sha256": "ee73a64e0d7bbd4147f9f8ece7fef98705c12235069c5dee69936422b09add1a"
     },
     "summary.json": {
       "bytes": 88837,
       "sha256": "bede5b98349fdeeccc1bc1fefc033dfafc25171302d80a037a4fa63004ee79b2"
     },
     "validation.json": {
-      "bytes": 1111,
-      "sha256": "db15bf87e40fb609baab94fb76100b22beef0d23e25ec488d135a712f3450c2c"
+      "bytes": 1207,
+      "sha256": "691fe89de5fa11b65c3e30e192b19b894c2061ba9ec09328c8cea2424b2303c3"
     }
   },
-  "bytes": 4418980
+  "bytes": 4423287
 }

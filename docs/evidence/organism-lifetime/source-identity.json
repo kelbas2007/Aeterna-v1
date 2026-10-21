@@ -8,12 +8,16 @@
       "frozen_sha256": "66dbb1b9f18b926c61472f609a297126cfe3d7acf938ca8c876db5427a272a12",
       "current_sha256": "287bdaaa6d0fbceedc84dbbd4c92a9e2de4ec0bd202cba12be6ad330a890c4cb"
     },
+    "src/recursive_search_runtime.rs": {
+      "frozen_sha256": "64f16f7de34ce430aa03adcd7e7bbad1b8af30833ae793b928d5c0b78dbf50be",
+      "current_sha256": "d898083209bddc8f4a1f084cca737768b90a6eea56c4d190988602f2250fe9de"
+    },
     "src/unified_runtime.rs": {
       "frozen_sha256": "04ecd50b0cc6d28216d2d0cad9f5813df8e25303b067210e14fa25920bf7d85b",
       "current_sha256": "d7ba0026fbfa66a1a67ed25108b8ac84881e5b6a5a6614b999738f79c0c2d006"
     }
   },
-  "later_change_scope": "freeze/validation of unfinished development, without changing the frozen experiment",
+  "later_change_scope": "freeze/validation of unfinished development and rejection of partial manual RSP2 lifecycle operations; neither occurred in the frozen experiment",
   "completed_lifetime_freeze_matches_frozen_study": true,
   "cargo_manifest_lock_and_embedded_project_state_identical": true
 }

@@ -187,7 +187,7 @@
       },
       "src/recursive_search_runtime.rs": {
         "before_sha256": "d9dbc4c420738e4ffcbf4a1c74cc287a6957d65347b23f95e620cc713b0d55b4",
-        "after_sha256": "64f16f7de34ce430aa03adcd7e7bbad1b8af30833ae793b928d5c0b78dbf50be"
+        "after_sha256": "d898083209bddc8f4a1f084cca737768b90a6eea56c4d190988602f2250fe9de"
       }
     },
     "added": {

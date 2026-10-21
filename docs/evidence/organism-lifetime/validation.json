@@ -37,5 +37,9 @@
       "passed": 5,
       "status": "PASS"
     }
+  },
+  "review_lifecycle_correction": {
+    "status": "PASS",
+    "passing_test_executions": 58
   }
 }

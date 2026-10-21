@@ -110,6 +110,19 @@ fn episode(rt: &mut ScientificRuntime, domain: usize, index: usize) {
 #[test]
 fn one_factual_lifetime_drives_existing_rsp2_and_evaluator_across_modalities_and_resume() {
     let mut rt = runtime(true);
+    let before_partial_freeze = rt.checkpoint_constructing().unwrap();
+    assert_eq!(rt.freeze_recursive_search(), Err(Error::Blocked));
+    assert!(!rt
+        .construction_learner()
+        .unwrap()
+        .recursive_search()
+        .unwrap()
+        .is_frozen());
+    assert_eq!(
+        before_partial_freeze,
+        rt.checkpoint_constructing().unwrap(),
+        "a rejected partial stop must not mutate or strand the common lifetime"
+    );
     assert_eq!(
         rt.improve_recursive_search(
             &[],

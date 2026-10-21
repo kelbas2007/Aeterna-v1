@@ -30,7 +30,9 @@ impl ScientificRuntime {
         settle_reserved_work(&mut u.computation_work,limits.work,r.work)?;Ok(r)
     }
     pub fn freeze_recursive_search(&mut self)->UResult<()> {
-        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;u.current.learner.freeze_recursive_search();Ok(())
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.development.is_some(){return Err(UError::Blocked);}
+        u.current.learner.freeze_recursive_search();Ok(())
     }
 }
 
