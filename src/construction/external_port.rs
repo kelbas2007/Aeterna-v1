@@ -49,6 +49,26 @@ impl Learner {
         if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
         self.external_memory.as_mut().ok_or(Error::NoEvidence)?.enable_consolidated_memory()
     }
+    pub(crate) fn carrier_enable_causal_readout(&mut self) -> Result<()> {
+        if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
+        self.external_memory.as_mut().ok_or(Error::NoEvidence)?.enable_causal_readout()
+    }
+    pub(crate) fn carrier_readout_task_open(&self)->bool {
+        self.external_memory.as_ref().is_some_and(|m|m.readout_task_is_open())
+    }
+    pub fn external_readout_assignment(&self)->Option<super::external_reward::CausalReadoutAssignment> {
+        self.external_memory.as_ref()?.readout_assignment()
+    }
+    pub(crate) fn carrier_begin_readout_task(&mut self)->Result<u64> {
+        let namespace=self.current[0];
+        self.external_memory.as_mut().map_or(Ok(0),|m|m.begin_readout_task(namespace))
+    }
+    pub(crate) fn carrier_end_readout_task(&mut self)->u64 {
+        self.external_memory.as_mut().map_or(0,|m|m.end_readout_task())
+    }
+    pub(crate) fn carrier_freeze_readout_policy(&mut self) {
+        if let Some(m)=self.external_memory.as_mut() { m.freeze_readout_policy(); }
+    }
     pub(crate) fn carrier_valid_external_state(&self, state: &[i64]) -> bool {
         self.external_memory.is_none()
             || (state.len() == 32

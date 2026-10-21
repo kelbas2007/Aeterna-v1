@@ -129,6 +129,8 @@ struct ConsolidatedMemory {
     resolved: u64,
     evicted: u64,
     exhausted: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    causal_readout: Option<CausalReadout>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidatedDomainReport {
@@ -153,6 +155,8 @@ pub struct ConsolidatedMemoryReport {
     pub distinct_inputs: usize,
     pub exhausted: bool,
     pub domains: BTreeMap<i64, ConsolidatedDomainReport>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub causal_readout: Option<CausalReadoutReport>,
 }
 impl ConsolidatedMemory {
     fn seeded(events: u64, rows: &[Case]) -> Self {
@@ -169,6 +173,7 @@ impl ConsolidatedMemory {
             resolved: 0,
             evicted: 0,
             exhausted: false,
+            causal_readout: None,
         };
         for row in rows.iter().filter(|r| r.reward > 0.0) {
             if m.domains.contains_key(&row.pre[0]) || m.domains.len() < 8 {
@@ -183,6 +188,7 @@ impl ConsolidatedMemory {
         m
     }
     fn active(&self, namespace: i64) -> bool {
+        if let Some(policy)=&self.causal_readout { return policy.active(namespace); }
         self.domains.get(&namespace).is_some_and(|d| d.active)
     }
     fn needs_forecast(&mut self, pre: &[i64]) -> bool {
@@ -313,6 +319,7 @@ impl ConsolidatedMemory {
     }
     fn report(&self) -> ConsolidatedMemoryReport {
         ConsolidatedMemoryReport {
+            causal_readout: self.causal_readout.as_ref().map(CausalReadout::report),
             enabled_at: self.enabled_at,
             seeded_prototypes: self.seeded_prototypes,
             bootstrap_work: self.bootstrap_work,
@@ -347,6 +354,7 @@ impl ConsolidatedMemory {
         let mut keys = std::collections::BTreeSet::new();
         let probability = |v: f64| v.is_finite() && (0.0..=1.0).contains(&v);
         self.revision == 1
+            && self.causal_readout.as_ref().is_none_or(|p|p.valid(events))
             && self.enabled_at <= events
             && self.seeded_prototypes <= CAPACITY
             && self.bootstrap_work <= self.seeded_prototypes as u64 * 1024

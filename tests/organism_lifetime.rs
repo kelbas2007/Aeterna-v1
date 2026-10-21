@@ -165,6 +165,47 @@ fn consolidated_knowledge_stays_in_the_same_life_across_modalities_restore_and_f
     assert_eq!(rt.enable_constructing_consolidated_memory(),Err(Error::Blocked));
     ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
 }
+
+#[test]
+fn whole_task_policy_trials_restore_without_reassigning_or_relabeling_real_actions() {
+    let mut rt=runtime(true);
+    // Only factual protected POSTs initialize the two observed outcome motors.
+    for domain in 0..2 {
+        for action in [3,11] {
+            let f=frame(domain,action);
+            rt.observe_external_sensor_restart(&f).unwrap();
+            let mut offered=offers();for (i,o) in offered.iter_mut().enumerate(){o.available=i==action;}
+            rt.step_external_sensors(&offered,Some(1),safe,|_|Ok(SensorPost{frame:f.clone(),cost:1,reward:1.0})).unwrap();
+            rt.finish_external_episode().unwrap();
+        }
+    }
+    rt.enable_constructing_consolidated_memory().unwrap();
+    rt.enable_constructing_causal_readout().unwrap();
+    for index in 0..132 {
+        let f=frame(index%2,index);
+        rt.observe_external_sensor_task_start(&f).unwrap();
+        let pending=rt.checkpoint_constructing().unwrap();
+        assert_eq!(rt.observe_external_sensor_task_start(&frame(0,999)),Err(Error::Busy));
+        assert_eq!(rt.checkpoint_constructing().unwrap(),pending);
+        rt=ScientificRuntime::from_constructing_checkpoint(&pending).unwrap();
+        rt.step_external_sensors(&offers(),Some(1),safe,|_|Ok(SensorPost{frame:f.clone(),cost:1,reward:f32::from(index%2==0)})).unwrap();
+        rt.finish_external_sensor_task().unwrap();
+    }
+    let report=rt.construction_learner().unwrap().external_reward_report().unwrap();
+    let trial=report.consolidated_memory.unwrap().causal_readout.unwrap();
+    assert!(!trial.task_open && trial.work>0);
+    assert_eq!(trial.domains.len(),2);
+    assert_eq!(trial.domains.values().map(|d|d.baseline_tasks+d.candidate_tasks+d.exploit_tasks).sum::<u64>(),132);
+    let checkpoint=rt.checkpoint_constructing().unwrap();
+    rt=ScientificRuntime::from_constructing_checkpoint(&checkpoint).unwrap();
+    rt.freeze_constructing().unwrap();
+    let fingerprint=rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint;
+    rt.observe_external_sensor_task_start(&frame(1,600)).unwrap();
+    rt.step_external_sensors(&offers(),Some(1),safe,|_|Ok(SensorPost{frame:frame(1,600),cost:1,reward:1.0})).unwrap();
+    rt.finish_external_sensor_task().unwrap();
+    assert_eq!(fingerprint,rt.construction_learner().unwrap().external_reward_report().unwrap().learned_fingerprint);
+    ScientificRuntime::from_constructing_checkpoint(&rt.checkpoint_constructing().unwrap()).unwrap();
+}
 fn episode(rt: &mut ScientificRuntime, domain: usize, index: usize) {
     let input = frame(domain, index);
     rt.observe_external_sensor_restart(&input).unwrap();

@@ -60,9 +60,18 @@ class Native:
         if value.get('type')=='error':raise RuntimeError('native: '+value.get('message','unknown'))
         return value
     def command(self,value):self.send(value);return self.receive()
-    def reset(self,frame,**metadata):
-        result=self.command({'op':'external_reset','frame':frame});self.frame=frame
+    def reset(self,frame,task_start=False,**metadata):
+        request={'op':'external_reset','frame':frame}
+        if task_start:request['task_start']=True;metadata['task_start']=True
+        result=self.command(request);self.frame=frame
+        if task_start:
+            assignment=result.get('policy_assignment')
+            if 'policy_assignment' in metadata:assert metadata['policy_assignment']==assignment,'native policy assignment differs'
+            metadata['policy_assignment']=assignment
         self.trace.write({'kind':'restart','frame_ref':self.trace.frame(frame),'metadata':metadata});return result
+    def end_task(self):
+        result=self.command({'op':'external_task_end'})
+        self.trace.write({'kind':'task_end'});return result
     def step(self,available,left,execute):
         offers=[{'available':bool(v),'max_cost':1} for v in available]
         self.send({'op':'external_step','offers':offers,'remaining_actions':int(left)})

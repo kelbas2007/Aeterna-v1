@@ -1287,6 +1287,7 @@ impl ScientificRuntime {
     pub fn freeze_constructing(&mut self)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
         u.current.learner.freeze_learning()?;
+        u.current.learner.carrier_freeze_readout_policy();
         if let Some(dev)=u.development.as_mut(){dev.freeze();}
         u.current.clear_canceled_causal_credit();
         let credits=u.current.learner.carrier_take_causal_credits();

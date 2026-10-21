@@ -20,13 +20,13 @@ def save(path,value):
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 
-def sensory_phase(agent,kind,data,training=True,source_offset=None):
+def sensory_phase(agent,kind,data,training=True,source_offset=None,task_boundaries=False):
     x,y,_=data;queries,answers=motors(kind)
     lookup={a:i for i,a in enumerate(queries)};classes={a:i for i,a in enumerate(answers)}
     targets=[];first_predictions=[];solved=0;actions=0;measurements=0
     for index,(sample,target) in enumerate(zip(x,y)):
         metadata={} if source_offset is None else {'source_offset':source_offset}
-        frame=blank(kind);agent.reset(frame,phase=kind,index=index,development=True,**metadata)
+        frame=blank(kind);agent.reset(frame,phase=kind,index=index,development=True,task_start=task_boundaries,**metadata)
         measured=set();failed=set();first=None;success=False
         for left in range(15 if kind=='har' else 11,0,-1):
             available=[False]*16
@@ -49,6 +49,7 @@ def sensory_phase(agent,kind,data,training=True,source_offset=None):
                 if success:break
                 if left>1:agent.reset(frame,phase=kind,index=index,corrective_retry=True,development=True,**metadata)
         agent.finish()
+        if task_boundaries:agent.end_task()
         if first is None:raise AssertionError('no response before action budget expired')
         targets.append(int(target));first_predictions.append(first);solved+=success
     return {'first_answer_prequential':metrics(targets,first_predictions,len(answers)),

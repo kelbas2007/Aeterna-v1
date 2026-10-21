@@ -58,6 +58,8 @@ def replay(root,variant,output,binary_override=None):
                             and variant!=provenance.get('frozen_before_mnist')):
                             assert hashlib.sha256(agent.checkpoint().encode()).hexdigest()==summary['mnist_entry_checkpoint_sha256']
                         agent.reset(frames[row['frame_ref']],**row['metadata'])
+                    elif kind=='task_end':
+                        agent.end_task()
                     elif kind=='learning_frozen':
                         assert variant==provenance.get('frozen_before_mnist') and row['before_phase']=='mnist'
                         # The adapter closes its last HAR reward episode before

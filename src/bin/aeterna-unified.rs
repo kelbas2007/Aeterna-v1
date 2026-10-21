@@ -110,6 +110,15 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"first_rule_readouts_enabled","fixed_readout_control":control,
                         "action_authority":"same_u1","learner":"same_living_checkpoint"}))
                 },
+                "organism_enable_causal_readout"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_causal_readout()?;
+                    Ok(json!({"type":"causal_readout_enabled","action_authority":"same_u1",
+                        "learner":"same_living_checkpoint","evidence":"actual_complete_tasks"}))
+                },
+                "external_task_end"=>{
+                    runtime.as_mut().ok_or("not loaded")?.finish_external_sensor_task()?;
+                    Ok(json!({"type":"external_task_finished"}))
+                },
                 "organism_enable_consolidated_memory"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_consolidated_memory()?;
                     Ok(json!({"type":"consolidated_memory_enabled","action_authority":"same_u1",
@@ -126,8 +135,13 @@ pub(crate) fn main()->Result<()>{
                 },
                 "external_reset"=>{
                     let frame=serde_json::from_value(request["frame"].clone())?;
-                    runtime.as_mut().ok_or("not loaded")?.observe_external_sensor_restart(&frame)?;
-                    Ok(json!({"type":"external_restarted"}))
+                    let task_start=request.get("task_start").map_or(Some(false),Value::as_bool).ok_or("invalid task_start")?;
+                    if task_start { runtime.as_mut().ok_or("not loaded")?.observe_external_sensor_task_start(&frame)?; }
+                    else { runtime.as_mut().ok_or("not loaded")?.observe_external_sensor_restart(&frame)?; }
+                    if task_start {
+                        let assignment=runtime.as_ref().ok_or("not loaded")?.construction_learner().and_then(|l|l.external_readout_assignment());
+                        Ok(json!({"type":"external_restarted","policy_assignment":assignment}))
+                    } else { Ok(json!({"type":"external_restarted"})) }
                 },
                 "external_episode_end"=>{
                     runtime.as_mut().ok_or("not loaded")?.finish_external_episode()?;

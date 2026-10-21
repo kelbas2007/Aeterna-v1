@@ -17,6 +17,7 @@ include!("acquired_rules.rs");
 include!("first_readout.rs");
 include!("coverage_memory.rs");
 include!("consolidated_memory.rs");
+include!("causal_readout.rs");
 
 fn zero(value: &f64) -> bool {
     *value == 0.0
@@ -786,6 +787,7 @@ impl ExternalMemory {
             work += meter.spent;
         }
         self.note_visit(&pre, action, &post, reward);
+        work += self.observe_readout_task(&pre,action,reward,cost);
         if let Some(model)=self.consolidated_memory.as_mut() { work += model.feedback(&pre,action,reward); }
         // Outcome-stratified prototype storage must not inflate frequencies.
         let key = serde_json::to_string(&(&pre, action)).unwrap_or_default();
@@ -944,7 +946,7 @@ impl ExternalMemory {
             .map(|r| r.id)
             .collect::<std::collections::BTreeSet<_>>();
         if self.events != events
-            || self.consolidated_memory.as_ref().is_some_and(|m| !self.enabled || self.adaptive || self.coverage_memory.is_some() || !m.validate(events))
+            || self.consolidated_memory.as_ref().is_some_and(|m| !self.enabled || self.adaptive || self.coverage_memory.is_some() || !m.validate(events) || m.causal_readout.as_ref().is_some_and(|p|p.frozen!=frozen))
             || self.coverage_memory.as_ref().is_some_and(|p| !self.enabled || self.adaptive || !p.validate(events))
             || self.acquired_rules.as_ref().is_some_and(|r| !self.enabled || self.adaptive || !r.validate(events))
             || self.learned > events

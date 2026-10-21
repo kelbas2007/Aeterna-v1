@@ -669,6 +669,32 @@ impl MetaRevision {
 }
 
 impl ScientificRuntime {
+    /// Assign a readout policy before any action in an observed external task.
+    pub fn observe_external_sensor_task_start(&mut self,frame:&crate::construction::sensors::SensorFrame)->UResult<()> {
+        let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;
+        if !u.freeze_controller && u.current.learner.carrier_readout_task_open() { return Err(UError::Busy); }
+        self.observe_external_sensor_restart(frame)?;
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if !u.freeze_controller {
+            let work=u.current.learner.carrier_begin_readout_task()?;
+            u.computation_work=u.computation_work.saturating_add(work);
+        }
+        Ok(())
+    }
+    pub fn finish_external_sensor_task(&mut self)->UResult<()> {
+        self.finish_external_episode()?;
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if !u.freeze_controller {
+            let work=u.current.learner.carrier_end_readout_task();
+            u.computation_work=u.computation_work.saturating_add(work);
+        }
+        Ok(())
+    }
+    pub fn enable_constructing_causal_readout(&mut self)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller || u.development.as_ref().is_none_or(|d|d.pending_actions!=0) { return Err(UError::Blocked); }
+        u.current.learner.carrier_enable_causal_readout()?;Ok(())
+    }
     /// Compress only existing factual successes into the same learner's model.
     /// Seeding work is charged without inventing external observations/actions.
     pub fn enable_constructing_consolidated_memory(&mut self) -> UResult<()> {
