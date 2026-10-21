@@ -79,6 +79,7 @@ def main():
  assert len(names)==len(set(names))
  names.append('external_continual')
  names.append('organism_lifetime')
+ names.append('learning_organism')
  cmd=['cargo','test',*flags]
  for name in names:cmd+=['--test',name]
  run(*cmd);run('cargo','test',*flags,'--example','rsp3_experience')

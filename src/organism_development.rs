@@ -297,7 +297,7 @@ impl OrganismDevelopment {
         }
         (fields[0] - before).abs() > 0.00001
     }
-    fn curriculum(&self) -> Option<(Vec<SynthesisTask>, AdmissionSuite, BTreeSet<u64>, String)> {
+    fn curriculum(&self, library:&MLibrary) -> Option<(Vec<SynthesisTask>, AdmissionSuite, BTreeSet<u64>, String)> {
         // Distinct measured inputs in every role; an exam input never returns
         // to proposal training. Require two actually experienced interfaces.
         let mut pools = BTreeMap::<i64, Vec<&DevelopmentFact>>::new();
@@ -322,7 +322,7 @@ impl OrganismDevelopment {
         pairs.sort_by_key(|p| std::cmp::Reverse(p.0));
         let (_, a, b, pair) = pairs.into_iter().next()?;
         let make = |rows: &[&DevelopmentFact]| SynthesisTask {
-            library: MLibrary::default(),
+            library: library.clone(),
             examples: rows
                 .iter()
                 .map(|r| RExample {
@@ -375,7 +375,7 @@ impl OrganismDevelopment {
         {
             return Ok(0);
         }
-        let Some((training, gate, consumed, pair)) = self.curriculum() else {
+        let Some((training, gate, consumed, pair)) = self.curriculum(learner.library()) else {
             return Ok(0);
         };
         if self.used_inputs.len() + consumed.len() > 4096 {

@@ -22,6 +22,12 @@ pub enum SensorFrame {
         namespace: u16,
         pixels: Vec<Vec<u16>>,
     },
+    /// Simultaneous observations of one external event. Only leaf frames,
+    /// at most one per physical modality; no recursive bundles or task labels.
+    Multimodal {
+        namespace: u16,
+        frames: Vec<SensorFrame>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -223,6 +229,30 @@ impl SensorEncoder {
                 ]);
                 self.namespace = Some(*namespace);
                 self.tracks = tracks;
+            }
+            SensorFrame::Multimodal { namespace, frames } => {
+                if frames.is_empty()||frames.len()>3{return Err(Error::InvalidData)}
+                let mut kinds=std::collections::BTreeSet::new();
+                let mut next=self.clone();
+                encoded[0]=i64::from(*namespace)*4+3;
+                for child in frames {
+                    let (k,ns)=match child {
+                        SensorFrame::Image{namespace,..}=>(0,*namespace),
+                        SensorFrame::Signals{namespace,..}=>(1,*namespace),
+                        SensorFrame::Scene{namespace,..}=>(2,*namespace),
+                        SensorFrame::Multimodal{..}=>return Err(Error::InvalidData),
+                    };
+                    if ns!=*namespace||!kinds.insert(k){return Err(Error::InvalidData)}
+                    let values=next.observe(child)?;
+                    // Compatibility projection only. The learning organism
+                    // receives every raw child, not these thirty summaries.
+                    for j in 0..10 {
+                        let mut sum=0;let mut n=0;
+                        for axis in j*3..j*3+3{if values[1]&(1_i64<<axis)!=0{sum+=values[2+axis];n+=1;}}
+                        if n>0{let axis=k*10+j;encoded[2+axis]=sum/n;encoded[1]|=1_i64<<axis;}
+                    }
+                }
+                *self=next;
             }
         }
         Ok(encoded)

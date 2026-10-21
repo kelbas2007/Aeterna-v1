@@ -323,5 +323,39 @@
       "src/construction/consolidated_memory.rs": "9ba0ea8bdd22b724d7ec2af2e15ebf782dcd103fa456ebfcc990923482815861"
     },
     "scope": "Opt-in bounded feature statistics and first-feedback readout selection within the existing Learner/U1; factual history, original RSP2 and old state bytes retained."
+  },
+  "implemented_learning_world_extension": {
+    "status": "implemented common learning state; engineering validation, not intelligence qualification",
+    "base_commit": "93192a6163b293f1b1706902ac0ef4a9fd0066fe",
+    "base_archive": "docs/evidence/LEARNING_WORLD_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "df07dc74947c1d1b2d7046c74dc248f1163209a03f78224a2bd02324c1f731f3",
+    "modified": {
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "d720aa0d73962edd72a8dd88e3820c5b769c7c9d4be52b1b611442eda0cac756",
+        "after_sha256": "ad9975690e1e7146b86f5355a52fd5319245c97180e62fc887ca93fd61a15bb5"
+      },
+      "src/construction/sensors.rs": {
+        "before_sha256": "69180aa9ce6583907abae8dd2329356a00014984510c426efd6d686dd6baf202",
+        "after_sha256": "5c3c285139044ddb6bb7969a58b4fbf06dfa4f6ae55a6722cfe0f5f5fe066f86"
+      },
+      "src/lib.rs": {
+        "before_sha256": "8b37210df6b9fe7f46c9be08262809df15d2188bd0e6ad6992e3f120124c58f1",
+        "after_sha256": "c1e4d07eda39c93103604d50d8b6b5e2dbdef70f4715a47b7196559efb618414"
+      },
+      "src/organism_development.rs": {
+        "before_sha256": "155192bbbf75d816c596b8df561bc250718e86fc002726231d4dac77581f6c81",
+        "after_sha256": "a1344ad7632af80fd9559332bf9cb9e36c91acfc828cc41cb0cf535e38084d5a"
+      },
+      "src/unified_runtime.rs": {
+        "before_sha256": "0f19baa3ac905445ae540fb9eb7c54e124cb4a15738cd3abcd6313edd94c90fa",
+        "after_sha256": "2cd84abd66c6bb6e6b11122ebe3a16a015d02bc0ec7ab6a1b1de269ca7032ae3"
+      }
+    },
+    "added": {
+      "src/learning_world.rs": "0de59dd6c37cc671a90776ee0d3ff21dc4b9031467dcd21c2cfeef5252f7bf87",
+      "src/learning_world/network.rs": "82c3de5e44004a30c82abecd4e2716526f3970c3985ace9cdd482e2a993db4e8"
+    },
+    "authority": "same protected native U1; no actuator in model",
+    "legacy_checkpoint": "v1 unchanged when learning state is absent; v2 stores raw learning state"
   }
 }
