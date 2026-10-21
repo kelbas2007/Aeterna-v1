@@ -1,0 +1,29 @@
+{
+  "project": {
+    "passing_test_executions": 484,
+    "test_binaries": 51,
+    "status": "PASS"
+  },
+  "gates": {
+    "passing_test_executions": 2,
+    "test_binaries": 1,
+    "status": "PASS"
+  },
+  "lifetime": {
+    "passing_test_executions": 15,
+    "test_binaries": 2,
+    "status": "PASS"
+  },
+  "rsp2_source_unchanged": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0",
+  "scope": "selected project suites; not every repository test or an independent intelligence exam",
+  "published_saved_state_inspection": {
+    "status": "PASS",
+    "checkpoint_sha256": "c05cc2bc70c1525d9990dea81838dc25cc14498d6a68610f63f6cf3020e7fe8d",
+    "factual_action_cost": 2200,
+    "interfaces": 4,
+    "rsp2_attempts": 5,
+    "evaluator_searches": 7,
+    "learning_remains_enabled": true,
+    "external_actions_executed": 0
+  }
+}

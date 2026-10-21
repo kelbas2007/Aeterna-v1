@@ -12,7 +12,9 @@ from run_external_continual5 import motors,scene,verify_data_files
 def audit(root,data):
     root=Path(root);provenance=json.loads((root/'provenance.json').read_text())
     if 'frozen_binary' in provenance:
-        assert hashlib.sha256((root/provenance['frozen_binary']).read_bytes()).hexdigest()==provenance['binary_sha256']
+        binary=root/provenance['frozen_binary']
+        raw=binary.read_bytes() if binary.exists() else gzip.decompress(Path(str(binary)+'.gz').read_bytes())
+        assert hashlib.sha256(raw).hexdigest()==provenance['binary_sha256']
     if 'dependencies' in provenance:
         assert {n:importlib.metadata.version(n) for n in provenance['dependencies']}==provenance['dependencies']
     assert verify_data_files(data)==provenance['data'],'corpus provenance mismatch'

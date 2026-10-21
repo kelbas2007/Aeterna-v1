@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "purpose": "software continuation on an already experienced public image, not a new exam",
+  "binary_sha256": "3217e5ffe179b72731b927fe995f202b4e34c73e10563e28680cbf5ad224fcf7",
+  "input_checkpoint_sha256": "c05cc2bc70c1525d9990dea81838dc25cc14498d6a68610f63f6cf3020e7fe8d",
+  "before_events": 2200,
+  "after_events": 2201,
+  "before_episodes": 1050,
+  "after_episodes": 1051,
+  "protected_actions": 1,
+  "actual_cost": 1,
+  "actual_reward": 1.0,
+  "retained_interfaces": [
+    4,
+    9,
+    82,
+    86
+  ],
+  "learned_fingerprint_changed": true,
+  "continued_checkpoint_sha256": "c5eda7028dbcb9b5d9f248eb3dac54d7fa1c85752fbf674187bdba3a2b02e2b5"
+}

@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "frozen_source_commit": "a8abc1574c46870e0b4c181213290c15f18ec323",
+  "current_rust_sources_identical": true,
+  "rust_source_files": 92,
+  "cargo_manifest_lock_and_embedded_project_state_identical": true
+}

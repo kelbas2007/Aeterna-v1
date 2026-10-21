@@ -1,0 +1,863 @@
+[
+  {
+    "phase": "fashion",
+    "result": {
+      "first_answer_prequential": {
+        "samples": 240,
+        "correct": 135,
+        "accuracy": 0.5625,
+        "balanced_accuracy": 0.5616876740201329,
+        "macro_f1": 0.5635516343680324,
+        "class_support": [
+          25,
+          29,
+          28,
+          30,
+          28,
+          23,
+          21,
+          20,
+          16,
+          20
+        ],
+        "confusion_matrix": [
+          [
+            16,
+            0,
+            0,
+            4,
+            1,
+            0,
+            4,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            23,
+            0,
+            4,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            13,
+            1,
+            5,
+            0,
+            6,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            5,
+            6,
+            13,
+            3,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            4,
+            2,
+            13,
+            2,
+            3,
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            2,
+            0,
+            0,
+            17,
+            1,
+            1,
+            0,
+            1
+          ],
+          [
+            4,
+            0,
+            4,
+            3,
+            7,
+            0,
+            2,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0,
+            13,
+            0,
+            3
+          ],
+          [
+            2,
+            0,
+            1,
+            2,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            18
+          ]
+        ]
+      },
+      "eventually_correct_with_feedback": 240,
+      "actual_actions": 879,
+      "measured_channels": 240
+    },
+    "report": {
+      "development": null,
+      "organism": {
+        "agency_credit": {
+          "externally_forced_actions": 251,
+          "self_selected_actions": 628
+        },
+        "archived_domains": [],
+        "computation_work": 28323400,
+        "controller_frozen": false,
+        "domain": "external-continuous-v5",
+        "learner": {
+          "active_program": 13491590171125486598,
+          "construction_work": 16448,
+          "constructor_generation": 0,
+          "constructors": 0,
+          "events": 879,
+          "last_error": null,
+          "library_nodes": 0,
+          "poisoned": false,
+          "program_nodes": 32,
+          "promotions": 0,
+          "recursive_improvements": 0,
+          "recursive_trials": 0,
+          "shadow_pending": false,
+          "state_cells": 0
+        },
+        "native_meta_observations": 628,
+        "native_weights": [
+          1.0,
+          0.0,
+          0.7622987031936646,
+          0.9973715543746948,
+          1.0
+        ],
+        "operations": [
+          0,
+          0,
+          320,
+          879
+        ],
+        "total_external_cost": 879
+      },
+      "reward_memory": {
+        "accepted_strategy_changes": 0,
+        "acquired_kernel_exponent": 1.0,
+        "acquired_neighbors": 3,
+        "enabled": true,
+        "evictions": 0,
+        "factual_events": 879,
+        "learned_events": 879,
+        "learned_fingerprint": 16823097884312741344,
+        "learned_mutation_weights": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "model_bytes": 388485,
+        "namespaces": 1,
+        "pending_actions": 0,
+        "recursive_generations": 0,
+        "rejected_strategy_changes": 0,
+        "retained_cases": 879,
+        "retained_reward_rates": 640,
+        "strategy_audits": [],
+        "working_transitions": 1
+      },
+      "type": "organism_report"
+    }
+  },
+  {
+    "phase": "har",
+    "result": {
+      "first_answer_prequential": {
+        "samples": 240,
+        "correct": 192,
+        "accuracy": 0.8,
+        "balanced_accuracy": 0.7828444368699615,
+        "macro_f1": 0.7863414449909126,
+        "class_support": [
+          27,
+          25,
+          23,
+          67,
+          54,
+          44
+        ],
+        "confusion_matrix": [
+          [
+            24,
+            0,
+            0,
+            1,
+            0,
+            2
+          ],
+          [
+            1,
+            17,
+            3,
+            0,
+            4,
+            0
+          ],
+          [
+            5,
+            1,
+            15,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            54,
+            10,
+            0
+          ],
+          [
+            1,
+            2,
+            0,
+            4,
+            46,
+            1
+          ],
+          [
+            0,
+            2,
+            0,
+            5,
+            1,
+            36
+          ]
+        ]
+      },
+      "eventually_correct_with_feedback": 240,
+      "actual_actions": 684,
+      "measured_channels": 354
+    },
+    "report": {
+      "development": null,
+      "organism": {
+        "agency_credit": {
+          "externally_forced_actions": 251,
+          "self_selected_actions": 1312
+        },
+        "archived_domains": [],
+        "computation_work": 117793395,
+        "controller_frozen": false,
+        "domain": "external-continuous-v5",
+        "learner": {
+          "active_program": 13491590171125486598,
+          "construction_work": 41088,
+          "constructor_generation": 0,
+          "constructors": 0,
+          "events": 1563,
+          "last_error": null,
+          "library_nodes": 0,
+          "poisoned": false,
+          "program_nodes": 32,
+          "promotions": 0,
+          "recursive_improvements": 0,
+          "recursive_trials": 0,
+          "shadow_pending": false,
+          "state_cells": 0
+        },
+        "native_meta_observations": 1312,
+        "native_weights": [
+          0.814370334148407,
+          0.0,
+          0.9879123568534851,
+          0.8060495257377625,
+          0.8831284046173096
+        ],
+        "operations": [
+          0,
+          0,
+          331,
+          1563
+        ],
+        "total_external_cost": 1563
+      },
+      "reward_memory": {
+        "accepted_strategy_changes": 0,
+        "acquired_kernel_exponent": 1.0,
+        "acquired_neighbors": 3,
+        "enabled": true,
+        "evictions": 0,
+        "factual_events": 1563,
+        "learned_events": 1563,
+        "learned_fingerprint": 7975610162520444974,
+        "learned_mutation_weights": [
+          0.8400000000000001,
+          1.0,
+          1.0
+        ],
+        "model_bytes": 685318,
+        "namespaces": 2,
+        "pending_actions": 0,
+        "recursive_generations": 1,
+        "rejected_strategy_changes": 1,
+        "retained_cases": 1563,
+        "retained_reward_rates": 1024,
+        "strategy_audits": [
+          {
+            "accepted": false,
+            "candidate_loss": 5.294686932600771,
+            "closed_at_event": 1088,
+            "comparisons": 64,
+            "generation": 0,
+            "incumbent_loss": 5.349620484774482,
+            "mutation_family": 0,
+            "retention_guard_passed": false,
+            "trained_before_event": 0
+          }
+        ],
+        "working_transitions": 2
+      },
+      "type": "organism_report"
+    }
+  },
+  {
+    "phase": "MiniGrid-Empty-5x5-v0",
+    "result": {
+      "game": "MiniGrid-Empty-5x5-v0",
+      "motor_map": [
+        7,
+        0,
+        5,
+        4,
+        2,
+        15,
+        1
+      ],
+      "episodes": [
+        {
+          "seed": 850000,
+          "actions": 64,
+          "reward": 0.0,
+          "success": false
+        },
+        {
+          "seed": 850001,
+          "actions": 64,
+          "reward": 0.0,
+          "success": false
+        },
+        {
+          "seed": 850002,
+          "actions": 64,
+          "reward": 0.0,
+          "success": false
+        },
+        {
+          "seed": 850003,
+          "actions": 52,
+          "reward": 0.532,
+          "success": true
+        }
+      ],
+      "successes": 1,
+      "actual_actions": 244
+    },
+    "report": {
+      "development": null,
+      "organism": {
+        "agency_credit": {
+          "externally_forced_actions": 251,
+          "self_selected_actions": 1556
+        },
+        "archived_domains": [],
+        "computation_work": 176618704,
+        "controller_frozen": false,
+        "domain": "external-continuous-v5",
+        "learner": {
+          "active_program": 13491590171125486598,
+          "construction_work": 49280,
+          "constructor_generation": 0,
+          "constructors": 0,
+          "events": 1807,
+          "last_error": null,
+          "library_nodes": 0,
+          "poisoned": false,
+          "program_nodes": 32,
+          "promotions": 0,
+          "recursive_improvements": 0,
+          "recursive_trials": 0,
+          "shadow_pending": false,
+          "state_cells": 0
+        },
+        "native_meta_observations": 1556,
+        "native_weights": [
+          0.814370334148407,
+          0.0,
+          0.33320918679237366,
+          0.34450870752334595,
+          0.2053595930337906
+        ],
+        "operations": [
+          0,
+          0,
+          531,
+          1807
+        ],
+        "total_external_cost": 1807
+      },
+      "reward_memory": {
+        "accepted_strategy_changes": 0,
+        "acquired_kernel_exponent": 1.0,
+        "acquired_neighbors": 3,
+        "enabled": true,
+        "evictions": 0,
+        "factual_events": 1807,
+        "learned_events": 1807,
+        "learned_fingerprint": 4098700488194392343,
+        "learned_mutation_weights": [
+          0.8400000000000001,
+          1.0,
+          1.0
+        ],
+        "model_bytes": 756190,
+        "namespaces": 3,
+        "pending_actions": 0,
+        "recursive_generations": 1,
+        "rejected_strategy_changes": 1,
+        "retained_cases": 1807,
+        "retained_reward_rates": 1024,
+        "strategy_audits": [
+          {
+            "accepted": false,
+            "candidate_loss": 5.294686932600771,
+            "closed_at_event": 1088,
+            "comparisons": 64,
+            "generation": 0,
+            "incumbent_loss": 5.349620484774482,
+            "mutation_family": 0,
+            "retention_guard_passed": false,
+            "trained_before_event": 0
+          }
+        ],
+        "working_transitions": 52
+      },
+      "type": "organism_report"
+    }
+  },
+  {
+    "phase": "MiniGrid-DoorKey-5x5-v0",
+    "result": {
+      "game": "MiniGrid-DoorKey-5x5-v0",
+      "motor_map": [
+        12,
+        3,
+        2,
+        10,
+        9,
+        8,
+        4
+      ],
+      "episodes": [
+        {
+          "seed": 850000,
+          "actions": 64,
+          "reward": 0.0,
+          "success": false
+        },
+        {
+          "seed": 850001,
+          "actions": 64,
+          "reward": 0.0,
+          "success": false
+        },
+        {
+          "seed": 850002,
+          "actions": 64,
+          "reward": 0.0,
+          "success": false
+        },
+        {
+          "seed": 850003,
+          "actions": 64,
+          "reward": 0.0,
+          "success": false
+        }
+      ],
+      "successes": 0,
+      "actual_actions": 256
+    },
+    "report": {
+      "development": null,
+      "organism": {
+        "agency_credit": {
+          "externally_forced_actions": 251,
+          "self_selected_actions": 1812
+        },
+        "archived_domains": [],
+        "computation_work": 236242928,
+        "controller_frozen": false,
+        "domain": "external-continuous-v5",
+        "learner": {
+          "active_program": 13491590171125486598,
+          "construction_work": 57824,
+          "constructor_generation": 0,
+          "constructors": 0,
+          "events": 2063,
+          "last_error": null,
+          "library_nodes": 0,
+          "poisoned": false,
+          "program_nodes": 32,
+          "promotions": 0,
+          "recursive_improvements": 0,
+          "recursive_trials": 0,
+          "shadow_pending": false,
+          "state_cells": 0
+        },
+        "native_meta_observations": 1812,
+        "native_weights": [
+          0.814370334148407,
+          0.0,
+          0.0,
+          0.24522508680820465,
+          0.0
+        ],
+        "operations": [
+          0,
+          0,
+          758,
+          2063
+        ],
+        "total_external_cost": 2063
+      },
+      "reward_memory": {
+        "accepted_strategy_changes": 0,
+        "acquired_kernel_exponent": 1.0,
+        "acquired_neighbors": 3,
+        "enabled": true,
+        "evictions": 15,
+        "factual_events": 2063,
+        "learned_events": 2063,
+        "learned_fingerprint": 17568496593512810504,
+        "learned_mutation_weights": [
+          0.8400000000000001,
+          1.0,
+          1.0
+        ],
+        "model_bytes": 836406,
+        "namespaces": 4,
+        "pending_actions": 0,
+        "recursive_generations": 1,
+        "rejected_strategy_changes": 1,
+        "retained_cases": 2048,
+        "retained_reward_rates": 1024,
+        "strategy_audits": [
+          {
+            "accepted": false,
+            "candidate_loss": 5.294686932600771,
+            "closed_at_event": 1088,
+            "comparisons": 64,
+            "generation": 0,
+            "incumbent_loss": 5.349620484774482,
+            "mutation_family": 0,
+            "retention_guard_passed": false,
+            "trained_before_event": 0
+          }
+        ],
+        "working_transitions": 64
+      },
+      "type": "organism_report"
+    }
+  },
+  {
+    "phase": "fashion_revisit_with_feedback",
+    "result": {
+      "first_answer_prequential": {
+        "samples": 64,
+        "correct": 56,
+        "accuracy": 0.875,
+        "balanced_accuracy": 0.8617424242424242,
+        "macro_f1": 0.8660184423419718,
+        "class_support": [
+          4,
+          6,
+          7,
+          8,
+          11,
+          8,
+          4,
+          4,
+          4,
+          8
+        ],
+        "confusion_matrix": [
+          [
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            5,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            7,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            7,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            10,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            7,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            7
+          ]
+        ]
+      },
+      "eventually_correct_with_feedback": 64,
+      "actual_actions": 137,
+      "measured_channels": 64
+    },
+    "report": {
+      "development": null,
+      "organism": {
+        "agency_credit": {
+          "externally_forced_actions": 315,
+          "self_selected_actions": 1885
+        },
+        "archived_domains": [],
+        "computation_work": 244875278,
+        "controller_frozen": false,
+        "domain": "external-continuous-v5",
+        "learner": {
+          "active_program": 13491590171125486598,
+          "construction_work": 57824,
+          "constructor_generation": 0,
+          "constructors": 0,
+          "events": 2200,
+          "last_error": null,
+          "library_nodes": 0,
+          "poisoned": false,
+          "program_nodes": 32,
+          "promotions": 0,
+          "recursive_improvements": 0,
+          "recursive_trials": 0,
+          "shadow_pending": false,
+          "state_cells": 0
+        },
+        "native_meta_observations": 1885,
+        "native_weights": [
+          1.0,
+          0.0,
+          0.5642816424369812,
+          1.0,
+          1.0
+        ],
+        "operations": [
+          0,
+          0,
+          763,
+          2200
+        ],
+        "total_external_cost": 2200
+      },
+      "reward_memory": {
+        "accepted_strategy_changes": 0,
+        "acquired_kernel_exponent": 1.0,
+        "acquired_neighbors": 3,
+        "enabled": true,
+        "evictions": 152,
+        "factual_events": 2200,
+        "learned_events": 2200,
+        "learned_fingerprint": 13757786129920984616,
+        "learned_mutation_weights": [
+          0.8400000000000001,
+          0.8400000000000001,
+          1.0
+        ],
+        "model_bytes": 834311,
+        "namespaces": 4,
+        "pending_actions": 0,
+        "recursive_generations": 2,
+        "rejected_strategy_changes": 2,
+        "retained_cases": 2048,
+        "retained_reward_rates": 1024,
+        "strategy_audits": [
+          {
+            "accepted": false,
+            "candidate_loss": 5.294686932600771,
+            "closed_at_event": 1088,
+            "comparisons": 64,
+            "generation": 0,
+            "incumbent_loss": 5.349620484774482,
+            "mutation_family": 0,
+            "retention_guard_passed": false,
+            "trained_before_event": 0
+          },
+          {
+            "accepted": false,
+            "candidate_loss": 0.6808681963464576,
+            "closed_at_event": 2112,
+            "comparisons": 64,
+            "generation": 1,
+            "incumbent_loss": 0.6831523985879066,
+            "mutation_family": 1,
+            "retention_guard_passed": true,
+            "trained_before_event": 1088
+          }
+        ],
+        "working_transitions": 2
+      },
+      "type": "organism_report"
+    }
+  }
+]

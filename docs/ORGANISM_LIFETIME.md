@@ -1,5 +1,7 @@
 # Общий жизненный цикл AETERNA
 
+[Проверенный результат: одна жизнь через четыре интерфейса, полный аудит и сохранённое обучающееся состояние](ORGANISM_LIFETIME_RESULT.md).
+
 `organism_init` создаёт один ScientificRuntime, U1 и Learner. Изображения,
 сигналы и навигация поступают в него через один интерфейс фактических действий.
 `external_reset` меняет наблюдение и рабочий контекст, сохраняя приобретённое.
@@ -46,11 +48,16 @@
 
 ```bash
 cargo test --locked --test organism_lifetime
-cargo build --release --locked --bin aeterna-v1
+CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \
+  cargo build --release --locked --bin aeterna-v1
 python scripts/run_organism_lifetime.py --binary target/release/aeterna-v1 \
   --data DATA_DIRECTORY --output NEW_RESULT_DIRECTORY
 python scripts/audit_organism_lifetime.py --results NEW_RESULT_DIRECTORY \
   --data DATA_DIRECTORY --output NEW_RESULT_DIRECTORY/audit.json
+python scripts/verify_organism_continuation.py \
+  --binary NEW_RESULT_DIRECTORY/frozen-aeterna-v1 \
+  --checkpoint NEW_RESULT_DIRECTORY/organism/one-organism.json.gz \
+  --data DATA_DIRECTORY --output NEW_CONTINUATION_DIRECTORY
 ```
 
 Один экземпляр проходит изображения → сохранение/восстановление → сигналы →

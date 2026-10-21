@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "checkpoint_sha256": "c05cc2bc70c1525d9990dea81838dc25cc14498d6a68610f63f6cf3020e7fe8d",
+  "factual_action_cost": 2200,
+  "interfaces": 4,
+  "rsp2_attempts": 5,
+  "evaluator_searches": 7,
+  "learning_remains_enabled": true,
+  "external_actions_executed": 0
+}

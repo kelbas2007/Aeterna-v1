@@ -1,0 +1,32 @@
+{
+  "organism": {
+    "status": "PASS",
+    "initializations": 1,
+    "exact_checkpoint_resumes": 1,
+    "factual_posts": 2200,
+    "actual_cost": 2200,
+    "sensor_interfaces": 4,
+    "corpus_values_and_rewards_replayed": true,
+    "minigrid_transitions_replayed": true
+  },
+  "organism_fixed": {
+    "status": "PASS",
+    "initializations": 1,
+    "exact_checkpoint_resumes": 1,
+    "factual_posts": 2200,
+    "actual_cost": 2200,
+    "sensor_interfaces": 4,
+    "corpus_values_and_rewards_replayed": true,
+    "minigrid_transitions_replayed": true
+  },
+  "full": {
+    "status": "PASS",
+    "initializations": 1,
+    "exact_checkpoint_resumes": 1,
+    "factual_posts": 2200,
+    "actual_cost": 2200,
+    "sensor_interfaces": 4,
+    "corpus_values_and_rewards_replayed": true,
+    "minigrid_transitions_replayed": true
+  }
+}

@@ -84,6 +84,7 @@ def main():
  # Consume the executable from the exact Cargo invocation, independent of
  # CARGO_TARGET_DIR, CARGO_BUILD_TARGET and .cargo/config build.target.
  binary=build_and_locate_binary(env,flags)
+ run('python','scripts/check_saved_organism.py','--binary',str(binary))
  run('python','scripts/lc1_joint_demo.py','--binary',str(binary),'--output',str(temp/'lc1_joint_demo.json'))
  run('python','scripts/unified_factual_autonomy_demo.py','--binary',str(binary),'--output',str(temp/'unscheduled_u1_loop.json'))
  print(json.dumps({'status':'PASS','suites':names,'fresh_intelligence_claim':False}))
