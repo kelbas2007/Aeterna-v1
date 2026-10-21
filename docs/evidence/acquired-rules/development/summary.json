@@ -1,0 +1,3216 @@
+{
+  "organism": {
+    "resume_checkpoint_sha256": "6ff7fb8db0732265ca38f68eda70848aced309f8c1eb81a82d655732fe263910",
+    "final_checkpoint_sha256": "4e7e66817048213d54b5fd9184e2bc9571b74a6656be2a49059436936f616a5f",
+    "continuing_checkpoint_sha256": "e97de732c5952a4b2dafe6fb967258e81e11976d924c7f5f5b98aa130c0f6624",
+    "phases": [
+      {
+        "phase": "fashion",
+        "result": {
+          "first_answer_prequential": {
+            "samples": 512,
+            "correct": 354,
+            "accuracy": 0.69140625,
+            "balanced_accuracy": 0.6830844898798611,
+            "macro_f1": 0.6718147848675754,
+            "class_support": [
+              51,
+              54,
+              52,
+              48,
+              46,
+              37,
+              42,
+              76,
+              64,
+              42
+            ],
+            "confusion_matrix": [
+              [
+                33,
+                0,
+                2,
+                9,
+                0,
+                0,
+                6,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                47,
+                1,
+                2,
+                1,
+                0,
+                0,
+                1,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                31,
+                2,
+                13,
+                1,
+                3,
+                0,
+                1,
+                1
+              ],
+              [
+                1,
+                3,
+                2,
+                37,
+                2,
+                0,
+                1,
+                0,
+                1,
+                1
+              ],
+              [
+                1,
+                1,
+                6,
+                5,
+                29,
+                0,
+                3,
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                1,
+                1,
+                26,
+                0,
+                5,
+                0,
+                3
+              ],
+              [
+                7,
+                0,
+                14,
+                5,
+                6,
+                1,
+                8,
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                2,
+                1,
+                0,
+                7,
+                1,
+                53,
+                2,
+                8
+              ],
+              [
+                0,
+                0,
+                1,
+                4,
+                2,
+                0,
+                1,
+                3,
+                51,
+                2
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                1,
+                0,
+                39
+              ]
+            ]
+          },
+          "eventually_correct_with_feedback": 512,
+          "actual_actions": 1328,
+          "measured_channels": 512
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 1866,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 1,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 7,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 7,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 290647,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 828,
+              "self_selected_actions": 2700
+            },
+            "archived_domains": [],
+            "computation_work": 397999470,
+            "contextual_namespaces": [
+              4
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 389495,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 3528,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 2700,
+            "native_weights": [
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "operations": [
+              0,
+              0,
+              985,
+              3528
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 7,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 317096,
+              "episodes": 1866,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 7,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 3528
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": {
+              "active_domains": [
+                4
+              ],
+              "admitted_programs": 1,
+              "audits": {
+                "4": [
+                  {
+                    "accepted": true,
+                    "candidate_correct": 62,
+                    "candidate_loss": 11.61668920870582,
+                    "closed_at": 2396,
+                    "fixed_correct": 54,
+                    "fixed_loss": 14.224869579009125,
+                    "future_examples": 64,
+                    "incumbent_correct": 54,
+                    "incumbent_loss": 14.224869579009125,
+                    "incumbent_program": null,
+                    "program_fingerprint": 3627904648784146859,
+                    "trained_through": 2204
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 10.412587582056634,
+                    "closed_at": 2731,
+                    "fixed_correct": 46,
+                    "fixed_loss": 18.0965604041467,
+                    "future_examples": 64,
+                    "incumbent_correct": 62,
+                    "incumbent_loss": 10.2544460376656,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 10281080182461258872,
+                    "trained_through": 2555
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 13.319449748641626,
+                    "closed_at": 3059,
+                    "fixed_correct": 47,
+                    "fixed_loss": 18.97694641622109,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 11.43541132304528,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 7815799886482790585,
+                    "trained_through": 2893
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 61,
+                    "candidate_loss": 10.853210218454938,
+                    "closed_at": 3382,
+                    "fixed_correct": 55,
+                    "fixed_loss": 12.359276703653611,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 9.92494034837108,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 9045377829863728063,
+                    "trained_through": 3218
+                  }
+                ]
+              },
+              "learned_predicates": 171,
+              "pending_programs": 0,
+              "proposals": 4,
+              "rollbacks": 0,
+              "work": 11257106
+            },
+            "enabled": true,
+            "evictions": 1480,
+            "factual_events": 3528,
+            "learned_events": 3528,
+            "learned_fingerprint": 9936870290892027262,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 908733,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 2
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "har",
+        "result": {
+          "first_answer_prequential": {
+            "samples": 512,
+            "correct": 389,
+            "accuracy": 0.759765625,
+            "balanced_accuracy": 0.7512295739368327,
+            "macro_f1": 0.7508519799189268,
+            "class_support": [
+              81,
+              67,
+              58,
+              98,
+              101,
+              107
+            ],
+            "confusion_matrix": [
+              [
+                61,
+                4,
+                10,
+                5,
+                0,
+                1
+              ],
+              [
+                5,
+                47,
+                7,
+                5,
+                2,
+                1
+              ],
+              [
+                15,
+                3,
+                40,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                2,
+                2,
+                78,
+                12,
+                3
+              ],
+              [
+                4,
+                2,
+                3,
+                11,
+                79,
+                2
+              ],
+              [
+                4,
+                2,
+                2,
+                9,
+                6,
+                84
+              ]
+            ]
+          },
+          "eventually_correct_with_feedback": 512,
+          "actual_actions": 1601,
+          "measured_channels": 879
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2588,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 1,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 7,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 7,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 290647,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 828,
+              "self_selected_actions": 4301
+            },
+            "archived_domains": [],
+            "computation_work": 996112954,
+            "contextual_namespaces": [
+              4,
+              9
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 438807,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 5129,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 4301,
+            "native_weights": [
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "operations": [
+              0,
+              0,
+              1017,
+              5129
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 7,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 317096,
+              "episodes": 2588,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 7,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 5129
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": {
+              "active_domains": [
+                4
+              ],
+              "admitted_programs": 1,
+              "audits": {
+                "4": [
+                  {
+                    "accepted": true,
+                    "candidate_correct": 62,
+                    "candidate_loss": 11.61668920870582,
+                    "closed_at": 2396,
+                    "fixed_correct": 54,
+                    "fixed_loss": 14.224869579009125,
+                    "future_examples": 64,
+                    "incumbent_correct": 54,
+                    "incumbent_loss": 14.224869579009125,
+                    "incumbent_program": null,
+                    "program_fingerprint": 3627904648784146859,
+                    "trained_through": 2204
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 10.412587582056634,
+                    "closed_at": 2731,
+                    "fixed_correct": 46,
+                    "fixed_loss": 18.0965604041467,
+                    "future_examples": 64,
+                    "incumbent_correct": 62,
+                    "incumbent_loss": 10.2544460376656,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 10281080182461258872,
+                    "trained_through": 2555
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 13.319449748641626,
+                    "closed_at": 3059,
+                    "fixed_correct": 47,
+                    "fixed_loss": 18.97694641622109,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 11.43541132304528,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 7815799886482790585,
+                    "trained_through": 2893
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 61,
+                    "candidate_loss": 10.853210218454938,
+                    "closed_at": 3382,
+                    "fixed_correct": 55,
+                    "fixed_loss": 12.359276703653611,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 9.92494034837108,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 9045377829863728063,
+                    "trained_through": 3218
+                  }
+                ],
+                "9": [
+                  {
+                    "accepted": false,
+                    "candidate_correct": 54,
+                    "candidate_loss": 21.193030588191597,
+                    "closed_at": 3746,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.021939329587552,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.021939329587552,
+                    "incumbent_program": null,
+                    "program_fingerprint": 18135851119577945766,
+                    "trained_through": 3531
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 51,
+                    "candidate_loss": 22.14946187096387,
+                    "closed_at": 4206,
+                    "fixed_correct": 55,
+                    "fixed_loss": 16.420875812441576,
+                    "future_examples": 64,
+                    "incumbent_correct": 55,
+                    "incumbent_loss": 16.420875812441576,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15519581294499490098,
+                    "trained_through": 3937
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 13.27562554785098,
+                    "closed_at": 4615,
+                    "fixed_correct": 58,
+                    "fixed_loss": 8.566424718228669,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 8.566424718228669,
+                    "incumbent_program": null,
+                    "program_fingerprint": 1567657665670250752,
+                    "trained_through": 4406
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 11.428265527246644,
+                    "closed_at": 4994,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.861496391846508,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.861496391846508,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15928429844701726640,
+                    "trained_through": 4812
+                  }
+                ]
+              },
+              "learned_predicates": 171,
+              "pending_programs": 0,
+              "proposals": 8,
+              "rollbacks": 0,
+              "work": 18449866
+            },
+            "enabled": true,
+            "evictions": 3081,
+            "factual_events": 5129,
+            "learned_events": 5129,
+            "learned_fingerprint": 5301033764518443919,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 876879,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 2
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "MiniGrid-Empty-5x5-v0",
+        "result": {
+          "game": "MiniGrid-Empty-5x5-v0",
+          "motor_map": [
+            7,
+            0,
+            5,
+            4,
+            2,
+            15,
+            1
+          ],
+          "episodes": [
+            {
+              "seed": 850000,
+              "actions": 15,
+              "reward": 0.865,
+              "success": true
+            },
+            {
+              "seed": 850001,
+              "actions": 12,
+              "reward": 0.892,
+              "success": true
+            },
+            {
+              "seed": 850002,
+              "actions": 21,
+              "reward": 0.8109999999999999,
+              "success": true
+            },
+            {
+              "seed": 850003,
+              "actions": 13,
+              "reward": 0.883,
+              "success": true
+            }
+          ],
+          "successes": 4,
+          "actual_actions": 61
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2592,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 2,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 8,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 8,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:82": 1,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 348815,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 828,
+              "self_selected_actions": 4362
+            },
+            "archived_domains": [],
+            "computation_work": 1013012844,
+            "contextual_namespaces": [
+              4,
+              9,
+              82
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 505167,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 5190,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 4362,
+            "native_weights": [
+              0.892935574054718,
+              0.0,
+              0.5777716040611267,
+              0.8340781927108765,
+              0.9276811480522156
+            ],
+            "operations": [
+              0,
+              0,
+              1017,
+              5190
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 8,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 376460,
+              "episodes": 2592,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 8,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 5190
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": {
+              "active_domains": [
+                4
+              ],
+              "admitted_programs": 1,
+              "audits": {
+                "4": [
+                  {
+                    "accepted": true,
+                    "candidate_correct": 62,
+                    "candidate_loss": 11.61668920870582,
+                    "closed_at": 2396,
+                    "fixed_correct": 54,
+                    "fixed_loss": 14.224869579009125,
+                    "future_examples": 64,
+                    "incumbent_correct": 54,
+                    "incumbent_loss": 14.224869579009125,
+                    "incumbent_program": null,
+                    "program_fingerprint": 3627904648784146859,
+                    "trained_through": 2204
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 10.412587582056634,
+                    "closed_at": 2731,
+                    "fixed_correct": 46,
+                    "fixed_loss": 18.0965604041467,
+                    "future_examples": 64,
+                    "incumbent_correct": 62,
+                    "incumbent_loss": 10.2544460376656,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 10281080182461258872,
+                    "trained_through": 2555
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 13.319449748641626,
+                    "closed_at": 3059,
+                    "fixed_correct": 47,
+                    "fixed_loss": 18.97694641622109,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 11.43541132304528,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 7815799886482790585,
+                    "trained_through": 2893
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 61,
+                    "candidate_loss": 10.853210218454938,
+                    "closed_at": 3382,
+                    "fixed_correct": 55,
+                    "fixed_loss": 12.359276703653611,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 9.92494034837108,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 9045377829863728063,
+                    "trained_through": 3218
+                  }
+                ],
+                "82": [],
+                "9": [
+                  {
+                    "accepted": false,
+                    "candidate_correct": 54,
+                    "candidate_loss": 21.193030588191597,
+                    "closed_at": 3746,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.021939329587552,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.021939329587552,
+                    "incumbent_program": null,
+                    "program_fingerprint": 18135851119577945766,
+                    "trained_through": 3531
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 51,
+                    "candidate_loss": 22.14946187096387,
+                    "closed_at": 4206,
+                    "fixed_correct": 55,
+                    "fixed_loss": 16.420875812441576,
+                    "future_examples": 64,
+                    "incumbent_correct": 55,
+                    "incumbent_loss": 16.420875812441576,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15519581294499490098,
+                    "trained_through": 3937
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 13.27562554785098,
+                    "closed_at": 4615,
+                    "fixed_correct": 58,
+                    "fixed_loss": 8.566424718228669,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 8.566424718228669,
+                    "incumbent_program": null,
+                    "program_fingerprint": 1567657665670250752,
+                    "trained_through": 4406
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 11.428265527246644,
+                    "closed_at": 4994,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.861496391846508,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.861496391846508,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15928429844701726640,
+                    "trained_through": 4812
+                  }
+                ]
+              },
+              "learned_predicates": 171,
+              "pending_programs": 0,
+              "proposals": 8,
+              "rollbacks": 0,
+              "work": 18449866
+            },
+            "enabled": true,
+            "evictions": 3142,
+            "factual_events": 5190,
+            "learned_events": 5190,
+            "learned_fingerprint": 6994192099377312213,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 878584,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 13
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "MiniGrid-DoorKey-5x5-v0",
+        "result": {
+          "game": "MiniGrid-DoorKey-5x5-v0",
+          "motor_map": [
+            12,
+            3,
+            2,
+            10,
+            9,
+            8,
+            4
+          ],
+          "episodes": [
+            {
+              "seed": 850000,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            },
+            {
+              "seed": 850001,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            },
+            {
+              "seed": 850002,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            },
+            {
+              "seed": 850003,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            }
+          ],
+          "successes": 0,
+          "actual_actions": 256
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2596,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 2,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 8,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 8,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:82": 1,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 348815,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 828,
+              "self_selected_actions": 4618
+            },
+            "archived_domains": [],
+            "computation_work": 1101155224,
+            "contextual_namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 513423,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 5446,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 4618,
+            "native_weights": [
+              1.0,
+              0.0,
+              0.01966489665210247,
+              0.3904648721218109,
+              0.0
+            ],
+            "operations": [
+              0,
+              0,
+              1233,
+              5446
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 8,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 376460,
+              "episodes": 2596,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 8,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 5446
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": {
+              "active_domains": [
+                4
+              ],
+              "admitted_programs": 1,
+              "audits": {
+                "4": [
+                  {
+                    "accepted": true,
+                    "candidate_correct": 62,
+                    "candidate_loss": 11.61668920870582,
+                    "closed_at": 2396,
+                    "fixed_correct": 54,
+                    "fixed_loss": 14.224869579009125,
+                    "future_examples": 64,
+                    "incumbent_correct": 54,
+                    "incumbent_loss": 14.224869579009125,
+                    "incumbent_program": null,
+                    "program_fingerprint": 3627904648784146859,
+                    "trained_through": 2204
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 10.412587582056634,
+                    "closed_at": 2731,
+                    "fixed_correct": 46,
+                    "fixed_loss": 18.0965604041467,
+                    "future_examples": 64,
+                    "incumbent_correct": 62,
+                    "incumbent_loss": 10.2544460376656,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 10281080182461258872,
+                    "trained_through": 2555
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 13.319449748641626,
+                    "closed_at": 3059,
+                    "fixed_correct": 47,
+                    "fixed_loss": 18.97694641622109,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 11.43541132304528,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 7815799886482790585,
+                    "trained_through": 2893
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 61,
+                    "candidate_loss": 10.853210218454938,
+                    "closed_at": 3382,
+                    "fixed_correct": 55,
+                    "fixed_loss": 12.359276703653611,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 9.92494034837108,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 9045377829863728063,
+                    "trained_through": 3218
+                  }
+                ],
+                "82": [],
+                "9": [
+                  {
+                    "accepted": false,
+                    "candidate_correct": 54,
+                    "candidate_loss": 21.193030588191597,
+                    "closed_at": 3746,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.021939329587552,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.021939329587552,
+                    "incumbent_program": null,
+                    "program_fingerprint": 18135851119577945766,
+                    "trained_through": 3531
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 51,
+                    "candidate_loss": 22.14946187096387,
+                    "closed_at": 4206,
+                    "fixed_correct": 55,
+                    "fixed_loss": 16.420875812441576,
+                    "future_examples": 64,
+                    "incumbent_correct": 55,
+                    "incumbent_loss": 16.420875812441576,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15519581294499490098,
+                    "trained_through": 3937
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 13.27562554785098,
+                    "closed_at": 4615,
+                    "fixed_correct": 58,
+                    "fixed_loss": 8.566424718228669,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 8.566424718228669,
+                    "incumbent_program": null,
+                    "program_fingerprint": 1567657665670250752,
+                    "trained_through": 4406
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 11.428265527246644,
+                    "closed_at": 4994,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.861496391846508,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.861496391846508,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15928429844701726640,
+                    "trained_through": 4812
+                  }
+                ]
+              },
+              "learned_predicates": 171,
+              "pending_programs": 0,
+              "proposals": 8,
+              "rollbacks": 0,
+              "work": 18449866
+            },
+            "enabled": true,
+            "evictions": 3398,
+            "factual_events": 5446,
+            "learned_events": 5446,
+            "learned_fingerprint": 11541233370964722640,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 886084,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 64
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "fashion_new_after_other_worlds",
+        "result": {
+          "first_answer_prequential": {
+            "samples": 160,
+            "correct": 109,
+            "accuracy": 0.68125,
+            "balanced_accuracy": 0.6782932263814616,
+            "macro_f1": 0.6768016813629336,
+            "class_support": [
+              15,
+              17,
+              16,
+              15,
+              16,
+              22,
+              12,
+              17,
+              15,
+              15
+            ],
+            "confusion_matrix": [
+              [
+                10,
+                0,
+                1,
+                1,
+                0,
+                0,
+                1,
+                1,
+                0,
+                1
+              ],
+              [
+                0,
+                14,
+                0,
+                1,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                10,
+                0,
+                4,
+                0,
+                2,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                10,
+                1,
+                0,
+                0,
+                0,
+                0,
+                2
+              ],
+              [
+                1,
+                0,
+                4,
+                2,
+                8,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                2,
+                0,
+                14,
+                1,
+                3,
+                0,
+                1
+              ],
+              [
+                1,
+                2,
+                1,
+                0,
+                1,
+                0,
+                6,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                2,
+                0,
+                13,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                13,
+                1
+              ],
+              [
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                3,
+                0,
+                11
+              ]
+            ]
+          },
+          "eventually_correct_with_feedback": 160,
+          "actual_actions": 407,
+          "measured_channels": 160
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2843,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 2,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 8,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 8,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:82": 1,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 348815,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 989,
+              "self_selected_actions": 4864
+            },
+            "archived_domains": [],
+            "computation_work": 1167644311,
+            "contextual_namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 523087,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 5853,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 4864,
+            "native_weights": [
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "operations": [
+              0,
+              0,
+              1296,
+              5853
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 8,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 376460,
+              "episodes": 2843,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 8,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 5853
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": {
+              "active_domains": [
+                4
+              ],
+              "admitted_programs": 1,
+              "audits": {
+                "4": [
+                  {
+                    "accepted": true,
+                    "candidate_correct": 62,
+                    "candidate_loss": 11.61668920870582,
+                    "closed_at": 2396,
+                    "fixed_correct": 54,
+                    "fixed_loss": 14.224869579009125,
+                    "future_examples": 64,
+                    "incumbent_correct": 54,
+                    "incumbent_loss": 14.224869579009125,
+                    "incumbent_program": null,
+                    "program_fingerprint": 3627904648784146859,
+                    "trained_through": 2204
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 10.412587582056634,
+                    "closed_at": 2731,
+                    "fixed_correct": 46,
+                    "fixed_loss": 18.0965604041467,
+                    "future_examples": 64,
+                    "incumbent_correct": 62,
+                    "incumbent_loss": 10.2544460376656,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 10281080182461258872,
+                    "trained_through": 2555
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 13.319449748641626,
+                    "closed_at": 3059,
+                    "fixed_correct": 47,
+                    "fixed_loss": 18.97694641622109,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 11.43541132304528,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 7815799886482790585,
+                    "trained_through": 2893
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 61,
+                    "candidate_loss": 10.853210218454938,
+                    "closed_at": 3382,
+                    "fixed_correct": 55,
+                    "fixed_loss": 12.359276703653611,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 9.92494034837108,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 9045377829863728063,
+                    "trained_through": 3218
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 57,
+                    "candidate_loss": 12.234522894597866,
+                    "closed_at": 5610,
+                    "fixed_correct": 56,
+                    "fixed_loss": 10.868231376019754,
+                    "future_examples": 64,
+                    "incumbent_correct": 64,
+                    "incumbent_loss": 10.979929623376595,
+                    "incumbent_program": 3627904648784146859,
+                    "program_fingerprint": 8039421373789377227,
+                    "trained_through": 5448
+                  }
+                ],
+                "82": [],
+                "9": [
+                  {
+                    "accepted": false,
+                    "candidate_correct": 54,
+                    "candidate_loss": 21.193030588191597,
+                    "closed_at": 3746,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.021939329587552,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.021939329587552,
+                    "incumbent_program": null,
+                    "program_fingerprint": 18135851119577945766,
+                    "trained_through": 3531
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 51,
+                    "candidate_loss": 22.14946187096387,
+                    "closed_at": 4206,
+                    "fixed_correct": 55,
+                    "fixed_loss": 16.420875812441576,
+                    "future_examples": 64,
+                    "incumbent_correct": 55,
+                    "incumbent_loss": 16.420875812441576,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15519581294499490098,
+                    "trained_through": 3937
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 58,
+                    "candidate_loss": 13.27562554785098,
+                    "closed_at": 4615,
+                    "fixed_correct": 58,
+                    "fixed_loss": 8.566424718228669,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 8.566424718228669,
+                    "incumbent_program": null,
+                    "program_fingerprint": 1567657665670250752,
+                    "trained_through": 4406
+                  },
+                  {
+                    "accepted": false,
+                    "candidate_correct": 59,
+                    "candidate_loss": 11.428265527246644,
+                    "closed_at": 4994,
+                    "fixed_correct": 58,
+                    "fixed_loss": 9.861496391846508,
+                    "future_examples": 64,
+                    "incumbent_correct": 58,
+                    "incumbent_loss": 9.861496391846508,
+                    "incumbent_program": null,
+                    "program_fingerprint": 15928429844701726640,
+                    "trained_through": 4812
+                  }
+                ]
+              },
+              "learned_predicates": 171,
+              "pending_programs": 1,
+              "proposals": 10,
+              "rollbacks": 0,
+              "work": 24583293
+            },
+            "enabled": true,
+            "evictions": 3805,
+            "factual_events": 5853,
+            "learned_events": 5853,
+            "learned_fingerprint": 5689163379359814218,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 925644,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 2
+          },
+          "type": "organism_report"
+        }
+      }
+    ],
+    "final_report": {
+      "development": {
+        "abandoned_episodes": 0,
+        "active_search_policy": 9182386847551643724,
+        "admitted_readout": null,
+        "behavioral_admissions": 0,
+        "behavioral_episodes": 0,
+        "behavioral_rejections": 0,
+        "behavioral_trials": 0,
+        "candidate_actions": 0,
+        "candidate_changed_readouts": 0,
+        "episodes": 2843,
+        "evaluator_attempts_per_namespace": {
+          "4": 3,
+          "82": 2,
+          "86": 0,
+          "9": 3
+        },
+        "evaluator_search_policy": 9182386847551643724,
+        "evaluator_searches": 8,
+        "last_recursive_error": null,
+        "namespaces": [
+          4,
+          9,
+          82,
+          86
+        ],
+        "recursive_attempts": 8,
+        "recursive_attempts_per_pair": {
+          "4:82": 2,
+          "4:86": 2,
+          "4:9": 2,
+          "9:82": 1,
+          "9:86": 1
+        },
+        "recursive_enabled": true,
+        "recursive_errors": 0,
+        "recursive_generations": 0,
+        "recursive_work": 348815,
+        "retained_factual_examples": 512
+      },
+      "organism": {
+        "agency_credit": {
+          "externally_forced_actions": 989,
+          "self_selected_actions": 4864
+        },
+        "archived_domains": [],
+        "computation_work": 1167644311,
+        "contextual_namespaces": [
+          4,
+          9,
+          82,
+          86
+        ],
+        "controller_frozen": true,
+        "domain": "aeterna-organism-lifetime",
+        "learner": {
+          "active_program": 13491590171125486598,
+          "construction_work": 523087,
+          "constructor_generation": 0,
+          "constructors": 0,
+          "events": 5853,
+          "last_error": null,
+          "library_nodes": 0,
+          "poisoned": false,
+          "program_nodes": 32,
+          "promotions": 0,
+          "recursive_improvements": 0,
+          "recursive_trials": 0,
+          "shadow_pending": false,
+          "state_cells": 0
+        },
+        "native_meta_observations": 4864,
+        "native_weights": [
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "operations": [
+          0,
+          0,
+          1296,
+          5853
+        ],
+        "self_revision": {
+          "active_program": null,
+          "attempts": 8,
+          "behavior_attempted": false,
+          "behavior_guard_enabled": true,
+          "computation_work": 376460,
+          "episodes": 2843,
+          "generations": 0,
+          "readout_ablated": false,
+          "rejected": 8,
+          "rollbacks": 0,
+          "shadow": false,
+          "steps": 128,
+          "unfinished_steps": 0
+        },
+        "total_external_cost": 5853
+      },
+      "reward_memory": {
+        "accepted_strategy_changes": 0,
+        "acquired_kernel_exponent": 1.0,
+        "acquired_neighbors": 3,
+        "acquired_rules": {
+          "active_domains": [
+            4
+          ],
+          "admitted_programs": 1,
+          "audits": {
+            "4": [
+              {
+                "accepted": true,
+                "candidate_correct": 62,
+                "candidate_loss": 11.61668920870582,
+                "closed_at": 2396,
+                "fixed_correct": 54,
+                "fixed_loss": 14.224869579009125,
+                "future_examples": 64,
+                "incumbent_correct": 54,
+                "incumbent_loss": 14.224869579009125,
+                "incumbent_program": null,
+                "program_fingerprint": 3627904648784146859,
+                "trained_through": 2204
+              },
+              {
+                "accepted": false,
+                "candidate_correct": 58,
+                "candidate_loss": 10.412587582056634,
+                "closed_at": 2731,
+                "fixed_correct": 46,
+                "fixed_loss": 18.0965604041467,
+                "future_examples": 64,
+                "incumbent_correct": 62,
+                "incumbent_loss": 10.2544460376656,
+                "incumbent_program": 3627904648784146859,
+                "program_fingerprint": 10281080182461258872,
+                "trained_through": 2555
+              },
+              {
+                "accepted": false,
+                "candidate_correct": 59,
+                "candidate_loss": 13.319449748641626,
+                "closed_at": 3059,
+                "fixed_correct": 47,
+                "fixed_loss": 18.97694641622109,
+                "future_examples": 64,
+                "incumbent_correct": 64,
+                "incumbent_loss": 11.43541132304528,
+                "incumbent_program": 3627904648784146859,
+                "program_fingerprint": 7815799886482790585,
+                "trained_through": 2893
+              },
+              {
+                "accepted": false,
+                "candidate_correct": 61,
+                "candidate_loss": 10.853210218454938,
+                "closed_at": 3382,
+                "fixed_correct": 55,
+                "fixed_loss": 12.359276703653611,
+                "future_examples": 64,
+                "incumbent_correct": 64,
+                "incumbent_loss": 9.92494034837108,
+                "incumbent_program": 3627904648784146859,
+                "program_fingerprint": 9045377829863728063,
+                "trained_through": 3218
+              },
+              {
+                "accepted": false,
+                "candidate_correct": 57,
+                "candidate_loss": 12.234522894597866,
+                "closed_at": 5610,
+                "fixed_correct": 56,
+                "fixed_loss": 10.868231376019754,
+                "future_examples": 64,
+                "incumbent_correct": 64,
+                "incumbent_loss": 10.979929623376595,
+                "incumbent_program": 3627904648784146859,
+                "program_fingerprint": 8039421373789377227,
+                "trained_through": 5448
+              }
+            ],
+            "82": [],
+            "9": [
+              {
+                "accepted": false,
+                "candidate_correct": 54,
+                "candidate_loss": 21.193030588191597,
+                "closed_at": 3746,
+                "fixed_correct": 58,
+                "fixed_loss": 9.021939329587552,
+                "future_examples": 64,
+                "incumbent_correct": 58,
+                "incumbent_loss": 9.021939329587552,
+                "incumbent_program": null,
+                "program_fingerprint": 18135851119577945766,
+                "trained_through": 3531
+              },
+              {
+                "accepted": false,
+                "candidate_correct": 51,
+                "candidate_loss": 22.14946187096387,
+                "closed_at": 4206,
+                "fixed_correct": 55,
+                "fixed_loss": 16.420875812441576,
+                "future_examples": 64,
+                "incumbent_correct": 55,
+                "incumbent_loss": 16.420875812441576,
+                "incumbent_program": null,
+                "program_fingerprint": 15519581294499490098,
+                "trained_through": 3937
+              },
+              {
+                "accepted": false,
+                "candidate_correct": 58,
+                "candidate_loss": 13.27562554785098,
+                "closed_at": 4615,
+                "fixed_correct": 58,
+                "fixed_loss": 8.566424718228669,
+                "future_examples": 64,
+                "incumbent_correct": 58,
+                "incumbent_loss": 8.566424718228669,
+                "incumbent_program": null,
+                "program_fingerprint": 1567657665670250752,
+                "trained_through": 4406
+              },
+              {
+                "accepted": false,
+                "candidate_correct": 59,
+                "candidate_loss": 11.428265527246644,
+                "closed_at": 4994,
+                "fixed_correct": 58,
+                "fixed_loss": 9.861496391846508,
+                "future_examples": 64,
+                "incumbent_correct": 58,
+                "incumbent_loss": 9.861496391846508,
+                "incumbent_program": null,
+                "program_fingerprint": 15928429844701726640,
+                "trained_through": 4812
+              }
+            ]
+          },
+          "learned_predicates": 171,
+          "pending_programs": 1,
+          "proposals": 10,
+          "rollbacks": 0,
+          "work": 24583293
+        },
+        "enabled": true,
+        "evictions": 3805,
+        "factual_events": 5853,
+        "learned_events": 5853,
+        "learned_fingerprint": 5689163379359814218,
+        "learned_mutation_weights": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "model_bytes": 925644,
+        "namespaces": 4,
+        "pending_actions": 0,
+        "recursive_generations": 0,
+        "rejected_strategy_changes": 0,
+        "retained_cases": 2048,
+        "retained_reward_rates": 1024,
+        "strategy_audits": [],
+        "working_transitions": 2
+      },
+      "type": "organism_report"
+    }
+  },
+  "organism_rules_fixed": {
+    "resume_checkpoint_sha256": "b01a01409d85a74f4681db662505cb146e985b37522bc14fba382fd18559aa8d",
+    "final_checkpoint_sha256": "f9af11061213de02098393e9b7fade6b022761da025ecc26c7562bba05eae95d",
+    "continuing_checkpoint_sha256": "7d2d2340dc42d9c65f2342586370420e0d76040c809c402befd5c96ff0a3d0de",
+    "phases": [
+      {
+        "phase": "fashion",
+        "result": {
+          "first_answer_prequential": {
+            "samples": 512,
+            "correct": 339,
+            "accuracy": 0.662109375,
+            "balanced_accuracy": 0.6454718616922901,
+            "macro_f1": 0.6425584013768434,
+            "class_support": [
+              51,
+              54,
+              52,
+              48,
+              46,
+              37,
+              42,
+              76,
+              64,
+              42
+            ],
+            "confusion_matrix": [
+              [
+                33,
+                0,
+                5,
+                6,
+                2,
+                0,
+                4,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                47,
+                2,
+                1,
+                0,
+                0,
+                1,
+                1,
+                2,
+                0
+              ],
+              [
+                0,
+                0,
+                28,
+                1,
+                14,
+                0,
+                8,
+                0,
+                0,
+                1
+              ],
+              [
+                2,
+                3,
+                3,
+                36,
+                3,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                8,
+                4,
+                21,
+                1,
+                6,
+                1,
+                1,
+                2
+              ],
+              [
+                0,
+                1,
+                0,
+                2,
+                2,
+                23,
+                0,
+                6,
+                0,
+                3
+              ],
+              [
+                8,
+                0,
+                13,
+                3,
+                9,
+                0,
+                8,
+                0,
+                1,
+                0
+              ],
+              [
+                1,
+                0,
+                1,
+                1,
+                0,
+                7,
+                1,
+                57,
+                1,
+                7
+              ],
+              [
+                0,
+                2,
+                2,
+                1,
+                2,
+                1,
+                0,
+                4,
+                51,
+                1
+              ],
+              [
+                1,
+                0,
+                2,
+                1,
+                1,
+                0,
+                0,
+                2,
+                0,
+                35
+              ]
+            ]
+          },
+          "eventually_correct_with_feedback": 512,
+          "actual_actions": 1492,
+          "measured_channels": 512
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2030,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 1,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 7,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 7,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 290009,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 831,
+              "self_selected_actions": 2861
+            },
+            "archived_domains": [],
+            "computation_work": 363455596,
+            "contextual_namespaces": [
+              4
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 396985,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 3692,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 2861,
+            "native_weights": [
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "operations": [
+              0,
+              0,
+              1098,
+              3692
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 7,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 317096,
+              "episodes": 2030,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 7,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 3692
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": null,
+            "enabled": true,
+            "evictions": 1644,
+            "factual_events": 3692,
+            "learned_events": 3692,
+            "learned_fingerprint": 2577182213828721645,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 871035,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 2
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "har",
+        "result": {
+          "first_answer_prequential": {
+            "samples": 512,
+            "correct": 387,
+            "accuracy": 0.755859375,
+            "balanced_accuracy": 0.7428842906292569,
+            "macro_f1": 0.742174006210721,
+            "class_support": [
+              81,
+              67,
+              58,
+              98,
+              101,
+              107
+            ],
+            "confusion_matrix": [
+              [
+                62,
+                6,
+                7,
+                4,
+                0,
+                2
+              ],
+              [
+                7,
+                42,
+                10,
+                4,
+                2,
+                2
+              ],
+              [
+                15,
+                2,
+                39,
+                1,
+                0,
+                1
+              ],
+              [
+                1,
+                2,
+                3,
+                79,
+                10,
+                3
+              ],
+              [
+                3,
+                3,
+                3,
+                9,
+                80,
+                3
+              ],
+              [
+                5,
+                2,
+                2,
+                7,
+                6,
+                85
+              ]
+            ]
+          },
+          "eventually_correct_with_feedback": 512,
+          "actual_actions": 1673,
+          "measured_channels": 936
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2767,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 1,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 7,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 7,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 290009,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 832,
+              "self_selected_actions": 4533
+            },
+            "archived_domains": [],
+            "computation_work": 947777824,
+            "contextual_namespaces": [
+              4,
+              9
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 446201,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 5365,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 4533,
+            "native_weights": [
+              0.8150349259376526,
+              0.0,
+              0.8885784149169922,
+              0.8181837201118469,
+              0.9285045862197876
+            ],
+            "operations": [
+              0,
+              0,
+              1129,
+              5365
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 7,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 317096,
+              "episodes": 2767,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 7,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 5365
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": null,
+            "enabled": true,
+            "evictions": 3317,
+            "factual_events": 5365,
+            "learned_events": 5365,
+            "learned_fingerprint": 1769411126516631502,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 826369,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 4
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "MiniGrid-Empty-5x5-v0",
+        "result": {
+          "game": "MiniGrid-Empty-5x5-v0",
+          "motor_map": [
+            7,
+            0,
+            5,
+            4,
+            2,
+            15,
+            1
+          ],
+          "episodes": [
+            {
+              "seed": 850000,
+              "actions": 15,
+              "reward": 0.865,
+              "success": true
+            },
+            {
+              "seed": 850001,
+              "actions": 12,
+              "reward": 0.892,
+              "success": true
+            },
+            {
+              "seed": 850002,
+              "actions": 21,
+              "reward": 0.8109999999999999,
+              "success": true
+            },
+            {
+              "seed": 850003,
+              "actions": 13,
+              "reward": 0.883,
+              "success": true
+            }
+          ],
+          "successes": 4,
+          "actual_actions": 61
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2771,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 2,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 8,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 8,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:82": 1,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 342464,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 832,
+              "self_selected_actions": 4594
+            },
+            "archived_domains": [],
+            "computation_work": 964488972,
+            "contextual_namespaces": [
+              4,
+              9,
+              82
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 506880,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 5426,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 4594,
+            "native_weights": [
+              0.892935574054718,
+              0.0,
+              0.5777716040611267,
+              0.8340781927108765,
+              0.9276811480522156
+            ],
+            "operations": [
+              0,
+              0,
+              1129,
+              5426
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 8,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 381147,
+              "episodes": 2771,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 8,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 5426
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": null,
+            "enabled": true,
+            "evictions": 3378,
+            "factual_events": 5426,
+            "learned_events": 5426,
+            "learned_fingerprint": 10257998590048722017,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 827836,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 13
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "MiniGrid-DoorKey-5x5-v0",
+        "result": {
+          "game": "MiniGrid-DoorKey-5x5-v0",
+          "motor_map": [
+            12,
+            3,
+            2,
+            10,
+            9,
+            8,
+            4
+          ],
+          "episodes": [
+            {
+              "seed": 850000,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            },
+            {
+              "seed": 850001,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            },
+            {
+              "seed": 850002,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            },
+            {
+              "seed": 850003,
+              "actions": 64,
+              "reward": 0.0,
+              "success": false
+            }
+          ],
+          "successes": 0,
+          "actual_actions": 256
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 2775,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 2,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 8,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 8,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:82": 1,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 342464,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 832,
+              "self_selected_actions": 4850
+            },
+            "archived_domains": [],
+            "computation_work": 1052761400,
+            "contextual_namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 515680,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 5682,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 4850,
+            "native_weights": [
+              1.0,
+              0.0,
+              0.01966489665210247,
+              0.3904648721218109,
+              0.0
+            ],
+            "operations": [
+              0,
+              0,
+              1345,
+              5682
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 8,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 381147,
+              "episodes": 2775,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 8,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 5682
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": null,
+            "enabled": true,
+            "evictions": 3634,
+            "factual_events": 5682,
+            "learned_events": 5682,
+            "learned_fingerprint": 10493603577992961565,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 834180,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 64
+          },
+          "type": "organism_report"
+        }
+      },
+      {
+        "phase": "fashion_new_after_other_worlds",
+        "result": {
+          "first_answer_prequential": {
+            "samples": 160,
+            "correct": 105,
+            "accuracy": 0.65625,
+            "balanced_accuracy": 0.6507442067736185,
+            "macro_f1": 0.6516002164219482,
+            "class_support": [
+              15,
+              17,
+              16,
+              15,
+              16,
+              22,
+              12,
+              17,
+              15,
+              15
+            ],
+            "confusion_matrix": [
+              [
+                11,
+                0,
+                0,
+                1,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                14,
+                0,
+                1,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                11,
+                1,
+                2,
+                0,
+                1,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                2,
+                0,
+                9,
+                4,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                2,
+                1,
+                11,
+                0,
+                2,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                1,
+                14,
+                0,
+                5,
+                0,
+                1
+              ],
+              [
+                2,
+                0,
+                2,
+                0,
+                1,
+                0,
+                6,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                1,
+                0,
+                1,
+                0,
+                1,
+                0,
+                12,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                1,
+                2,
+                11,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                3,
+                1,
+                6
+              ]
+            ]
+          },
+          "eventually_correct_with_feedback": 160,
+          "actual_actions": 456,
+          "measured_channels": 160
+        },
+        "report": {
+          "development": {
+            "abandoned_episodes": 0,
+            "active_search_policy": 9182386847551643724,
+            "admitted_readout": null,
+            "behavioral_admissions": 0,
+            "behavioral_episodes": 0,
+            "behavioral_rejections": 0,
+            "behavioral_trials": 0,
+            "candidate_actions": 0,
+            "candidate_changed_readouts": 0,
+            "episodes": 3071,
+            "evaluator_attempts_per_namespace": {
+              "4": 3,
+              "82": 2,
+              "86": 0,
+              "9": 3
+            },
+            "evaluator_search_policy": 9182386847551643724,
+            "evaluator_searches": 8,
+            "last_recursive_error": null,
+            "namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "recursive_attempts": 8,
+            "recursive_attempts_per_pair": {
+              "4:82": 2,
+              "4:86": 2,
+              "4:9": 2,
+              "9:82": 1,
+              "9:86": 1
+            },
+            "recursive_enabled": true,
+            "recursive_errors": 0,
+            "recursive_generations": 0,
+            "recursive_work": 342464,
+            "retained_factual_examples": 512
+          },
+          "organism": {
+            "agency_credit": {
+              "externally_forced_actions": 994,
+              "self_selected_actions": 5144
+            },
+            "archived_domains": [],
+            "computation_work": 1098404765,
+            "contextual_namespaces": [
+              4,
+              9,
+              82,
+              86
+            ],
+            "controller_frozen": false,
+            "domain": "aeterna-organism-lifetime",
+            "learner": {
+              "active_program": 13491590171125486598,
+              "construction_work": 524288,
+              "constructor_generation": 0,
+              "constructors": 0,
+              "events": 6138,
+              "last_error": null,
+              "library_nodes": 0,
+              "poisoned": false,
+              "program_nodes": 32,
+              "promotions": 0,
+              "recursive_improvements": 0,
+              "recursive_trials": 0,
+              "shadow_pending": false,
+              "state_cells": 0
+            },
+            "native_meta_observations": 5144,
+            "native_weights": [
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "operations": [
+              0,
+              0,
+              1432,
+              6138
+            ],
+            "self_revision": {
+              "active_program": null,
+              "attempts": 8,
+              "behavior_attempted": false,
+              "behavior_guard_enabled": true,
+              "computation_work": 381147,
+              "episodes": 3071,
+              "generations": 0,
+              "readout_ablated": false,
+              "rejected": 8,
+              "rollbacks": 0,
+              "shadow": false,
+              "steps": 128,
+              "unfinished_steps": 0
+            },
+            "total_external_cost": 6138
+          },
+          "reward_memory": {
+            "accepted_strategy_changes": 0,
+            "acquired_kernel_exponent": 1.0,
+            "acquired_neighbors": 3,
+            "acquired_rules": null,
+            "enabled": true,
+            "evictions": 4090,
+            "factual_events": 6138,
+            "learned_events": 6138,
+            "learned_fingerprint": 9346981523290275173,
+            "learned_mutation_weights": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "model_bytes": 844932,
+            "namespaces": 4,
+            "pending_actions": 0,
+            "recursive_generations": 0,
+            "rejected_strategy_changes": 0,
+            "retained_cases": 2048,
+            "retained_reward_rates": 1024,
+            "strategy_audits": [],
+            "working_transitions": 1
+          },
+          "type": "organism_report"
+        }
+      }
+    ],
+    "final_report": {
+      "development": {
+        "abandoned_episodes": 0,
+        "active_search_policy": 9182386847551643724,
+        "admitted_readout": null,
+        "behavioral_admissions": 0,
+        "behavioral_episodes": 0,
+        "behavioral_rejections": 0,
+        "behavioral_trials": 0,
+        "candidate_actions": 0,
+        "candidate_changed_readouts": 0,
+        "episodes": 3071,
+        "evaluator_attempts_per_namespace": {
+          "4": 3,
+          "82": 2,
+          "86": 0,
+          "9": 3
+        },
+        "evaluator_search_policy": 9182386847551643724,
+        "evaluator_searches": 8,
+        "last_recursive_error": null,
+        "namespaces": [
+          4,
+          9,
+          82,
+          86
+        ],
+        "recursive_attempts": 8,
+        "recursive_attempts_per_pair": {
+          "4:82": 2,
+          "4:86": 2,
+          "4:9": 2,
+          "9:82": 1,
+          "9:86": 1
+        },
+        "recursive_enabled": true,
+        "recursive_errors": 0,
+        "recursive_generations": 0,
+        "recursive_work": 342464,
+        "retained_factual_examples": 512
+      },
+      "organism": {
+        "agency_credit": {
+          "externally_forced_actions": 994,
+          "self_selected_actions": 5144
+        },
+        "archived_domains": [],
+        "computation_work": 1098404765,
+        "contextual_namespaces": [
+          4,
+          9,
+          82,
+          86
+        ],
+        "controller_frozen": true,
+        "domain": "aeterna-organism-lifetime",
+        "learner": {
+          "active_program": 13491590171125486598,
+          "construction_work": 524288,
+          "constructor_generation": 0,
+          "constructors": 0,
+          "events": 6138,
+          "last_error": null,
+          "library_nodes": 0,
+          "poisoned": false,
+          "program_nodes": 32,
+          "promotions": 0,
+          "recursive_improvements": 0,
+          "recursive_trials": 0,
+          "shadow_pending": false,
+          "state_cells": 0
+        },
+        "native_meta_observations": 5144,
+        "native_weights": [
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "operations": [
+          0,
+          0,
+          1432,
+          6138
+        ],
+        "self_revision": {
+          "active_program": null,
+          "attempts": 8,
+          "behavior_attempted": false,
+          "behavior_guard_enabled": true,
+          "computation_work": 381147,
+          "episodes": 3071,
+          "generations": 0,
+          "readout_ablated": false,
+          "rejected": 8,
+          "rollbacks": 0,
+          "shadow": false,
+          "steps": 128,
+          "unfinished_steps": 0
+        },
+        "total_external_cost": 6138
+      },
+      "reward_memory": {
+        "accepted_strategy_changes": 0,
+        "acquired_kernel_exponent": 1.0,
+        "acquired_neighbors": 3,
+        "acquired_rules": null,
+        "enabled": true,
+        "evictions": 4090,
+        "factual_events": 6138,
+        "learned_events": 6138,
+        "learned_fingerprint": 9346981523290275173,
+        "learned_mutation_weights": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "model_bytes": 844932,
+        "namespaces": 4,
+        "pending_actions": 0,
+        "recursive_generations": 0,
+        "rejected_strategy_changes": 0,
+        "retained_cases": 2048,
+        "retained_reward_rates": 1024,
+        "strategy_audits": [],
+        "working_transitions": 1
+      },
+      "type": "organism_report"
+    }
+  }
+}

@@ -38,7 +38,8 @@ class Native:
         try:
             if checkpoint is not None:
                 self.command({'op':'load','checkpoint':checkpoint})
-                self.trace.write({'kind':'loaded','checkpoint_sha256':hashlib.sha256(checkpoint.encode()).hexdigest(),'variant':variant})
+                if variant.startswith('organism'):
+                    self.trace.write({'kind':'loaded','checkpoint_sha256':hashlib.sha256(checkpoint.encode()).hexdigest(),'variant':variant})
             else:
                 self.command({'op':'organism_init' if variant.startswith('organism') else 'external_init',
                     'frame':frame,'reward_memory':variant!='legacy','recursive':variant!='organism_fixed',

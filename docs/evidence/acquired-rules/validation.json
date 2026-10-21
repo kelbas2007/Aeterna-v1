@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "command": "CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 python scripts/check_project.py --release --offline",
+  "successful_rust_test_executions": 490,
+  "rust_test_invocations": 52,
+  "external_format_tests": 11,
+  "scope": "source before the later induction-budget monitoring fix; its focused regression and current-binary complete-life replay recorded separately",
+  "fresh_intelligence_claim": false,
+  "post_study_monitoring_fix": {
+    "focused_rust_tests_passed": 2,
+    "current_complete_confirmation_replay": "validation/current-replay-confirmation.json",
+    "current_learned_state_load_and_roundtrip": "validation/current-inspect.json",
+    "historical_checkpoint_compatibility": "validation/legacy-inspect.json"
+  }
+}

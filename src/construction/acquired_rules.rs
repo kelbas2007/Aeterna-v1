@@ -339,7 +339,7 @@ impl AcquiredRules {
         candidate: Option<[f64; 16]>,
         rows: &[Case],
     ) -> u64 {
-        if row.reward <= 0.0 || row.pre[1] == 0 || self.work >= RULE_LIFETIME_WORK {
+        if row.reward <= 0.0 || row.pre[1] == 0 {
             return 0;
         }
         if !self.domains.contains_key(&row.pre[0]) && self.domains.len() >= 8 {
@@ -351,7 +351,7 @@ impl AcquiredRules {
             return 0;
         }
         domain.successes += 1;
-        let mut meter = Meter::new(RULE_WORK.min(RULE_LIFETIME_WORK - self.work));
+        let mut meter = Meter::new(RULE_WORK.min(RULE_LIFETIME_WORK.saturating_sub(self.work)));
         if domain.active.is_some() {
             domain.monitoring += 1;
             domain.fixed_correct += usize::from(rule_best(&fixed) == row.action);
@@ -392,6 +392,7 @@ impl AcquiredRules {
             }
         }
         if domain.shadow.is_none()
+            && meter.remaining() > 0
             && domain.successes >= domain.next_proposal
             && domain.audits.len() < 8
         {
@@ -611,6 +612,9 @@ mod acquired_rule_tests {
         assert_eq!(book.report().admitted_programs, 1);
         assert_eq!(book.report().active_domains, [4]);
         assert!(book.validate(193));
+        // Exhausting the induction budget must not disable monitoring of an
+        // already admitted program against subsequent factual outcomes.
+        book.work = RULE_LIFETIME_WORK;
         for id in 194..258 {
             let row = example(id);
             book.observe(&row, distribution(row.action), distribution(0), None, &rows);

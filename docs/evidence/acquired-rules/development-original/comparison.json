@@ -1,0 +1,886 @@
+{
+  "purpose": "whole-lifetime behavioral comparison, distinct from internal predictive rule admission",
+  "advance_criterion_passed": false,
+  "criterion_checks": {
+    "at_least_one_program_admitted": true,
+    "changed_first_answers": true,
+    "pooled_sensor_accuracy_gain": false,
+    "no_excess_per_phase_drop": false,
+    "no_navigation_regression": true,
+    "actual_action_budget": true
+  },
+  "sensor_tasks": 1184,
+  "organism_correct": 874,
+  "fixed_correct": 885,
+  "accuracy_gain": -0.009290540540540541,
+  "changed_first_answer_actions": 256,
+  "paired_wins": 101,
+  "paired_losses": 112,
+  "navigation_successes": {
+    "organism": 4,
+    "fixed": 4
+  },
+  "actual_actions": {
+    "organism": 3611,
+    "fixed": 3759
+  },
+  "final_factual_events": {
+    "organism": 5811,
+    "fixed": 5959
+  },
+  "final_computation_work": {
+    "organism": 1158908455,
+    "fixed": 1058928909
+  },
+  "acquired_programs": {
+    "active_domains": [
+      4
+    ],
+    "admitted_programs": 1,
+    "audits": {
+      "4": [
+        {
+          "accepted": true,
+          "candidate_correct": 62,
+          "candidate_loss": 11.483451700049828,
+          "closed_at": 2399,
+          "fixed_correct": 54,
+          "fixed_loss": 14.227415625998987,
+          "future_examples": 64,
+          "incumbent_correct": 54,
+          "incumbent_loss": 14.227415625998987,
+          "incumbent_program": null,
+          "program_fingerprint": 3627904648784146859,
+          "trained_through": 2204
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 60,
+          "candidate_loss": 11.140365365253018,
+          "closed_at": 2734,
+          "fixed_correct": 47,
+          "fixed_loss": 17.350671122341893,
+          "future_examples": 64,
+          "incumbent_correct": 63,
+          "incumbent_loss": 9.750674613078647,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 5889211468527278043,
+          "trained_through": 2562
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 55,
+          "candidate_loss": 16.206999123185355,
+          "closed_at": 3067,
+          "fixed_correct": 46,
+          "fixed_loss": 20.366386008596162,
+          "future_examples": 64,
+          "incumbent_correct": 62,
+          "incumbent_loss": 12.54988656519016,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 15986863082697017964,
+          "trained_through": 2894
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 61,
+          "candidate_loss": 8.95074578590288,
+          "closed_at": 3386,
+          "fixed_correct": 56,
+          "fixed_loss": 11.644191115099181,
+          "future_examples": 64,
+          "incumbent_correct": 64,
+          "incumbent_loss": 9.257368896063305,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 6104095814377001509,
+          "trained_through": 3225
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 58,
+          "candidate_loss": 10.679019424817634,
+          "closed_at": 5580,
+          "fixed_correct": 56,
+          "fixed_loss": 11.215690554440972,
+          "future_examples": 64,
+          "incumbent_correct": 64,
+          "incumbent_loss": 11.29297981550717,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 18267290867608448258,
+          "trained_through": 5417
+        }
+      ],
+      "82": [],
+      "9": [
+        {
+          "accepted": false,
+          "candidate_correct": 58,
+          "candidate_loss": 18.5191783077046,
+          "closed_at": 3746,
+          "fixed_correct": 59,
+          "fixed_loss": 7.616910056823175,
+          "future_examples": 64,
+          "incumbent_correct": 59,
+          "incumbent_loss": 7.616910056823175,
+          "incumbent_program": null,
+          "program_fingerprint": 3361331078488827645,
+          "trained_through": 3541
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 58,
+          "candidate_loss": 19.283497190301528,
+          "closed_at": 4167,
+          "fixed_correct": 59,
+          "fixed_loss": 8.2733969364259,
+          "future_examples": 64,
+          "incumbent_correct": 59,
+          "incumbent_loss": 8.2733969364259,
+          "incumbent_program": null,
+          "program_fingerprint": 9850158898920201301,
+          "trained_through": 3937
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 59,
+          "candidate_loss": 11.600194294117935,
+          "closed_at": 4540,
+          "fixed_correct": 60,
+          "fixed_loss": 6.767209618267017,
+          "future_examples": 64,
+          "incumbent_correct": 60,
+          "incumbent_loss": 6.767209618267017,
+          "incumbent_program": null,
+          "program_fingerprint": 17039916013252198465,
+          "trained_through": 4344
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 60,
+          "candidate_loss": 10.603040564818578,
+          "closed_at": 4925,
+          "fixed_correct": 60,
+          "fixed_loss": 6.4222352896844335,
+          "future_examples": 64,
+          "incumbent_correct": 60,
+          "incumbent_loss": 6.4222352896844335,
+          "incumbent_program": null,
+          "program_fingerprint": 16891514791860098090,
+          "trained_through": 4756
+        }
+      ]
+    },
+    "learned_predicates": 171,
+    "pending_programs": 1,
+    "proposals": 10,
+    "rollbacks": 0,
+    "work": 25086662
+  },
+  "sensor_phases": {
+    "fashion": {
+      "organism": {
+        "samples": 512,
+        "correct": 350,
+        "accuracy": 0.68359375,
+        "balanced_accuracy": 0.6727824080315162,
+        "macro_f1": 0.660472099642581,
+        "class_support": [
+          51,
+          54,
+          52,
+          48,
+          46,
+          37,
+          42,
+          76,
+          64,
+          42
+        ],
+        "confusion_matrix": [
+          [
+            35,
+            0,
+            0,
+            9,
+            0,
+            0,
+            6,
+            0,
+            0,
+            1
+          ],
+          [
+            2,
+            46,
+            1,
+            2,
+            1,
+            0,
+            0,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            28,
+            3,
+            12,
+            0,
+            6,
+            0,
+            1,
+            1
+          ],
+          [
+            2,
+            4,
+            2,
+            37,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            6,
+            6,
+            30,
+            0,
+            3,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            3,
+            25,
+            0,
+            4,
+            0,
+            4
+          ],
+          [
+            7,
+            1,
+            15,
+            5,
+            8,
+            0,
+            6,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            9,
+            0,
+            55,
+            0,
+            10
+          ],
+          [
+            1,
+            1,
+            1,
+            2,
+            4,
+            0,
+            1,
+            4,
+            50,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            3,
+            0,
+            38
+          ]
+        ]
+      },
+      "fixed": {
+        "samples": 512,
+        "correct": 349,
+        "accuracy": 0.681640625,
+        "balanced_accuracy": 0.6701019680799092,
+        "macro_f1": 0.6650365985897323,
+        "class_support": [
+          51,
+          54,
+          52,
+          48,
+          46,
+          37,
+          42,
+          76,
+          64,
+          42
+        ],
+        "confusion_matrix": [
+          [
+            35,
+            0,
+            3,
+            6,
+            1,
+            0,
+            4,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            49,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            2
+          ],
+          [
+            1,
+            1,
+            25,
+            2,
+            11,
+            0,
+            10,
+            0,
+            0,
+            2
+          ],
+          [
+            2,
+            5,
+            3,
+            35,
+            2,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            11,
+            6,
+            23,
+            0,
+            4,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            1,
+            25,
+            1,
+            7,
+            0,
+            2
+          ],
+          [
+            7,
+            0,
+            14,
+            3,
+            7,
+            0,
+            10,
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            2,
+            1,
+            1,
+            7,
+            0,
+            57,
+            0,
+            6
+          ],
+          [
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            5,
+            50,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            40
+          ]
+        ]
+      },
+      "accuracy_gain": 0.001953125
+    },
+    "har": {
+      "organism": {
+        "samples": 512,
+        "correct": 407,
+        "accuracy": 0.794921875,
+        "balanced_accuracy": 0.7835577425404376,
+        "macro_f1": 0.7828216821982852,
+        "class_support": [
+          81,
+          67,
+          58,
+          98,
+          101,
+          107
+        ],
+        "confusion_matrix": [
+          [
+            61,
+            3,
+            11,
+            2,
+            2,
+            2
+          ],
+          [
+            3,
+            50,
+            10,
+            1,
+            3,
+            0
+          ],
+          [
+            12,
+            3,
+            41,
+            2,
+            0,
+            0
+          ],
+          [
+            3,
+            2,
+            3,
+            78,
+            9,
+            3
+          ],
+          [
+            1,
+            2,
+            3,
+            13,
+            81,
+            1
+          ],
+          [
+            0,
+            0,
+            4,
+            6,
+            1,
+            96
+          ]
+        ]
+      },
+      "fixed": {
+        "samples": 512,
+        "correct": 425,
+        "accuracy": 0.830078125,
+        "balanced_accuracy": 0.8195159466611374,
+        "macro_f1": 0.8205049903923709,
+        "class_support": [
+          81,
+          67,
+          58,
+          98,
+          101,
+          107
+        ],
+        "confusion_matrix": [
+          [
+            70,
+            2,
+            5,
+            2,
+            1,
+            1
+          ],
+          [
+            3,
+            53,
+            9,
+            0,
+            1,
+            1
+          ],
+          [
+            12,
+            2,
+            41,
+            2,
+            0,
+            1
+          ],
+          [
+            0,
+            2,
+            0,
+            85,
+            11,
+            0
+          ],
+          [
+            3,
+            2,
+            2,
+            15,
+            77,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            5,
+            3,
+            99
+          ]
+        ]
+      },
+      "accuracy_gain": -0.03515625
+    },
+    "fashion_new_after_other_worlds": {
+      "organism": {
+        "samples": 160,
+        "correct": 117,
+        "accuracy": 0.73125,
+        "balanced_accuracy": 0.722860962566845,
+        "macro_f1": 0.7221029397870211,
+        "class_support": [
+          15,
+          17,
+          16,
+          15,
+          16,
+          22,
+          12,
+          17,
+          15,
+          15
+        ],
+        "confusion_matrix": [
+          [
+            10,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            14,
+            0,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            11,
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            0,
+            12,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            4,
+            2,
+            9,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0,
+            17,
+            1,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            3,
+            1,
+            1,
+            0,
+            6,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            13,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            3,
+            2,
+            10
+          ]
+        ]
+      },
+      "fixed": {
+        "samples": 160,
+        "correct": 111,
+        "accuracy": 0.69375,
+        "balanced_accuracy": 0.6886229946524064,
+        "macro_f1": 0.6900000540118302,
+        "class_support": [
+          15,
+          17,
+          16,
+          15,
+          16,
+          22,
+          12,
+          17,
+          15,
+          15
+        ],
+        "confusion_matrix": [
+          [
+            11,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            12,
+            0,
+            2,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            11,
+            0,
+            4,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0,
+            8,
+            3,
+            0,
+            0,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            0,
+            2,
+            1,
+            11,
+            0,
+            2,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            1,
+            0,
+            15,
+            0,
+            4,
+            0,
+            1
+          ],
+          [
+            3,
+            0,
+            2,
+            0,
+            0,
+            0,
+            6,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            14,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            13,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            0,
+            10
+          ]
+        ]
+      },
+      "accuracy_gain": 0.03749999999999998
+    }
+  },
+  "summary_sha256": "6617f11f0dff1d7ef77ba177188b08a9572a37dbeb333ee3cc7f13975a01c80a",
+  "interpretation": "prequential new training rows with ongoing feedback, not an IID blind test, not an official held-out benchmark or evidence of general intelligence; internal 64-outcome rule gates are predictive, not behavioral qualification"
+}
