@@ -52,6 +52,7 @@ pub(crate) fn main()->Result<()>{
             println!("{}",serde_json::to_string_pretty(&json!({"type":"checkpoint_inspection",
                 "organism":rt.unified_report(),"school":rt.school_report(),"recursive_search":recursive,
                 "development":rt.organism_development_report(),
+                "reward_memory":rt.construction_learner().and_then(|l|l.external_reward_report()),
                 "learned_requirements":rt.requirements_report(),
                 "read_only":true,"external_actions_executed":0}))?);
             return Ok(());
@@ -87,9 +88,25 @@ pub(crate) fn main()->Result<()>{
                         history_depth:3,model_entries:256,model_bytes:512*1024,outcomes_per_entry:4,planning_states:64})?;
                     rt.enable_constructing_external_reward_memory(if whole {true}else{request.get("reward_memory").map_or(Some(true),Value::as_bool).ok_or("invalid reward_memory")?},
                         if whole {false}else{request.get("adaptive").map_or(Some(true),Value::as_bool).ok_or("invalid adaptive")?})?;
-                    if whole {rt.enable_constructing_organism_development(request.get("recursive").map_or(Some(true),Value::as_bool).ok_or("invalid recursive")?)?;}
+                    if whole {
+                        rt.enable_constructing_organism_development(request.get("recursive").map_or(Some(true),Value::as_bool).ok_or("invalid recursive")?)?;
+                        if request.get("contextual_u1").map_or(Some(true),Value::as_bool).ok_or("invalid contextual_u1")? {
+                            rt.enable_constructing_contextual_control()?;
+                        }
+                        if request.get("acquired_rules").map_or(Some(true),Value::as_bool).ok_or("invalid acquired_rules")? {
+                            rt.enable_constructing_acquired_sensory_rules()?;
+                        }
+                    }
                     rt.observe_external_sensor_restart(&frame)?;runtime=Some(rt);
                     Ok(json!({"type":"initialized","action_authority":"protected_u1","learner":"one_joint_checkpoint"}))
+                },
+                "organism_enable_rules"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_acquired_sensory_rules()?;
+                    Ok(json!({"type":"acquired_rules_enabled","learner":"same_living_checkpoint"}))
+                },
+                "organism_enable_contextual_control"=>{
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_contextual_control()?;
+                    Ok(json!({"type":"contextual_control_enabled","action_authority":"same_u1"}))
                 },
                 "external_reset"=>{
                     let frame=serde_json::from_value(request["frame"].clone())?;

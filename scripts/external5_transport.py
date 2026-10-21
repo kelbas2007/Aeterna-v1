@@ -36,10 +36,15 @@ class Native:
             except Exception as error:self.mail.put(error)
         threading.Thread(target=reader,daemon=True).start()
         try:
-            if checkpoint is not None:self.command({'op':'load','checkpoint':checkpoint})
+            if checkpoint is not None:
+                self.command({'op':'load','checkpoint':checkpoint})
+                if variant.startswith('organism'):
+                    self.trace.write({'kind':'loaded','checkpoint_sha256':hashlib.sha256(checkpoint.encode()).hexdigest(),'variant':variant})
             else:
-                self.command({'op':'organism_init' if variant in ('organism','organism_fixed') else 'external_init',
+                self.command({'op':'organism_init' if variant.startswith('organism') else 'external_init',
                     'frame':frame,'reward_memory':variant!='legacy','recursive':variant!='organism_fixed',
+                    'acquired_rules':variant not in ('organism_rules_fixed','organism_previous'),
+                    'contextual_u1':variant!='organism_previous',
                     'adaptive':variant=='full','planning_depth':1 if variant=='one_step' else 32})
                 self.frame=frame;self.trace.write({'kind':'initial','frame_ref':self.trace.frame(frame),'variant':variant})
         except BaseException:

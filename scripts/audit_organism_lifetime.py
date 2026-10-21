@@ -6,7 +6,7 @@ Does not treat integration success as evidence of behavioral superiority.
 """
 import argparse,gzip,hashlib,importlib.metadata,json
 from pathlib import Path
-from external5_sensors import load_fashion,load_har,blank,acquire
+from external5_sensors import load_fashion,load_har,blank,acquire,metrics
 from run_external_continual5 import motors,scene,verify_data_files
 
 def audit(root,data):
@@ -22,12 +22,25 @@ def audit(root,data):
     for kind,loader in [('fashion',load_fashion),('har',load_har)]:
         start,end=provenance['training_ranges'][kind]
         datasets[kind]=loader(data,'train',start,end-start)
+    sources={}
+    for kind,ranges in provenance.get('sensory_sources',{}).items():
+        loader=load_fashion if kind=='fashion' else load_har
+        for offset,count in ranges.items():sources[(kind,int(offset))]=loader(data,'train',int(offset),count)
     import gymnasium as gym
     import minigrid  # noqa: F401 -- registration
     summaries=json.loads((root/'summary.json').read_text());proof={}
     for variant,summary in summaries.items():
-        folder=root/variant;global_event=0;frames={};context=None;pending=None;env=None
-        initializations=0;resumes=0;posts=0;actual_cost=0;namespaces=set()
+        start=provenance.get('starting_checkpoints',{}).get(variant,{})
+        base_events=start.get('events',provenance.get('starting_events',0));base_cost=start.get('cost',provenance.get('starting_cost',0))
+        start_sha=start.get('sha256',provenance.get('starting_checkpoint_sha256'))
+        if start_sha:
+            raw=gzip.decompress((root/start.get('file','starting-organism.json.gz')).read_bytes())
+            assert hashlib.sha256(raw).hexdigest()==start_sha
+            starting=json.loads(raw)['cognition']
+            assert starting['total_external_cost']==base_cost
+            assert starting['current']['learner']['external_memory']['events']==base_events
+        folder=root/variant;global_event=base_events;frames={};context=None;pending=None;env=None
+        initializations=0;loads=0;resumes=0;posts=0;actual_cost=base_cost;namespaces=set();answers_observed=[]
         maps={p['result']['game']:p['result']['motor_map'] for p in summary['phases'] if 'game' in p['result']}
         try:
             for part,name in enumerate(('life-before-resume.jsonl.gz','life-after-resume.jsonl.gz')):
@@ -49,6 +62,10 @@ def audit(root,data):
                             frames[row['id']]=row['frame']
                         elif kind=='initial':
                             initializations+=1;assert part==0 and row['variant']==variant
+                        elif kind=='loaded':
+                            expected=start_sha if part==0 else summary['resume_checkpoint_sha256']
+                            assert expected and row['checkpoint_sha256']==expected and row['variant']==variant
+                            loads+=1
                         elif kind=='restart':
                             assert pending is None
                             metadata=row['metadata'];observed=frames[row['frame_ref']]
@@ -62,7 +79,8 @@ def audit(root,data):
                                 modality=metadata['phase'];index=metadata['index']
                                 if not metadata.get('corrective_retry'):
                                     context={'modality':modality,'index':index,'frame':blank(modality),
-                                        'measured':set(),'failed':set(),'left':11 if modality=='fashion' else 15}
+                                        'measured':set(),'failed':set(),'left':11 if modality=='fashion' else 15,
+                                        'source_offset':metadata.get('source_offset'),'answered':False}
                                 assert context['modality']==modality and context['index']==index
                                 assert observed==context['frame']
                         elif kind=='intent':
@@ -86,13 +104,17 @@ def audit(root,data):
                                 obs,reward,_,_,_=env.step(maps[context['game']].index(action))
                                 expected=scene(obs,context['namespace'])
                             else:
-                                modality=context['modality'];index=context['index'];sample,target,_=datasets[modality]
+                                modality=context['modality'];index=context['index']
+                                sample,target,_=(datasets[modality] if context['source_offset'] is None else sources[(modality,context['source_offset'])])
                                 query,answers=motors(modality)
                                 if action in query:
                                     axis=query.index(action);context['measured'].add(axis)
                                     expected=acquire(context['frame'],axis,sample[index]);reward=0.0
                                 else:
                                     expected=context['frame'];reward=float(answers.index(action)==int(target[index]))
+                                    if not context['answered']:
+                                        answers_observed.append((modality,index,int(target[index]),answers.index(action)))
+                                        context['answered']=True
                                     if not reward:context['failed'].add(action)
                             assert frames[row['frame_ref']]==expected,'invented or mismatched sensor POST'
                             assert abs(row['reward']-float(reward))<1e-12,'incorrect actual reward'
@@ -121,9 +143,23 @@ def audit(root,data):
             assert stored['cognition']['total_external_cost']==actual_cost
             assert summary['final_report']['organism']['total_external_cost']==actual_cost
             assert sum(p['result']['actual_actions'] for p in summary['phases'])==posts
-            assert initializations==1 and resumes==1 and len(namespaces)==4
+            cursor=0
+            for phase in summary['phases']:
+                result=phase['result']
+                if 'first_answer_prequential' not in result:continue
+                count=result['first_answer_prequential']['samples'];rows=answers_observed[cursor:cursor+count];cursor+=count
+                assert len(rows)==count and [r[1] for r in rows]==list(range(count))
+                modality=rows[0][0];assert all(r[0]==modality for r in rows)
+                assert metrics([r[2] for r in rows],[r[3] for r in rows],10 if modality=='fashion' else 6)==result['first_answer_prequential']
+            assert cursor==len(answers_observed)
+            assert initializations==(0 if start_sha else 1) and resumes==1 and len(namespaces)==4
+            if start_sha:assert loads==2
+            if provenance.get('contextual_u1_requested') and variant!='organism_previous':
+                assert summary['final_report']['organism']['contextual_namespaces']==[4,9,82,86]
             proof[variant]={'status':'PASS','initializations':initializations,'exact_checkpoint_resumes':resumes,
                 'factual_posts':posts,'actual_cost':actual_cost,'sensor_interfaces':len(namespaces),
+                'starting_factual_events':base_events,'initial_checkpoint_loads':int(bool(start_sha)),
+                'reported_first_answer_metrics_recomputed':True,
                 'corpus_values_and_rewards_replayed':True,'minigrid_transitions_replayed':True}
         finally:
             if env is not None:env.close()

@@ -13,6 +13,8 @@ const GAMMA: f64 = 0.95;
 const FAILURE_WIDTH: usize = 2048;
 const FAILURE_DEPTH: usize = 4;
 
+include!("acquired_rules.rs");
+
 fn zero(value: &f64) -> bool {
     *value == 0.0
 }
@@ -293,6 +295,8 @@ pub(crate) struct ExternalMemory {
     evictions: u64,
     #[serde(default)]
     credits: Vec<([f32; 5], f64)>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    acquired_rules: Option<AcquiredRules>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -315,9 +319,17 @@ pub struct ExternalRewardReport {
     pub acquired_neighbors: usize,
     pub acquired_kernel_exponent: f64,
     pub strategy_audits: Vec<StrategyAudit>,
+    pub acquired_rules: Option<AcquiredRulesReport>,
 }
 
 impl ExternalMemory {
+    pub(crate) fn enable_acquired_rules(&mut self) -> Result<()> {
+        if !self.enabled || self.adaptive || self.acquired_rules.is_some() || !self.pending.is_empty() {
+            return Err(Error::Busy);
+        }
+        self.acquired_rules = Some(AcquiredRules::default());
+        Ok(())
+    }
     pub(crate) fn use_shared_development(&mut self) {
         // The existing RSP2/trajectory mechanism owns development in this mode.
         // Keep EXTERNAL5 parameter adaptation only for its historical protocol.
@@ -340,6 +352,7 @@ impl ExternalMemory {
             bytes: 0,
             evictions: 0,
             credits: Vec::new(),
+            acquired_rules: None,
         }
     }
     pub fn report(&self) -> ExternalRewardReport {
@@ -351,6 +364,8 @@ impl ExternalMemory {
             self.enabled,
             self.adaptive,
         ));
+        let previous_fingerprint = self.acquired_rules.as_ref().map_or(previous_fingerprint,
+            |rules| fingerprint(&(previous_fingerprint, rules)));
         ExternalRewardReport {
             enabled: self.enabled,
             factual_events: self.events,
@@ -363,6 +378,7 @@ impl ExternalMemory {
                 }),
             retained_cases: self.rows.len(),
             model_bytes: self.bytes
+                + self.acquired_rules.as_ref().map_or(0, |r| serde_json::to_vec(r).map_or(0, |b| b.len()))
                 + serde_json::to_vec(&self.metrics).map_or(0, |b| b.len())
                 + serde_json::to_vec(&self.reward_rates).map_or(0, |b| b.len())
                 + self
@@ -381,6 +397,7 @@ impl ExternalMemory {
             acquired_neighbors: self.strategy.active.neighbors,
             acquired_kernel_exponent: self.strategy.active.exponent,
             strategy_audits: self.strategy.audits.clone(),
+            acquired_rules: self.acquired_rules.as_ref().map(AcquiredRules::report),
         }
     }
     pub fn take_credits(&mut self) -> Vec<([f32; 5], f64)> {
@@ -469,6 +486,13 @@ impl ExternalMemory {
         omit: Option<u64>,
         meter: &mut Meter,
     ) -> (Vec<f64>, Vec<u64>) {
+        let program = self.acquired_rules.as_ref().and_then(|r| r.domains.get(&state[0])).and_then(|d| d.active.as_ref());
+        self.immediate_with_program(state, actions, policy, omit, program, meter)
+    }
+    fn immediate_with_program(
+        &self, state: &[i64], actions: usize, policy: &Strategy, omit: Option<u64>,
+        program: Option<&RewardProgram>, meter: &mut Meter,
+    ) -> (Vec<f64>, Vec<u64>) {
         let nearest = self.nearest_positive(state, policy, omit, meter);
         let mut values = vec![0.0; actions];
         let mut support = vec![0; actions];
@@ -486,6 +510,14 @@ impl ExternalMemory {
         if total > 0.0 {
             for v in &mut values {
                 *v = (*v / total * coverage).clamp(0.0, 1.0);
+            }
+        }
+        // Acquired conditional programs change this SAME reward estimator.
+        // Exact factual contradiction/evicted-failure guards below still apply.
+        if let Some(prediction) = program.and_then(|p| p.infer(state, meter)) {
+            let base = rule_normalize(&values);
+            for a in 0..actions {
+                values[a] = (0.5 * base[a] + 0.5 * prediction[a]) * coverage;
             }
         }
         // An unmeasured or aliased state can have contradictory outcomes.
@@ -644,6 +676,22 @@ impl ExternalMemory {
             return 0;
         }
         let mut work = 64;
+        if self.acquired_rules.is_some() && reward > 0.0 && pre[1] != 0 {
+            // Score a future outcome before inserting or fitting it. The
+            // authored 3NN is the fixed comparison; the active rule program
+            // competes with the next acquired revision inside observe().
+            let mut meter = Meter::new(300_000);
+            let rules = self.acquired_rules.as_ref().unwrap();
+            let domain = rules.domains.get(&pre[0]);
+            let (baseline, _) = self.immediate_with_program(&pre, 16, &self.strategy.active, None, None, &mut meter);
+            let old = domain.and_then(|d| d.active.as_ref()).map_or_else(|| baseline.clone(), |p|
+                self.immediate_with_program(&pre, 16, &self.strategy.active, None, Some(p), &mut meter).0);
+            let candidate = domain.and_then(|d| d.shadow.as_ref()).map(|t|
+                self.immediate_with_program(&pre, 16, &self.strategy.active, None, Some(&t.program), &mut meter).0);
+            let row = Case { id: self.events, pre: pre.clone(), action, post: post.clone(), reward, cost, value: reward, distance: 1 };
+            work += meter.spent + self.acquired_rules.as_mut().unwrap().observe(&row,
+                rule_normalize(&baseline), rule_normalize(&old), candidate.as_ref().map(|p| rule_normalize(p)), &self.rows);
+        }
         if self.pending.len() >= EPISODE {
             self.finish();
         }
@@ -832,6 +880,7 @@ impl ExternalMemory {
             .map(|r| r.id)
             .collect::<std::collections::BTreeSet<_>>();
         if self.events != events
+            || self.acquired_rules.as_ref().is_some_and(|r| !self.enabled || self.adaptive || !r.validate(events))
             || self.learned > events
             || self.rows.len() > CAPACITY
             || self.bytes > MODEL_BYTES

@@ -51,6 +51,7 @@ pub(super) struct PhaseMetaControlState {
     /// Opt-in, non-diluting score for evidence bearing feature vectors.
     monotone_evidence_score: bool,
     ecology: Option<PhaseHypothesisEcologyState>,
+    contextual: Option<ContextualMetaProjection>,
 }
 
 #[derive(Debug, Clone)]
@@ -59,7 +60,10 @@ pub struct PhaseMetaControlCheckpoint {
     learned_synapses: [PhaseSynapse; META_FIELD_COUNT],
     observations: u64,
     monotone_evidence_score: bool,
+    contextual: Option<ContextualMetaProjection>,
 }
+
+include!("phase_contextual_meta.rs");
 
 impl EvoPhase {
     /// Allocate a generic physical utility projection. Every weight begins at
@@ -96,7 +100,7 @@ impl EvoPhase {
 
         native.meta_control=Some(PhaseMetaControlState{
             config,feature_cells,utility_cell,weight_synapses,observations:0,
-            monotone_evidence_score:false,ecology:None,
+            monotone_evidence_score:false,ecology:None,contextual:None,
         });
         self.phase_native=Some(native);
         true
@@ -112,7 +116,7 @@ impl EvoPhase {
     {
         let meta=self.phase_native.as_ref()?.meta_control.as_ref()?;
         Some(std::array::from_fn(|i|
-            self.synapses[meta.weight_synapses[i]].weight
+            meta.projection_synapse(&self.synapses,i).weight
         ))
     }
 
@@ -154,7 +158,7 @@ impl EvoPhase {
         let mut available_weight=0.0f32;
         for i in 0..META_FIELD_COUNT{
             let physical=conductance(
-                &self.cells,&self.synapses[meta.weight_synapses[i]],floor
+                &self.cells,meta.projection_synapse(&self.synapses,i),floor
             );
             score+=fields[i]*physical;
             available_weight+=physical;
@@ -200,8 +204,8 @@ impl EvoPhase {
         let config=meta.config.clone();
         let synapses=meta.weight_synapses;
         let mass=if meta.monotone_evidence_score {
-            meta.weight_synapses.iter().map(|&index|
-                conductance(&self.cells,&self.synapses[index],
+            (0..META_FIELD_COUNT).map(|i|
+                conductance(&self.cells,meta.projection_synapse(&self.synapses,i),
                     native.config.coherence_floor)
             ).sum::<f32>().max(1.0)
         } else {
@@ -213,7 +217,11 @@ impl EvoPhase {
         if config.learning_enabled{
             for i in 0..META_FIELD_COUNT{
                 if fields[i]<=0.0{continue;}
-                let syn=&mut self.synapses[synapses[i]];
+                let meta=native.meta_control.as_mut().expect("meta");
+                let syn=if let Some(contextual)=meta.contextual.as_mut(){
+                    let Some(row)=contextual.current.and_then(|key|contextual.rows.get_mut(&key)) else {continue;};
+                    &mut row.synapses[i]
+                }else{&mut self.synapses[synapses[i]]};
                 if !syn.plastic{continue;}
                 let credit=fields[i]/mass;
                 syn.eligibility=credit;
@@ -276,10 +284,11 @@ impl EvoPhase {
         Some(PhaseMetaControlCheckpoint{
             config:meta.config.clone(),
             learned_synapses:std::array::from_fn(|i|
-                self.synapses[meta.weight_synapses[i]].clone()
+                meta.projection_synapse(&self.synapses,i).clone()
             ),
             observations:meta.observations,
             monotone_evidence_score:meta.monotone_evidence_score,
+            contextual:meta.contextual.clone(),
         })
     }
 
@@ -307,6 +316,15 @@ impl EvoPhase {
         }
         meta.observations=checkpoint.observations;
         meta.monotone_evidence_score=checkpoint.monotone_evidence_score;
+        meta.contextual=checkpoint.contextual;
+        if let Some(c)=meta.contextual.as_mut(){
+            for row in std::iter::once(&mut c.prior).chain(c.rows.values_mut().map(|r|&mut r.synapses)){
+                for i in 0..META_FIELD_COUNT{
+                    row[i].from=self.synapses[meta.weight_synapses[i]].from;
+                    row[i].to=self.synapses[meta.weight_synapses[i]].to;
+                }
+            }
+        }
         self.phase_native=Some(native);
         true
     }

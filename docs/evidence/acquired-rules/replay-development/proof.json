@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "variant": "organism",
+  "recorded_actions_replayed": 3653,
+  "native_commits_matched": 3653,
+  "exact_checkpoint_resumes": 1,
+  "continuing_checkpoint_sha256": "e97de732c5952a4b2dafe6fb967258e81e11976d924c7f5f5b98aa130c0f6624",
+  "frozen_checkpoint_sha256": "4e7e66817048213d54b5fd9184e2bc9571b74a6656be2a49059436936f616a5f",
+  "binary_sha256": "3da35d8d9d7b4c5038e76b0e0a74affc227c482ac8eb9e1f3c03a7df15b1b928",
+  "all_native_choices_matched": true,
+  "full_learned_state_byte_identical": true,
+  "new_external_world_actions": 0,
+  "purpose": "deterministic software replay of the complete recorded organism; not a fresh performance experiment"
+}

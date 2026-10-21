@@ -1,0 +1,28 @@
+{
+  "organism": {
+    "status": "PASS",
+    "initializations": 0,
+    "exact_checkpoint_resumes": 1,
+    "factual_posts": 3653,
+    "actual_cost": 5853,
+    "sensor_interfaces": 4,
+    "starting_factual_events": 2200,
+    "initial_checkpoint_loads": 1,
+    "reported_first_answer_metrics_recomputed": true,
+    "corpus_values_and_rewards_replayed": true,
+    "minigrid_transitions_replayed": true
+  },
+  "organism_rules_fixed": {
+    "status": "PASS",
+    "initializations": 0,
+    "exact_checkpoint_resumes": 1,
+    "factual_posts": 3938,
+    "actual_cost": 6138,
+    "sensor_interfaces": 4,
+    "starting_factual_events": 2200,
+    "initial_checkpoint_loads": 1,
+    "reported_first_answer_metrics_recomputed": true,
+    "corpus_values_and_rewards_replayed": true,
+    "minigrid_transitions_replayed": true
+  }
+}

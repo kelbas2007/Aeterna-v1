@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "canonical_continuing_life": [
+    {
+      "file": "docs/evidence/organism-lifetime/organism/one-organism.json.gz",
+      "sha256": "c05cc2bc70c1525d9990dea81838dc25cc14498d6a68610f63f6cf3020e7fe8d",
+      "factual_events": 2200,
+      "completed_episodes": 1050,
+      "learner_owners": 1,
+      "controller_frozen": false
+    },
+    {
+      "file": "docs/evidence/acquired-rules/development/organism/one-organism.json.gz",
+      "sha256": "e97de732c5952a4b2dafe6fb967258e81e11976d924c7f5f5b98aa130c0f6624",
+      "factual_events": 5853,
+      "completed_episodes": 2843,
+      "learner_owners": 1,
+      "controller_frozen": false
+    },
+    {
+      "file": "docs/evidence/acquired-rules/confirmation/organism/one-organism.json.gz",
+      "sha256": "396f00fa43ca7d46a64e2fd2edc9e2b618c3486abae736d391940ae77be5482b",
+      "factual_events": 11174,
+      "completed_episodes": 5499,
+      "learner_owners": 1,
+      "controller_frozen": false
+    },
+    {
+      "file": "docs/evidence/acquired-rules/continuation/continued-organism.json.gz",
+      "sha256": "df644b03b247b762d2746afba986f35acd33182f5b3d4e2187badf52b646fc08",
+      "factual_events": 11175,
+      "completed_episodes": 5500,
+      "learner_owners": 1,
+      "controller_frozen": false
+    }
+  ]
+}

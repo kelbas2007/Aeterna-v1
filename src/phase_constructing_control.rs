@@ -27,7 +27,7 @@ impl EvoPhase {
             || !self.branches.is_empty() || self.synapses.len()!=META_FIELD_COUNT {return None;}
         serde_json::to_vec(&ConstructingCarrierSnapshot{version:1,config:self.config.clone(),native:n.config.clone(),
             cells:self.cells.clone(),synapses:self.synapses.clone(),meta:m.config.clone(),observations:m.observations,
-            monotone:m.monotone_evidence_score,tick:self.tick,current:self.current_real.as_ref().map(|r|(r.sensory.clone(),r.need,r.tick))}).ok()
+            monotone:m.monotone_evidence_score,contextual:m.contextual.clone(),tick:self.tick,current:self.current_real.as_ref().map(|r|(r.sensory.clone(),r.need,r.tick))}).ok()
     }
     pub(crate) fn from_constructing_carrier_checkpoint(bytes:&[u8])->Option<Self> {
         if bytes.len()>2*1024*1024{return None;}
@@ -49,13 +49,14 @@ impl EvoPhase {
         for (a,b) in s.synapses.iter().zip(&evo.synapses) {
             if a.from!=b.from || a.to!=b.to || !unit(a.weight) || !unit(a.eligibility) || !unit(a.confidence) || !a.phase_offset.is_finite(){return None;}
         }
+        if s.contextual.as_ref().is_some_and(|c| !c.validate(&s.synapses)){return None;}
         evo.cells=s.cells;evo.synapses=s.synapses;evo.tick=s.tick;
         if let Some((sensory,need,tick))=s.current {
             if sensory.len()!=evo.config.sensory_cells || sensory.iter().any(|&x|!unit(x)) || tick!=s.tick {return None;}
             evo.current_real=Some(super::FactualFrame{sensory,need,tick});
         }
         let m=evo.phase_native.as_mut()?.meta_control.as_mut()?;
-        m.observations=s.observations;m.monotone_evidence_score=s.monotone;Some(evo)
+        m.observations=s.observations;m.monotone_evidence_score=s.monotone;m.contextual=s.contextual;Some(evo)
     }
 }
 #[derive(serde::Serialize,serde::Deserialize)]
@@ -63,4 +64,6 @@ impl EvoPhase {
 struct ConstructingCarrierSnapshot {
     version:u32,config:super::EvoConfig,native:PhaseNativeConfig,cells:Vec<super::PhaseCell>,synapses:Vec<super::PhaseSynapse>,
     meta:PhaseMetaControlConfig,observations:u64,monotone:bool,tick:u64,current:Option<(Vec<f32>,bool,u64)>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    contextual:Option<ContextualMetaProjection>,
 }

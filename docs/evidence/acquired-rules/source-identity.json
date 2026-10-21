@@ -1,0 +1,15 @@
+{
+  "study_source_commit": "38c6d9252c3ef8a5d0944ae7aec294f14f459e95",
+  "runtime_frozen_at": "4a9e68e",
+  "study_binary_sha256": "3da35d8d9d7b4c5038e76b0e0a74affc227c482ac8eb9e1f3c03a7df15b1b928",
+  "post_study_rust_changes": {
+    "src/construction/acquired_rules.rs": {
+      "study_sha256": "ad307b262e5d0ac41ba449bd7c535c4d1f7c4c44be27f617aeaa3ede5dc4ceb3",
+      "current_sha256": "387ea623544143094ffe6076a2b5b7a07f83690bd3d95ecd9526787fd3fc72f0"
+    }
+  },
+  "post_study_change_reason": "continue outcome monitoring and rollback after exhausting only the program-induction budget; no admission criteria or study inputs changed",
+  "rsp2_source_sha256": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0",
+  "current_binary_sha256": "100a07e3cb99a5b95d15a4ef5915273df31428dea19dd840c4fc6f573130b1d4",
+  "current_complete_life_replay": "validation/current-replay-confirmation.json"
+}

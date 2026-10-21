@@ -1,0 +1,97 @@
+{
+  "purpose": "one continuing organism; prospective development followed by one locked-source continuation comparison on different public training rows",
+  "starting_checkpoint": "docs/evidence/organism-lifetime/organism/one-organism.json.gz",
+  "starting_checkpoint_sha256": "c05cc2bc70c1525d9990dea81838dc25cc14498d6a68610f63f6cf3020e7fe8d",
+  "variants": [
+    "organism",
+    "organism_rules_fixed"
+  ],
+  "difference": "acquisition and prospective admission of conditional sensory reward programs inside the same ExternalMemory; common U1, memories, RSP2 and trajectory development retained",
+  "schedule": [
+    "new Fashion images",
+    "exact checkpoint save, process close and restore",
+    "new UCI HAR raw windows",
+    "Empty-5x5",
+    "DoorKey-5x5",
+    "different new Fashion images"
+  ],
+  "confirmation": {
+    "fashion_train_offset": 50000,
+    "har_train_offset": 6000,
+    "samples_each": 768,
+    "retention_fashion_offset": 52000,
+    "retention_samples": 160,
+    "grid_seeds": [
+      850000,
+      850001,
+      850002,
+      850003
+    ],
+    "starting_state": "continue each matching development organism export, including acquired programs and all memory; no reinitialization",
+    "variants": [
+      "organism",
+      "organism_rules_fixed",
+      "organism_previous"
+    ],
+    "previous_control_start": "acquired-rules-development-eb2a50c/organism_rules_fixed/one-organism.json.gz; the same completed image/signal/navigation/retention schedule with the original global U1 and no acquired rules",
+    "comparisons": "Primary: full organism vs previous whole U1 architecture; secondary: full organism vs same contextual U1 without rule acquisition. Same new confirmation rows and action limits in all three complete lives."
+  },
+  "matched_action_limits": {
+    "fashion": 11,
+    "har": 15,
+    "navigation": 64
+  },
+  "resource_disclosure": "same permitted action/planning budgets; rule search adds up to 64 million metered work plus metered forecasts; actual computation for each arm is reported and may differ",
+  "advance_criterion": {
+    "at_least_one_program_admitted": true,
+    "changed_first_answers": true,
+    "pooled_sensor_accuracy_gain_min": 0.02,
+    "per_sensor_phase_accuracy_drop_max": 0.02,
+    "navigation_success_drop_max": 0,
+    "actual_action_ratio_max": 1.1
+  },
+  "interpretation": "prequential new training rows with ongoing feedback, not an IID blind test, not an official held-out benchmark or evidence of general intelligence; internal 64-outcome rule gates are predictive, not behavioral qualification",
+  "confirmation_policy": "freeze source and executable before exposing confirmation samples to the organism or scoring them; one run per arm, no retuning on these confirmation outcomes; report failure as failure",
+  "protocol_clarification_before_confirmation": "Confirmation extends the two development lives through their own exact checkpoint exports. Its row ranges and acceptance criteria are unchanged; no confirmation sample has been presented to the organism or scored; corpus archives have been integrity-checked in full. This checks preservation and further learning in one life.",
+  "development_round_1": {
+    "source": "eb2a50c",
+    "pooled_first_answer_gain": -0.009290540540540541,
+    "failure": "HAR 407/512 vs 425/512 despite only image program admission; global U1 calibration/exploration remained coupled across interfaces",
+    "output": "acquired-rules-development-eb2a50c"
+  },
+  "contextual_u1": "enabled identically in both arms before continued learning; observed namespace conditions five U1 utility weights and exploration count; common fixed prior, no new actuator, no hidden role labels",
+  "development_round_2": {
+    "fashion_train_offset": 48000,
+    "har_train_offset": 4500,
+    "samples_each": 512,
+    "retention_fashion_offset": 49000,
+    "retention_samples": 160,
+    "grid_seeds": [
+      850000,
+      850001,
+      850002,
+      850003
+    ],
+    "observed": {
+      "image_first_correct": [
+        354,
+        339
+      ],
+      "signal_first_correct": [
+        389,
+        387
+      ],
+      "new_retention_first_correct": [
+        109,
+        105
+      ],
+      "actual_actions": [
+        3653,
+        3938
+      ],
+      "pooled_accuracy_gain": 0.017736486486486486,
+      "advance_criterion_passed": false,
+      "reason": "1.77 percentage points is below the predeclared 2-point threshold"
+    }
+  }
+}

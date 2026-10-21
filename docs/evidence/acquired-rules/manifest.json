@@ -1,0 +1,374 @@
+{
+  "schema": "aeterna.acquired-rules.evidence.v1",
+  "files": {
+    "confirmation/audit.json": {
+      "sha256": "6a52021e0bd38c7d3f1f6ddec65e449bd7839a97811896a027163ad774335d43",
+      "bytes": 1227
+    },
+    "confirmation/comparison-previous.json": {
+      "sha256": "cab75197ae053e054f1b38f2813f6c09fe588f2c7a36914a3316d0b69787b22b",
+      "bytes": 20335
+    },
+    "confirmation/comparison-rules-fixed.json": {
+      "sha256": "d8775ffe359deba5989a5731b1946617cf24050282304d10b8ba41a1f439c8bc",
+      "bytes": 20340
+    },
+    "confirmation/frozen-aeterna-v1.gz": {
+      "sha256": "928b534bf6f3c45371f6c566f53edf15e35d586ab02464e620557d90a4b64601",
+      "bytes": 1646367
+    },
+    "confirmation/inspect.json": {
+      "sha256": "38a7f0091b4cafb87e1c01a82ab1c4915e7b21b7ef78af626cedb07bbd99bd67",
+      "bytes": 8332
+    },
+    "confirmation/organism/frozen-organism.json.gz": {
+      "sha256": "b6ad62f2773d3011c765846b24ac60bcaa91d0a165fc67228abcdb12761394e2",
+      "bytes": 184600
+    },
+    "confirmation/organism/life-after-resume.jsonl.gz": {
+      "sha256": "654ea57b59fe9cb6a30da901e53b7c0b98afc5db4f68de9fb0bdfc9f73d77b17",
+      "bytes": 1151614
+    },
+    "confirmation/organism/life-before-resume.jsonl.gz": {
+      "sha256": "dd76aa3f0a0e9331279b8018ec23a10f591d12cd387b4c0a007054c9d4716e77",
+      "bytes": 705455
+    },
+    "confirmation/organism/one-organism.json.gz": {
+      "sha256": "06a671ad0310f30a674819905d6ff22677464cce283ca0db562e28de50290fc6",
+      "bytes": 184579
+    },
+    "confirmation/organism/phases.json": {
+      "sha256": "c14107a5ed571e11cd07d87f107d3bfdaddc699aabc865765fcf4cad34841a9f",
+      "bytes": 70331
+    },
+    "confirmation/organism/resume.json.gz": {
+      "sha256": "b684c152d3aa09476de9da8e3d1b4403de7218f41d7ba813946cc94ee901e58e",
+      "bytes": 188632
+    },
+    "confirmation/organism/starting-organism.json.gz": {
+      "sha256": "ed5030a1fc9511ea60b8b2cab453db3b7fe3d68a43bc5392333d15c03513ee45",
+      "bytes": 172400
+    },
+    "confirmation/organism/summary.json": {
+      "sha256": "a99012b0775d79bab069da9aaf11b310b668835f1081caf0273100fcb16f1147",
+      "bytes": 87409
+    },
+    "confirmation/organism_previous/frozen-organism.json.gz": {
+      "sha256": "3035f7857ddf18667409fbda98599f23eb9f6429e92755fdc98d0efc283d4a27",
+      "bytes": 149976
+    },
+    "confirmation/organism_previous/life-after-resume.jsonl.gz": {
+      "sha256": "773061d5deb27090522aa7f0a1756f330c0837c237385712f478b0e19fa2ed91",
+      "bytes": 1297458
+    },
+    "confirmation/organism_previous/life-before-resume.jsonl.gz": {
+      "sha256": "256c7641afe19500978c27bc149548190164a2ce072c064ae1f1573b6ea0ec74",
+      "bytes": 724274
+    },
+    "confirmation/organism_previous/one-organism.json.gz": {
+      "sha256": "810c7d66244fd2a05348af6ac654ada781d62e647858552a605f7c212b3e72ef",
+      "bytes": 149957
+    },
+    "confirmation/organism_previous/phases.json": {
+      "sha256": "b7216ffa16aec7e1893c6cd9e4fc7c10b4397c7f031dbbe2c817be6cb188844b",
+      "bytes": 24849
+    },
+    "confirmation/organism_previous/resume.json.gz": {
+      "sha256": "7d1671c53582c8dba2b0920124d717b3ba7254d982e2275ffb03130654711546",
+      "bytes": 145787
+    },
+    "confirmation/organism_previous/starting-organism.json.gz": {
+      "sha256": "1a86c195cb1ee8e345d4cf4215638f8256e54b99b9c980a9468819c10a18ba42",
+      "bytes": 144902
+    },
+    "confirmation/organism_previous/summary.json": {
+      "sha256": "817cff8c1dfd334cc1e0084169c3aab6badef9dd2d69b214a0e748d4ebbac3a8",
+      "bytes": 30500
+    },
+    "confirmation/organism_rules_fixed/frozen-organism.json.gz": {
+      "sha256": "a957ad4047022f1b76a56bf6cb64b113816dbc60d6364c1a9d8a6efd5093326b",
+      "bytes": 149308
+    },
+    "confirmation/organism_rules_fixed/life-after-resume.jsonl.gz": {
+      "sha256": "19bd143ba3748ea53b74c1c87a1de62ac691ebf86b9d6c10896eb358d23e1244",
+      "bytes": 1301334
+    },
+    "confirmation/organism_rules_fixed/life-before-resume.jsonl.gz": {
+      "sha256": "5fad379c56cf65f0cfe6a5d5ceb35c2e16dbfc2f1542bf3d027cac7670a92106",
+      "bytes": 726528
+    },
+    "confirmation/organism_rules_fixed/one-organism.json.gz": {
+      "sha256": "881be2ac6bf0242a5033d9601874d6c470b165970c0902756968a60e52b8f1c6",
+      "bytes": 149290
+    },
+    "confirmation/organism_rules_fixed/phases.json": {
+      "sha256": "f68448b51cab3ac8fcec632f14cd9e3238c93697a18fe3d6620866ea4b3e71bb",
+      "bytes": 25308
+    },
+    "confirmation/organism_rules_fixed/resume.json.gz": {
+      "sha256": "efa97d9d8eb377e36e488221e90939b655bf507fe55f23a6d48f7feecdc1ba27",
+      "bytes": 154665
+    },
+    "confirmation/organism_rules_fixed/starting-organism.json.gz": {
+      "sha256": "e5a664836dfef49608b608bc5753d5021eae37fb9b71b97106c3d2a3462aa6ec",
+      "bytes": 145934
+    },
+    "confirmation/organism_rules_fixed/summary.json": {
+      "sha256": "693fd55ef38ca9266dafa2cf685b7bd169e05db844249c830d70f64648f9090e",
+      "bytes": 31109
+    },
+    "confirmation/provenance.json": {
+      "sha256": "31657ee0ee86207423d5b627e9dd9df5f18c6e81feaa842db8f7f9058169d37c",
+      "bytes": 18771
+    },
+    "confirmation/summary.json": {
+      "sha256": "644c2e296ce16f571948f335116ad01dcc5acb087fa143daf2c14d8d23768219",
+      "bytes": 159253
+    },
+    "continuation/continuation.jsonl.gz": {
+      "sha256": "c146b202cd7fbbace46ed1517f0d493960d270214eb92cc7a5305514a605d87a",
+      "bytes": 1188
+    },
+    "continuation/continued-organism.json.gz": {
+      "sha256": "02b2f151cecd1ae664f23e12ea67aafb2b4b1e1d51951baea94d7a06cc5da2ab",
+      "bytes": 184604
+    },
+    "continuation/proof.json": {
+      "sha256": "05302081cd5f7257d64c251e5844f8d92ec2eaaa5ac67c325759c4714ba1ac4b",
+      "bytes": 675
+    },
+    "development/audit.json": {
+      "sha256": "c8922ef1191f79f688b1f499054ad91882290311a1a9de0d945c66926c01752e",
+      "bytes": 815
+    },
+    "development/comparison.json": {
+      "sha256": "9af4c6c294055e9008cec21bcf0bdd657ad315d4657681b3e68b74472312d50d",
+      "bytes": 16888
+    },
+    "development/frozen-aeterna-v1.gz": {
+      "sha256": "928b534bf6f3c45371f6c566f53edf15e35d586ab02464e620557d90a4b64601",
+      "bytes": 1646367
+    },
+    "development/inspect.json": {
+      "sha256": "bf4baaca2da164ad72cd111030608b04f53432f3cf76352d8fe586b0b69bb536",
+      "bytes": 4944
+    },
+    "development/organism/frozen-organism.json.gz": {
+      "sha256": "d2310cf0b0c762f1949d7d7798253bdf6dcd3de294dd047a6e5e222587033a3a",
+      "bytes": 172411
+    },
+    "development/organism/life-after-resume.jsonl.gz": {
+      "sha256": "e3348dcc29a00daf872f8339283acb0d6dd92c6562f70aa4b97668b38633f2b8",
+      "bytes": 763835
+    },
+    "development/organism/life-before-resume.jsonl.gz": {
+      "sha256": "d8e8ffa363c99c0e777afa75f59555bf17270eb1ac05611915d84988a1e2bcea",
+      "bytes": 461404
+    },
+    "development/organism/one-organism.json.gz": {
+      "sha256": "b2c80c94d6ec8eca62a3ad4d900bb06a61ecde5d9165fe33ee85724043fd9519",
+      "bytes": 172395
+    },
+    "development/organism/phases.json": {
+      "sha256": "6085a273f74ef394d4eead6c5b403b14bc17c10a2459ff3bed236134b3555f2f",
+      "bytes": 47829
+    },
+    "development/organism/resume.json.gz": {
+      "sha256": "1351435599badf5cb7e41a19e05bdebdce113d5f23d7bfdf1018ce21926ffd14",
+      "bytes": 168597
+    },
+    "development/organism/starting-organism.json.gz": {
+      "sha256": "b2f1d91cd42922dc522d5573186f7e4927811ffb2009fdec12cbd794fdbadc17",
+      "bytes": 105507
+    },
+    "development/organism/summary.json": {
+      "sha256": "a660f89ebb9771ba816772c19cccbe7588a63384eb94183c133f66e02d6bfa3a",
+      "bytes": 59991
+    },
+    "development/organism_rules_fixed/frozen-organism.json.gz": {
+      "sha256": "a00689180d91da3bdb6fe31b2d75505ae837811ad8be307ba4d46550977698f3",
+      "bytes": 145947
+    },
+    "development/organism_rules_fixed/life-after-resume.jsonl.gz": {
+      "sha256": "d336f77318b668423fc46de327ff2fb968b20ec1ef89939b60fd614b59426d5d",
+      "bytes": 810958
+    },
+    "development/organism_rules_fixed/life-before-resume.jsonl.gz": {
+      "sha256": "9b193db86ced43e93691b71d27d863400b4635b0f5c71086c88e4206fc80cd74",
+      "bytes": 473865
+    },
+    "development/organism_rules_fixed/one-organism.json.gz": {
+      "sha256": "b251d33df15dfd5551732bc722892ec8bf5ecdc35df0b3c27c6479b79d677704",
+      "bytes": 145929
+    },
+    "development/organism_rules_fixed/phases.json": {
+      "sha256": "8c3aeb4fe87cfe4f620c3665e4d49eb71421ecac7567c28196a59e353617b1a7",
+      "bytes": 25150
+    },
+    "development/organism_rules_fixed/resume.json.gz": {
+      "sha256": "acb4a95abba86c84eec9d8f1155ee48ca05f7fd1957b2fea063563174f1e27c5",
+      "bytes": 149755
+    },
+    "development/organism_rules_fixed/starting-organism.json.gz": {
+      "sha256": "3ea5187da689e560435ba7d15f1d40493ebeea10d5c9e63267f192c0f2388078",
+      "bytes": 105507
+    },
+    "development/organism_rules_fixed/summary.json": {
+      "sha256": "6d9a2a166c65177384fd06ade82599e78cf0799f44336d402a8cdc30e828717b",
+      "bytes": 30926
+    },
+    "development/provenance.json": {
+      "sha256": "618fed19e761b748a66516311959ce3821289b8e19aa2b6aab274d05ba101a1d",
+      "bytes": 18456
+    },
+    "development/starting-organism.json.gz": {
+      "sha256": "b2f1d91cd42922dc522d5573186f7e4927811ffb2009fdec12cbd794fdbadc17",
+      "bytes": 105507
+    },
+    "development/summary.json": {
+      "sha256": "62385aecbb7f57bfdb2b574e6d2d7a8be974b4ea2e4a59abdb6460be8c42a6cc",
+      "bytes": 97386
+    },
+    "development-original/audit.json": {
+      "sha256": "83c61318cfc53023704e41b3fdd17efa3af7d8ed2078178e87161b27c46ea1a0",
+      "bytes": 815
+    },
+    "development-original/comparison.json": {
+      "sha256": "13920c5311b65229551544a7d6a01162dd05c12d529146fb56ab407452df4d83",
+      "bytes": 16857
+    },
+    "development-original/frozen-aeterna-v1.gz": {
+      "sha256": "6472eae82fe84b467452db477bcda9e915ebeadeed04d3ff7019b588409568b9",
+      "bytes": 1631042
+    },
+    "development-original/organism/frozen-organism.json.gz": {
+      "sha256": "d1bf7bd2a09eee03710c6c0821459fe29ca1c62709899c10dc385e98b4bb7213",
+      "bytes": 171309
+    },
+    "development-original/organism/life-after-resume.jsonl.gz": {
+      "sha256": "1e7899b5811aa0e90a14341c46d53f3343f9786fc97ca96a11ee2436f26fbd94",
+      "bytes": 742899
+    },
+    "development-original/organism/life-before-resume.jsonl.gz": {
+      "sha256": "3eb5f8152625f14b49ebcf799a785082f3e1c7ae32bc10719fed6062eccb7534",
+      "bytes": 462296
+    },
+    "development-original/organism/one-organism.json.gz": {
+      "sha256": "27cc6b5df4174af4d2142be839c7027bec7e26cc46dfdc29f1aeb17293c23cc7",
+      "bytes": 171287
+    },
+    "development-original/organism/phases.json": {
+      "sha256": "6055c9031c001c94ba5cee89b932b97f0c39fb0d6a6dc4b6544f553241794cb4",
+      "bytes": 47418
+    },
+    "development-original/organism/resume.json.gz": {
+      "sha256": "3630e144946c8f19924ce236c265522c04f42afb0a0eb94d43edeab53d06497b",
+      "bytes": 168644
+    },
+    "development-original/organism/summary.json": {
+      "sha256": "79f28ea1831634fb7c82aec71052eb9bd4a31963d1bad113fc46e785c5a404b8",
+      "bytes": 59444
+    },
+    "development-original/organism_rules_fixed/frozen-organism.json.gz": {
+      "sha256": "4552d833e2e75561b92379a118405b56044d91c9b0a357272a064a724b93f90b",
+      "bytes": 144917
+    },
+    "development-original/organism_rules_fixed/life-after-resume.jsonl.gz": {
+      "sha256": "cd2f545bf65ed9dab500bb69f8665bdc57d1f63351ab6e6686c3b77212d54f35",
+      "bytes": 714168
+    },
+    "development-original/organism_rules_fixed/life-before-resume.jsonl.gz": {
+      "sha256": "18952348c09747da9bb313935a49ceb36f731950aeeeba086dc04459b7581d28",
+      "bytes": 476255
+    },
+    "development-original/organism_rules_fixed/one-organism.json.gz": {
+      "sha256": "fd177f76cae19ce892aa87f945dc3e2af77eef9de3903da6965cc0c1de7f14d1",
+      "bytes": 144897
+    },
+    "development-original/organism_rules_fixed/phases.json": {
+      "sha256": "b60f991de48ef7875ad2924805104aeccc0ca9454e55a9f8a6de2e7f4a1e4b0c",
+      "bytes": 24728
+    },
+    "development-original/organism_rules_fixed/resume.json.gz": {
+      "sha256": "4a90049aa61721e7db535b035ac982522eeb60e316b5e1f67b8973687e41be5c",
+      "bytes": 149216
+    },
+    "development-original/organism_rules_fixed/summary.json": {
+      "sha256": "21edebe4e32fd6784a06909afe139aae84954e8e95a45c2c562ac0bdb5af7667",
+      "bytes": 30370
+    },
+    "development-original/provenance.json": {
+      "sha256": "1c4e4eb67b8d9405b42207405175054ade96bb165f19488c8d76ce97fc7f09f3",
+      "bytes": 17638
+    },
+    "development-original/starting-organism.json.gz": {
+      "sha256": "f2dba62d317ea2728ad890ab9ab19ed7bffae8f59b680e1656da5657554a441f",
+      "bytes": 105507
+    },
+    "development-original/summary.json": {
+      "sha256": "6617f11f0dff1d7ef77ba177188b08a9572a37dbeb333ee3cc7f13975a01c80a",
+      "bytes": 96163
+    },
+    "protocol.json": {
+      "sha256": "cc6277784d9b50201340274008c151c94fa87089ee614e74bbe2d1f52eda36e7",
+      "bytes": 4428
+    },
+    "replay-confirmation/proof.json": {
+      "sha256": "2e7bf19e9d8355616a5724f8b30335f6bffb260d5b2867160c725f758095974b",
+      "bytes": 673
+    },
+    "replay-development/proof.json": {
+      "sha256": "3707ade282d5547ca818209fc3ad1618d857ebaea28aca3e686a776ed85acc4c",
+      "bytes": 673
+    },
+    "source-identity.json": {
+      "sha256": "ff6a4e09d61bec5f162507f26dc4f9faeb42771ad345ce0ffc522e65350171c8",
+      "bytes": 906
+    },
+    "state-lineage.json": {
+      "sha256": "12d1258f3bf990c7a373129da18e1c0efa8e594aa684c7e4caba36fd636c56d7",
+      "bytes": 1288
+    },
+    "validation/acquired-rules-external-regressions.log.gz": {
+      "sha256": "e9aa5ad91f489d737369c7e72497b98fdffddeafd1f4f8aec94f4a0f854565f5",
+      "bytes": 55
+    },
+    "validation/acquired-rules-final-regression.log.gz": {
+      "sha256": "d479c3b2e9fb5bf7a1c9fea5bbb12f127f21467d7ea89646b12b901bc394de2e",
+      "bytes": 24765
+    },
+    "validation/contextual-u1-unit.log.gz": {
+      "sha256": "ef7014c05bda084196e7928eba80c7951ddc822db803b9b5400479aa19d8e762",
+      "bytes": 1547
+    },
+    "validation/current-inspect.json": {
+      "sha256": "38a7f0091b4cafb87e1c01a82ab1c4915e7b21b7ef78af626cedb07bbd99bd67",
+      "bytes": 8332
+    },
+    "validation/current-replay-confirmation.json": {
+      "sha256": "9e082292628a0a0554884d03192980b6c8b23b2bdbd95d966ee722ac93fee2a8",
+      "bytes": 773
+    },
+    "validation/docs-check.txt": {
+      "sha256": "101245b8ce66b848f58d5914bffec0aa6bf96fc1e614afb757ca4e74440e4d73",
+      "bytes": 64
+    },
+    "validation/induction-budget-monitoring-test.log.gz": {
+      "sha256": "119d0998465982173c5aa4c7efbd191529afcd2fa2ff96c88ef0a17bbaa3d824",
+      "bytes": 1566
+    },
+    "validation/legacy-inspect.json": {
+      "sha256": "19a03b69fb23fa6bb3f6d7ec44f7911f18c402fd5ea97e828acab48caef3fe21",
+      "bytes": 341
+    },
+    "validation/source-audit.json": {
+      "sha256": "b5b6c688ec1d26e6236c5406d39babeab082c612605b0094406c098e79f65b95",
+      "bytes": 400
+    },
+    "validation.json": {
+      "sha256": "181d78b50620f8f9fb982fca21cc212f70f8347d021afa886e3278aa09bc5ed5",
+      "bytes": 781
+    }
+  },
+  "bytes": 21310122
+}
