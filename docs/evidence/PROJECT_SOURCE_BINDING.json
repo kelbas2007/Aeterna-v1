@@ -163,5 +163,36 @@
       "src/construction/sensors.rs": "69180aa9ce6583907abae8dd2329356a00014984510c426efd6d686dd6baf202"
     },
     "status": "implemented; external scoring is separate from historical CAUSAL-CONTINUAL-4C evidence"
+  },
+  "implemented_organism_development_extension": {
+    "base_commit": "4dbe30ba99eb5cbf0ea49bd1f5fed6f4808b72d8",
+    "base_archive": "docs/evidence/ORGANISM_DEVELOPMENT_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "99a3dd4ea61b3d30342ce69a20845ed283bc90c2c50a01e531e430dfa8afd178",
+    "modified": {
+      "src/unified_runtime.rs": {
+        "before_sha256": "8fad7364b5bf7a5f3197dd7e65d62fb6ef6ce491deb30da296a87a860e8df036",
+        "after_sha256": "d7ba0026fbfa66a1a67ed25108b8ac84881e5b6a5a6614b999738f79c0c2d006"
+      },
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "d64e70952dde8c80f3ab4438ff9fee809c8f005baacf964900b1ae77c7057f5b",
+        "after_sha256": "9dd45c3879a45519deb6371b80e17f83b05d397ec63fe6a4d0e6a31d5093eaaf"
+      },
+      "src/construction/external_port.rs": {
+        "before_sha256": "c150a9679d91bd8447c1c482fabdf6bc16a8611bb6bfdeeb6c6e5bd659c06c61",
+        "after_sha256": "9c89860f6d675bfc5cbd9d658499a1f1a6811d011e71dd234d650943921909c2"
+      },
+      "src/construction/external_reward.rs": {
+        "before_sha256": "86af566ccc01d9efc7e2fd68cb568329c6c1b69f27dac233455f219f3c2fc660",
+        "after_sha256": "dd716a145fed106c69b8ece7b38e3278b91902ac4594842291b84da6bb6bca80"
+      },
+      "src/recursive_search_runtime.rs": {
+        "before_sha256": "d9dbc4c420738e4ffcbf4a1c74cc287a6957d65347b23f95e620cc713b0d55b4",
+        "after_sha256": "d898083209bddc8f4a1f084cca737768b90a6eea56c4d190988602f2250fe9de"
+      }
+    },
+    "added": {
+      "src/organism_development.rs": "287bdaaa6d0fbceedc84dbbd4c92a9e2de4ec0bd202cba12be6ad330a890c4cb"
+    },
+    "scope": "one factual sensory lifetime; existing unchanged RSP2 drives trajectory self-revision; actual chronological behavioral canaries"
   }
 }

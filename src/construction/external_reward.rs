@@ -318,6 +318,11 @@ pub struct ExternalRewardReport {
 }
 
 impl ExternalMemory {
+    pub(crate) fn use_shared_development(&mut self) {
+        // The existing RSP2/trajectory mechanism owns development in this mode.
+        // Keep EXTERNAL5 parameter adaptation only for its historical protocol.
+        self.adaptive = false;
+    }
     pub fn new(enabled: bool, adaptive: bool) -> Self {
         Self {
             encoder: SensorEncoder::default(),

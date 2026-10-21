@@ -20,6 +20,13 @@ impl Learner {
     pub fn external_reward_enabled(&self) -> bool {
         self.external_memory.as_ref().is_some_and(|m| m.enabled)
     }
+    pub(crate) fn carrier_use_shared_development(&mut self) -> Result<()> {
+        if self.next_id != 0 || self.frozen_at.is_some() || self.poisoned {
+            return Err(Error::Busy);
+        }
+        self.external_memory.as_mut().ok_or(Error::NoEvidence)?.use_shared_development();
+        Ok(())
+    }
     pub(crate) fn carrier_valid_external_state(&self, state: &[i64]) -> bool {
         self.external_memory.is_none()
             || (state.len() == 32

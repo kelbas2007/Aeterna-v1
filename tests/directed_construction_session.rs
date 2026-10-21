@@ -12,17 +12,29 @@ use std::{
     io::{BufRead, BufReader, Write},
     path::PathBuf,
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
-    sync::atomic::{AtomicU64, Ordering},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Mutex, MutexGuard,
+    },
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
-struct Folder(PathBuf);
+// Other tests in this same process spawn children. Between fork and exec a
+// child can temporarily inherit another test's OS file lock even after that
+// test drops its owner. Keep these process/lock cases serial; production still
+// rejects every competing writer without retries or weaker locking.
+static SESSION_CASES: Mutex<()> = Mutex::new(());
+struct Folder(PathBuf, #[allow(dead_code)] MutexGuard<'static, ()>);
 impl Folder {
     fn new() -> Self {
-        Self(std::env::temp_dir().join(format!(
-            "aeterna-session-{}-{}",
-            std::process::id(),
-            NEXT.fetch_add(1, Ordering::Relaxed)
-        )))
+        let serial = SESSION_CASES.lock().unwrap_or_else(|p| p.into_inner());
+        Self(
+            std::env::temp_dir().join(format!(
+                "aeterna-session-{}-{}",
+                std::process::id(),
+                NEXT.fetch_add(1, Ordering::Relaxed)
+            )),
+            serial,
+        )
     }
 }
 impl Drop for Folder {

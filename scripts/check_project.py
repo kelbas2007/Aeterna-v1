@@ -73,15 +73,18 @@ def main():
  run('cargo','test',*flags,'--lib','causal_continuity_credit_tests')
  # Automatically synthesized trajectory evaluator, including prospective gates.
  run('cargo','test',*flags,'--lib','autonomous_temporal_revision_tests')
+ run('cargo','test',*flags,'--lib','organism_development_tests')
  names=['causal_continual_autonomy','causal_jsonl_contract','project_entrypoint','recursive_search_policy','recursive_search_repair','experiential','learned_requirements','lc1_execution_contract','quantity_relations','word_problems','education_runtime','semantic_grounding','unified_runtime','unified_restore_guards','unified_self_directed_lifetime','trajectory_self_revision_protected','trajectory_self_revision_transfer','trajectory_behavior_gate','agency_choice_credit_development','cold_episodic_autonomy_development','instrumental_credit_development','agency_credit_manual_equivalence_development','cold_pair_probe_development','cold_autobiographical_option_development','cold_variable_depth_option_development','complexity_necessity_development','adaptive_history_suffix_development','predictive_history_action_development','predictive_history_state_development','certified_chain_protected_development','factual_transfer_development','factual_selective_holdout','human_protection','u1_meta_control']+[p.stem for p in sorted((ROOT/'tests').glob('directed_construction*.rs'))]
  assert len(names)==len(set(names))
  names.append('external_continual')
+ names.append('organism_lifetime')
  cmd=['cargo','test',*flags]
  for name in names:cmd+=['--test',name]
  run(*cmd);run('cargo','test',*flags,'--example','rsp3_experience')
  # Consume the executable from the exact Cargo invocation, independent of
  # CARGO_TARGET_DIR, CARGO_BUILD_TARGET and .cargo/config build.target.
  binary=build_and_locate_binary(env,flags)
+ run('python','scripts/check_saved_organism.py','--binary',str(binary))
  run('python','scripts/lc1_joint_demo.py','--binary',str(binary),'--output',str(temp/'lc1_joint_demo.json'))
  run('python','scripts/unified_factual_autonomy_demo.py','--binary',str(binary),'--output',str(temp/'unscheduled_u1_loop.json'))
  print(json.dumps({'status':'PASS','suites':names,'fresh_intelligence_claim':False}))
