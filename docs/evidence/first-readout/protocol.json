@@ -169,7 +169,7 @@
     "docs/evidence/PROJECT_SOURCE_BINDING.json": "69f138164699c8f17394e0588d611662c31cf01620b4b6cd7a8ba96eaf8f36fe",
     "docs/evidence/FIRST_READOUT_BASE_SOURCES.json.gz": "5b5f7dd5ab88a997eab6ef9ef99ca6d84360dd159f245ab60042ce1aaeb5ae5f",
     "docs/FIRST_READOUT_PROTOCOL.md": "f374d384797324d47ea1bd0956f55d56aa4bea5bb7ee5e570747cd4706a65ea9",
-    "docs/ARCHITECTURE_AUDIT_20261021.md": "fcd3ae009e559a13ddd289a540e97498bff552f0c7a40920fa822abdfcdc46b2"
+    "docs/ARCHITECTURE_AUDIT_20261021.md": "8df247d32cc87f3efaed6847e37cfaf4105b6539a3b3d8005e0fa2b1ca55b17e"
   },
   "starting_checkpoint_sha256": "396f00fa43ca7d46a64e2fd2edc9e2b618c3486abae736d391940ae77be5482b",
   "configuration": {
