@@ -1,0 +1,18 @@
+{
+  "organism_coverage": {
+    "status": "PASS",
+    "factual_actions": 22109,
+    "retained_cases": 2048,
+    "one_live_learner": true,
+    "checkpoint_sha256": "93e733e786b7032435f1047c99e73ec99e7983c4fe0fd032d0ee99c3b3b412e4",
+    "external_actions_executed": 0
+  },
+  "organism_fifo": {
+    "status": "PASS",
+    "factual_actions": 22033,
+    "retained_cases": 2048,
+    "one_live_learner": true,
+    "checkpoint_sha256": "67835dd0add1dd9ab004a7c2fb6eb0d757addfcf53171f594676d40227086f58",
+    "external_actions_executed": 0
+  }
+}

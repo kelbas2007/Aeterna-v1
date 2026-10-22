@@ -33,19 +33,26 @@ def build(archive, output, offset=0, count=64):
     def frame(window):
         return {'kind': 'signals', 'namespace': 70, 'channels': window.tolist()}
 
+    previous_post = None
+    continuations = 0
     with output.open('x', encoding='utf-8') as target:
         for index, window in enumerate(values):
-            row = {'pre': frame(window[:, :64]), 'post': frame(window[:, 64:]),
-                   'action': 0, 'reward': 0.0, 'cost': 1, 'episode_start': True,
+            pre, post = frame(window[:, :64]), frame(window[:, 64:])
+            episode_start = previous_post != pre
+            continuations += int(not episode_start)
+            row = {'pre': pre, 'post': post,
+                   'action': 0, 'reward': 0.0, 'cost': 1, 'episode_start': episode_start,
                    'provenance': {'source': 'UCI HAR original raw training recording',
                                   'archive_sha256': source_hash, 'window': offset + index,
                                   'pre_samples': [0, 64], 'post_samples': [64, 128],
                                   'action_semantics': 'advance recorded sensor playback; no original actuator labels',
                                   'label_access': False, 'independent_qualification': False}}
             target.write(json.dumps(row, separators=(',', ':'), allow_nan=False) + '\n')
+            previous_post = post
     return {'records': count, 'source_sha256': source_hash, 'labels_decoded': False,
             'stream_sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
-            'recorded_physical_actions_available': False}
+            'recorded_physical_actions_available': False,
+            'continuous_window_boundaries': continuations}
 
 
 if __name__ == '__main__':

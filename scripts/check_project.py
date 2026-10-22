@@ -81,6 +81,7 @@ def main():
  names.append('external_continual')
  names.append('organism_lifetime')
  names.append('learning_organism')
+ names.append('temporal_organism')
  cmd=['cargo','test',*flags]
  for name in names:cmd+=['--test',name]
  run(*cmd);run('cargo','test',*flags,'--example','rsp3_experience')

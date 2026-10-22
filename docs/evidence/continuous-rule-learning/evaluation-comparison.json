@@ -1,0 +1,242 @@
+{
+  "scope": "recorded real-data forecasting; no physical control or general-intelligence qualification",
+  "forecast_operation": "world_prediction",
+  "sources": {
+    "data/realAWSCloudwatch/ec2_cpu_utilization_24ae8d.csv": {
+      "observations": 3226,
+      "mse": {
+        "last": 0.0037603597704558736,
+        "mean8": 0.0022184136190834484,
+        "ar8": 0.0018960914523596612,
+        "full": 0.0023712005758161213,
+        "fixed": 0.0023712005758161213
+      }
+    },
+    "data/realAdExchange/exchange-2_cpc_results.csv": {
+      "observations": 1300,
+      "mse": {
+        "last": 0.00022713146174658996,
+        "mean8": 0.0006044173129629183,
+        "ar8": 0.00022339877555496737,
+        "full": 0.0002476687474097834,
+        "fixed": 0.0002476687474097834
+      }
+    },
+    "data/realKnownCause/ambient_temperature_system_failure.csv": {
+      "observations": 5814,
+      "mse": {
+        "last": 3.229504159875857e-08,
+        "mean8": 8.624349659672453e-08,
+        "ar8": 3.2186830890295566e-08,
+        "full": 2.9792991761933285e-08,
+        "fixed": 2.9792991761933285e-08
+      }
+    },
+    "data/realTraffic/TravelTime_387.csv": {
+      "observations": 2000,
+      "mse": {
+        "last": 2.9641292488106983e-05,
+        "mean8": 2.8977515033792e-05,
+        "ar8": 2.7134374191201714e-05,
+        "full": 2.689631095887552e-05,
+        "fixed": 2.689631095887552e-05
+      }
+    },
+    "data/realTweets/Twitter_volume_AAPL.csv": {
+      "observations": 12722,
+      "mse": {
+        "last": 0.0005649321536447453,
+        "mean8": 0.0009463624343817622,
+        "ar8": 0.000529697964194,
+        "full": 0.0005617149672565914,
+        "fixed": 0.0005617149672565914
+      }
+    }
+  },
+  "mean_source_relative_mse": {
+    "last": 1.0,
+    "mean8": 1.7148619774973521,
+    "ar8": 0.86750051622587,
+    "full": 0.9090444288310886,
+    "fixed": 0.9090444288310886
+  },
+  "best_single_reference": "ar8",
+  "whole_organism_work": {
+    "full": 29251094838,
+    "fixed": 29038915284
+  },
+  "rule_reports": {
+    "full": {
+      "accepted_rule_uses": 0,
+      "baseline_mse": 0.0007386872608411502,
+      "committed_frames": 31320,
+      "comparison_frames": 12722,
+      "config": {
+        "recursive": true,
+        "search": true,
+        "seed": 6072344679902495052
+      },
+      "forecast_mse": 0.0005734724190243924,
+      "forecast_values": 31320,
+      "last_rule_trial": {
+        "accepted": false,
+        "after": 0.02561742762678507,
+        "before": 0.02265678340850582,
+        "candidate": {
+          "Bin": [
+            "Sub",
+            {
+              "Lit": {
+                "Int": -2
+              }
+            },
+            {
+              "Input": 4
+            }
+          ]
+        },
+        "future_frames": 128,
+        "future_values": 128,
+        "incumbent": {
+          "Input": 0
+        },
+        "proposed_after": 28069,
+        "resolved_after": 28197
+      },
+      "learned_fingerprint": 14323036338705688285,
+      "neural_prediction_weights": [
+        0.0,
+        0.00448325571209451,
+        0.0
+      ],
+      "neural_reconstruction_paused": true,
+      "parameter_updates": 31250,
+      "pending_rule_frames": null,
+      "pending_rule_losses": null,
+      "raw_values_presented": 31330,
+      "recent_neural_mse": 0.03825572018813147,
+      "recent_temporal_mse": 5.17900696371929e-05,
+      "rule": {
+        "Input": 0
+      },
+      "rule_admissions": 0,
+      "rule_rejections": 3,
+      "rule_trials": 3,
+      "search": {
+        "attempts": 43,
+        "last_direct": [
+          2148079.733833604,
+          2067212.2481314705
+        ],
+        "last_error": null,
+        "last_producers": [],
+        "long_term_lessons": 16,
+        "pending_stage": 0,
+        "policy": {
+          "location": {
+            "Input": 9
+          },
+          "priority": {
+            "Input": 0
+          },
+          "variation": {
+            "Input": 8
+          }
+        },
+        "policy_generations": 0,
+        "policy_id": 9182386847551643724,
+        "remembered_counterexamples": 3,
+        "retained_lessons": 64,
+        "rule_proposals": 3,
+        "rule_searches": 117,
+        "work": 273403110
+      },
+      "series": 1,
+      "unrepresented_values": 0,
+      "world_forecast_mse": 0.0005587805169411069,
+      "world_forecast_values": 31320
+    },
+    "fixed": {
+      "accepted_rule_uses": 0,
+      "baseline_mse": 0.0007386872608411502,
+      "committed_frames": 31320,
+      "comparison_frames": 12722,
+      "config": {
+        "recursive": false,
+        "search": false,
+        "seed": 6072344679902495052
+      },
+      "forecast_mse": 0.0005734724190243924,
+      "forecast_values": 31320,
+      "last_rule_trial": null,
+      "learned_fingerprint": 3662631634581497797,
+      "neural_prediction_weights": [
+        0.0,
+        0.00448325571209451,
+        0.0
+      ],
+      "neural_reconstruction_paused": true,
+      "parameter_updates": 31250,
+      "pending_rule_frames": null,
+      "pending_rule_losses": null,
+      "raw_values_presented": 31330,
+      "recent_neural_mse": 0.03825572018813147,
+      "recent_temporal_mse": 5.17900696371929e-05,
+      "rule": {
+        "Input": 0
+      },
+      "rule_admissions": 0,
+      "rule_rejections": 0,
+      "rule_trials": 0,
+      "search": {
+        "attempts": 0,
+        "last_direct": null,
+        "last_error": null,
+        "last_producers": [],
+        "long_term_lessons": 16,
+        "pending_stage": null,
+        "policy": {
+          "location": {
+            "Input": 9
+          },
+          "priority": {
+            "Input": 0
+          },
+          "variation": {
+            "Input": 8
+          }
+        },
+        "policy_generations": 0,
+        "policy_id": 9182386847551643724,
+        "remembered_counterexamples": 0,
+        "retained_lessons": 64,
+        "rule_proposals": 0,
+        "rule_searches": 0,
+        "work": 0
+      },
+      "series": 1,
+      "unrepresented_values": 0,
+      "world_forecast_mse": 0.0005587805169411069,
+      "world_forecast_values": 31320
+    }
+  },
+  "pre_post_forecasts": 25062,
+  "criteria": {
+    "beats_best_reference_by_five_percent": false,
+    "no_source_ten_percent_regression_vs_last": true,
+    "improved_acquisition_by_five_percent": false,
+    "work_within_one_point_five": true,
+    "recursive_producer_admitted": false,
+    "acquired_learning_program_executed": false
+  },
+  "qualified": false,
+  "paired_time_block_interval": {
+    "block": 64,
+    "resamples": 2000,
+    "fixed_minus_full_relative_mse_95": [
+      0.0,
+      0.0
+    ],
+    "independent_generalization_claim": false
+  }
+}

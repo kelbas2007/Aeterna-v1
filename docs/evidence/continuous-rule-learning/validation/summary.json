@@ -1,0 +1,23 @@
+{
+  "source_commit": "c333b0665d5724d5961bbf692895b7b5ad1428db",
+  "local_project_check": "PASS",
+  "local_temporal_runtime_check": "PASS",
+  "source_ci": {
+    "status": "PASS",
+    "run_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/39757637396",
+    "platforms": [
+      "ubuntu-latest",
+      "windows-latest"
+    ],
+    "all_source_pr_checks": 23
+  },
+  "source_ci_console_archive": {
+    "status": "UNAVAILABLE",
+    "reason": "GitHub Actions log download host returned HTTP Forbidden",
+    "conclusions_and_steps_verified_with_GitHub_API": true
+  },
+  "native_replay_new_primary_commits": 31448,
+  "native_replay_evaluation_control_commits": 25062,
+  "primary_replay_byte_identical": true,
+  "intelligence_qualification": "FAIL"
+}

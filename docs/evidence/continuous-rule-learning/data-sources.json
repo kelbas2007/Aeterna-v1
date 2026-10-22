@@ -1,0 +1,47 @@
+{
+  "selection": "lexicographically first CSV in each of five real data directories, before reading values",
+  "repository": "numenta/NAB",
+  "ref": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+  "files": [
+    {
+      "group": "realAWSCloudwatch",
+      "path": "data/realAWSCloudwatch/ec2_cpu_utilization_24ae8d.csv",
+      "ref": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+      "sha256": "ab446fbd8b9f37507eb2fdb06315826d8daeef02e241133ce06e0ee571ba53d9",
+      "rows": 4032,
+      "development_fraction": 0.2
+    },
+    {
+      "group": "realAdExchange",
+      "path": "data/realAdExchange/exchange-2_cpc_results.csv",
+      "ref": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+      "sha256": "d869ab165254f3ee77ee21fd9fab2be1d07c1f80b8133cf01bbaf2d768c2ac64",
+      "rows": 1624,
+      "development_fraction": 0.2
+    },
+    {
+      "group": "realKnownCause",
+      "path": "data/realKnownCause/ambient_temperature_system_failure.csv",
+      "ref": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+      "sha256": "230b68ccca20f59d562afd5d24ad52939c9b784386bed0054018358bf9120581",
+      "rows": 7267,
+      "development_fraction": 0.2
+    },
+    {
+      "group": "realTraffic",
+      "path": "data/realTraffic/TravelTime_387.csv",
+      "ref": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+      "sha256": "38e70e9ead8227fd023bff6e93247d5bc01ee008f781b921a156962419b399bb",
+      "rows": 2500,
+      "development_fraction": 0.2
+    },
+    {
+      "group": "realTweets",
+      "path": "data/realTweets/Twitter_volume_AAPL.csv",
+      "ref": "ea702d75cc2258d9d7dd35ca8e5e2539d71f3140",
+      "sha256": "826f5cf404c2890784a7824f7102fd00cb134a4948e12e44ec320d095cbbc217",
+      "rows": 15902,
+      "development_fraction": 0.2
+    }
+  ]
+}

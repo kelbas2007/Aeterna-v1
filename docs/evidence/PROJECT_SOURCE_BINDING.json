@@ -357,5 +357,34 @@
     },
     "authority": "same protected native U1; no actuator in model",
     "legacy_checkpoint": "v1 unchanged when learning state is absent; v2 stores raw learning state"
+  },
+  "implemented_continuous_rule_extension": {
+    "status": "implementation under engineering validation; no qualified intelligence claim",
+    "base_commit": "01a35d0c69c3dec0340c753456ada4a7b7f221da",
+    "base_archive": "docs/evidence/CONTINUOUS_RULE_BASE_SOURCES.json.gz",
+    "base_archive_sha256": "2b3a9da910151fa48841b10aaaeb75106f55e62ff4c521832c42e8e90d591eba",
+    "modified": {
+      "src/bin/aeterna-unified.rs": {
+        "before_sha256": "ad9975690e1e7146b86f5355a52fd5319245c97180e62fc887ca93fd61a15bb5",
+        "after_sha256": "28351750335f5d1070d0e02a37ac9f62567dd4df6a6e4dbc623a530f862a72fb"
+      },
+      "src/learning_world.rs": {
+        "before_sha256": "e464196e090ae05587e9c666981dac5c662320186010071a89e8a7ea2b4487b0",
+        "after_sha256": "7ad3590ec38d74e1181a7c6daa529e61dcb6cd42483dd30358a9560ff7c73002"
+      },
+      "src/unified_runtime.rs": {
+        "before_sha256": "94689342a349699a49449884be6bab50d1b68960bffb4e698597d2379cc24417",
+        "after_sha256": "a59bb58fc025715a95e9c69889851cfb82edb6db81e9c2ac104da321c52e7028"
+      },
+      "src/learning_world/network.rs": {
+        "before_sha256": "82c3de5e44004a30c82abecd4e2716526f3970c3985ace9cdd482e2a993db4e8",
+        "after_sha256": "cf6e5e7797d84a29cd19e81a29c6933f5cab03e5c0dad74c0337adb0c16895ff"
+      }
+    },
+    "added": {
+      "src/learning_world/temporal.rs": "0d081787bf2e687be3e4cdee09439ad4648497c8f7b2e632066f1c89ecd2e212",
+      "src/learning_world/temporal/rule_search.rs": "baed2bcf53649a907622551a543a30878c7071ba494473d7e1f924b96cdb6350"
+    },
+    "search_engine": "existing RSP2 search function, unchanged; noisy learning objectives with separate prospective producer evidence"
   }
 }

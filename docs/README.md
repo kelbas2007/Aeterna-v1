@@ -1,4 +1,9 @@
-# Documentation index — 21 October 2026
+# Documentation index — 22 October 2026
+
+[Непрерывное обучение: отрицательная проверка на реальных рядах](CONTINUOUS_RULE_LEARNING_RESULT.md) ·
+[Реализация и единое сохраняемое состояние](CONTINUOUS_RULE_LEARNING.md) ·
+[Заранее заданные критерии](CONTINUOUS_RULE_LEARNING_PROTOCOL.md).
+Прогнозы полного и фиксированного вариантов совпали; рекурсивного улучшения нет.
 
 [Реализованный общий контур обучения v2 и запуск на файлах](LEARNING_ORGANISM.md) ·
 [Проверки реализации](LEARNING_ORGANISM_RESULT.md).

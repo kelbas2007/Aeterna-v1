@@ -1,0 +1,72 @@
+{
+  "source_commit": "c333b0665d5724d5961bbf692895b7b5ad1428db",
+  "qualification": "FAIL",
+  "initial_published_checkpoint_sha256": "9f602b6fa673785fbe0dcf894c62ff964f7f5a29abee4a42cae4913db9db61b2",
+  "initial_factual_events": 17990,
+  "arms": {
+    "full": {
+      "stages": [
+        {
+          "stage": "development",
+          "directory": "development-full",
+          "new_factual_events": 6258,
+          "initial_events": 17990,
+          "final_events": 24248,
+          "starting_checkpoint_sha256": "9f602b6fa673785fbe0dcf894c62ff964f7f5a29abee4a42cae4913db9db61b2",
+          "continuing_checkpoint_sha256": "103170c1cf73cb902bbc711c58374f2952364f1d28b4c98ad826c5156209fd87",
+          "whole_organism_work": 10686214881,
+          "checkpoint_bytes": 5847006
+        },
+        {
+          "stage": "evaluation",
+          "directory": "evaluation-full",
+          "new_factual_events": 25062,
+          "initial_events": 24248,
+          "final_events": 49310,
+          "starting_checkpoint_sha256": "103170c1cf73cb902bbc711c58374f2952364f1d28b4c98ad826c5156209fd87",
+          "continuing_checkpoint_sha256": "58981ebd723b52f69fa0e0c2c0773e8d547a749000d7c9a2e87785459ae68aec",
+          "whole_organism_work": 29251094838,
+          "checkpoint_bytes": 6025134
+        }
+      ],
+      "acquisition_and_evaluation_work": 39937309719
+    },
+    "fixed": {
+      "stages": [
+        {
+          "stage": "development",
+          "directory": "development-fixed",
+          "new_factual_events": 6258,
+          "initial_events": 17990,
+          "final_events": 24248,
+          "starting_checkpoint_sha256": "9f602b6fa673785fbe0dcf894c62ff964f7f5a29abee4a42cae4913db9db61b2",
+          "continuing_checkpoint_sha256": "128db20addb395318a11af584c9f64d121c4f1a4e3517bca0a36fb86530c60d4",
+          "whole_organism_work": 10624834077,
+          "checkpoint_bytes": 5840755
+        },
+        {
+          "stage": "evaluation",
+          "directory": "evaluation-fixed",
+          "new_factual_events": 25062,
+          "initial_events": 24248,
+          "final_events": 49310,
+          "starting_checkpoint_sha256": "128db20addb395318a11af584c9f64d121c4f1a4e3517bca0a36fb86530c60d4",
+          "continuing_checkpoint_sha256": "cea4d2d6de928c34c5315f97158aabb7a798fa717e3f189cb2e35850e0f511d7",
+          "whole_organism_work": 29038915284,
+          "checkpoint_bytes": 5996476
+        }
+      ],
+      "acquisition_and_evaluation_work": 39663749361
+    }
+  },
+  "primary_simulated_control_continuation": {
+    "directory": "physics",
+    "actions": 128,
+    "final_events": 49438,
+    "starting_checkpoint_sha256": "58981ebd723b52f69fa0e0c2c0773e8d547a749000d7c9a2e87785459ae68aec",
+    "continuing_checkpoint_sha256": "5eb0b82cf10aacfc04cd0ce8a0e3cf4653ed990ea8b560cfe3625070b097acb6",
+    "environment": "Gymnasium Pendulum-v1",
+    "intelligence_qualification": false
+  },
+  "acquisition_and_evaluation_work_ratio": 1.006896986855937
+}

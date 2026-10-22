@@ -116,6 +116,17 @@ pub(crate) fn main()->Result<()>{
                     Ok(json!({"type":"learning_world_enabled","checkpoint_version":2,
                         "action_authority":"same_u1","prior_experience":"preserved_without_inventing_raw_observations"}))
                 },
+                "organism_enable_temporal_learning"=>{
+                    let config=serde_json::from_value(request.get("config").cloned().unwrap_or(json!({})))?;
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_temporal_learning(config)?;
+                    Ok(json!({"type":"temporal_learning_enabled","action_authority":"same_u1"}))
+                },
+                "temporal_prediction"=>Ok(json!({"type":"temporal_prediction","prediction":runtime.as_mut().ok_or("not loaded")?.predict_constructing_temporal()?})),
+                "world_prediction"=>{
+                    let action=request.get("action").and_then(Value::as_u64).unwrap_or(0);
+                    if action>=16{return Err("invalid prediction action".into());}
+                    Ok(json!({"type":"world_prediction","prediction":runtime.as_mut().ok_or("not loaded")?.predict_constructing_world(action as usize)?}))
+                },
                 "learning_world_report"=>Ok(json!({"type":"learning_world_report",
                     "report":runtime.as_ref().ok_or("not loaded")?.learning_world_report()})),
                 "set_learning_world_goal"=>{
