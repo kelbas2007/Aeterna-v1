@@ -395,3 +395,70 @@ fn actual_measurement_post_supplies_the_next_protected_answer() {
     assert_eq!(r.construction_learner().unwrap().factual_event_count(), 2);
     assert_eq!(r.own_basis_report().unwrap().learned_fingerprint, learned);
 }
+#[test]
+fn basis_and_recurrent_world_share_the_same_action_and_restored_life() {
+    let mut r = runtime(false);
+    r.enable_constructing_learning_world(
+        aeterna_v1::learning_world::LearningWorldConfig {
+            latent: 4,
+            context_frames: 2,
+            max_coordinates: 128,
+            max_frame_values: 128,
+            memory_entries: 4,
+            memory_bytes: 65536,
+            work_per_step: 200_000,
+            reconstruction_targets: 8,
+            replay_updates: 1,
+            ..Default::default()
+        },
+        &image(0),
+    )
+    .unwrap();
+    for i in 0..96 {
+        teach(&mut r, "light", i);
+    }
+    r.set_own_basis_goal(Some(BasisGoal {
+        skill: "light".into(),
+        answers: vec![
+            BasisAnswer {
+                motor: 3,
+                concept: "dark".into(),
+            },
+            BasisAnswer {
+                motor: 9,
+                concept: "bright".into(),
+            },
+        ],
+    }))
+    .unwrap();
+    r.observe_external_sensor_restart(&image(201)).unwrap();
+    let offers: Vec<_> = (0..16)
+        .map(|a| ActionOffer {
+            available: a == 3 || a == 9,
+            max_cost: 1,
+        })
+        .collect();
+    let mut calls = 0;
+    r.step_external_sensors(&offers, Some(1), safe, |a| {
+        calls += 1;
+        assert_eq!(a, 9);
+        Ok(SensorPost {
+            frame: image(201),
+            reward: 0.,
+            cost: 1,
+        })
+    })
+    .unwrap();
+    assert_eq!(calls, 1);
+    assert_eq!(r.construction_learner().unwrap().factual_event_count(), 1);
+    assert!(r.learning_world_report().unwrap().online_updates > 0);
+    let before = r.own_basis_report().unwrap().learned_fingerprint;
+    let bytes = r.checkpoint_constructing().unwrap();
+    let resumed = ScientificRuntime::from_constructing_checkpoint(&bytes).unwrap();
+    assert_eq!(bytes, resumed.checkpoint_constructing().unwrap());
+    assert_eq!(
+        before,
+        resumed.own_basis_report().unwrap().learned_fingerprint
+    );
+    assert!(resumed.unified_report().unwrap().learning_world.is_some());
+}
