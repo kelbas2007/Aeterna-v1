@@ -1,5 +1,18 @@
 // U1 bridge: bounded cold exploration in the same carrier readout.
 impl EvoPhase {
+    /// Source-neutral Pareto admission for an explicit evidential goal. A cold
+    /// zero utility projection must not turn strictly stronger positive
+    /// evidence into an arbitrary motor tie. Selection among the frontier is
+    /// still the same physical U1, with its existing learning/exploration.
+    pub(crate) fn choose_phase_meta_evidence_ordered(&self,proposals:&[PhaseCognitiveProposal],entropy:u64,explore:bool)->Option<PhaseMetaDecision>{
+        if proposals.is_empty()||proposals.len()>256{return None}
+        let mut ids=std::collections::BTreeSet::new();
+        for p in proposals {if p.action>=self.config.motor_cells||!ids.insert(p.proposal_id)||!Self::valid_meta_fields(p.fields){return None}}
+        let frontier:Vec<_>=proposals.iter().filter(|p|!proposals.iter().any(|q|
+            q.fields.iter().zip(p.fields).all(|(a,b)|*a>=b) &&
+            q.fields.iter().zip(p.fields).any(|(a,b)|*a>b))).copied().collect();
+        self.choose_phase_meta_exploratory(&frontier,entropy,explore)
+    }
     pub fn choose_phase_meta_exploratory(&self, proposals:&[PhaseCognitiveProposal], entropy:u64, explore:bool)->Option<PhaseMetaDecision> {
         if proposals.is_empty() || proposals.len()>256 {return None;}
         let mut ids=std::collections::BTreeSet::new();let mut scored=Vec::new();

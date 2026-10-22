@@ -46,6 +46,10 @@ fn runtime(grow: bool) -> ScientificRuntime {
     )
     .unwrap();
     r.enable_constructing_self_directed_control().unwrap();
+    r.enable_constructing_causal_memory(
+        aeterna_v1::construction::causal_memory::CausalConfig::default(),
+    )
+    .unwrap();
     r.enable_constructing_external_reward_memory(true, false)
         .unwrap();
     r.enable_constructing_own_basis(
@@ -221,6 +225,8 @@ fn frozen_same_u1_uses_the_acquired_answer_goal_and_commits_one_actual_post() {
             .unwrap();
         assert_eq!(calls, 1);
         assert_eq!(step.action, wanted);
+        assert!(step.operations.iter().any(|s| s == "evidence-dominance"));
+        assert!(step.selected_fields[0] > 0.9);
     }
     assert_eq!(r.construction_learner().unwrap().factual_event_count(), 2);
     assert_eq!(r.own_basis_report().unwrap().learned_fingerprint, learned);
@@ -295,6 +301,13 @@ fn unaffordable_teaching_preserves_the_entire_life() {
         namespace: 7,
         pixels: Some(vec![vec![0; 32]; 32]),
     };
+    r.enable_constructing_self_directed_control().unwrap();
+    r.enable_constructing_causal_memory(
+        aeterna_v1::construction::causal_memory::CausalConfig::default(),
+    )
+    .unwrap();
+    r.enable_constructing_external_reward_memory(true, false)
+        .unwrap();
     r.enable_constructing_own_basis(
         BasisConfig {
             grow: false,

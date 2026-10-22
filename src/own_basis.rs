@@ -762,6 +762,9 @@ impl OwnBasis {
             origin: event,
             fingerprint,
         };
+        // The live lesson is learned even when reservoir sampling elects not
+        // to retain it. Replay supplements acquisition; it cannot replace it.
+        let current = e.clone();
         if skill.examples.len() < self.config.memory_examples {
             skill.examples.push(e)
         } else {
@@ -782,11 +785,11 @@ impl OwnBasis {
         }
         if skill.examples.len() >= BATCH {
             for _ in 0..64 {
-                let batch: Vec<_> = (0..BATCH)
-                    .map(|_| {
+                let batch: Vec<_> = std::iter::once(current.clone())
+                    .chain((1..BATCH).map(|_| {
                         let i = word(&mut self.rng) as usize % skill.examples.len();
                         skill.examples[i].clone()
-                    })
+                    }))
                     .collect();
                 let base_cost = update_cost(library, &skill.head, None);
                 let extra_cost = skill

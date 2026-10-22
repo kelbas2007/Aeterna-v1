@@ -361,7 +361,7 @@
   "implemented_own_basis_extension": {
     "base_commit": "01a35d0c69c3dec0340c753456ada4a7b7f221da",
     "base_archive": "docs/evidence/own-basis-base-source.json.gz",
-    "base_archive_sha256": "8d2ca1d5a4cf6c99ef6575fbec5b287463f1a41707723da7f9bc9b84d4b42ac2",
+    "base_archive_sha256": "8043fb50cdd380074f03d5cbe135d68aecde8e246159c0484514e7ca9dd83e75",
     "modified": {
       "src/lib.rs": {
         "before_sha256": "c1e4d07eda39c93103604d50d8b6b5e2dbdef70f4715a47b7196559efb618414",
@@ -369,7 +369,7 @@
       },
       "src/unified_runtime.rs": {
         "before_sha256": "94689342a349699a49449884be6bab50d1b68960bffb4e698597d2379cc24417",
-        "after_sha256": "0a7497f7f6abc5cf8779de2f61e9bdeb781c11f37ac254a4730c8da67f9ea61f"
+        "after_sha256": "23b1001b71eef84399fef0fb71a84beae9b03242fd35716203ff0a539c57fd2d"
       },
       "src/bin/aeterna-unified.rs": {
         "before_sha256": "ad9975690e1e7146b86f5355a52fd5319245c97180e62fc887ca93fd61a15bb5",
@@ -378,10 +378,14 @@
       "src/learning_world.rs": {
         "before_sha256": "e464196e090ae05587e9c666981dac5c662320186010071a89e8a7ea2b4487b0",
         "after_sha256": "5a5bf90abf99b182bfa415bb312035e4a80b756a148ee52abd8859ef39c68d01"
+      },
+      "src/phase_constructing_control.rs": {
+        "before_sha256": "0fcf968ae0e1d85e7637def73214925a1ee8a6ca175573081534e68dbd4f648c",
+        "after_sha256": "9d09f38e3704450821a926f17b6d46483be971927db29293d0d2c0c12e0456fd"
       }
     },
     "added": {
-      "src/own_basis.rs": "22ef7aaf5bf72728d8503cef79fb7cee01236600a3ff26cb7513e51bbdab8e73"
+      "src/own_basis.rs": "f22ad93e0de998a8710924fe768539237cd9c07cfc26b10846c571c2cc3ce70d"
     },
     "scope": "Initially untrained constructive feature library, explicit teaching and typed goals inside the existing protected organism; RSP2 engine unchanged."
   }

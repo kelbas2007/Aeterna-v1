@@ -1856,15 +1856,6 @@ impl ScientificRuntime {
                     }
                 }
             }
-            if let Some((predictions,coverage,examples))=&basis_forecasts {
-                // The explicit answer goal defines utility for every immediate
-                // proposal. Old sensor-code proximity cannot outrank its meaning.
-                for candidate in options.iter_mut().filter(|o|o.kind==3) {
-                    let p=predictions.iter().find(|(a,_)|*a==candidate.p.action).map_or(0.,|(_,p)|*p);
-                    candidate.p.fields=[p as f32,0.,0.,(*coverage * *examples as f64/(*examples as f64+8.)) as f32,
-                        1./(1.+(offers[candidate.p.action].max_cost as f32).ln_1p())];
-                }
-            }
             let mut candidates=options.clone();
             let can_construct=u.current.learner.carrier_can_construct() && u.current.learner.factual_event_count().saturating_sub(u.current.last_construction)>=cfg.search_every;
             if round<3 {
@@ -1888,9 +1879,23 @@ impl ScientificRuntime {
                     for c in &mut candidates {if c.kind==3 {revision.adjust(&mut c.p.fields);}}
                 }
             }
+            if let Some((predictions,coverage,examples))=&basis_forecasts {
+                // The explicit answer goal defines utility for every immediate
+                // proposal. Old sensor-code proximity cannot outrank its meaning.
+                for (index,candidate) in candidates.iter_mut().enumerate().filter(|(_,o)|o.kind==3) {
+                    changed_readouts[index]=false;
+                    let p=predictions.iter().find(|(a,_)|*a==candidate.p.action).map_or(0.,|(_,p)|*p);
+                    candidate.p.fields=[p as f32,0.,0.,(*coverage * *examples as f64/(*examples as f64+8.)) as f32,
+                        1./(1.+(offers[candidate.p.action].max_cost as f32).ln_1p())];
+                }
+            }
             let raw:Vec<_>=candidates.iter().map(|x|x.p).collect();u.nonce=u.nonce.checked_add(1).ok_or(UError::Capacity)?;
             let entropy=self.organism.contextual_meta_entropy().map_or(u.nonce,|value|value);
-            let choice=self.organism.choose_phase_meta_exploratory(&raw,uword(entropy),!u.freeze_controller).ok_or(UError::NoEvidence)?;
+            let choice=if basis_forecasts.is_some(){
+                u.computation_work=u.computation_work.saturating_add((raw.len()*raw.len()*5) as u64);
+                operations.push("evidence-dominance".into());
+                self.organism.choose_phase_meta_evidence_ordered(&raw,uword(entropy),!u.freeze_controller)
+            }else{self.organism.choose_phase_meta_exploratory(&raw,uword(entropy),!u.freeze_controller)}.ok_or(UError::NoEvidence)?;
             let chosen_index=candidates.iter().position(|p|p.p.proposal_id==choice.proposal_id).ok_or(UError::InvalidData)?;
             let chosen=candidates.into_iter().nth(chosen_index).ok_or(UError::InvalidData)?;
             u.operations[chosen.kind as usize]+=1;operations.push(chosen.source.to_string());
