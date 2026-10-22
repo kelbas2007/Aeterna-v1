@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "native_commits_matched": 6258,
+  "continuing_checkpoint_sha256": "103170c1cf73cb902bbc711c58374f2952364f1d28b4c98ad826c5156209fd87",
+  "full_state_byte_identical": true,
+  "new_physical_experiments": 0
+}

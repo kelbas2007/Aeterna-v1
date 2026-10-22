@@ -1,0 +1,10 @@
+{
+  "evaluation_forecasts": 25062,
+  "same_indices": true,
+  "different_predictions": 0,
+  "all_forecasts_byte_equal_as_canonical_json": true,
+  "sha256": {
+    "full": "61c9e1bd1c783c3f6d3cc081745d3f963a42a711f7746eb13623694afe4c808a",
+    "fixed": "61c9e1bd1c783c3f6d3cc081745d3f963a42a711f7746eb13623694afe4c808a"
+  }
+}

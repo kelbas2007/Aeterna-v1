@@ -1,0 +1,58 @@
+{
+  "scope": "Repeated allowed development prefixes; no held-out qualification claims",
+  "initial_attach_failure": "Budget on exhausted old step; no factual ingestion; fixed by observing actual first PRE before enabling the extension",
+  "runs": [
+    {
+      "run": "native-initial-full-2",
+      "status": "development_only_not_source_frozen",
+      "records": 500,
+      "binary_sha256": "e680482baf08d3d6cad568e0568dd0dd30ab6c8b42870251743e53d6ed74826c",
+      "rule_admissions": 0,
+      "recursive_generations": 0,
+      "whole_organism_work": 1056480745,
+      "forecast_scope": "temporal component, not the final fused world forecast"
+    },
+    {
+      "run": "native-development-full",
+      "status": "development_only_not_source_frozen",
+      "records": 6258,
+      "binary_sha256": "29cc0d2642138ecf93c4ac099651acf7e8157a824a51668a890ce1f1cef2b616",
+      "rule_admissions": 0,
+      "recursive_generations": 0,
+      "whole_organism_work": 12966523709,
+      "forecast_scope": "temporal component, not the final fused world forecast"
+    },
+    {
+      "run": "native-development-fixed",
+      "status": "development_only_not_source_frozen",
+      "records": 6258,
+      "binary_sha256": "29cc0d2642138ecf93c4ac099651acf7e8157a824a51668a890ce1f1cef2b616",
+      "rule_admissions": 0,
+      "recursive_generations": 0,
+      "whole_organism_work": 12915051517,
+      "forecast_scope": "temporal component, not the final fused world forecast"
+    },
+    {
+      "run": "context-development-full",
+      "status": "development_only_not_source_frozen",
+      "records": 6258,
+      "binary_sha256": "107ea4f0dfa4d66f429bdb4869e73dfd9a1a393b180f37fc2f603384272671e3",
+      "rule_admissions": 0,
+      "recursive_generations": 0,
+      "whole_organism_work": 7675821289,
+      "forecast_scope": "temporal component, not the final fused world forecast"
+    },
+    {
+      "run": "context-development-fixed",
+      "status": "development_only_not_source_frozen",
+      "records": 6258,
+      "binary_sha256": "107ea4f0dfa4d66f429bdb4869e73dfd9a1a393b180f37fc2f603384272671e3",
+      "rule_admissions": 0,
+      "recursive_generations": 0,
+      "whole_organism_work": 7625712957,
+      "forecast_scope": "temporal component, not the final fused world forecast"
+    }
+  ],
+  "frozen_final_development": "development-comparison.json",
+  "all_final_qualification_searches_included_in_work": true
+}
