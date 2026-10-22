@@ -1,0 +1,3046 @@
++ python scripts/test_check_project_target.py
++ cargo build --locked --offline --bin aeterna-v1 --bin aeterna-unified --message-format=json
++ cargo build --locked --offline --bin aeterna-v1 --bin aeterna-unified --message-format=json
++ cargo build --locked --release --bin aeterna-v1 --bin aeterna-unified --message-format=json
++ cargo build --locked --bin aeterna-v1 --bin aeterna-unified --message-format=json
+PASS: Cargo artifact selects canonical binary under custom target directory, explicit target triples and both profiles
++ cargo check --locked --all-targets
+    Checking aeterna-v1 v0.1.0 (/workspace/Aeterna-v1)
+warning: unused import: `Series`
+ --> src/learning_world/temporal/rule_search.rs:3:43
+  |
+3 | use super::{normalized, valid_rule, Seed, Series, LAGS};
+  |                                           ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `propose` is never used
+   --> src/construction/causal_memory.rs:636:19
+    |
+214 | impl CausalMemory {
+    | ----------------- method in this implementation
+...
+636 |     pub(crate) fn propose(
+    |                   ^^^^^^^
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib) generated 11 warnings (run `cargo fix --lib -p aeterna-v1` to apply 2 suggestions)
+warning: unused variable: `monitor`
+   --> tests/intel2_unified_worlds.rs:199:5
+    |
+199 |     monitor:&mut Monitor,
+    |     ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_monitor`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "te6_cold_probe_control") generated 1 warning (run `cargo fix --test "te6_cold_probe_control" -p aeterna-v1` to apply 1 suggestion)
+warning: `aeterna-v1` (test "goal_replan_physical") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "intel2_exploration_edge_cost") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "structure1_two_stage_sensing") generated 1 warning (1 duplicate)
+warning: value assigned to `stage` is never read
+   --> tests/g7_support.rs:705:5
+    |
+705 |     stage = 3;
+    |     ^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "g7_support") generated 1 warning
+warning: `aeterna-v1` (test "u1_cold_lifetime") generated 1 warning (1 duplicate)
+warning: unused import: `StepOutcome`
+  --> tests/primitive_intrinsic_experiments.rs:10:56
+   |
+10 |     use aeterna_v1::scientific_runtime::{ReasoningMode,StepOutcome};
+   |                                                        ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "primitive_intrinsic_experiments") generated 1 warning (run `cargo fix --test "primitive_intrinsic_experiments" -p aeterna-v1` to apply 1 suggestion)
+warning: variants `Two`, `Majority`, and `Selector` are never constructed
+  --> examples/support/induction.rs:10:5
+   |
+ 9 | pub enum Function {
+   |          -------- variants in this enum
+10 |     Two(u8),
+   |     ^^^
+11 |     Parity,
+12 |     Majority,
+   |     ^^^^^^^^
+13 |     Selector,
+   |     ^^^^^^^^
+   |
+   = note: `Function` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `function`, `variant`, `tuition`, and `checkpoint_bytes` are never read
+   --> examples/support/induction.rs:231:9
+    |
+230 | pub struct Report {
+    |            ------ fields in this struct
+231 |     pub function: Function,
+    |         ^^^^^^^^
+232 |     pub variant: usize,
+    |         ^^^^^^^
+...
+242 |     pub tuition: usize,
+    |         ^^^^^^^
+243 |     pub nodes: usize,
+244 |     pub checkpoint_bytes: usize,
+    |         ^^^^^^^^^^^^^^^^
+    |
+    = note: `Report` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: function `run` is never used
+   --> examples/support/induction.rs:346:8
+    |
+346 | pub fn run(f: Function, variant: usize) -> Report {
+    |        ^^^
+
+warning: `aeterna-v1` (example "induced_programs") generated 3 warnings
+warning: unused import: `Value`
+ --> tests/lc1_execution_contract.rs:6:35
+  |
+6 |     vm::{Error,Expr,Library,Op,Ty,Value},Config,
+  |                                   ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "lc1_execution_contract") generated 1 warning (run `cargo fix --test "lc1_execution_contract" -p aeterna-v1` to apply 1 suggestion)
+warning: `aeterna-v1` (test "factorized_world2_development") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "te5_unified_decisions") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "goal_replan_fresh1") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "complex_world_fresh1") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "intel2_context_field_diagnosis") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "e_model_revalidation") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (lib test) generated 9 warnings (9 duplicates)
+warning: fields `rivals_at_start` and `stage` are never read
+  --> tests/g7_support.rs:38:9
+   |
+33 | pub struct Score {
+   |            ----- fields in this struct
+...
+38 |     pub rivals_at_start: usize,
+   |         ^^^^^^^^^^^^^^^
+...
+41 |     pub stage: u8,
+   |         ^^^^^
+   |
+   = note: `Score` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "g7_open_world") generated 2 warnings (1 duplicate)
+warning: value assigned to `graph_pending` is never read
+  --> tests/observable_graph1_development.rs:80:27
+   |
+80 |     let mut graph_pending=false;
+   |                           ^^^^^ this value is reassigned later and never used
+...
+83 |         graph_pending=false;
+   |         ------------------- `graph_pending` is overwritten here before the previous value is read
+   |
+   = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "observable_graph1_development") generated 1 warning
+warning: unused variable: `second`
+  --> tests/structure1_chain_mechanism.rs:15:9
+   |
+15 |     let second=0usize;
+   |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_second`
+
+warning: `aeterna-v1` (test "structure1_chain_mechanism") generated 2 warnings (1 duplicate) (run `cargo fix --test "structure1_chain_mechanism" -p aeterna-v1` to apply 1 suggestion)
+warning: variants `Parity`, `Majority`, and `Selector` are never constructed
+  --> tests/../examples/support/induction.rs:11:5
+   |
+ 9 | pub enum Function {
+   |          -------- variants in this enum
+10 |     Two(u8),
+11 |     Parity,
+   |     ^^^^^^
+12 |     Majority,
+   |     ^^^^^^^^
+13 |     Selector,
+   |     ^^^^^^^^
+   |
+   = note: `Function` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `function`, `variant`, `tuition`, `nodes`, and `checkpoint_bytes` are never read
+   --> tests/../examples/support/induction.rs:231:9
+    |
+230 | pub struct Report {
+    |            ------ fields in this struct
+231 |     pub function: Function,
+    |         ^^^^^^^^
+232 |     pub variant: usize,
+    |         ^^^^^^^
+...
+242 |     pub tuition: usize,
+    |         ^^^^^^^
+243 |     pub nodes: usize,
+    |         ^^^^^
+244 |     pub checkpoint_bytes: usize,
+    |         ^^^^^^^^^^^^^^^^
+    |
+    = note: `Report` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: function `run` is never used
+   --> tests/../examples/support/induction.rs:346:8
+    |
+346 | pub fn run(f: Function, variant: usize) -> Report {
+    |        ^^^
+
+warning: `aeterna-v1` (test "induction_mechanism") generated 3 warnings
+warning: enum `Function` is never used
+ --> tests/../examples/support/induction.rs:9:10
+  |
+9 | pub enum Function {
+  |          ^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `arity` and `outcome` are never used
+  --> tests/../examples/support/induction.rs:16:12
+   |
+15 | impl Function {
+   | ------------- methods in this implementation
+16 |     pub fn arity(self) -> usize {
+   |            ^^^^^
+...
+23 |     pub fn outcome(self, bits: usize) -> usize {
+   |            ^^^^^^^
+
+warning: function `features` is never used
+  --> tests/../examples/support/induction.rs:41:8
+   |
+41 | pub fn features(
+   |        ^^^^^^^^
+
+warning: function `fresh` is never used
+  --> tests/../examples/support/induction.rs:80:8
+   |
+80 | pub fn fresh(width: usize) -> EvoPhase {
+   |        ^^^^^
+
+warning: methods `sensor` and `choose` are never used
+   --> tests/../examples/support/induction.rs:129:8
+    |
+106 | impl Controls {
+    | ------------- methods in this implementation
+...
+129 |     fn sensor(&self) -> Option<usize> {
+    |        ^^^^^^
+...
+139 |     fn choose(&self, x: &[f32], linear: bool) -> Option<usize> {
+    |        ^^^^^^
+
+warning: function `train` is never used
+   --> tests/../examples/support/induction.rs:208:8
+    |
+208 | pub fn train(f: Function, variant: usize) -> (Vec<u8>, Controls, usize) {
+    |        ^^^^^
+
+warning: struct `Report` is never constructed
+   --> tests/../examples/support/induction.rs:230:12
+    |
+230 | pub struct Report {
+    |            ^^^^^^
+
+warning: function `evaluate` is never used
+   --> tests/../examples/support/induction.rs:246:8
+    |
+246 | pub fn evaluate(
+    |        ^^^^^^^^
+
+warning: `aeterna-v1` (test "primitive_argument_transfer") generated 9 warnings (1 duplicate)
+warning: `aeterna-v1` (test "u1_cold_fresh2") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "te5_belief_action") generated 1 warning (1 duplicate)
+warning: unused import: `aeterna_v1::scientific_runtime::ScientificRuntime`
+ --> tests/general_policy_native.rs:5:5
+  |
+5 | use aeterna_v1::scientific_runtime::ScientificRuntime;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "general_policy_native") generated 1 warning (run `cargo fix --test "general_policy_native" -p aeterna-v1` to apply 1 suggestion)
+warning: `aeterna-v1` (test "factorized_world1_development") generated 1 warning (1 duplicate)
+warning: variant `Images` is never constructed
+  --> examples/support/real_programs.rs:11:5
+   |
+10 | pub enum Corpus {
+   |          ------ variant in this enum
+11 |     Images,
+   |     ^^^^^^
+   |
+   = note: `Corpus` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `sensor` and `predict` are never used
+   --> examples/support/real_programs.rs:165:8
+    |
+144 | impl Controls {
+    | ------------- methods in this implementation
+...
+165 |     fn sensor(&self) -> Option<usize> {
+    |        ^^^^^^
+...
+171 |     fn predict(&self, x: &[f32], linear: bool) -> Option<usize> {
+    |        ^^^^^^^
+
+warning: struct `Report` is never constructed
+   --> examples/support/real_programs.rs:233:12
+    |
+233 | pub struct Report {
+    |            ^^^^^^
+
+warning: function `run` is never used
+   --> examples/support/real_programs.rs:252:8
+    |
+252 | pub fn run(corpus: Corpus) -> Report {
+    |        ^^^
+
+warning: `aeterna-v1` (example "acquired_primitives") generated 4 warnings
+warning: `aeterna-v1` (test "complex_world1_development") generated 1 warning (1 duplicate)
+warning: unused import: `EvoPhase`
+ --> tests/intel1_unknown_worlds.rs:1:18
+  |
+1 | use aeterna_v1::{EvoPhase, HumanProtectionEvidence, HumanProtectionReason};
+  |                  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `correct` is never read
+   --> tests/intel1_unknown_worlds.rs:126:23
+    |
+124 | struct HistoryWorld{
+    |        ------------ field in this struct
+125 |     state:usize,context:bool,calls:usize,rng:Rng,
+126 |     actions:[usize;2],correct:usize,total:usize,score_correct:usize,ctx:[usize;4],
+    |                       ^^^^^^^
+    |
+    = note: `HistoryWorld` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "intel1_unknown_worlds") generated 2 warnings (run `cargo fix --test "intel1_unknown_worlds" -p aeterna-v1` to apply 1 suggestion)
+warning: `aeterna-v1` (test "structure1_chain_development") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "u1_cold_fresh") generated 1 warning (1 duplicate)
+warning: unnecessary parentheses around assigned value
+  --> tests/te4_cold_discovery.rs:80:29
+   |
+80 |                     success=(motor==roles.commit[episode.hidden]);
+   |                             ^                                   ^
+   |
+   = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+   |
+80 -                     success=(motor==roles.commit[episode.hidden]);
+80 +                     success=motor==roles.commit[episode.hidden];
+   |
+
+warning: `aeterna-v1` (test "te4_cold_discovery") generated 2 warnings (1 duplicate) (run `cargo fix --test "te4_cold_discovery" -p aeterna-v1` to apply 1 suggestion)
+warning: constant `CUE_BASE` is never used
+  --> tests/g7_support.rs:10:7
+   |
+10 | const CUE_BASE: u64 = 50_000;
+   |       ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `CHILD_PRE_CODE` is never used
+  --> tests/g7_support.rs:11:7
+   |
+11 | const CHILD_PRE_CODE: u64 = 70_000;
+   |       ^^^^^^^^^^^^^^
+
+warning: constant `CHILD_MID_BASE` is never used
+  --> tests/g7_support.rs:12:7
+   |
+12 | const CHILD_MID_BASE: u64 = 71_000;
+   |       ^^^^^^^^^^^^^^
+
+warning: struct `World` is never constructed
+  --> tests/g7_support.rs:15:12
+   |
+15 | pub struct World {
+   |            ^^^^^
+
+warning: enum `Arm` is never used
+  --> tests/g7_support.rs:25:10
+   |
+25 | pub enum Arm {
+   |          ^^^
+
+warning: struct `Score` is never constructed
+  --> tests/g7_support.rs:33:12
+   |
+33 | pub struct Score {
+   |            ^^^^^
+
+warning: struct `Mature` is never constructed
+  --> tests/g7_support.rs:45:12
+   |
+45 | pub struct Mature {
+   |            ^^^^^^
+
+warning: function `carrier` is never used
+   --> tests/g7_support.rs:168:4
+    |
+168 | fn carrier() -> EvoPhase {
+    |    ^^^^^^^
+
+warning: function `post_code` is never used
+   --> tests/g7_support.rs:207:4
+    |
+207 | fn post_code(
+    |    ^^^^^^^^^
+
+warning: function `install_world_models` is never used
+   --> tests/g7_support.rs:220:8
+    |
+220 | pub fn install_world_models(
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `train_strategy` is never used
+   --> tests/g7_support.rs:238:4
+    |
+238 | fn train_strategy(evo: &mut EvoPhase, perm: [usize; 4]) -> u32 {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `child_mid_code` is never used
+   --> tests/g7_support.rs:265:4
+    |
+265 | fn child_mid_code(perm: [usize; 4], first_action: usize, branch: usize) -> Option<u64> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `old_terminal` is never used
+   --> tests/g7_support.rs:273:4
+    |
+273 | fn old_terminal(perm: [usize; 4], child: usize, branch: usize) -> usize {
+    |    ^^^^^^^^^^^^
+
+warning: function `changed_terminal` is never used
+   --> tests/g7_support.rs:283:4
+    |
+283 | fn changed_terminal(perm: [usize; 4], child: usize, branch: usize) -> usize {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `train_child` is never used
+   --> tests/g7_support.rs:291:4
+    |
+291 | fn train_child(
+    |    ^^^^^^^^^^^
+
+warning: function `acquire_children` is never used
+   --> tests/g7_support.rs:312:4
+    |
+312 | fn acquire_children(
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `required_children` is never used
+   --> tests/g7_support.rs:344:4
+    |
+344 | fn required_children(law: usize, children: [u64; 2]) -> [u64; 2] {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `required_branches` is never used
+   --> tests/g7_support.rs:353:4
+    |
+353 | fn required_branches(law: usize) -> [usize; 2] {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `child_index` is never used
+   --> tests/g7_support.rs:362:4
+    |
+362 | fn child_index(children: [u64; 2], id: u64) -> Option<usize> {
+    |    ^^^^^^^^^^^
+
+warning: function `execute_child` is never used
+   --> tests/g7_support.rs:372:4
+    |
+372 | fn execute_child(
+    |    ^^^^^^^^^^^^^
+
+warning: function `evaluate_sequence` is never used
+   --> tests/g7_support.rs:387:4
+    |
+387 | fn evaluate_sequence(
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `all_child_sequences` is never used
+   --> tests/g7_support.rs:432:4
+    |
+432 | fn all_child_sequences(children: [u64; 2]) -> Vec<Vec<u64>> {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `train_parents` is never used
+   --> tests/g7_support.rs:444:4
+    |
+444 | fn train_parents(evo: &mut EvoPhase, children: [u64; 2], perm: [usize; 4]) -> usize {
+    |    ^^^^^^^^^^^^^
+
+warning: function `revise_child0` is never used
+   --> tests/g7_support.rs:477:4
+    |
+477 | fn revise_child0(
+    |    ^^^^^^^^^^^^^
+
+warning: function `build_mature` is never used
+   --> tests/g7_support.rs:517:8
+    |
+517 | pub fn build_mature(seed: u64) -> Mature {
+    |        ^^^^^^^^^^^^
+
+warning: function `prepare_worlds` is never used
+   --> tests/g7_support.rs:550:8
+    |
+550 | pub fn prepare_worlds(mature: &mut Mature, worlds: &[World]) {
+    |        ^^^^^^^^^^^^^^
+
+warning: function `score_world` is never used
+   --> tests/g7_support.rs:567:8
+    |
+567 | pub fn score_world(mature: &Mature, world: World, arm: Arm) -> Score {
+    |        ^^^^^^^^^^^
+
+warning: function `generate_worlds` is never used
+   --> tests/g7_support.rs:725:8
+    |
+725 | pub fn generate_worlds(authority_seed: u64, sub: u64, perm: [usize; 4]) -> Vec<World> {
+    |        ^^^^^^^^^^^^^^^
+
+warning: function `wilson95` is never used
+   --> tests/g7_support.rs:763:8
+    |
+763 | pub fn wilson95(success: usize, n: usize) -> (f64, f64) {
+    |        ^^^^^^^^
+
+warning: function `fnv_mix` is never used
+   --> tests/g7_support.rs:774:8
+    |
+774 | pub fn fnv_mix(mut hash: u64, value: u64) -> u64 {
+    |        ^^^^^^^
+
+warning: `aeterna-v1` (test "g9_fresh_belief") generated 31 warnings (1 duplicate)
+warning: unused variable: `dead`
+  --> tests/u3_cross_mechanism_allocation.rs:19:13
+   |
+19 |         let dead=fixture::scene(&l1,8,0,None);
+   |             ^^^^ help: if this is intentional, prefix it with an underscore: `_dead`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "u3_cross_mechanism_allocation") generated 1 warning (run `cargo fix --test "u3_cross_mechanism_allocation" -p aeterna-v1` to apply 1 suggestion)
+warning: `aeterna-v1` (test "acquired_primitives") generated 9 warnings (9 duplicates)
+warning: unused import: `Op`
+ --> tests/experiential.rs:1:146
+  |
+1 | ...Case,SynthesisTask,SearchPolicy,SearchLimits},vm::{Expr,Library,Op}};
+  |                                                                    ^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around type
+ --> tests/experiential.rs:8:51
+  |
+8 | #[test]fn identical_cohorts_forbidden(){let train:(Vec<_>)=(0..8).map(case).collect();let cfg=StudyConfig{limits:limits(),candidate_l...
+  |                                                   ^      ^
+  |
+  = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+  |
+8 - #[test]fn identical_cohorts_forbidden(){let train:(Vec<_>)=(0..8).map(case).collect();let cfg=StudyConfig{limits:limits(),candidate_limit:16,shortlist:4,train_seed:100,validation_seed:200};assert!(study(&train,&train,cfg).is_err());}
+8 + #[test]fn identical_cohorts_forbidden(){let train:Vec<_>=(0..8).map(case).collect();let cfg=StudyConfig{limits:limits(),candidate_limit:16,shortlist:4,train_seed:100,validation_seed:200};assert!(study(&train,&train,cfg).is_err());}
+  |
+
+warning: `aeterna-v1` (test "experiential") generated 2 warnings (run `cargo fix --test "experiential" -p aeterna-v1` to apply 2 suggestions)
+warning: unused import: `EvoPhase`
+  --> tests/te3_unified_sensing.rs:15:18
+   |
+15 | use aeterna_v1::{EvoPhase};
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "te3_unified_sensing") generated 2 warnings (1 duplicate) (run `cargo fix --test "te3_unified_sensing" -p aeterna-v1` to apply 1 suggestion)
+warning: unused variable: `promoted_before`
+   --> tests/intel4_unified_worlds.rs:239:9
+    |
+239 |     let promoted_before=rt.organism().phase_native_context_witnesses()
+    |         ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_promoted_before`
+
+warning: `aeterna-v1` (test "intel4_unified_worlds") generated 2 warnings (1 duplicate) (run `cargo fix --test "intel4_unified_worlds" -p aeterna-v1` to apply 1 suggestion)
+warning: method `shuffle` is never used
+  --> tests/g7_support.rs:82:12
+   |
+62 | impl Rng {
+   | -------- method in this implementation
+...
+82 |     pub fn shuffle<T>(&mut self, values: &mut [T]) {
+   |            ^^^^^^^
+
+warning: function `perm4` is never used
+  --> tests/g7_support.rs:90:8
+   |
+90 | pub fn perm4(rng: &mut Rng) -> [usize; 4] {
+   |        ^^^^^
+
+warning: `aeterna-v1` (test "g9_belief_state") generated 33 warnings (31 duplicates)
+warning: field `pair` is never read
+  --> tests/g16_autonomous_abstract_model.rs:38:5
+   |
+36 | struct ResetWorld {
+   |        ---------- field in this struct
+37 |     length: usize,
+38 |     pair: [usize;2],
+   |     ^^^^
+   |
+   = note: `ResetWorld` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "g16_autonomous_abstract_model") generated 1 warning
+warning: unused variable: `seed`
+  --> tests/intel1_repair3_fanout.rs:59:36
+   |
+59 |     pub fn one_fact_parent_support(seed:u64)->(u64,usize){
+   |                                    ^^^^ help: if this is intentional, prefix it with an underscore: `_seed`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "intel1_repair3_fanout") generated 2 warnings (1 duplicate) (run `cargo fix --test "intel1_repair3_fanout" -p aeterna-v1` to apply 1 suggestion)
+warning: unused imports: `Context`, `Expr`, `Library`, `Meter`, and `Op`
+ --> examples/rsp3_experience.rs:6:70
+  |
+6 | use aeterna_v1::construction::{experiential::*,search_policy::*,vm::{Expr,Op,Library,Context,Meter}};
+  |                                                                      ^^^^ ^^ ^^^^^^^ ^^^^^^^ ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `limits` is never used
+ --> examples/rsp1_support/mod.rs:4:8
+  |
+4 | pub fn limits()->SearchLimits{SearchLimits{work:100_000,evaluations:384,max_nodes:11,frontier:512,edits_per_expansion:24}}
+  |        ^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `meta` is never used
+ --> examples/rsp1_support/mod.rs:5:8
+  |
+5 | pub fn meta()->SearchLimits{SearchLimits{work:100_000_000,evaluations:120,max_nodes:23,frontier:256,edits_per_expansion:12}}
+  |        ^^^^
+
+warning: function `config` is never used
+ --> examples/rsp1_support/mod.rs:6:8
+  |
+6 | pub fn config()->EvolutionConfig{EvolutionConfig{object:limits(),meta:meta(),max_lifetime_work:5_000_000_000}}
+  |        ^^^^^^
+
+warning: function `tasks` is never used
+  --> examples/rsp1_support/mod.rs:14:8
+   |
+14 | pub fn tasks(seed:u64,n:usize,transfer:bool)->(Vec<SynthesisTask>,Vec<SynthesisTask>){
+   |        ^^^^^
+
+warning: function `admission` is never used
+  --> examples/rsp1_support/mod.rs:35:8
+   |
+35 | pub fn admission(seed:u64)->AdmissionSuite{
+   |        ^^^^^^^^^
+
+warning: function `fifo` is never used
+  --> examples/rsp1_support/mod.rs:43:8
+   |
+43 | pub fn fifo()->SearchPolicy{SearchPolicy{priority:Expr::Input(2),..Default::default()}}
+   |        ^^^^
+
+warning: function `probe` is never used
+  --> examples/rsp1_support/mod.rs:44:8
+   |
+44 | pub fn probe(program:&Expr,task:&SynthesisTask)->Value{
+   |        ^^^^^
+
+warning: function `tested` is never used
+  --> examples/rsp1_support/mod.rs:52:8
+   |
+52 | pub fn tested(policy:&SearchPolicy,tasks:&[SynthesisTask],probes:&[SynthesisTask],seed:u64)->Result<Value,Box<dyn std::error::Error>>{
+   |        ^^^^^^
+
+warning: `aeterna-v1` (example "rsp3_experience") generated 9 warnings (run `cargo fix --example "rsp3_experience" -p aeterna-v1` to apply 1 suggestion)
+warning: value assigned to `pending_memory` is never read
+   --> tests/self_originated_option1_one_use.rs:114:28
+    |
+114 |     let mut pending_memory=0usize;
+    |                            ^^^^^^ this value is reassigned later and never used
+...
+125 |         pending_memory=0;
+    |         ---------------- `pending_memory` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "self_originated_option1_one_use") generated 1 warning
+warning: `aeterna-v1` (test "multistep_physical_path") generated 1 warning (1 duplicate)
+warning: unnecessary parentheses around block return value
+  --> tests/frontier1_noisy_latent.rs:74:21
+   |
+74 |                     (Ok((foundation::scene(
+   |                     ^
+75 |                         l1,roles.cue[ep.cues[read_index]],(layout+k+1)%6
+76 |                     ),0.0)))
+   |                            ^
+   |
+   = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+   |
+74 ~                     Ok((foundation::scene(
+75 |                         l1,roles.cue[ep.cues[read_index]],(layout+k+1)%6
+76 ~                     ),0.0))
+   |
+
+warning: `aeterna-v1` (test "frontier1_noisy_latent") generated 2 warnings (1 duplicate) (run `cargo fix --test "frontier1_noisy_latent" -p aeterna-v1` to apply 1 suggestion)
+warning: variable does not need to be mutable
+  --> tests/developmental_history_alias.rs:91:9
+   |
+91 |     let mut e=organism(true);
+   |         ----^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "developmental_history_alias") generated 1 warning (run `cargo fix --test "developmental_history_alias" -p aeterna-v1` to apply 1 suggestion)
+warning: variable does not need to be mutable
+   --> tests/phase_native_learned_drive.rs:201:9
+    |
+201 |     let mut probe = cold_with_drive(learned_checkpoint.clone());
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "phase_native_learned_drive") generated 1 warning (run `cargo fix --test "phase_native_learned_drive" -p aeterna-v1` to apply 1 suggestion)
+warning: fields `corpus`, `training_actions`, and `primitive_uses` are never read
+   --> tests/../examples/support/real_programs.rs:234:9
+    |
+233 | pub struct Report {
+    |            ------ fields in this struct
+234 |     pub corpus: Corpus,
+    |         ^^^^^^
+...
+243 |     pub training_actions: usize,
+    |         ^^^^^^^^^^^^^^^^
+...
+247 |     pub primitive_uses: u64,
+    |         ^^^^^^^^^^^^^^
+    |
+    = note: `Report` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "real_programs") generated 1 warning
+warning: `aeterna-v1` (test "intel2_unified_worlds") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "te2_sensing_affordance") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "cold_goal_fresh1") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "multistep_cold_development") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "te1_temporal_evidence") generated 1 warning (1 duplicate)
+warning: function `relation` is never used
+   --> tests/g7_support.rs:114:8
+    |
+114 | pub fn relation(code: u64, ox: usize, oy: usize) -> Vec<f32> {
+    |        ^^^^^^^^
+
+warning: `aeterna-v1` (test "g8_fresh_planning") generated 32 warnings (31 duplicates)
+warning: `aeterna-v1` (test "intel2_remainder_development") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "cold_goal1_development") generated 1 warning (1 duplicate)
+warning: fields `corpus`, `training_actions`, `primitives`, `primitive_uses`, `constructor_updates`, and `checkpoint_bytes` are never read
+   --> examples/support/real_programs.rs:234:9
+    |
+233 | pub struct Report {
+    |            ------ fields in this struct
+234 |     pub corpus: Corpus,
+    |         ^^^^^^
+...
+243 |     pub training_actions: usize,
+    |         ^^^^^^^^^^^^^^^^
+...
+246 |     pub primitives: usize,
+    |         ^^^^^^^^^^
+247 |     pub primitive_uses: u64,
+    |         ^^^^^^^^^^^^^^
+248 |     pub constructor_updates: u64,
+    |         ^^^^^^^^^^^^^^^^^^^
+249 |     pub checkpoint_bytes: usize,
+    |         ^^^^^^^^^^^^^^^^
+    |
+    = note: `Report` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (example "real_programs") generated 1 warning
+warning: unused variable: `world`
+   --> tests/phase_native_continual.rs:181:52
+    |
+181 | fn prediction_probe(evo: &EvoPhase, domain: usize, world: &World) -> Option<usize> {
+    |                                                    ^^^^^ help: if this is intentional, prefix it with an underscore: `_world`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `world`
+   --> tests/phase_native_continual.rs:217:59
+    |
+217 | fn diagnostic_decision(evo: &mut EvoPhase, domain: usize, world: &World) -> Option<(usize, f32, Vec<f32>)> {
+    |                                                           ^^^^^ help: if this is intentional, prefix it with an underscore: `_world`
+
+warning: `aeterna-v1` (test "phase_native_continual") generated 2 warnings (run `cargo fix --test "phase_native_continual" -p aeterna-v1` to apply 2 suggestions)
+warning: `aeterna-v1` (test "r1_robust_perception") generated 34 warnings (34 duplicates)
+warning: `aeterna-v1` (test "intel2_refined_state_controls") generated 1 warning (1 duplicate)
+warning: `aeterna-v1` (test "g8_fresh2_planning") generated 32 warnings (32 duplicates)
+warning: `aeterna-v1` (test "u1_live_credit") generated 1 warning (1 duplicate)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 22s
++ cargo test --locked --release --lib construction::
+    Blocking waiting for file lock on build directory
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib test) generated 9 warnings (run `cargo fix --lib -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 9m 08s
+     Running unittests src/lib.rs (target/release/deps/aeterna_v1-375b9134a8364559)
+
+running 121 tests
+test construction::autonomy::tests::deterministic_and_stochastic_contracts_cannot_be_swapped ... ok
+test construction::autonomy::tests::widening_uses_failures_not_target_number_or_training_fit ... ok
+test construction::autonomy::tests::expansion_never_changes_contract_or_exceeds_declared_ceiling ... ok
+test construction::causal_memory::tests::an_empty_goal_mask_cannot_complete_an_episode ... ok
+test construction::causal_memory::tests::an_unknown_law_can_be_tested_without_fabricating_goal_value ... ok
+test construction::causal_memory::tests::consolidation_retains_supported_old_laws_and_their_counterexamples ... ok
+test construction::causal_memory::tests::a_one_action_horizon_cannot_borrow_the_second_action_goal ... ok
+test construction::causal_memory::tests::accounted_model_bytes_cover_encoded_extreme_integer_outcomes ... ok
+test construction::causal_memory::tests::freezing_finalizes_failure_once_without_erasing_predictive_context ... ok
+test construction::causal_memory::tests::delayed_information_credit_requires_an_actual_goal_and_charges_intervening_cost ... ok
+test construction::causal_memory::tests::exhausted_search_still_reports_work_and_changes_no_acquired_evidence ... ok
+test construction::causal_memory::tests::genuine_conflicts_are_retained_as_probability_not_deleted_edges ... ok
+test construction::causal_memory::tests::heterogeneous_quotes_preserve_cheap_routes_without_exceeding_path_budget ... ok
+test construction::causal_memory::tests::horizons_beyond_five_reach_a_learned_ten_transition_goal ... ok
+test construction::causal_memory::tests::goal_parameter_information_decreases_while_noise_entropy_stays_high ... ok
+test construction::causal_memory::tests::information_gain_uses_rival_predictions_and_goal_decisions_not_noise_frequency ... ok
+test construction::causal_memory::tests::learned_stochastic_branches_make_a_costly_sensor_worthwhile ... ok
+test construction::constructors::applicability_tests::contradictory_features_clear_stale_guard_instead_of_inventing_a_rule ... ok
+test construction::constructors::applicability_tests::exhausted_fitting_retains_evidence_without_preserving_a_stale_ban ... ok
+test construction::causal_memory::tests::full_entry_and_byte_caches_admit_a_new_recurring_domain ... ok
+test construction::constructors::applicability_tests::prospective_labels_are_scoped_and_false_guard_only_deprioritizes ... ok
+test construction::constructors::tests::executable_schema_is_acquired_and_keeps_bound_holes ... ok
+test construction::constructors::tests::failed_batch_does_not_permanently_hide_a_constructor ... ok
+test construction::constructors::tests::generation_two_uses_successful_constructor_descendants ... ok
+test construction::constructors::tests::cross_origin_structure_is_learnable_without_inventing_recursive_credit ... ok
+test construction::constructors::applicability_tests::open_trial_and_unscoped_labels_cannot_rewrite_constructor_guards ... ok
+test construction::causal_memory::tests::a_full_outcome_set_can_learn_a_new_stable_law_and_later_drift ... ok
+test construction::constructors::tests::learned_guard_is_an_executable_expression ... ok
+test construction::constructors::tests::pure_library_counts_definition_and_rebinds_arguments ... ok
+test construction::constructors::tests::training_success_is_not_promotion ... ok
+test construction::curriculum::tests::arbitrarily_large_distractor_does_not_starve_other_residuals ... ok
+test construction::curriculum::tests::largest_residual_control_exhibits_starvation ... ok
+test construction::curriculum::tests::pending_selection_round_trips_and_history_is_checked ... ok
+test construction::curriculum::tests::rejected_fit_cannot_buy_positive_priority ... ok
+test construction::curriculum::tests::solved_targets_are_not_scheduled_and_can_reopen ... ok
+test construction::epistemic::tests::changed_program_or_library_cannot_use_old_evidence ... ok
+test construction::epistemic::tests::evidence_and_risk_roundtrip_bit_exactly ... ok
+test construction::epistemic::tests::installed_outcome_requires_crossing_and_is_single_use ... ok
+test construction::epistemic::tests::invalid_policy_rejected ... ok
+test construction::epistemic::tests::noisy_superior_model_can_cross_despite_old_lucky_observation ... ok
+test construction::epistemic::tests::null_and_inferior_candidates_do_not_cross_on_balanced_control ... ok
+test construction::epistemic::tests::protected_outputs_and_existing_state_updates_cannot_change ... ok
+test construction::epistemic::tests::repeated_inspection_is_inert ... ok
+test construction::epistemic::tests::replay_rejects_modified_future ... ok
+test construction::epistemic::tests::shape_failure_does_not_spend_an_observation ... ok
+test construction::epistemic::tests::spending_is_summable_and_cancellation_does_not_refund ... ok
+test construction::epistemic::tests::stale_ticket_cannot_be_reused ... ok
+test construction::epistemic::tests::twenty_sample_timeout_is_inconclusive_not_rejection_of_world ... ok
+test construction::epistemic::tests::repeated_or_skipped_events_are_not_evidence ... ok
+test construction::external_reward::acquired_rule_tests::measured_predicates_are_acquired_and_missing_is_distinct_from_zero ... ok
+test construction::external_reward::consolidated_memory_tests::frozen_feedback_preserves_consolidated_parameters_and_failure_history ... ok
+test construction::external_reward::consolidated_memory_tests::separately_observed_features_combine_without_a_full_mask_prototype ... ok
+test construction::external_reward::consolidated_memory_tests::statistical_values_cannot_bypass_an_observed_failure_or_unpaid_guards ... ok
+test construction::external_reward::acquired_rule_tests::future_gate_survives_restore_rejects_repeated_inputs_and_rolls_back_regression ... ok
+test construction::external_reward::consolidated_memory_tests::first_feedback_selects_model_without_rewriting_forecasts_after_retries ... ok
+test construction::external_reward::coverage_memory_tests::redundant_twin_is_removed_before_isolated_prototype ... ok
+test construction::external_reward::coverage_memory_tests::finishing_episode_cannot_resurrect_evicted_fact_and_frozen_feedback_keeps_policy ... ok
+test construction::external_reward::tests::actual_delayed_reward_teaches_a_route_without_a_goal_vector ... ok
+test construction::external_reward::tests::contradictory_rewards_at_an_aliased_state_reduce_the_forecast ... ok
+test construction::external_reward::first_readout_tests::evicted_first_forecasts_never_become_fresh_and_malformed_receipts_fail ... ok
+test construction::external_reward::tests::delayed_returns_do_not_treat_expensive_future_motors_as_cheap ... ok
+test construction::external_reward::tests::forced_followup_settles_one_prior_choice_and_freeze_preserves_knowledge ... ok
+test construction::external_reward::first_readout_tests::retries_and_restore_cannot_rewrite_the_first_forecast_or_hide_regression ... ok
+test construction::external_reward::tests::frozen_working_memory_changes_an_unproductive_experiment_without_learning ... ok
+test construction::external_reward::tests::long_retained_rates_do_not_halve_away_old_failures ... ok
+test construction::external_reward::tests::recursive_candidates_descend_from_accepted_strategies ... ok
+test construction::recursive::tests::economic_regression_revokes_previous_usefulness ... ok
+test construction::runtime::active_context_restart_boundary_tests::actual_connected_pair_is_still_counted ... ok
+test construction::runtime::active_context_restart_boundary_tests::restart_inside_suffix_cannot_be_credited_as_observed_pair ... ok
+test construction::external_reward::coverage_memory_tests::capacity_pressure_preserves_sole_measurement_context_and_factual_rates ... ok
+test construction::external_reward::tests::prototype_eviction_does_not_turn_failed_guesses_into_likely_rewards ... ok
+test construction::runtime::causal_checkpoint_tests::a_prospective_model_trial_and_rollback_keep_register_meanings_after_compaction ... ok
+test construction::runtime::causal_checkpoint_tests::an_inexecutable_old_rollback_model_does_not_stop_current_learning ... ok
+test construction::external_reward::tests::evicted_rate_retains_failure_evidence_across_restore_and_reentry ... ok
+test construction::runtime::causal_checkpoint_tests::stateful_vm_anchor_survives_compaction_and_a_real_restart ... ok
+test construction::runtime::causal_checkpoint_tests::legacy_large_capacity_stops_before_losing_checkpointability ... ok
+test construction::runtime::factual_control_integrity_tests::certified_multistep_chain_uses_only_heldout_validated_factual_edges ... ok
+test construction::runtime::factual_control_integrity_tests::correlated_sensors_cannot_fake_independent_causal_guards ... ok
+test construction::runtime::factual_control_integrity_tests::double_guard_fails_closed_on_insufficient_meter ... ok
+test construction::runtime::factual_control_integrity_tests::factual_search_cost_is_bounded_even_with_large_journal ... ok
+test construction::runtime::factual_control_integrity_tests::freeze_excludes_actual_later_transitions_from_acquired_effects ... ok
+test construction::runtime::factual_control_integrity_tests::independently_contrasted_double_guard_survives_later_real_evidence ... ok
+test construction::runtime::factual_control_integrity_tests::never_certify_uninformative_repetition_or_unmetered_guess ... ok
+test construction::runtime::factual_control_integrity_tests::prospective_factual_validation_uses_real_heldout_consequences ... ok
+test construction::runtime::observable_graph_scan_budget_tests::complete_recent_windows_fit_valid_self_directed_widths ... ok
+test construction::runtime::observed_goal_route_and_helper_budget_tests::one_step_goal_is_never_promoted_into_a_false_two_step_route ... ok
+test construction::runtime::observed_goal_route_and_helper_budget_tests::plan_and_recall_share_an_explicit_remaining_work_ceiling ... ok
+test construction::runtime::observed_goal_route_and_helper_budget_tests::two_distinct_real_successive_postconditions_form_a_valid_option ... ok
+test construction::runtime::tests::autonomous_acquisition_survives_frozen_non_alternating_probe ... ok
+test construction::runtime::tests::blocked_callback_and_checkpoint_cannot_clear_emergency_stop ... ok
+test construction::runtime::tests::callback_fault_poisoned_not_replayed ... ok
+test construction::runtime::tests::capacity_is_checked_before_external_execution ... ok
+test construction::runtime::tests::checkpoint_round_trip_and_corruption ... ok
+test construction::runtime::tests::closed_loop_acquires_state_then_uses_fresh_shadow_observations ... ok
+test construction::runtime::tests::older_snapshot_cannot_erase_a_same_observation_event ... ok
+test construction::runtime::tests::probability_handles_extreme_integer_difference ... ok
+test construction::runtime::tests::rollback_does_not_delete_experience ... ok
+test construction::runtime::tests::shadow_audit_acceptance_still_requires_local_vote ... ok
+test construction::runtime::tests::shadow_audit_error_cannot_install_locally_preferred_model ... ok
+test construction::runtime::tests::shadow_audit_veto_cannot_install_locally_preferred_model ... ok
+test construction::runtime::tests::shadow_joint_acceptance_installs_exact_frozen_candidate ... ok
+test construction::runtime::tests::shadow_missing_audit_cannot_use_legacy_installation_path ... ok
+test construction::runtime::tests::simulation_does_not_manufacture_factual_experience ... ok
+test construction::runtime::tests::snapshot_cannot_clear_unknown_external_state ... ok
+test construction::sensors::tests::measurements_expose_only_acquired_channels_and_reject_nan ... ok
+test construction::sensors::tests::raw_scene_geometry_and_tracks_survive_a_checkpoint ... ok
+test construction::synthesis::tests::collision_requires_available_history_only_under_contract ... ok
+test construction::synthesis::tests::constructor_does_not_receive_credit_for_unrelated_inverse_solver ... ok
+test construction::synthesis::tests::discovers_state_update_without_delay_operator ... ok
+test construction::synthesis::tests::finite_queue_does_not_claim_exhaustive_search ... ok
+test construction::synthesis::tests::missing_raw_source_and_inverse_requirement ... ok
+test construction::synthesis::tests::reject_unrecorded_reset_and_duplicate_evidence ... ok
+test construction::synthesis::tests::stale_patch_cannot_replace_new_parent ... ok
+test construction::vm::tests::anti_unification_reuses_variable ... ok
+test construction::vm::tests::bounded_loop_and_fuel ... ok
+test construction::vm::tests::library_rejects_recursive_call_and_bad_state ... ok
+test construction::vm::tests::simultaneous_state_and_no_post_leak ... ok
+test construction::vm::tests::types_and_checked_arithmetic ... ok
+test construction::runtime::causal_checkpoint_tests::a_large_stateful_window_can_start_and_complete_new_construction ... ok
+test construction::runtime::causal_checkpoint_tests::expensive_valid_state_programs_compact_restore_and_rollback ... ok
+test construction::runtime::causal_checkpoint_tests::wide_large_capacity_journal_remains_checkpointable_and_reports_lifetime_debt ... ok
+
+test result: ok. 121 passed; 0 failed; 0 ignored; 0 measured; 44 filtered out; finished in 3.12s
+
++ cargo test --locked --release --lib learning_world::
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib test) generated 9 warnings (run `cargo fix --lib -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.27s
+     Running unittests src/lib.rs (target/release/deps/aeterna_v1-375b9134a8364559)
+
+running 6 tests
+test learning_world::temporal::rule_search::tests::temporal_noise_accepts_improvement_without_exact_fit ... ok
+test learning_world::tests::malformed_checkpoint_counters_fail_validation_without_integer_overflow ... ok
+test learning_world::temporal::rule_search::tests::temporal_direct_improvement_cannot_become_a_recursive_admission ... ok
+test learning_world::temporal::rule_search::tests::temporal_research_replays_the_actual_parameter_context ... ok
+test learning_world::temporal::rule_search::tests::temporal_search_cannot_read_its_future_probes ... ok
+test learning_world::tests::terminal_feedback_does_not_replenish_an_exhausted_step_budget ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 159 filtered out; finished in 0.01s
+
++ cargo test --locked --release --lib causal_continuity_credit_tests
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib test) generated 9 warnings (run `cargo fix --lib -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.10s
+     Running unittests src/lib.rs (target/release/deps/aeterna_v1-375b9134a8364559)
+
+running 12 tests
+test scientific_runtime::causal_continuity_credit_tests::changing_goals_closes_old_credit_even_when_no_new_action_is_possible ... ok
+test scientific_runtime::causal_continuity_credit_tests::entering_a_domain_delivers_old_goal_credit_before_archival ... ok
+test scientific_runtime::causal_continuity_credit_tests::forced_followups_settle_earlier_choices_without_creating_new_credit ... ok
+test scientific_runtime::causal_continuity_credit_tests::freezing_delivers_final_failure_credit_before_disabling_native_learning ... ok
+test scientific_runtime::causal_continuity_credit_tests::ordinary_no_evidence_consumes_the_construction_cadence ... ok
+test scientific_runtime::causal_continuity_credit_tests::a_missing_restart_does_not_consume_the_next_construction_opportunity ... ok
+test scientific_runtime::causal_continuity_credit_tests::restart_failure_credit_is_delivered_before_new_actions_or_domains ... ok
+test scientific_runtime::causal_continuity_credit_tests::instrumental_preparation_keeps_its_event_identity_across_compaction ... ok
+test scientific_runtime::causal_continuity_credit_tests::real_rewards_reach_native_learning_even_for_delayed_causal_experiments ... ok
+test scientific_runtime::causal_continuity_credit_tests::canceled_construction_credit_cannot_pass_to_a_later_trial ... ok
+test scientific_runtime::causal_continuity_credit_tests::the_action_deadline_limits_legacy_vm_plans_and_restores_configuration ... ok
+test scientific_runtime::causal_continuity_credit_tests::valid_domain_checkpoints_cannot_create_an_unrestorable_combined_checkpoint ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 153 filtered out; finished in 2.97s
+
++ cargo test --locked --release --lib autonomous_temporal_revision_tests
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib test) generated 9 warnings (run `cargo fix --lib -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.11s
+     Running unittests src/lib.rs (target/release/deps/aeterna_v1-375b9134a8364559)
+
+running 2 tests
+test scientific_runtime::autonomous_temporal_revision_tests::interrupted_goal_does_not_create_fake_success_or_failure ... ok
+test scientific_runtime::autonomous_temporal_revision_tests::delayed_outcomes_initiate_vm_program_change_and_prospective_admission ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 163 filtered out; finished in 0.02s
+
++ cargo test --locked --release --lib organism_development_tests
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib test) generated 9 warnings (run `cargo fix --lib -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.11s
+     Running unittests src/lib.rs (target/release/deps/aeterna_v1-375b9134a8364559)
+
+running 3 tests
+test scientific_runtime::organism_development_tests::predictive_admission_is_shadow_until_real_behavior_and_all_contexts_pass ... ok
+test scientific_runtime::organism_development_tests::freeze_closes_a_ready_canary_without_inventing_a_completed_episode ... ok
+test scientific_runtime::organism_development_tests::non_improvement_extra_cost_and_interrupted_canaries_cannot_be_promoted ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 162 filtered out; finished in 0.01s
+
++ cargo test --locked --release --lib contextual_meta_tests
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib test) generated 9 warnings (run `cargo fix --lib -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.15s
+     Running unittests src/lib.rs (target/release/deps/aeterna_v1-375b9134a8364559)
+
+running 1 test
+test carrier::phase_native::contextual_meta_tests::one_u1_keeps_contextual_credit_and_exploration_across_restore_and_freeze ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 164 filtered out; finished in 0.00s
+
++ cargo test --locked --release --test causal_continual_autonomy --test causal_jsonl_contract --test project_entrypoint --test recursive_search_policy --test recursive_search_repair --test experiential --test learned_requirements --test lc1_execution_contract --test quantity_relations --test word_problems --test education_runtime --test semantic_grounding --test unified_runtime --test unified_restore_guards --test unified_self_directed_lifetime --test trajectory_self_revision_protected --test trajectory_self_revision_transfer --test trajectory_behavior_gate --test agency_choice_credit_development --test cold_episodic_autonomy_development --test instrumental_credit_development --test agency_credit_manual_equivalence_development --test cold_pair_probe_development --test cold_autobiographical_option_development --test cold_variable_depth_option_development --test complexity_necessity_development --test adaptive_history_suffix_development --test predictive_history_action_development --test predictive_history_state_development --test certified_chain_protected_development --test factual_transfer_development --test factual_selective_holdout --test human_protection --test u1_meta_control --test directed_construction_autonomy --test directed_construction_completion --test directed_construction_continuity --test directed_construction_epistemic --test directed_construction_epistemic_integrity --test directed_construction_recursive --test directed_construction_scheduling --test directed_construction_session --test directed_construction_transfer --test directed_construction_unified --test external_continual --test organism_lifetime --test learning_organism --test temporal_organism
+warning: unused import: `Series`
+ --> src/learning_world/temporal/rule_search.rs:3:43
+  |
+3 | use super::{normalized, valid_rule, Seed, Series, LAGS};
+  |                                           ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `propose` is never used
+   --> src/construction/causal_memory.rs:636:19
+    |
+214 | impl CausalMemory {
+    | ----------------- method in this implementation
+...
+636 |     pub(crate) fn propose(
+    |                   ^^^^^^^
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib) generated 11 warnings (run `cargo fix --lib -p aeterna-v1` to apply 2 suggestions)
+warning: `aeterna-v1` (lib) generated 11 warnings (11 duplicates)
+   Compiling aeterna-v1 v0.1.0 (/workspace/Aeterna-v1)
+warning: unused import: `Op`
+ --> tests/experiential.rs:1:146
+  |
+1 | ...Case,SynthesisTask,SearchPolicy,SearchLimits},vm::{Expr,Library,Op}};
+  |                                                                    ^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around type
+ --> tests/experiential.rs:8:51
+  |
+8 | #[test]fn identical_cohorts_forbidden(){let train:(Vec<_>)=(0..8).map(case).collect();let cfg=StudyConfig{limits:limits(),candidate_l...
+  |                                                   ^      ^
+  |
+  = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+  |
+8 - #[test]fn identical_cohorts_forbidden(){let train:(Vec<_>)=(0..8).map(case).collect();let cfg=StudyConfig{limits:limits(),candidate_limit:16,shortlist:4,train_seed:100,validation_seed:200};assert!(study(&train,&train,cfg).is_err());}
+8 + #[test]fn identical_cohorts_forbidden(){let train:Vec<_>=(0..8).map(case).collect();let cfg=StudyConfig{limits:limits(),candidate_limit:16,shortlist:4,train_seed:100,validation_seed:200};assert!(study(&train,&train,cfg).is_err());}
+  |
+
+warning: unused import: `Value`
+ --> tests/lc1_execution_contract.rs:6:35
+  |
+6 |     vm::{Error,Expr,Library,Op,Ty,Value},Config,
+  |                                   ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "experiential") generated 2 warnings (run `cargo fix --test "experiential" -p aeterna-v1` to apply 2 suggestions)
+warning: `aeterna-v1` (test "lc1_execution_contract") generated 1 warning (run `cargo fix --test "lc1_execution_contract" -p aeterna-v1` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 12m 50s
+     Running tests/adaptive_history_suffix_development.rs (target/release/deps/adaptive_history_suffix_development-16c1cf9e20f0a99e)
+
+running 14 tests
+test entire_autobiographical_route_quote_must_be_affordable ... ok
+test human_protection_veto_cannot_forge_suffix_training ... ok
+test domain_switch_drops_incompatible_option_lane_before_serializing ... ok
+test matched_physical_option_outcomes_causally_diverge_native_u1_weights ... ok
+test no_hidden_history_effect_cannot_produce_spurious_suffix_goal_plan ... ok
+test causal_option_survives_checkpoint_but_fresh_protection_veto_revokes_it ... ok
+test a_self_selected_macro_learns_from_the_entire_executed_trajectory ... ok
+test real_unexpected_option_post_rejects_remaining_plan_without_forging_goal ... ok
+test native_u1_attempts_the_full_unforced_hidden_preparation_chain ... ok
+test unavailable_option_motor_is_not_executed_and_cancels_macro ... ok
+test underfunded_or_wrongly_initialized_suffix_never_gets_action_authority ... ok
+test three_real_later_contradictions_revoke_a_suffix_goal_route ... ok
+test same_sensor_and_same_last_motor_but_different_older_action_are_distinguished ... ok
+test unavailable_preparatory_motor_must_not_be_imagined ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests/agency_choice_credit_development.rs (target/release/deps/agency_choice_credit_development-64f172bb40faaf9e)
+
+running 3 tests
+test agency_credit_opt_in_is_one_way_and_pre_experience_only ... ok
+test denied_forced_action_never_receives_policy_credit_or_experience ... ok
+test forced_actions_acquire_facts_but_cannot_change_self_choice_weights ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/agency_credit_manual_equivalence_development.rs (target/release/deps/agency_credit_manual_equivalence_development-f293f97303eb24ba)
+
+running 1 test
+test automatic_agency_rule_matches_manual_control_on_disclosed_role_permutations ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.73s
+
+     Running tests/causal_continual_autonomy.rs (target/release/deps/causal_continual_autonomy-06a992e53e6dedc7)
+
+running 6 tests
+test an_empty_masked_goal_is_rejected_before_a_physical_action ... ok
+test causal_memory_does_not_bypass_protection_or_accept_a_late_enable ... ok
+test causal_native_reuses_a_ten_motor_path_with_twelve_sensors_after_own_factual_acquisition ... ok
+test causal_continuous_physical_learning_compacts_restores_and_preserves_frozen_knowledge ... ok
+test causal_goal_credit_and_proposals_do_not_use_numeric_closeness_of_opaque_codes ... ok
+test causal_native_selects_a_paid_sensor_and_uses_its_noisy_result_for_a_later_goal ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.79s
+
+     Running tests/causal_jsonl_contract.rs (target/release/deps/causal_jsonl_contract-816260ab0d7f4f2d)
+
+running 2 tests
+Error: Capacity
+test causal_jsonl_invalid_horizon_fails_closed_before_initialization ... ok
+test causal_jsonl_exposes_wide_inputs_motor_count_and_long_horizon_with_real_post_handshake ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/certified_chain_protected_development.rs (target/release/deps/certified_chain_protected_development-51962234d3cdde60)
+
+running 1 test
+test same_observation_checkpoint_candidate_and_u1_execute_protected_actions ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/cold_autobiographical_option_development.rs (target/release/deps/cold_autobiographical_option_development-77321c8aa7d65727)
+
+running 2 tests
+test direct_progress_world_does_not_invent_hidden_causal_preparations ... ok
+test cold_self_originated_3_action_route_vs_same_native_u1_without_memory ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.69s
+
+     Running tests/cold_episodic_autonomy_development.rs (target/release/deps/cold_episodic_autonomy_development-ade667f2f0bd5859)
+
+running 2 tests
+test externally_observed_reset_preserves_true_checkpoint_and_safety_latch ... ok
+test cold_protected_u1_reuses_one_lifetime_across_world_initiated_episodes ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+
+     Running tests/cold_pair_probe_development.rs (target/release/deps/cold_pair_probe_development-b1ba2e73d2fcd320)
+
+running 3 tests
+test one_legacy_budget_and_incorrect_opt_in_order_cannot_enable_probe_lane ... ok
+test safety_veto_preserves_cold_epistemic_journal_and_motors ... ok
+test cold_u1_chooses_its_own_information_experiments_without_tutor ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s
+
+     Running tests/cold_variable_depth_option_development.rs (target/release/deps/cold_variable_depth_option_development-f45ea57909c5e568)
+
+running 2 tests
+test cannot_turn_on_depth_search_after_seeing_motor_outcomes ... ok
+test untutored_four_and_five_action_skills_are_acquired_from_real_history ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.89s
+
+     Running tests/complexity_necessity_development.rs (target/release/deps/complexity_necessity_development-91ab1a82dc0beb7a)
+
+running 2 tests
+test need_gate_cannot_be_enabled_post_tuition_and_cannot_run_without_depth ... ok
+test same_cold_orgs_decide_when_extra_history_is_needed ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.57s
+
+     Running tests/directed_construction_autonomy.rs (target/release/deps/directed_construction_autonomy-d90188463c4a4ebf)
+
+running 5 tests
+test masked_goal_respects_dimensions_and_existing_permission_boundary ... ok
+test focused_hint_cannot_overwrite_existing_state_meaning ... ok
+test target_perfect_search_terminates_despite_unrelated_error ... ok
+test target_selection_is_shared_by_counterfactual_search_arms ... ok
+test autonomous_curriculum_is_preserved_with_pending_trials ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/directed_construction_completion.rs (target/release/deps/directed_construction_completion-9dc9c126674d3710)
+
+running 3 tests
+test learned_root_must_really_be_instantiated_to_receive_credit ... ok
+test false_one_row_match_is_not_an_exact_completion ... ok
+test every_input_position_can_support_a_new_memory_law ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.42s
+
+     Running tests/directed_construction_continuity.rs (target/release/deps/directed_construction_continuity-ea305ce13cfbe72e)
+
+running 5 tests
+test json_likelihoods_and_scales_round_trip_without_bit_changes ... ok
+test pending_cognitive_trial_does_not_restore_emergency_stop_authority ... ok
+test pending_trial_checkpoint_cannot_clear_external_fault_or_replay_action ... ok
+test autonomous_actions_and_forecasts_are_identical_after_round_trips ... ok
+test pending_trials_and_final_decisions_survive_every_step_round_trip ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.84s
+
+     Running tests/directed_construction_epistemic.rs (target/release/deps/directed_construction_epistemic-67d26d25ad96b004)
+
+running 10 tests
+test deterministic_contract_cannot_be_relabelled_stochastic ... ok
+test enabling_again_or_after_experience_cannot_reset_risk ... ok
+test blocked_action_neither_creates_evidence_nor_clears_the_shield ... ok
+test declared_hard_output_is_not_revised ... ok
+test old_checkpoint_cannot_rewind_allocated_risk_or_factual_history ... ok
+test external_callback_fault_cannot_be_replayed_to_manufacture_evidence ... ok
+test short_explicit_budget_records_inconclusive_without_installation ... ok
+test unfinished_evidence_survives_beyond_legacy_window_and_roundtrip ... ok
+test stochastic_revision_installs_without_erasing_the_incumbents_lucky_zero ... ok
+test frequent_restores_have_identical_evidence_and_decisions ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+
+     Running tests/directed_construction_epistemic_integrity.rs (target/release/deps/directed_construction_epistemic_integrity-2e52a065794e75dc)
+
+running 7 tests
+test mutually_consistent_fake_forecasts_and_evidence_fail_frozen_program_replay ... ok
+test imagined_actions_do_not_add_evidence ... ok
+test refunded_pending_risk_is_rejected ... ok
+test inflated_evidence_is_rejected_even_with_a_recomputed_envelope_hash ... ok
+test rollback_does_not_refund_the_risk_budget ... ok
+test relaxed_pending_threshold_is_rejected ... ok
+test nonzero_target_can_learn_without_changing_a_protected_output ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/directed_construction_recursive.rs (target/release/deps/directed_construction_recursive-057ddd68b30a8fa1)
+
+running 8 tests
+test constructor_revision_replays_with_capture_free_linked_holes ... ok
+test misleading_constructor_id_does_not_create_a_generation ... ok
+test invalid_future_consumes_trial_without_teaching_a_constructor ... ok
+test model_installation_veto_does_not_train ... ok
+test prospective_commitment_cannot_be_changed_by_future_labels ... ok
+test single_use_ticket_survives_serialization_and_row_relabelling ... ok
+test cancelling_preserves_consumption_and_allows_next_problem ... ok
+test failed_hint_cannot_remove_the_broad_fallback ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/directed_construction_scheduling.rs (target/release/deps/directed_construction_scheduling-5a8f9e35addc4762)
+
+running 3 tests
+test constructor_rewrite_executes_and_rejects_a_forged_cache ... ok
+test generation_number_does_not_override_smallest_completion_cost ... ok
+test over_specialized_schema_cannot_starve_a_small_sibling ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/directed_construction_session.rs (target/release/deps/directed_construction_session-b93edb5796ae227f)
+
+running 11 tests
+test broken_state_is_not_silently_replaced_with_a_cold_lifetime ... ok
+test bad_receipt_is_durable_and_not_retryable_after_reopen ... ok
+test emergency_latch_survives_process_store_and_cannot_be_cleared_by_start ... ok
+test actual_process_exit_and_reattachment_preserve_unfinished_evidence ... ok
+test freeze_is_persistent_and_cannot_be_undone_by_rollback ... ok
+test killed_process_after_act_never_replays_an_uncertain_external_action ... ok
+test leftover_intent_requires_reconciliation_even_with_a_valid_saved_state ... ok
+test mismatched_process_receipt_poison_is_saved_before_the_error_response ... ok
+test persistent_live_trial_is_not_restarted_or_refunded ... ok
+test single_writer_lock_is_released_by_drop_not_by_a_second_open ... ok
+test spent_external_budget_survives_a_new_runtime ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.92s
+
+     Running tests/directed_construction_transfer.rs (target/release/deps/directed_construction_transfer-94eb542fbd0480ef)
+
+running 3 tests
+test future_labels_do_not_change_synthesis_and_batches_are_single_use ... ok
+test comparison_charges_the_same_library_and_does_not_invent_a_speedup ... ok
+test program_from_observations_is_frozen_before_disjoint_probe ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/directed_construction_unified.rs (target/release/deps/directed_construction_unified-db80b92e291dacd6)
+
+running 11 tests
+test dishonest_cost_is_recorded_and_stops_further_execution ... ok
+test emergency_stop_is_not_an_exploration_exception ... ok
+test actual_external_spending_cannot_be_refunded_by_a_checkpoint ... ok
+test model_independent_exploration_respects_the_action_mask ... ok
+test frozen_probe_cannot_change_model_library_or_acquired_search ... ok
+test older_step_api_cannot_bypass_the_lifetime_cost_contract ... ok
+test no_available_action_means_no_side_effect_and_no_experience ... ok
+test protected_noisy_output_never_becomes_a_search_obligation ... ok
+test policy_cannot_be_reset_or_partially_enabled_after_error ... ok
+test joint_state_search_can_cross_a_useless_single_register ... ok
+test cold_lifetime_expands_itself_and_acquires_missing_memory ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/education_runtime.rs (target/release/deps/education_runtime-497ca5b39fac15fd)
+
+running 22 tests
+test a_similar_question_with_other_numbers_cannot_recall_an_old_numeric_answer ... ok
+test arithmetic_ablation_keeps_examples_but_removes_generalization ... ok
+test acquired_rule_solves_unseen_numbers ... ok
+test arbitrary_unknown_vocabulary_is_learned_not_a_subject_dispatch ... ok
+test decimal_and_fraction_syntax_not_misrepresented_as_integer_answer ... ok
+test conflicting_sources_cause_abstention ... ok
+test exact_integer_division_never_silently_truncates ... ok
+test domain_change_preserves_school_knowledge ... ok
+test induction_budget_is_bounded_even_when_no_program_fits ... ok
+test opaque_subject_id_and_solution_program_are_not_accepted ... ok
+test multiple_lexical_bindings_reuse_one_acquired_function ... ok
+test prospective_validation_cannot_train_the_candidate ... ok
+test freeze_prevents_all_teacher_updates ... ok
+test prior_snapshot_cannot_rewind_school_without_rewinding_external_actions ... ok
+test repeated_inputs_cannot_be_passed_off_as_evidence ... ok
+test checkpoint_reproduces_learned_answers_and_native_weights ... ok
+test reordered_known_words_use_a_marked_lexical_hypothesis ... ok
+test science_facts_are_marked_as_recall_not_as_invention ... ok
+test semantic_replay_rejects_a_tampered_acquired_program ... ok
+test same_numbers_do_not_solve_an_unlearned_instruction ... ok
+test questions_are_read_only_including_failed_ones ... ok
+test untrained_cold_state_has_no_school_answers ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/experiential.rs (target/release/deps/experiential-8b57f38dabcf81b1)
+
+running 7 tests
+test identical_cohorts_forbidden ... ok
+test invalid_input_width_and_limits_are_rejected ... ok
+test generated_programs_are_valid_and_bounded ... ok
+test scramble_does_not_change_simple_unguided_search_results ... ok
+test study_rejects_missing_support_rows_without_panic ... ok
+test truncated_grammar_includes_every_residual_feature ... ok
+test study_never_claims_producer_admission ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/external_continual.rs (target/release/deps/external_continual-e821e8441d663166)
+
+running 4 tests
+test unknown_sensor_post_stops_actuation_and_does_not_invent_a_training_failure ... ok
+test invalid_sensor_posts_keep_the_known_actual_cost_without_learning ... ok
+test one_lifetime_learns_two_sensory_contracts_and_restores_frozen_knowledge ... ok
+test jsonl_malformed_sensor_content_preserves_known_cost_and_stops_without_learning ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/factual_selective_holdout.rs (target/release/deps/factual_selective_holdout-81b75212914a274d)
+
+running 1 test
+test one_shot_five_sensor_conjunction_recovery ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+     Running tests/factual_transfer_development.rs (target/release/deps/factual_transfer_development-b6fa09697f6f770f)
+
+running 2 tests
+test acquired_consequences_can_be_offered_after_prospective_validation ... ok
+test compound_prerequisite_repeated_reset_development_controls ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/human_protection.rs (target/release/deps/human_protection-56c2163c45b23adb)
+
+running 5 tests
+test human_absence_requires_confident_external_evidence ... ok
+test human_protection_permits_are_single_use_current_sequence_tokens ... ok
+test human_protection_blocks_harm_uncertainty_invalid_and_latches_emergency_stop ... ok
+test human_protection_source_has_no_cognitive_override_dependency ... ok
+test human_protection_is_deterministic_and_cognitive_checkpoint_cannot_clear_latch ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/instrumental_credit_development.rs (target/release/deps/instrumental_credit_development-0a70057904ab0950)
+
+running 3 tests
+test refused_action_or_late_optin_cannot_credit_virtual_progress ... ok
+test unsolved_information_may_teach_facts_but_not_utility_until_actual_progress ... ok
+test disclosed_unscheduled_lifetimes_show_goal_vs_exploration_credit_separation ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+     Running tests/lc1_execution_contract.rs (target/release/deps/lc1_execution_contract-0125f4520f1df423)
+
+running 3 tests
+test fragment_search_never_uses_nodes_beyond_actual_remaining_output_capacity ... ok
+test malformed_very_deep_sketch_fails_bounded_preflight_without_recursive_walk ... ok
+test runtime_settles_failed_lc1_evaluation_by_metered_work_not_reserved_limit ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/learned_requirements.rs (target/release/deps/learned_requirements-0ceb6fd408f4c6e4)
+
+running 22 tests
+test contradictory_inverse_observations_refuse_an_unidentifiable_rule ... ok
+test inverse_is_acquired_from_executions_not_preloaded ... ok
+test lc1_checkpoint_rejects_fitting_but_noncanonical_inverse ... ok
+test lc1_discovery_skips_impossible_generated_skeletons_without_discarding_work_receipt ... ok
+test lc1_frozen_book_must_match_learner_freeze_both_directions ... ok
+test lc1_disabled_requests_cannot_consume_organism_budget ... ok
+test lc1_induction_input_width_validation_is_before_work_reservation ... ok
+test lc1_induction_support_limit_rejects_before_work_reservation ... ok
+test lc1_after_charged_rsp2_failure_uses_shared_learner_counter ... ok
+test lc1_invalid_sketches_are_rejected_before_work_reservation ... ok
+test lc1_oversized_but_well_formed_sketch_rejected_before_budget_charge ... ok
+test lc1_known_references_are_checked_before_shared_budget_reservation ... ok
+test lc1_restored_book_work_cannot_exceed_parent_learner_ledger ... ok
+test lc1_restored_ledger_cannot_claim_free_acquisition ... ok
+test no_rule_cannot_be_claimed_as_solving_and_bad_examples_fail_atomically ... ok
+test lc1_restored_rule_cannot_claim_acquisition_from_undiverse_records ... ok
+test missing_intermediate_expression_is_inferred_and_verified_on_unseen_inputs ... ok
+test old_learner_checkpoint_remains_unchanged_with_lc1_opt_in_absent ... ok
+test observed_lc1_work_is_the_change_in_total_learner_work_not_total_vs_lc1 ... ok
+test rule_memory_is_part_of_joint_checkpoint_and_freeze_blocks_learning ... ok
+test acquired_requirements_coexist_with_rsp2_inside_one_restored_organism ... ok
+test organism_can_discover_a_missing_expression_without_a_human_sketch ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/learning_organism.rs (target/release/deps/learning_organism-fce6cc607187ce3f)
+
+running 5 tests
+test blocked_and_invalid_actions_do_not_teach_fictional_post_observations ... ok
+test raw_order_and_simultaneous_modalities_reach_the_same_trainable_belief ... ok
+test goal_updates_working_state_without_adding_facts_or_learning_weights ... ok
+test a_version_one_life_migrates_without_inventing_old_raw_experience ... ok
+test one_life_learns_raw_temporal_context_and_preserves_it_across_restore_and_freeze ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.99s
+
+     Running tests/organism_lifetime.rs (target/release/deps/organism_lifetime-96e5a6644ddc3630)
+
+running 7 tests
+test freeze_abandons_unfinished_development_but_preserves_the_committed_fact ... ok
+test canonical_jsonl_entrypoint_owns_the_same_state_across_sensor_contracts ... ok
+test acquired_rules_extend_the_same_restored_organism_and_freeze_with_its_memory ... ok
+test unknown_post_cannot_become_a_development_episode_or_a_training_failure ... ok
+test recursion_control_preserves_the_same_lifetime_without_policy_admissions ... ok
+test one_factual_lifetime_drives_existing_rsp2_and_evaluator_across_modalities_and_resume ... ok
+test consolidated_knowledge_stays_in_the_same_life_across_modalities_restore_and_freeze ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.65s
+
+     Running tests/predictive_history_action_development.rs (target/release/deps/predictive_history_action_development-1b92433e2380d775)
+
+running 4 tests
+test actual_denial_does_not_advance_the_history_or_execute_a_plan ... ok
+test prepared_context_executes_the_remaining_step_after_checkpoint ... ok
+test real_contradiction_retires_previously_supported_history_route ... ok
+test report_unforced_closed_loop_for_all_opaque_role_permutations ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+
+     Running tests/predictive_history_state_development.rs (target/release/deps/predictive_history_state_development-882461a3f2a3e2fb)
+
+running 4 tests
+test underfunded_history_reasoning_and_legacy_control_fail_closed ... ok
+test identical_outcomes_under_all_histories_do_not_invent_latent_states ... ok
+test unavailable_prerequisite_motor_cannot_be_invented_in_imagined_plan ... ok
+test learner_discovers_invisible_prerequisite_from_protected_real_post ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/project_entrypoint.rs (target/release/deps/project_entrypoint-938e103e932727ef)
+
+running 7 tests
+test inventory_does_not_initialize_or_change_state ... ok
+test original_piped_protocol_still_works ... ok
+test inspection_is_read_only ... ok
+test status_distinguishes_code_from_knowledge ... ok
+test invalid_arguments_do_not_enter_another_mode ... ok
+test aliases_have_identical_help_and_version ... ok
+test school_and_rsp2_share_one_state_and_restore ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/quantity_relations.rs (target/release/deps/quantity_relations-22464f0be270e4db)
+
+running 28 tests
+test code_injection_cannot_be_deserialized_into_a_factor ... ok
+test argument_roles_are_not_an_unordered_bag ... ok
+test every_proposed_composition_replays_exactly ... ok
+test extra_numeric_scope_abstains ... ok
+test exact_rational_execution_retained ... ok
+test extension_preserves_controller_and_world_cost ... ok
+test fixed_factors_fixture_constructs_new_expression_not_in_a_bank ... ok
+test frozen_knowledge_cannot_be_replaced ... ok
+test invalid_search_capacity_rejected ... ok
+test malformed_argument_binding_rejected ... ok
+test malformed_matrices_and_floats_rejected ... ok
+test model_must_explicitly_declare_derivation_supervision ... ok
+test installed_relations_repair_the_existing_default_answer_path ... ok
+test no_external_program_dispatch_added ... ok
+test ordered_subtraction_is_not_big_minus_small ... ok
+test invalid_install_is_transactional ... ok
+test numeric_replacement_does_not_change_features ... ok
+test checkpoint_roundtrip_is_exact ... ok
+test reverse_relation_is_distinct ... ok
+test score_is_not_an_assertion_of_understanding ... ok
+test question_is_an_explicit_factor_input ... ok
+test single_quantity_needs_no_pair ... ok
+test selected_relations_are_jointly_realized_in_a_tree ... ok
+test unsupported_language_is_not_dropped ... ok
+test untrusted_reserved_slots_are_not_accepted ... ok
+test standalone_relational_model_roundtrip_validates ... ok
+test zero_division_never_becomes_a_numeric_infinity ... ok
+test predictions_do_not_update_knowledge_or_controller ... ok
+
+test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/recursive_search_policy.rs (target/release/deps/recursive_search_policy-5c11de790e19e7e6)
+
+running 32 tests
+test all_work_caps_checked ... ok
+test all_three_functions_are_validated ... ok
+test arbitrary_code_record_is_not_a_policy ... ok
+test code_roundtrip_includes_rank_operator_and_location ... ok
+test duplicate_or_overlapping_validation_inputs_rejected ... ok
+test changing_mutation_or_location_changes_real_search ... ok
+test empty_objective_is_rejected_before_indexing ... ok
+test every_winner_replays_its_full_edit_chain ... ok
+test fabricated_generation_fails_even_after_reserialization ... ok
+test freeze_prevents_generation_or_risk_reset ... ok
+test frozen_runtime_blocks_retraining ... ok
+test existing_constructor_executes_the_opted_in_policy_and_keeps_prospective_gate ... ok
+test insufficient_lifetime_budget_cannot_install_or_spend ... ok
+test invalid_edit_location_is_not_silently_accepted ... ok
+test legacy_checkpoint_with_no_recursive_state_is_unchanged ... ok
+test gate_cannot_be_reused_or_become_training ... ok
+test live_restore_cannot_refund_pure_search_work ... ok
+test no_zero_sized_search_or_bad_width ... ok
+test oversized_literals_rejected_without_abs_overflow ... ok
+test policy_cannot_embed_unknown_library_or_action_authority ... ok
+test meta_search_really_executes_policy_as_code ... ok
+test policy_requires_integer_outputs ... ok
+test priority_cannot_read_outside_public_features ... ok
+test pure_search_does_not_create_external_events_or_permissions ... ok
+test reexecuted_candidate_matches_recorded_loss ... ok
+test root_replacement_is_executable_not_hole_specialization ... ok
+test changing_labels_does_not_reopen_gate ... ok
+test search_is_deterministic_and_reports_its_actual_producer ... ok
+test shape_growth_is_bounded ... ok
+test acceptance_requires_actual_execution_not_caller_boolean ... ok
+test runtime_owns_search_state_and_preserves_prior_cognition ... ok
+test proposal_serialization_and_generation_validation ... ok
+
+test result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/recursive_search_repair.rs (target/release/deps/recursive_search_repair-23c7d7c5085a25b8)
+
+running 21 tests
+test all_feedback_coordinates_are_executable_policy_inputs ... ok
+test diagnostics_are_lazy_and_metered ... ok
+test equal_scalar_loss_exposes_different_residual_bindings ... ok
+test a_solver_gain_is_insufficient_without_a_producer_gain ... ok
+test hidden_examples_and_producer_exams_are_single_use ... ok
+test complete_actual_work_is_charged_including_probe_checks ... ok
+test local_improvement_cannot_hide_failed_transfer ... ok
+test malformed_observations_are_rejected_before_feature_indexing ... ok
+test observed_binding_can_select_the_operand_instead_of_drawing_it_randomly ... ok
+test old_checkpoint_remains_readable_but_cannot_bypass_new_admission ... ok
+test ordering_residuals_are_derived_from_examples ... ok
+test probes_cannot_be_search_examples ... ok
+test local_improvement_cannot_replace_a_policy_that_retains_an_old_solution ... ok
+test identical_producers_cannot_be_reported_as_recursive_improvement ... ok
+test qualifications_cannot_be_removed_from_new_state ... ok
+test residual_arithmetic_handles_extreme_predictions ... ok
+test residual_bindings_change_actual_edits ... ok
+test transfer_and_producer_evidence_are_mandatory_before_spending ... ok
+test producer_test_executes_children_from_the_same_starting_target ... ok
+test reordering_consumed_examples_cannot_reopen_admission ... ok
+test accepted_history_survives_checkpoint_and_is_checked_by_the_next_admission ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.30s
+
+     Running tests/semantic_grounding.rs (target/release/deps/semantic_grounding-85e6f4f5969a38c2)
+
+running 28 tests
+test accidental_same_numeric_answer_does_not_remove_ambiguity ... ok
+test ambiguous_structure_is_not_replaced_by_a_surface_guess ... ok
+test ambiguity_cap_fails_closed ... ok
+test arithmetic_overflow_has_no_fabricated_answer ... ok
+test decimal_is_not_two_integer_arguments ... ok
+test budget_exhaustion_cannot_be_called_understanding ... ok
+test contradictory_sources_are_not_overridden_by_composition ... ok
+test division_domain_checked_after_parsing ... ok
+test freeze_guards_parsing_mode_and_all_new_lessons ... ok
+test extra_unknown_number_is_not_discarded ... ok
+test generated_counterexample_distinguishes_competing_meanings ... ok
+test incorrect_clarification_does_not_trigger_arbitrary_program_selection ... ok
+test learned_wrapper_composes_with_unseen_subexpression ... ok
+test no_full_sentence_training_is_needed_for_composition ... ok
+test old_serialized_school_without_mode_remains_valid ... ok
+test missing_argument_is_reported ... ok
+test opaque_word_meaning_is_acquired_from_examples ... ok
+test clarification_is_episode_evidence_not_frozen_library_training ... ok
+test parentheses_resolve_structural_ambiguity ... ok
+test reply_to_generated_question_selects_the_original_meaning ... ok
+test role_binding_depends_on_learned_order_not_number_bag ... ok
+test grammar_reconstructed_from_the_same_checkpoint ... ok
+test unknown_negation_is_not_silently_ignored ... ok
+test query_and_counterexample_do_not_change_frozen_state ... ok
+test validation_failure_cannot_create_a_grammar_production ... ok
+test unseen_nested_program_is_built_from_learned_relations ... ok
+test unmatched_parentheses_refused ... ok
+test unseen_word_has_no_assumed_semantics ... ok
+
+test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/temporal_organism.rs (target/release/deps/temporal_organism-ca54d8c804da6aff)
+
+running 5 tests
+test temporal_invalid_real_post_never_trains_or_advances_the_model ... ok
+test temporal_namespace_is_not_a_predictive_feature ... ok
+test temporal_world_prediction_is_fixed_before_the_real_answer ... ok
+test temporal_computation_policy_keeps_learning_rewards_when_reconstruction_is_paused ... ok
+test temporal_one_life_learning_restore_and_freeze ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
+     Running tests/trajectory_behavior_gate.rs (target/release/deps/trajectory_behavior_gate-19bb0a748eaf9070)
+
+running 2 tests
+test safety_denial_consumes_canary_and_cannot_turn_into_fabricated_evidence ... ok
+test real_protected_paired_canary_qualifies_or_blocks_and_survives_checkpoint ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests/trajectory_self_revision_protected.rs (target/release/deps/trajectory_self_revision_protected-d40c4703719c3286)
+
+running 2 tests
+test human_protection_veto_never_enters_revision_experience ... ok
+test only_protected_executed_post_builds_trajectory_and_checkpoint ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/trajectory_self_revision_transfer.rs (target/release/deps/trajectory_self_revision_transfer-7c7845ad13eba87e)
+
+running 2 tests
+test preregistered_one_use_action_transfer ... ignored, one-use preregistered external virtual-world qualification
+test frozen_evaluator_ablation_requires_admitted_code ... ok
+
+test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/u1_meta_control.rs (target/release/deps/u1_meta_control-fca3bbcbb3c7cae4)
+
+running 4 tests
+test u1_meta_competition_source_has_no_module_priority ... ok
+test u1_learned_physical_meta_control_selects_across_opaque_proposals ... ok
+test u1_positive_evidence_does_not_dilute_factual_utility_in_online_mode ... ok
+test u1_meta_winner_depends_causally_on_physical_synapses ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/unified_restore_guards.rs (target/release/deps/unified_restore_guards-4c563f3b34adc19a)
+
+running 4 tests
+test generic_online_restore_rejected_at_mode_boundary ... ok
+test generic_restore_cannot_clear_a_constructing_emergency_latch ... ok
+test generic_restart_rejected_without_mutating_combined_cognition ... ok
+test generic_native_restore_rejected_before_replacing_carrier ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/unified_runtime.rs (target/release/deps/unified_runtime-f264116b1693c23f)
+
+running 10 tests
+test existing_native_route_cannot_be_a_second_commander ... ok
+test callback_fault_is_poisoned_and_not_retried ... ok
+test freeze_preserves_weights_while_recording_real_outcomes ... ok
+test emergency_is_retained_after_restore ... ok
+test old_checkpoint_cannot_rewind_live_history ... ok
+test one_real_callback_and_one_factual_event ... ok
+test real_consequence_changes_existing_physical_weights ... ok
+test new_sensor_contract_preserves_controller_and_prior_experience ... ok
+test checkpoint_restores_controller_and_learner_exactly ... ok
+test resumed_decisions_and_checkpoints_match ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/unified_self_directed_lifetime.rs (target/release/deps/unified_self_directed_lifetime-5e6b9e6e7ea2f19c)
+
+running 8 tests
+test accomplished_goal_cannot_trigger_unnecessary_factual_action ... ok
+test partially_satisfied_goal_stops_direct_learner_and_protected_executor ... ok
+test protection_gate_still_owns_all_action_authority ... ok
+test unknown_outcome_cannot_compete_with_real_u1_proposals ... ok
+test jsonl_multi_domain_keeps_small_sensor_contract ... ok
+test unscheduled_probe_then_exploit_in_joint_u1_and_restore ... ok
+test fixed_budget_ablation_reports_both_arms_without_relabeling ... ok
+test physical_roles_remain_opaque_under_joint_arbitration ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/word_problems.rs (target/release/deps/word_problems-2dfd9714e79e4561)
+
+running 24 tests
+test exact_nested_composition ... ok
+test digits_inside_a_word_are_not_arithmetic_quantities ... ok
+test decimal_and_grouped_quantities_are_not_split ... ok
+test exact_rational_division_has_no_float_roundoff ... ok
+test fabricated_numeric_slot_is_rejected ... ok
+test explicit_extension_does_not_erase_world_experience_or_weights ... ok
+test integer_vm_contract_is_unchanged ... ok
+test invalid_float_and_unsorted_vocabulary_rejected ... ok
+test frozen_knowledge_cannot_be_replaced_silently ... ok
+test margin_is_not_a_probability ... ok
+test model_cannot_smuggle_executable_calls ... ok
+test model_roundtrip_and_validation ... ok
+test new_values_are_computed_not_recalled ... ok
+test overflow_does_not_wrap ... ok
+test old_and_new_interpretation_paths_coexist ... ok
+test raw_unmasked_year_count_is_an_input_not_hidden_metadata ... ok
+test invalid_model_rejected_before_install ... ok
+test repeated_input_and_wrong_support_rejected ... ok
+test too_many_quantities_abstains ... ok
+test unsupported_language_does_not_silently_drop_words ... ok
+test zero_denominator_is_not_a_prediction ... ok
+test same_words_different_question_has_different_role_features ... ok
+test fresh_process_cognition_has_identical_answers ... ok
+test predictions_cannot_train_or_mutate_checkpoints ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
++ cargo test --locked --release --example rsp3_experience
+warning: unused import: `Series`
+ --> src/learning_world/temporal/rule_search.rs:3:43
+  |
+3 | use super::{normalized, valid_rule, Seed, Series, LAGS};
+  |                                           ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `propose` is never used
+   --> src/construction/causal_memory.rs:636:19
+    |
+214 | impl CausalMemory {
+    | ----------------- method in this implementation
+...
+636 |     pub(crate) fn propose(
+    |                   ^^^^^^^
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib) generated 11 warnings (run `cargo fix --lib -p aeterna-v1` to apply 2 suggestions)
+   Compiling aeterna-v1 v0.1.0 (/workspace/Aeterna-v1)
+warning: unused imports: `Context`, `Library`, `Meter`, and `Op`
+ --> examples/rsp3_experience.rs:6:75
+  |
+6 | use aeterna_v1::construction::{experiential::*,search_policy::*,vm::{Expr,Op,Library,Context,Meter}};
+  |                                                                           ^^ ^^^^^^^ ^^^^^^^ ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `limits` is never used
+ --> examples/rsp1_support/mod.rs:4:8
+  |
+4 | pub fn limits()->SearchLimits{SearchLimits{work:100_000,evaluations:384,max_nodes:11,frontier:512,edits_per_expansion:24}}
+  |        ^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `meta` is never used
+ --> examples/rsp1_support/mod.rs:5:8
+  |
+5 | pub fn meta()->SearchLimits{SearchLimits{work:100_000_000,evaluations:120,max_nodes:23,frontier:256,edits_per_expansion:12}}
+  |        ^^^^
+
+warning: function `config` is never used
+ --> examples/rsp1_support/mod.rs:6:8
+  |
+6 | pub fn config()->EvolutionConfig{EvolutionConfig{object:limits(),meta:meta(),max_lifetime_work:5_000_000_000}}
+  |        ^^^^^^
+
+warning: function `tasks` is never used
+  --> examples/rsp1_support/mod.rs:14:8
+   |
+14 | pub fn tasks(seed:u64,n:usize,transfer:bool)->(Vec<SynthesisTask>,Vec<SynthesisTask>){
+   |        ^^^^^
+
+warning: function `admission` is never used
+  --> examples/rsp1_support/mod.rs:35:8
+   |
+35 | pub fn admission(seed:u64)->AdmissionSuite{
+   |        ^^^^^^^^^
+
+warning: function `fifo` is never used
+  --> examples/rsp1_support/mod.rs:43:8
+   |
+43 | pub fn fifo()->SearchPolicy{SearchPolicy{priority:Expr::Input(2),..Default::default()}}
+   |        ^^^^
+
+warning: function `probe` is never used
+  --> examples/rsp1_support/mod.rs:44:8
+   |
+44 | pub fn probe(program:&Expr,task:&SynthesisTask)->Value{
+   |        ^^^^^
+
+warning: function `tested` is never used
+  --> examples/rsp1_support/mod.rs:52:8
+   |
+52 | pub fn tested(policy:&SearchPolicy,tasks:&[SynthesisTask],probes:&[SynthesisTask],seed:u64)->Result<Value,Box<dyn std::error::Error>>{
+   |        ^^^^^^
+
+warning: `aeterna-v1` (example "rsp3_experience" test) generated 9 warnings (run `cargo fix --example "rsp3_experience" -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 5.20s
+     Running unittests examples/rsp3_experience.rs (target/release/examples/rsp3_experience-c4bcbe2ffebfb398)
+
+running 2 tests
+test integrity_tests::report_commitment_prevents_policy_swap_after_train ... ok
+test integrity_tests::partial_primary_exam_is_not_valid_evidence ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
++ cargo build --locked --release --bin aeterna-v1 --bin aeterna-unified --message-format=json
+    Finished `release` profile [optimized] target(s) in 0.08s
+warning: unused import: `Series`
+ --> src/learning_world/temporal/rule_search.rs:3:43
+  |
+3 | use super::{normalized, valid_rule, Seed, Series, LAGS};
+  |                                           ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+
+warning: method `propose` is never used
+   --> src/construction/causal_memory.rs:636:19
+    |
+214 | impl CausalMemory {
+    | ----------------- method in this implementation
+...
+636 |     pub(crate) fn propose(
+    |                   ^^^^^^^
+
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+
++ python scripts/check_saved_organism.py --binary /workspace/Aeterna-v1/target/release/aeterna-v1
+{
+  "status": "PASS",
+  "checkpoint_sha256": "c05cc2bc70c1525d9990dea81838dc25cc14498d6a68610f63f6cf3020e7fe8d",
+  "factual_action_cost": 2200,
+  "interfaces": 4,
+  "rsp2_attempts": 5,
+  "evaluator_searches": 7,
+  "learning_remains_enabled": true,
+  "external_actions_executed": 0,
+  "completed_lifetime_freeze_matches_frozen_study": true
+}
++ python scripts/check_acquired_organism.py --binary /workspace/Aeterna-v1/target/release/aeterna-v1
+{
+  "status": "PASS",
+  "checkpoint_sha256": "396f00fa43ca7d46a64e2fd2edc9e2b618c3486abae736d391940ae77be5482b",
+  "factual_actions": 11174,
+  "completed_episodes": 5499,
+  "acquired_rules": {
+    "active_domains": [
+      4
+    ],
+    "admitted_programs": 1,
+    "audits": {
+      "4": [
+        {
+          "accepted": true,
+          "candidate_correct": 62,
+          "candidate_loss": 11.61668920870582,
+          "closed_at": 2396,
+          "fixed_correct": 54,
+          "fixed_loss": 14.224869579009125,
+          "future_examples": 64,
+          "incumbent_correct": 54,
+          "incumbent_loss": 14.224869579009125,
+          "incumbent_program": null,
+          "program_fingerprint": 3627904648784146859,
+          "trained_through": 2204
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 58,
+          "candidate_loss": 10.412587582056634,
+          "closed_at": 2731,
+          "fixed_correct": 46,
+          "fixed_loss": 18.0965604041467,
+          "future_examples": 64,
+          "incumbent_correct": 62,
+          "incumbent_loss": 10.2544460376656,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 10281080182461258872,
+          "trained_through": 2555
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 59,
+          "candidate_loss": 13.319449748641626,
+          "closed_at": 3059,
+          "fixed_correct": 47,
+          "fixed_loss": 18.97694641622109,
+          "future_examples": 64,
+          "incumbent_correct": 64,
+          "incumbent_loss": 11.43541132304528,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 7815799886482790585,
+          "trained_through": 2893
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 61,
+          "candidate_loss": 10.853210218454938,
+          "closed_at": 3382,
+          "fixed_correct": 55,
+          "fixed_loss": 12.359276703653611,
+          "future_examples": 64,
+          "incumbent_correct": 64,
+          "incumbent_loss": 9.92494034837108,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 9045377829863728063,
+          "trained_through": 3218
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 57,
+          "candidate_loss": 12.234522894597866,
+          "closed_at": 5610,
+          "fixed_correct": 56,
+          "fixed_loss": 10.868231376019754,
+          "future_examples": 64,
+          "incumbent_correct": 64,
+          "incumbent_loss": 10.979929623376595,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 8039421373789377227,
+          "trained_through": 5448
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 59,
+          "candidate_loss": 13.903600619809081,
+          "closed_at": 5940,
+          "fixed_correct": 53,
+          "fixed_loss": 14.288594174360933,
+          "future_examples": 64,
+          "incumbent_correct": 64,
+          "incumbent_loss": 10.917201429799437,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 9468393571052674806,
+          "trained_through": 5770
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 59,
+          "candidate_loss": 11.618044504013044,
+          "closed_at": 6278,
+          "fixed_correct": 57,
+          "fixed_loss": 12.629069082543289,
+          "future_examples": 64,
+          "incumbent_correct": 64,
+          "incumbent_loss": 10.773553967321606,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 16687685867781492819,
+          "trained_through": 6120
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 58,
+          "candidate_loss": 15.116976174907222,
+          "closed_at": 6643,
+          "fixed_correct": 51,
+          "fixed_loss": 13.769178492797115,
+          "future_examples": 64,
+          "incumbent_correct": 63,
+          "incumbent_loss": 11.238209970292338,
+          "incumbent_program": 3627904648784146859,
+          "program_fingerprint": 2069805109074875934,
+          "trained_through": 6461
+        }
+      ],
+      "82": [],
+      "9": [
+        {
+          "accepted": false,
+          "candidate_correct": 54,
+          "candidate_loss": 21.193030588191597,
+          "closed_at": 3746,
+          "fixed_correct": 58,
+          "fixed_loss": 9.021939329587552,
+          "future_examples": 64,
+          "incumbent_correct": 58,
+          "incumbent_loss": 9.021939329587552,
+          "incumbent_program": null,
+          "program_fingerprint": 18135851119577945766,
+          "trained_through": 3531
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 51,
+          "candidate_loss": 22.14946187096387,
+          "closed_at": 4206,
+          "fixed_correct": 55,
+          "fixed_loss": 16.420875812441576,
+          "future_examples": 64,
+          "incumbent_correct": 55,
+          "incumbent_loss": 16.420875812441576,
+          "incumbent_program": null,
+          "program_fingerprint": 15519581294499490098,
+          "trained_through": 3937
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 58,
+          "candidate_loss": 13.27562554785098,
+          "closed_at": 4615,
+          "fixed_correct": 58,
+          "fixed_loss": 8.566424718228669,
+          "future_examples": 64,
+          "incumbent_correct": 58,
+          "incumbent_loss": 8.566424718228669,
+          "incumbent_program": null,
+          "program_fingerprint": 1567657665670250752,
+          "trained_through": 4406
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 59,
+          "candidate_loss": 11.428265527246644,
+          "closed_at": 4994,
+          "fixed_correct": 58,
+          "fixed_loss": 9.861496391846508,
+          "future_examples": 64,
+          "incumbent_correct": 58,
+          "incumbent_loss": 9.861496391846508,
+          "incumbent_program": null,
+          "program_fingerprint": 15928429844701726640,
+          "trained_through": 4812
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 61,
+          "candidate_loss": 8.982062306300925,
+          "closed_at": 8216,
+          "fixed_correct": 61,
+          "fixed_loss": 5.395989569680768,
+          "future_examples": 64,
+          "incumbent_correct": 61,
+          "incumbent_loss": 5.395989569680768,
+          "incumbent_program": null,
+          "program_fingerprint": 1916660914772494850,
+          "trained_through": 8016
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 54,
+          "candidate_loss": 19.226717610037323,
+          "closed_at": 8701,
+          "fixed_correct": 59,
+          "fixed_loss": 8.594750631034554,
+          "future_examples": 64,
+          "incumbent_correct": 59,
+          "incumbent_loss": 8.594750631034554,
+          "incumbent_program": null,
+          "program_fingerprint": 2698505620112159352,
+          "trained_through": 8459
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 53,
+          "candidate_loss": 21.967412896690362,
+          "closed_at": 9138,
+          "fixed_correct": 54,
+          "fixed_loss": 14.636335199532663,
+          "future_examples": 64,
+          "incumbent_correct": 54,
+          "incumbent_loss": 14.636335199532663,
+          "incumbent_program": null,
+          "program_fingerprint": 12062811396173011359,
+          "trained_through": 8896
+        },
+        {
+          "accepted": false,
+          "candidate_correct": 57,
+          "candidate_loss": 13.434013652631048,
+          "closed_at": 9592,
+          "fixed_correct": 57,
+          "fixed_loss": 9.800138500029286,
+          "future_examples": 64,
+          "incumbent_correct": 57,
+          "incumbent_loss": 9.800138500029286,
+          "incumbent_program": null,
+          "program_fingerprint": 15340054096779138027,
+          "trained_through": 9365
+        }
+      ]
+    },
+    "learned_predicates": 171,
+    "pending_programs": 0,
+    "proposals": 16,
+    "rollbacks": 0,
+    "work": 40004979
+  },
+  "joint_checkpoint_bytes": 1556753,
+  "reward_model_bytes": 944954,
+  "learning_enabled": true,
+  "external_actions_executed": 0
+}
++ python scripts/check_first_readout_organism.py --binary /workspace/Aeterna-v1/target/release/aeterna-v1
+{
+  "organism_first_readout": {
+    "status": "PASS",
+    "learning_enabled": true,
+    "one_learner": true,
+    "checkpoint_sha256": "c1e32f7341f1dc3c9430716f3ea48280cc9847f673e8d4d631678f5217c9a39f",
+    "factual_actions": 17798,
+    "completed_episodes": 9067,
+    "raw_checkpoint_bytes": 1852716,
+    "immutable_forecasts": 1056,
+    "external_actions_executed": 0
+  },
+  "organism_no_new_learning": {
+    "status": "PASS",
+    "learning_enabled": false,
+    "one_learner": true,
+    "checkpoint_sha256": "f0754d39dba3b44dd47ba5fca306eaa324e7b503ae44306d9f201d7f442cc870",
+    "factual_actions": 20305,
+    "completed_episodes": 7131,
+    "raw_checkpoint_bytes": 1722119,
+    "immutable_forecasts": 512,
+    "external_actions_executed": 0
+  }
+}
++ python scripts/lc1_joint_demo.py --binary /workspace/Aeterna-v1/target/release/aeterna-v1 --output /workspace/Aeterna-v1/.test-temp/lc1_joint_demo.json
+{
+  "kind": "LC1_UNIFIED_JOINT_EXAMPLE_NOT_EXTERNAL_EXAM",
+  "acquired_rules": 1,
+  "training_observations": 35,
+  "target_support": 22,
+  "heldout_probe_not_passed_to_solver": 18,
+  "learning_work": 514,
+  "completion_work": 492116,
+  "automatic_hypotheses_tried": 5,
+  "forward_verified_support": true,
+  "restored_program_byte_identical": true,
+  "joint_checkpoint_fingerprint": "d0d761df565976bbbdade42ba11cb7cd874124df22e2afdae7d0551507b1727e",
+  "frozen_joint_checkpoint_fingerprint": "340553b5377dd7f0e63683a479c842b66d70193ee0c9f535e95dd251e3cfbf8c",
+  "rsp2_policy_generation": 0,
+  "rsp2_admitted_new_policy": false,
+  "human_level_intelligence": false
+}
++ python scripts/unified_factual_autonomy_demo.py --binary /workspace/Aeterna-v1/target/release/aeterna-v1 --output /workspace/Aeterna-v1/.test-temp/unscheduled_u1_loop.json
+{
+  "status": "DEVELOPMENT_PASS",
+  "first_goal": 3,
+  "first_actions": 19,
+  "new_goal": 6,
+  "reused_actions": 17,
+  "world": [
+    6,
+    1,
+    1
+  ],
+  "sources": {
+    "predict": 19
+  },
+  "learned_motor_tuition": false,
+  "separate_process_restore": true,
+  "one_scientific_runtime": true,
+  "independent_external_benchmark": false
+}
+{"status": "PASS", "suites": ["causal_continual_autonomy", "causal_jsonl_contract", "project_entrypoint", "recursive_search_policy", "recursive_search_repair", "experiential", "learned_requirements", "lc1_execution_contract", "quantity_relations", "word_problems", "education_runtime", "semantic_grounding", "unified_runtime", "unified_restore_guards", "unified_self_directed_lifetime", "trajectory_self_revision_protected", "trajectory_self_revision_transfer", "trajectory_behavior_gate", "agency_choice_credit_development", "cold_episodic_autonomy_development", "instrumental_credit_development", "agency_credit_manual_equivalence_development", "cold_pair_probe_development", "cold_autobiographical_option_development", "cold_variable_depth_option_development", "complexity_necessity_development", "adaptive_history_suffix_development", "predictive_history_action_development", "predictive_history_state_development", "certified_chain_protected_development", "factual_transfer_development", "factual_selective_holdout", "human_protection", "u1_meta_control", "directed_construction_autonomy", "directed_construction_completion", "directed_construction_continuity", "directed_construction_epistemic", "directed_construction_epistemic_integrity", "directed_construction_recursive", "directed_construction_scheduling", "directed_construction_session", "directed_construction_transfer", "directed_construction_unified", "external_continual", "organism_lifetime", "learning_organism", "temporal_organism"], "fresh_intelligence_claim": false}

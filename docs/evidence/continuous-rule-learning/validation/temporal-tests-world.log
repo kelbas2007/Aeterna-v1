@@ -1,0 +1,134 @@
+warning: unused import: `Series`
+ --> src/learning_world/temporal/rule_search.rs:3:43
+  |
+3 | use super::{normalized, valid_rule, Seed, Series, LAGS};
+  |                                           ^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:501:31
+    |
+501 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+513 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `propose` is never used
+   --> src/construction/causal_memory.rs:636:19
+    |
+214 | impl CausalMemory {
+    | ----------------- method in this implementation
+...
+636 |     pub(crate) fn propose(
+    |                   ^^^^^^^
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib) generated 11 warnings (run `cargo fix --lib -p aeterna-v1` to apply 2 suggestions)
+   Compiling aeterna-v1 v0.1.0 (/workspace/Aeterna-v1)
+warning: `aeterna-v1` (lib test) generated 9 warnings (9 duplicates)
+warning: `aeterna-v1` (lib) generated 11 warnings (11 duplicates)
+    Finished `release` profile [optimized] target(s) in 17m 14s
+     Running unittests src/lib.rs (target/release/deps/aeterna_v1-375b9134a8364559)
+
+running 6 tests
+test learning_world::temporal::rule_search::tests::temporal_noise_accepts_improvement_without_exact_fit ... ok
+test learning_world::temporal::rule_search::tests::temporal_research_replays_the_actual_parameter_context ... ok
+test learning_world::temporal::rule_search::tests::temporal_search_cannot_read_its_future_probes ... ok
+test learning_world::temporal::rule_search::tests::temporal_direct_improvement_cannot_become_a_recursive_admission ... ok
+test scientific_runtime::autonomous_temporal_revision_tests::interrupted_goal_does_not_create_fake_success_or_failure ... ok
+test scientific_runtime::autonomous_temporal_revision_tests::delayed_outcomes_initiate_vm_program_change_and_prospective_admission ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 159 filtered out; finished in 0.04s
+
+     Running tests/temporal_organism.rs (target/release/deps/temporal_organism-ca54d8c804da6aff)
+
+running 5 tests
+test temporal_invalid_real_post_never_trains_or_advances_the_model ... ok
+test temporal_world_prediction_is_fixed_before_the_real_answer ... ok
+test temporal_namespace_is_not_a_predictive_feature ... ok
+test temporal_one_life_learning_restore_and_freeze ... ok
+test temporal_computation_policy_keeps_learning_rewards_when_reconstruction_is_paused ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+
