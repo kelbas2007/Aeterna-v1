@@ -1,0 +1,53 @@
+{
+  "source_commit": "ac76869",
+  "parent": "01a35d0c69c3dec0340c753456ada4a7b7f221da",
+  "scope": "own untrained constructive foundation; explicit supervised lessons, fixed official test ranges; not AGI or autonomous label acquisition",
+  "whole_organisms": {
+    "growing": {
+      "computation_work": 58614523935,
+      "teaching_events": 9216,
+      "physical_commits_frozen": 1536,
+      "physical_commits_continuing": 768,
+      "controller_frozen": true,
+      "continuing_controller_frozen": false,
+      "correct": 535,
+      "evaluated_examples": 768,
+      "checkpoint_uncompressed_bytes": 15341250
+    },
+    "fixed": {
+      "computation_work": 67186453708,
+      "teaching_events": 9216,
+      "physical_commits_frozen": 1536,
+      "physical_commits_continuing": 768,
+      "controller_frozen": true,
+      "continuing_controller_frozen": false,
+      "correct": 534,
+      "evaluated_examples": 768,
+      "checkpoint_uncompressed_bytes": 14148510
+    }
+  },
+  "whole_computation_work_reduction_fraction": 0.12758419740762905,
+  "test_native_u1_readout_disagreements": {
+    "growing": 0,
+    "fixed": 0
+  },
+  "recursive_generations": {
+    "growing": 0,
+    "fixed": 0
+  },
+  "build": {
+    "rust": "1.99.0",
+    "target": "x86_64-unknown-linux-gnu",
+    "profile": "release",
+    "opt_level": 1,
+    "lto": false,
+    "codegen_units": 16,
+    "panic": "unwind",
+    "incremental": true,
+    "jobs": 2
+  },
+  "python": "3.12.14",
+  "source_and_embedded_manifest_unchanged_since_ac76869": true,
+  "flow_control_source": "2a5674c",
+  "flow_treatment_source": "ac76869"
+}

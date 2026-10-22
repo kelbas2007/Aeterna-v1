@@ -1,0 +1,47 @@
+{
+  "date_utc": "2026-10-22",
+  "source_commit": "edb3ff8af37ae02fe1dadf7923aeeaa1c2b7821b",
+  "origin_main": "01a35d0c69c3dec0340c753456ada4a7b7f221da",
+  "files": [
+    {
+      "path": "src/scientific_runtime.rs",
+      "sha256": "6e78805d8e7930518b8dd04a73d175010ca4d97dc45590c40c283a8d8872b1df"
+    },
+    {
+      "path": "src/unified_runtime.rs",
+      "sha256": "23b1001b71eef84399fef0fb71a84beae9b03242fd35716203ff0a539c57fd2d"
+    },
+    {
+      "path": "src/learning_world.rs",
+      "sha256": "5a5bf90abf99b182bfa415bb312035e4a80b756a148ee52abd8859ef39c68d01"
+    },
+    {
+      "path": "src/learning_world/network.rs",
+      "sha256": "82c3de5e44004a30c82abecd4e2716526f3970c3985ace9cdd482e2a993db4e8"
+    },
+    {
+      "path": "src/own_basis.rs",
+      "sha256": "f22ad93e0de998a8710924fe768539237cd9c07cfc26b10846c571c2cc3ce70d"
+    },
+    {
+      "path": "src/organism_development.rs",
+      "sha256": "a1344ad7632af80fd9559332bf9cb9e36c91acfc828cc41cb0cf535e38084d5a"
+    },
+    {
+      "path": "src/construction/sensors.rs",
+      "sha256": "5c3c285139044ddb6bb7969a58b4fbf06dfa4f6ae55a6722cfe0f5f5fe066f86"
+    },
+    {
+      "path": "src/construction/search_policy.rs",
+      "sha256": "aafe66f572983b9172e733a0abb7eccee2ba740af4eeec5ef36529782409bcb0"
+    },
+    {
+      "path": "src/construction/vm.rs",
+      "sha256": "c99ae33b67ba659e69281f54032a3ffb1f86e7cd7e40e3c859451a83c0d6e970"
+    },
+    {
+      "path": "src/bin/aeterna-unified.rs",
+      "sha256": "957b46b9ec7ee1c17f4a6848f17c66395d3ba4f5238c6a82e7f7547ec3571605"
+    }
+  ]
+}

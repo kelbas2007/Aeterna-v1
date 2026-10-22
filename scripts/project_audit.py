@@ -9,6 +9,21 @@ rsp3=binding.get('reviewed_rsp3_extension')
 lc1=binding.get('reviewed_lc1_extension')
 autonomous=binding.get('reviewed_autonomous_u1_extension')
 sha=lambda b:hashlib.sha256(b).hexdigest()
+own=binding.get('implemented_own_basis_extension')
+own_base={}
+if own:
+ packed=(r/own['base_archive']).read_bytes()
+ assert sha(packed)==own['base_archive_sha256'],'own-basis historical archive changed'
+ own_base=json.loads(gzip.decompress(packed))
+ assert set(own_base)==set(own['modified']),'incomplete own-basis archive'
+ for name,d in own['modified'].items():
+  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared own-basis mutation'
+  assert sha(own_base[name].encode())==d['before_sha256'],name+' own-basis historical mismatch'
+ for name,digest in own['added'].items():
+  assert sha((r/name).read_bytes())==digest,name+' own-basis source mismatch'
+def before_own(path):
+ name=path.relative_to(r).as_posix()
+ return own_base[name].encode() if name in own_base else path.read_bytes()
 learning=binding.get('implemented_learning_world_extension')
 learning_base={}
 if learning:
@@ -17,13 +32,13 @@ if learning:
  learning_base=json.loads(gzip.decompress(packed))
  assert set(learning_base)==set(learning['modified']),'incomplete learning-world historical archive'
  for name,d in learning['modified'].items():
-  assert sha((r/name).read_bytes())==d['after_sha256'],name+' undeclared learning-world mutation'
+  assert sha(before_own(r/name))==d['after_sha256'],name+' undeclared learning-world mutation'
   assert sha(learning_base[name].encode())==d['before_sha256'],name+' learning-world base mismatch'
  for name,digest in learning['added'].items():
-  assert sha((r/name).read_bytes())==digest,name+' learning-world source mismatch'
+  assert sha(before_own(r/name))==digest,name+' learning-world source mismatch'
 def before_learning(path):
  name=path.relative_to(r).as_posix()
- return learning_base[name].encode() if name in learning_base else path.read_bytes()
+ return learning_base[name].encode() if name in learning_base else before_own(path)
 consolidated=binding.get('implemented_consolidated_memory_extension')
 consolidated_base={}
 if consolidated:
@@ -139,6 +154,7 @@ if first:added.update(first['added'])
 if coverage:added.update(coverage['added'])
 if consolidated:added.update(consolidated['added'])
 if learning:added.update(learning['added'])
+if own:added.update(own['added'])
 original_hashes={}
 if lc1:
  for path,expected in lc1['added'].items():
@@ -209,7 +225,7 @@ assert len(files)==binding['bound_cognitive_source_files'],len(files)
 assert count_untouched==binding['unchanged_cognitive_source_files'],(count_untouched,binding['unchanged_cognitive_source_files'])
 assert h.hexdigest()==binding['aggregate_sha256'],'original core changed unexpectedly'
 assert sha(source(r / 'src/construction/search_policy.rs'))==binding['search_policy_sha256'],'RSP2 engine changed'
-current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})|set(organism['modified'] if organism else {})|set(rules['modified'] if rules else {})|set(first['modified'] if first else {})|set(coverage['modified'] if coverage else {})|set(consolidated['modified'] if consolidated else {})|set(learning['modified'] if learning else {})
+current_modified=set(causal['modified'] if causal else {})|set(external['modified'] if external else {})|set(organism['modified'] if organism else {})|set(rules['modified'] if rules else {})|set(first['modified'] if first else {})|set(coverage['modified'] if coverage else {})|set(consolidated['modified'] if consolidated else {})|set(learning['modified'] if learning else {})|set(own['modified'] if own else {})
 untouched=count_untouched-sum(p.relative_to(r).as_posix() in current_modified
  and p.relative_to(r).as_posix() not in original_hashes and p.relative_to(r).as_posix() not in changes for p in files)
 print(json.dumps({'status':'PASS','original_source_files':len(files),'historical_base_untouched':count_untouched,
@@ -220,4 +236,5 @@ print(json.dumps({'status':'PASS','original_source_files':len(files),'historical
  'coverage_memory_extension_verified':bool(coverage),
  'consolidated_memory_extension_verified':bool(consolidated),
  'learning_world_extension_verified':bool(learning),
+ 'own_basis_extension_verified':bool(own),
  'lc1_added_files':len(lc1['added']) if lc1 else 0,'original_aggregate':h.hexdigest(),'rsp2_search_policy_unchanged':True}))

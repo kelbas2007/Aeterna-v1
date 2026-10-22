@@ -1,0 +1,892 @@
+{
+  "date_utc": "2026-10-22",
+  "scope": "Targeted update for autonomous acquisition, memory, transfer and learning-to-learn; not an exhaustive or systematic review of all neuroscience.",
+  "access": "Official eLife XML GitHub archive and author-hosted Science PDF. Publisher, PubMed, Europe PMC, Crossref, OpenAlex, arXiv requests returned proxy HTTP 403, including an escalated repeat attempt. Available sources are a restricted sample.",
+  "screening": {
+    "xml_files_with_versions": 116,
+    "unique_elife_article_ids": 81,
+    "selected_elife_primary_sources": 12,
+    "selected_other_primary_sources": 1,
+    "screening_is_not_full_text_reading": true
+  },
+  "inclusion_rule": "Accessible original human developmental/learning evidence, related human memory/metacognition, selected explicitly labeled animal or computational studies and methodological checks; version date not later than review date.",
+  "search_queries": [
+    {
+      "query": "\"infants\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 292,
+      "returned_count": 12
+    },
+    {
+      "query": "\"curiosity\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 104,
+      "returned_count": 12
+    },
+    {
+      "query": "\"children\" \"curiosity\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 28,
+      "returned_count": 10
+    },
+    {
+      "query": "\"children\" \"metacognition\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 7,
+      "returned_count": 7
+    },
+    {
+      "query": "\"infants\" \"2025\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 163,
+      "returned_count": 10
+    },
+    {
+      "query": "\"children\" \"exploration\" \"learning\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 158,
+      "returned_count": 10
+    },
+    {
+      "query": "\"replay\" \"generalization\" \"2026\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 21,
+      "returned_count": 10
+    },
+    {
+      "query": "\"causal\" \"children\" \"interventions\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 108,
+      "returned_count": 10
+    },
+    {
+      "query": "\"metacognition\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 44,
+      "returned_count": 12
+    },
+    {
+      "query": "\"learning\" \"metacognition\" \"children\" repo:langcog/curiobaby_drop",
+      "engine": "GitHub code search",
+      "total_count": 1,
+      "returned_count": 1
+    },
+    {
+      "query": "\"help\" \"infants\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 248,
+      "returned_count": 7
+    },
+    {
+      "query": "\"children\" \"information-seeking\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 10,
+      "returned_count": 7
+    },
+    {
+      "query": "\"metacognitive\" \"development\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 34,
+      "returned_count": 7
+    },
+    {
+      "query": "\"learning-to-learn\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 5,
+      "returned_count": 5
+    },
+    {
+      "query": "\"replay\" \"2025\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 140,
+      "returned_count": 12
+    },
+    {
+      "query": "\"development\" \"2026\" repo:elifesciences/elife-article-xml",
+      "engine": "GitHub code search",
+      "total_count": 1756,
+      "returned_count": 12
+    },
+    {
+      "query": "\"Hippocampal encoding of memories\"",
+      "engine": "GitHub code search",
+      "total_count": 12,
+      "returned_count": 12
+    },
+    {
+      "query": "\"Grounded language acquisition\"",
+      "engine": "GitHub code search",
+      "total_count": 7616,
+      "returned_count": 12
+    }
+  ],
+  "sources": [
+    {
+      "id": "R01",
+      "title": "Hippocampal encoding of memories in human infants",
+      "authors": [
+        "Tristan S. Yates",
+        "Jared Fel",
+        "Dawoon Choi",
+        "Juliana E. Trach",
+        "Lillian Behm",
+        "Cameron T. Ellis",
+        "Nicholas B. Turk-Browne"
+      ],
+      "kind": "primary human research, Science 387, 1316-1320",
+      "publication_date": "2025-03-21",
+      "doi": [
+        "10.1126/science.adt7570"
+      ],
+      "url": "https://github.com/tristansyates/tristansyates.github.io/blob/60bc133466f82d52becafda883ddc155b83bedce/papers/Yates_2025_Science.pdf",
+      "blob_sha": "b45a7297b831d9e0be37da8ae84f9f7dc1ffdaab",
+      "sha256": "c88c3d716b92ae05bc29c021224918c6f11bbaee09642223cfd1a75976187891",
+      "bytes": 2676701,
+      "reading": [
+        "Abstract",
+        "Main results: sample and subsequent-memory association",
+        "Selected interpretation and caveats from main five-page PDF",
+        "Conclusions"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "26 infants, looking-based memory measure, no overall familiarity preference; not proof of a general retrieval mechanism."
+    },
+    {
+      "id": "R02",
+      "title": "Early roots of information-seeking: Infants predict and generalize the value of information",
+      "authors": [
+        "Ghilardi Tommaso",
+        "Poli Francesco",
+        "Meyer Marlene",
+        "Colizoli Olympia",
+        "Hunnius Sabine"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.92388",
+        "10.7554/eLife.92388.1"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2024-01-10"
+          },
+          "date": {
+            "day": "10",
+            "month": "01",
+            "year": "2024"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-92388-v1.xml",
+      "blob_sha": "005f2c3338e7bbb8b417bf1e8667a663225763f2",
+      "sha256": "f1a158455f667c7214920f04188fdec5261ecfb2c93815fda509f898b58610b9",
+      "bytes": 116000,
+      "reading": [
+        "Abstract",
+        "Discussion",
+        "Materials and Methods: sample, procedure, generalization analysis",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Infants; pupil response is indirect evidence; 30 primary and 19 generalization participants.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.92388.1.sa3"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R03",
+      "title": "A stimulus-computable rational model of visual habituation in infants and adults",
+      "authors": [
+        "Raz Gal",
+        "Cao Anjie",
+        "Saxe Rebecca",
+        "Frank Michael C"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.102713",
+        "10.7554/eLife.102713.2"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2025-01-08"
+          },
+          "date": {
+            "day": "08",
+            "month": "01",
+            "year": "2025"
+          }
+        },
+        {
+          "kind": {
+            "date-type": "update",
+            "iso-8601-date": "2025-09-29"
+          },
+          "date": {
+            "day": "29",
+            "month": "09",
+            "year": "2025"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-102713-v2.xml",
+      "blob_sha": "a8d8141dfcac3e5e789bd78745f70ef54895f493",
+      "sha256": "c9ee4da9839b2efefc2ea2a8b3fbda0504160b18bea767bd67bbeff32a6a14ad",
+      "bytes": 163669,
+      "reading": [
+        "Abstract",
+        "General discussion",
+        "Methods and Materials: image embeddings and selected statistical methods",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Infants/adults and computational model; pretrained ResNet embeddings; not an end-to-end developmental account.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.102713.2.sa2"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R04",
+      "title": "Age-dependent predictors of effective reinforcement motor learning across childhood",
+      "authors": [
+        "Hill Nayo M",
+        "Tripp Haley M",
+        "Wolpert Daniel M",
+        "Malone Laura A",
+        "Bastian Amy J"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.101036",
+        "10.7554/eLife.101036.2"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2024-09-30"
+          },
+          "date": {
+            "day": "30",
+            "month": "09",
+            "year": "2024"
+          }
+        },
+        {
+          "kind": {
+            "date-type": "update",
+            "iso-8601-date": "2025-06-10"
+          },
+          "date": {
+            "day": "10",
+            "month": "06",
+            "year": "2025"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-101036-v2.xml",
+      "blob_sha": "ddb9f19748fe7b646885b6b98fc769ec573e1727",
+      "sha256": "5be20d3d02e71b0b239878cb5d5a9c10ff30278370099c770b52a8d7900e5200",
+      "bytes": 231683,
+      "reading": [
+        "Abstract",
+        "Discussion",
+        "Methods: participants, task and selected model-fitting sections",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Cross-sectional child/adult study, 385 complete datasets; not longitudinal self-modification.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.101036.2.sa4"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R05",
+      "title": "From salience to semantics: multilevel hierarchical contingencies organise parent-infant joint attention",
+      "authors": [
+        "Labendzki Pierre",
+        "Perapoch Amadó Marta",
+        "Viswanathan Narain K",
+        "Northrop Tom J",
+        "Ives James",
+        "Lancaster Katie L",
+        "Greenwood Emily",
+        "Esposito Giovanni",
+        "Phillips Emily AM",
+        "Jones Emily JH",
+        "Goupil Louise",
+        "Wass Sam V"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.109024",
+        "10.7554/eLife.109024.1"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2025-11-25"
+          },
+          "date": {
+            "day": "25",
+            "month": "11",
+            "year": "2025"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-109024-v1.xml",
+      "blob_sha": "8c18a6dc28984a5021fb3b6d913b903a0964f73a",
+      "sha256": "4df8dc9fb580963c1d1127510071c5eb9519fb0d462686b1f325e3d2cf4c5f4b",
+      "bytes": 208587,
+      "reading": [
+        "Abstract",
+        "Materials and methods: recruitment and selected measurement sections",
+        "Discussion including limitations",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "67 mother-infant dyads; temporal association is not causal identification; pretrained models used in research measurements.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.109024.1.sa0"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R06",
+      "title": "How does curriculum learning influence cognitive map formation?",
+      "authors": [
+        "Glitz Leonie",
+        "Liang Zilu",
+        "Barron Helen C",
+        "Summerfield Christopher"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.111035",
+        "10.7554/eLife.111035.1"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2026-04-02"
+          },
+          "date": {
+            "day": "02",
+            "month": "04",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-111035-v1.xml",
+      "blob_sha": "c10857309baa329fd6457fed398ee721c756754d",
+      "sha256": "6046024238d0a31dab737d2d4359dc2043fd72223ade9c2d5684ab8c36cc9546",
+      "bytes": 153440,
+      "reading": [
+        "Abstract",
+        "Discussion",
+        "Methods and participant/procedure paragraphs",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Adult cognitive-map study; behavioral curriculum effect is stronger evidence than proposed fragmentation mechanism.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.111035.1.sa3"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R07",
+      "title": "Confidence phenotypes: a unified computational account of value and decision certainty in reinforcement learning",
+      "authors": [
+        "Comay Nicolás A",
+        "Solovey Guillermo",
+        "Barttfeld Pablo"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.111820",
+        "10.7554/eLife.111820.1"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2026-06-23"
+          },
+          "date": {
+            "day": "23",
+            "month": "06",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-111820-v1.xml",
+      "blob_sha": "8028befbe804bae91f09d8abd897a102701ef95f",
+      "sha256": "652e257ab4c18aba21747e3a5a45878f12ce6d63ef2e6cf4f10330617b31ab20",
+      "bytes": 194321,
+      "reading": [
+        "Abstract",
+        "Discussion: first/concluding paragraphs and selected caveats",
+        "Methods: dataset provenance and value-confidence sample",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Adult human datasets; model identifiability and direct confidence interactions remain partly open.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.111820.1.sa3"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R08",
+      "title": "Ramping-up hippocampal ripples and their neocortical coupling support human visual short-term memory",
+      "authors": [
+        "Liu Jing",
+        "He Xianhui",
+        "Yang Can",
+        "Axmacher Nikolai",
+        "Xue Gui",
+        "Zhang Shaoming",
+        "Cai Ying"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.111304",
+        "10.7554/eLife.111304.1"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2026-06-12"
+          },
+          "date": {
+            "day": "12",
+            "month": "06",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-111304-v1.xml",
+      "blob_sha": "91b38da338839f5e6405610f7bc4be249d802092",
+      "sha256": "b5354e6ab8727f4e516881d612e885bf46081760513057e202115eef71a6065e",
+      "bytes": 197294,
+      "reading": [
+        "Abstract",
+        "Discussion: selected mechanism/caveat paragraphs",
+        "Participant count from sample description/figure",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Intracranial recordings in 13 epilepsy patients; correlation and limited spatial sampling.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.111304.1.sa3"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R09",
+      "title": "Challenges in Replay Detection by TDLM in Post-Encoding Resting State",
+      "authors": [
+        "Kern Simon",
+        "Nagel Juliane",
+        "Wittkuhn Lennart",
+        "Gais Steffen",
+        "Dolan Ray",
+        "Feld Gordon"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.108023",
+        "10.7554/eLife.108023.2"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2025-09-11"
+          },
+          "date": {
+            "day": "11",
+            "month": "09",
+            "year": "2025"
+          }
+        },
+        {
+          "kind": {
+            "date-type": "update",
+            "iso-8601-date": "2026-03-13"
+          },
+          "date": {
+            "day": "13",
+            "month": "03",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-108023-v2.xml",
+      "blob_sha": "95ee3a13866fc2616ade20a5cd25a138c3105f04",
+      "sha256": "e21918d0884c11fbb4f29c6b8c522d03b9688f75156fcdf2603b10b09ee02d60",
+      "bytes": 346275,
+      "reading": [
+        "Abstract",
+        "Discussion: selected sensitivity and interpretation paragraphs",
+        "Results/sample figure description",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Methodological limitations of TDLM; lack of detected replay does not establish absence of replay.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.108023.2.sa4"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R10",
+      "title": "Formation of Task Representations and Replay in Mouse Medial Prefrontal Cortex",
+      "authors": [
+        "Shabani Hamed",
+        "Muysers Hannah",
+        "Yiu Yuk-Hoi",
+        "Sauer Jonas-Frederic",
+        "Bartos Marlene",
+        "Leibold Christian"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.106981",
+        "10.7554/eLife.106981.3"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2025-07-23"
+          },
+          "date": {
+            "day": "23",
+            "month": "07",
+            "year": "2025"
+          }
+        },
+        {
+          "kind": {
+            "date-type": "update",
+            "iso-8601-date": "2026-03-06"
+          },
+          "date": {
+            "day": "06",
+            "month": "03",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-106981-v3.xml",
+      "blob_sha": "9b27698b2b6a941eb2e56edec8637d9b422ab382",
+      "sha256": "a110390fc01f4d4a860ea0dfe4f8b92519da9dd3616c67ae98f87ae550475004",
+      "bytes": 131845,
+      "reading": [
+        "Abstract",
+        "Discussion: opening, sequence-analysis and transfer paragraphs",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Mouse longitudinal data; limited functional relevance of neural sequences; not a human-development result.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.106981.3.sa2"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R11",
+      "title": "Rapid cortical reorganization tracks goal-directed sensorimotor learning in real time",
+      "authors": [
+        "Renard Anthony",
+        "Foustoukos Georgios",
+        "Iuga Maya",
+        "Bech Pol",
+        "Bisi Axel",
+        "Dard Robin F",
+        "Crochet Sylvain",
+        "Petersen Carl CH"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.111818",
+        "10.7554/eLife.111818.1"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2026-08-03"
+          },
+          "date": {
+            "day": "03",
+            "month": "08",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-111818-v1.xml",
+      "blob_sha": "0c614683ed871f2ba7c78d33dfe93e83a57e4dbd",
+      "sha256": "4ed6505ea730d241a813cac71f3cf5e0ee93d5ffddf436af1861e6e5175aec44",
+      "bytes": 154780,
+      "reading": [
+        "Abstract",
+        "Discussion: task/cortical-plasticity and reactivation interpretation paragraphs",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Mouse sensorimotor learning; sensory reorganization better supported than reactivation as its cause.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.111818.1.sa3"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R12",
+      "title": "A cortical–hippocampal communication undergoes rebalancing after new learning",
+      "authors": [
+        "Hall Arron F",
+        "Wang Dong V"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.107370",
+        "10.7554/eLife.107370.2"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2025-07-14"
+          },
+          "date": {
+            "day": "14",
+            "month": "07",
+            "year": "2025"
+          }
+        },
+        {
+          "kind": {
+            "date-type": "update",
+            "iso-8601-date": "2026-09-16"
+          },
+          "date": {
+            "day": "16",
+            "month": "09",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-107370-v2.xml",
+      "blob_sha": "1c163410c9146afe5fa4adf04e36c04c60065c9b",
+      "sha256": "eb91e004e83a3b18dc643e9a8239203ba3cf9c8f0b28e45d8b35d0987409ce11",
+      "bytes": 259411,
+      "reading": [
+        "Abstract",
+        "Discussion: communication and candidate-interpretation paragraphs",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Animal ACC-CA1 data; pathway evidence stronger than particular memory-consolidation interpretation.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.107370.2.sa2"
+          ],
+          "labels": []
+        }
+      ]
+    },
+    {
+      "id": "R13",
+      "title": "Evolution imposes an inductive bias that alters and accelerates learning dynamics",
+      "authors": [
+        "Midler Benjamin",
+        "Vazquez Alejandro Pan"
+      ],
+      "kind": "primary research, eLife reviewed preprint; cited version only",
+      "doi": [
+        "10.7554/eLife.111582",
+        "10.7554/eLife.111582.1"
+      ],
+      "publication_dates": [
+        {
+          "kind": {
+            "date-type": "original-publication",
+            "iso-8601-date": "2026-08-27"
+          },
+          "date": {
+            "day": "27",
+            "month": "08",
+            "year": "2026"
+          }
+        }
+      ],
+      "url": "https://github.com/elifesciences/elife-article-xml/blob/765b677890aae8798535871e83936cff5cf53728/preprints/elife-preprint-111582-v1.xml",
+      "blob_sha": "2e383ca2fe9ea28ad5e38457b5afa2e3396edb19",
+      "sha256": "1b1ce74725805d3b1eba42a1b3b8a4cba18c59af51d85302aef3c1ad070a8510",
+      "bytes": 104899,
+      "reading": [
+        "Abstract",
+        "Discussion",
+        "eLife editorial assessment"
+      ],
+      "full_text_obtained": true,
+      "supplementary_materials_fully_read": false,
+      "independently_reproduced": false,
+      "limitations": "Computational small-task study, not human experiment; editorial assessment calls evidence incomplete and novelty unclear.",
+      "editorial_assessment": [
+        {
+          "doi": [
+            "10.7554/eLife.111582.1.sa2"
+          ],
+          "labels": []
+        }
+      ]
+    }
+  ],
+  "supporting_author_material": [
+    {
+      "repo": "frangilr/generalized-learning-small-data",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/frangilr/generalized-learning-small-data/main/README.md",
+      "sha256": "9ad758fddf7a7071663e1f2048a464190d19751b22b6a82700ecbbc4b2eb91f1",
+      "bytes": 3165,
+      "reading": "Author README or publication listing; not a full-text reading of associated papers.",
+      "used_as_primary_result_evidence": false
+    },
+    {
+      "repo": "Kexueyi/discover-hidden-visual-concepts",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/Kexueyi/discover-hidden-visual-concepts/main/README.md",
+      "sha256": "fcaf2740572c10021a9a6ef0fa4e0924e23c2617641ee7050da77da91ab8a2d1",
+      "bytes": 5926,
+      "reading": "Author README or publication listing; not a full-text reading of associated papers.",
+      "used_as_primary_result_evidence": false
+    },
+    {
+      "repo": "tristansyates/tristansyates.github.io",
+      "path": "publications.html",
+      "url": "https://raw.githubusercontent.com/tristansyates/tristansyates.github.io/master/publications.html",
+      "sha256": "1622693144574e8fb20fc75372a69ee8b30b2b43732b9b00a37fcca3d3f0080c",
+      "bytes": 7891,
+      "reading": "Author README or publication listing; not a full-text reading of associated papers.",
+      "used_as_primary_result_evidence": false
+    },
+    {
+      "repo": "wkvong/multimodal-baby",
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/wkvong/multimodal-baby/master/README.md",
+      "sha256": "abb7e447302aae0c3f0f0e34bc11c25417b445dae18d306d013cabedd3cd9c7c",
+      "bytes": 4077,
+      "reading": "Author README or publication listing; not a full-text reading of associated papers.",
+      "used_as_primary_result_evidence": false
+    }
+  ],
+  "dataset_access": [
+    {
+      "url": "https://personal.utdallas.edu/~kehtar/UTD-MHAD.html",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://vlomonaco.github.io/core50/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://huggingface.co/datasets/uea-datasets/utd-mhad/raw/main/README.md",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/vlomonaco/core50/master/scripts/bash/fetch_data_and_setup.sh",
+      "status": 200,
+      "sha256_prefix": "945108ff467e11bc932202fa31ea23bb995740d3c80017c1f024d440a781de1a",
+      "bytes_read": 744,
+      "actual_dataset_downloaded": false
+    },
+    {
+      "url": "https://raw.githubusercontent.com/razzu/cmc-cmkm/main/datasets/download_utd_mhad.sh",
+      "status": 200,
+      "sha256_prefix": "1a01254cd24983545a0df63225244a9bf43c6b85b0c675935e73fe7726ab1955",
+      "bytes_read": 1314,
+      "actual_dataset_downloaded": false
+    }
+  ],
+  "external_weights_or_model_apis_used_in_aeterna": false,
+  "foreign_full_text_copies_in_repository": false
+}

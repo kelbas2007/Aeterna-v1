@@ -1,0 +1,259 @@
+{
+  "organism": {
+    "development": {
+      "abandoned_episodes": 1536,
+      "active_search_policy": 9182386847551643724,
+      "admitted_readout": null,
+      "behavioral_admissions": 0,
+      "behavioral_episodes": 0,
+      "behavioral_rejections": 0,
+      "behavioral_trials": 0,
+      "candidate_actions": 0,
+      "candidate_changed_readouts": 0,
+      "episodes": 0,
+      "evaluator_attempts_per_namespace": {},
+      "evaluator_search_policy": null,
+      "evaluator_searches": 0,
+      "last_recursive_error": null,
+      "namespaces": [],
+      "recursive_attempts": 0,
+      "recursive_attempts_per_pair": {},
+      "recursive_enabled": true,
+      "recursive_errors": 0,
+      "recursive_generations": 0,
+      "recursive_work": 0,
+      "retained_factual_examples": 0
+    },
+    "organism": {
+      "agency_credit": {
+        "externally_forced_actions": 0,
+        "self_selected_actions": 1536
+      },
+      "archived_domains": [],
+      "computation_work": 67186453708,
+      "contextual_namespaces": [
+        4,
+        9,
+        12
+      ],
+      "controller_frozen": true,
+      "domain": "aeterna-organism-lifetime",
+      "learner": {
+        "active_program": 13491590171125486598,
+        "construction_work": 32768,
+        "constructor_generation": 0,
+        "constructors": 0,
+        "events": 1536,
+        "last_error": null,
+        "library_nodes": 0,
+        "poisoned": false,
+        "program_nodes": 32,
+        "promotions": 0,
+        "recursive_improvements": 0,
+        "recursive_trials": 0,
+        "shadow_pending": false,
+        "state_cells": 0
+      },
+      "native_meta_observations": 1536,
+      "native_weights": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "operations": [
+        0,
+        0,
+        520,
+        1536
+      ],
+      "own_basis": {
+        "admitted_growth": 0,
+        "config": {
+          "grow": false,
+          "growth_units": 16,
+          "max_coordinates": 2048,
+          "max_features": 64,
+          "max_parameters": 262144,
+          "memory_bytes": 4194304,
+          "memory_examples": 256,
+          "reuse_features": true,
+          "seed": 72848337621809,
+          "work_per_example": 8000000
+        },
+        "features": 0,
+        "frozen": true,
+        "last_growth": null,
+        "learned_fingerprint": 4892479831827628072,
+        "parameters": 45210,
+        "programs": 0,
+        "rejected_growth": 0,
+        "skills": [
+          {
+            "candidate": false,
+            "concepts": [
+              "5",
+              "6",
+              "7",
+              "4",
+              "0",
+              "1",
+              "9",
+              "3",
+              "2",
+              "8"
+            ],
+            "distinct_inputs": 3071,
+            "model_fingerprint": 9422829191480450957,
+            "name": "fashion",
+            "prequential_correct": 2277,
+            "prequential_log_loss": 2.334643375546077,
+            "prequential_predictions": 3062,
+            "reused_features": 0,
+            "teaching_examples": 3072,
+            "visible_features": 0
+          },
+          {
+            "candidate": false,
+            "concepts": [
+              "1",
+              "4",
+              "0",
+              "5",
+              "2",
+              "3"
+            ],
+            "distinct_inputs": 3071,
+            "model_fingerprint": 13950707282223767101,
+            "name": "har",
+            "prequential_correct": 1857,
+            "prequential_log_loss": 2.484826954078903,
+            "prequential_predictions": 3066,
+            "reused_features": 0,
+            "teaching_examples": 3072,
+            "visible_features": 0
+          },
+          {
+            "candidate": false,
+            "concepts": [
+              "6",
+              "8",
+              "3",
+              "0",
+              "4",
+              "1",
+              "5",
+              "9",
+              "7",
+              "2"
+            ],
+            "distinct_inputs": 3072,
+            "model_fingerprint": 10692053842858045672,
+            "name": "mnist",
+            "prequential_correct": 2456,
+            "prequential_log_loss": 1.9328625710114482,
+            "prequential_predictions": 3062,
+            "reused_features": 0,
+            "teaching_examples": 3072,
+            "visible_features": 0
+          }
+        ],
+        "stored_examples": 768,
+        "teaching_events": 9216,
+        "trials": 0,
+        "work": 67073497720
+      },
+      "self_revision": {
+        "active_program": null,
+        "attempts": 0,
+        "behavior_attempted": false,
+        "behavior_guard_enabled": true,
+        "computation_work": 0,
+        "episodes": 0,
+        "generations": 0,
+        "readout_ablated": false,
+        "rejected": 0,
+        "rollbacks": 0,
+        "shadow": false,
+        "steps": 0,
+        "unfinished_steps": 0
+      },
+      "total_external_cost": 1536
+    },
+    "reward_memory": {
+      "accepted_strategy_changes": 0,
+      "acquired_kernel_exponent": 1.0,
+      "acquired_neighbors": 3,
+      "acquired_rules": {
+        "active_domains": [],
+        "admitted_programs": 0,
+        "audits": {},
+        "learned_predicates": 0,
+        "pending_programs": 0,
+        "proposals": 0,
+        "rollbacks": 0,
+        "work": 0
+      },
+      "enabled": true,
+      "evictions": 0,
+      "factual_events": 1536,
+      "learned_events": 1536,
+      "learned_fingerprint": 9063250590273636158,
+      "learned_mutation_weights": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "model_bytes": 614761,
+      "namespaces": 3,
+      "pending_actions": 0,
+      "recursive_generations": 0,
+      "rejected_strategy_changes": 0,
+      "retained_cases": 1536,
+      "retained_reward_rates": 768,
+      "strategy_audits": [],
+      "working_transitions": 1
+    },
+    "type": "organism_report"
+  },
+  "recursive": {
+    "state": {
+      "active": {
+        "location": {
+          "Input": 9
+        },
+        "priority": {
+          "Input": 0
+        },
+        "variation": {
+          "Input": 8
+        }
+      },
+      "admission_version": 2,
+      "audits": [],
+      "config": {
+        "max_lifetime_work": 40000000,
+        "meta": {
+          "edits_per_expansion": 8,
+          "evaluations": 16,
+          "frontier": 64,
+          "max_nodes": 13,
+          "work": 600000
+        },
+        "object": {
+          "edits_per_expansion": 8,
+          "evaluations": 32,
+          "frontier": 64,
+          "max_nodes": 7,
+          "work": 6000
+        }
+      },
+      "frozen": true,
+      "generation": 0,
+      "used_gate_inputs": [],
+      "work": 0
+    },
+    "type": "recursive_search_report"
+  }
+}
