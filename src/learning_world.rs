@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 
 mod network;
 use network::{Network, Pass};
+mod temporal;
+pub use temporal::{TemporalConfig, TemporalPrediction, TemporalReport,WorldPrediction};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -184,6 +186,8 @@ pub struct WorldActionForecast {
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LearningWorldReport {
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub temporal:Option<TemporalReport>,
     pub version: u32,
     pub config: LearningWorldConfig,
     pub attached_after_event: u64,
@@ -216,6 +220,9 @@ pub struct LearningWorldReport {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct LearningWorld {
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    temporal:Option<temporal::Temporal>,
+    #[serde(skip)] temporal_observation_reserved:bool,
     config: LearningWorldConfig,
     network: Network,
     attached_after_event: u64,
@@ -404,6 +411,7 @@ impl LearningWorld {
         let mut rng = config.seed;
         let network = Network::new(config.latent, actions, &mut rng);
         Ok(Self {
+            temporal:None, temporal_observation_reserved:false,
             belief: vec![0.0; config.latent],
             network,
             config,
@@ -443,6 +451,31 @@ impl LearningWorld {
     }
     pub(crate) fn total_work(&self) -> u64 {
         self.work
+    }
+    pub(crate) fn enable_temporal(&mut self,config:TemporalConfig,policy:crate::construction::search_policy::SearchPolicy)->Result<()> {
+        if self.temporal.is_some(){return Err(Error::Busy);}
+        let frame=&self.context.last().ok_or(Error::NoEvidence)?.frame;
+        let available=self.config.work_per_step.saturating_sub(self.step_work).saturating_sub(self.refresh_reserve());
+        if temporal::Temporal::observation_bound(frame).min((self.config.max_frame_values*64) as u64)>available{return Err(Error::Budget);}
+        let mut t=temporal::Temporal::new(config,policy)?;let mut meter=crate::construction::vm::Meter::new(available);
+        t.restart(frame,false,&mut meter)?;
+        self.charge(meter.spent);self.temporal=Some(t);Ok(())
+    }
+    pub(crate) fn predict_temporal(&mut self)->Result<TemporalPrediction> {
+        let frame=&self.context.last().ok_or(Error::NoEvidence)?.frame;
+        let bound=temporal::Temporal::prediction_bound(frame);
+        if bound>self.config.work_per_step.saturating_sub(self.step_work){return Err(Error::Budget);}
+        let mut meter=crate::construction::vm::Meter::new(bound);
+        let prediction=self.temporal.as_ref().ok_or(Error::NoEvidence)?.predict(frame,&mut meter)?;
+        if !self.charge(meter.spent){return Err(Error::Budget);}Ok(prediction)
+    }
+    pub(crate) fn predict_world(&mut self,action:usize)->Result<WorldPrediction>{
+        if action>=self.network.actions{return Err(Error::InvalidData);}
+        let prediction=self.predict_temporal()?;let keys:Vec<_>=prediction.values.keys().cloned().collect();
+        let cost=(keys.len()*(self.config.latent*4+64)+self.config.latent*self.config.latent*8) as u64;
+        if !self.charge(cost){return Err(Error::Budget);}
+        let neural=self.network.sensor_predictions(&self.belief,action,&keys);
+        Ok(self.temporal.as_ref().ok_or(Error::NoEvidence)?.fuse(prediction,neural))
     }
     pub(crate) fn set_goal(&mut self, frame: Option<SensorFrame>, tolerance: f64) -> Result<u64> {
         if !tolerance.is_finite() || !(0.0..=1.0).contains(&tolerance) {
@@ -495,7 +528,7 @@ impl LearningWorld {
         (self.config.max_frame_values
             * (self.config.context_frames * (self.config.latent * 4 + 48) + 128)
             + self.config.context_frames * (self.config.latent * self.config.latent * 4 + 128))
-            as u64
+            as u64 + if self.temporal_observation_reserved {(self.config.max_frame_values*80) as u64}else{0}
     }
     fn charge(&mut self, cost: u64) -> bool {
         if cost > self.config.work_per_step.saturating_sub(self.step_work) {
@@ -573,12 +606,19 @@ impl LearningWorld {
         }
         self.step_work = 0;
         self.pending = None;
+        self.temporal_observation_reserved=false;
         self.last_experience = None;
         self.context = vec![ContextFrame {
             frame: frame.clone(),
             previous_action: None,
         }];
         self.bridge = bridge.to_vec();
+        let temporal_available=self.config.work_per_step.saturating_sub(self.step_work).saturating_sub(self.refresh_reserve());
+        if let Some(t)=self.temporal.as_mut(){
+            let mut meter=crate::construction::vm::Meter::new(temporal_available);
+            t.restart(frame,frozen,&mut meter)?;
+            self.charge(meter.spent);
+        }
         self.register(&self.context.clone(), frozen);
         let cost = self
             .network
@@ -598,6 +638,8 @@ impl LearningWorld {
     ) -> (Vec<WorldActionForecast>, u64) {
         self.pending = None;
         self.step_work = 0;
+        self.temporal_observation_reserved=self.temporal.is_some();
+        if let Some(t)=self.temporal.as_mut(){t.cancel();}
         if self.context.is_empty() || allowed.len() != self.network.actions {
             return (Vec::new(), 0);
         }
@@ -657,10 +699,27 @@ impl LearningWorld {
             version: self.representation_version,
             context_key: key,
         });
-        (forecasts, cost)
+        let mut temporal_work=0;
+        let temporal_reserve=self.refresh_reserve();
+        if let Some(t)=self.temporal.as_mut(){
+            if let Some(frame)=self.context.last().map(|c|&c.frame){
+                let bound=temporal::Temporal::prediction_bound(frame);
+                let available=self.config.work_per_step.saturating_sub(self.step_work);
+                if bound+temporal_reserve<=available{
+                    let mut meter=crate::construction::vm::Meter::new(bound);
+                    t.begin(frame,&mut meter).expect("reserved temporal prediction");
+                    t.correct_pending(&mut forecasts);temporal_work=meter.spent;
+                }
+            }
+        }
+        if temporal_work>0{self.charge(temporal_work);}
+        if let Some(p)=self.pending.as_mut(){p.forecasts=forecasts.clone();}
+        (forecasts, cost+temporal_work)
     }
     pub(crate) fn cancel_decision(&mut self) {
         self.pending = None;
+        self.temporal_observation_reserved=false;
+        if let Some(t)=self.temporal.as_mut(){t.cancel();}
     }
     pub(crate) fn committed(
         &mut self,
@@ -743,11 +802,24 @@ impl LearningWorld {
                 self.sensor_squared_error += sq;
                 self.sensor_count = self.sensor_count.saturating_add(n);
                 sample.last_loss = sq / n.max(1) as f64;
+                let keys=self.temporal.as_ref().map_or_else(Vec::new,|t|t.pending_keys());
+                if !keys.is_empty()&&metric_cost+self.refresh_reserve()<=self.config.work_per_step.saturating_sub(self.step_work)&&self.charge(metric_cost){
+                    let predictions=self.network.sensor_predictions(&pre.pass.last(),action,&keys);
+                    if let Some(t)=self.temporal.as_mut(){t.note_neural_predictions(predictions);}
+                }
             }
         }
         self.factual_updates += 1;
         if selected {
             self.selected_proposals += 1;
+        }
+        self.temporal_observation_reserved=false;
+        let available=self.config.work_per_step.saturating_sub(self.step_work).saturating_sub(self.refresh_reserve());
+        if let Some(t)=self.temporal.as_mut(){
+            let mut meter=crate::construction::vm::Meter::new(available);
+            t.committed(action,reward,post,frozen,&mut meter)?;
+            let spent=meter.spent;
+            if !self.charge(spent){return Err(Error::Budget);}
         }
         if !frozen {
             self.last_experience = None;
@@ -788,7 +860,8 @@ impl LearningWorld {
         if self.representation_version == u64::MAX {
             return false;
         }
-        let cost = self.network.training_cost(sample, &self.config);
+        let feedback_only=self.temporal.as_ref().is_some_and(|t|t.pause_reconstruction());
+        let cost = if feedback_only{self.network.feedback_training_cost(sample,&self.config)}else{self.network.training_cost(sample, &self.config)};
         // Always leave enough for recomputing the largest live context.
         let reserve = self.refresh_reserve();
         if cost.saturating_add(reserve) > self.config.work_per_step.saturating_sub(self.step_work) {
@@ -798,7 +871,7 @@ impl LearningWorld {
         if !self.charge(cost) {
             return false;
         }
-        let loss = self.network.train(sample, &self.config, &mut self.rng);
+        let loss = if feedback_only{self.network.train_feedback(sample,&self.config)}else{self.network.train(sample, &self.config, &mut self.rng)};
         if replay {
             self.consolidation_updates += 1;
         } else {
@@ -886,6 +959,7 @@ impl LearningWorld {
     pub(crate) fn validate(&self, current: &[i64], factual_events: u64) -> Result<()> {
         self.config.validate()?;
         self.network.validate(&self.config)?;
+        if let Some(t)=&self.temporal{t.validate()?;}
         if self.context.is_empty()
             || self.context.len() > self.config.context_frames
             || self.bridge != current
@@ -1005,7 +1079,12 @@ impl LearningWorld {
             context_key(&self.context, self.config.max_frame_values),
             &mut action_forecasts,
         );
+        if let (Some(t),Some(frame))=(&self.temporal,self.context.last().map(|c|&c.frame)){
+            let mut meter=crate::construction::vm::Meter::new(temporal::Temporal::prediction_bound(frame));
+            if let Ok(prediction)=t.predict(frame,&mut meter){t.correct(&prediction.features,&mut action_forecasts);}
+        }
         LearningWorldReport {
+            temporal:self.temporal.as_ref().map(|t|t.report()),
             version: 1,
             config: self.config.clone(),
             attached_after_event: self.attached_after_event,
@@ -1031,13 +1110,14 @@ impl LearningWorld {
             goal_active: self.goal.is_some(),
             goal_satisfied: self.goal_utility.map(|v| v > 0.0),
             action_forecasts,
-            learned_fingerprint: hash(&(
+            learned_fingerprint: if let Some(t)=&self.temporal { hash(&(hash(&(
+                &self.network,&self.memory,self.representation_version,self.rng)),t.learned_hash())) } else { hash(&(
                 &self.network,
                 &self.memory,
                 self.representation_version,
                 self.rng,
-            )),
-            model_fingerprint: hash(&self.network),
+            )) },
+            model_fingerprint: self.temporal.as_ref().map_or_else(||hash(&self.network),|t|hash(&(hash(&self.network),t.model_hash()))),
         }
     }
 }

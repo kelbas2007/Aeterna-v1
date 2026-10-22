@@ -863,6 +863,23 @@ impl ScientificRuntime {
     pub fn learning_world_report(&self)->Option<crate::learning_world::LearningWorldReport>{
         self.constructing.as_ref()?.learning_world.as_ref().map(|w|w.report())
     }
+    pub fn enable_constructing_temporal_learning(&mut self,config:crate::learning_world::TemporalConfig)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Blocked);}
+        let policy=u.current.learner.recursive_search().map(|s|s.policy().clone()).unwrap_or_default();
+        let w=u.learning_world.as_mut().ok_or(UError::NoEvidence)?;let before=w.total_work();
+        let result=w.enable_temporal(config,policy);u.computation_work=u.computation_work.saturating_add(w.total_work()-before);result
+    }
+    pub fn predict_constructing_temporal(&mut self)->UResult<crate::learning_world::TemporalPrediction>{
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        let w=u.learning_world.as_mut().ok_or(UError::NoEvidence)?;
+        let before=w.total_work();let result=w.predict_temporal();
+        u.computation_work=u.computation_work.saturating_add(w.total_work()-before);result
+    }
+    pub fn predict_constructing_world(&mut self,action:usize)->UResult<crate::learning_world::WorldPrediction>{
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;let w=u.learning_world.as_mut().ok_or(UError::NoEvidence)?;
+        let before=w.total_work();let result=w.predict_world(action);u.computation_work=u.computation_work.saturating_add(w.total_work()-before);result
+    }
     /// A desired observation is a goal, not a fabricated factual example.
     pub fn set_learning_world_goal(&mut self,frame:Option<crate::construction::sensors::SensorFrame>,tolerance:f64)->UResult<()> {
         let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;

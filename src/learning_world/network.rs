@@ -307,6 +307,13 @@ impl Network {
         }
         (sum, count)
     }
+    pub(super) fn sensor_predictions(&self,h:&[f64],action:usize,keys:&[String])->BTreeMap<String,f64>{
+        let states:Vec<_>=self.heads.iter().map(|head|transition(head,self.dim,h,action)).collect();
+        keys.iter().filter_map(|key|self.coordinates.get(key).map(|c|{
+            let value=c.bias+0.5*(dot(&c.decoder,&states[0])+dot(&c.decoder,&states[1]));
+            (key.clone(),value.clamp(-1.,1.))
+        })).collect()
+    }
     pub(super) fn observe_outcome(&mut self, action: usize, error: Option<f64>) {
         self.action_counts[action] = self.action_counts[action].saturating_add(1);
         if let Some(error) = error {
@@ -334,6 +341,28 @@ impl Network {
                 + cfg.context_frames * self.dim * self.dim * 16
                 + self.actions * self.dim * 32
                 + 2048) as u64
+    }
+    pub(super) fn feedback_training_cost(&self,sample:&Experience,cfg:&LearningWorldConfig)->u64{
+        let mut next=sample.context.clone();next.push(sample.post.clone());while next.len()>cfg.context_frames{next.remove(0);}
+        self.encode_cost(&sample.context,cfg.max_frame_values)+self.encode_cost(&next,cfg.max_frame_values)
+            +(self.dim*self.actions*64+1024) as u64
+    }
+    /// Preserve perception parameters when their reconstruction is prospectively
+    /// dominated. Continue factual reward/value learning through the same heads.
+    pub(super) fn train_feedback(&mut self,sample:&Experience,cfg:&LearningWorldConfig)->f64{
+        let h=self.encode(&sample.context,cfg.max_frame_values).last();
+        let mut next=sample.context.clone();next.push(sample.post.clone());while next.len()>cfg.context_frames{next.remove(0);}
+        let next_h=self.encode(&next,cfg.max_frame_values).last();
+        let action=sample.post.previous_action.expect("factual action");let mut loss=0.;
+        for head in &mut self.heads{
+            let bootstrap=if sample.terminal{0.}else{(0..self.actions).map(|a|projection(&head.value,a,&next_h)).fold(-1.,f64::max)};
+            let value_target=(sample.reward+cfg.discount*bootstrap).clamp(-1.,1.);
+            for (weights,target,strength) in [(&mut head.reward,sample.reward,1.),(&mut head.value,value_target,0.5)]{
+                let prediction=projection(weights,action,&h);let error=prediction-target;loss+=0.5*strength*error*error;
+                let derivative=strength*error*(1.-prediction*prediction);
+                for i in 0..=self.dim{let x=if i==self.dim{1.}else{h[i]};let p=&mut weights[action*(self.dim+1)+i];*p=(*p-cfg.learning_rate*(derivative*x).clamp(-1.,1.)).clamp(-6.,6.);}
+            }
+        }loss
     }
     pub(super) fn train(
         &mut self,

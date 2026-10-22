@@ -75,7 +75,8 @@ def records(path, offset, limit):
             yield index, row
 
 
-def ingest(binary, source, output, config, offset=0, limit=256, checkpoint=None, freeze=False):
+def ingest(binary, source, output, config, offset=0, limit=256, checkpoint=None, freeze=False,
+           temporal=None, forecast_log=False):
     if offset < 0 or limit <= 0:
         raise ValueError('offset must be nonnegative and limit positive')
     binary = Path(binary).resolve()
@@ -95,19 +96,33 @@ def ingest(binary, source, output, config, offset=0, limit=256, checkpoint=None,
     agent.frame = raw_current
     count = 0
     try:
+        attached_at_first_pre = False
+        if temporal is not None and stored['cognition']['learning_world'].get('temporal') is None:
+            # Attach at the actual observation of the new recorded interface.
+            # The previous life's last action may have spent its full allowance.
+            agent.reset(first[1]['pre'], recorded_source_index=first[0], before_temporal_attachment=True)
+            attached_at_first_pre = True
+            request = {'op': 'organism_enable_temporal_learning', 'config': temporal}
+            response = agent.command(request)
+            agent.trace.write({'kind': 'runtime_command', 'request': request, 'expected': response})
         if freeze:
             agent.trace.write({'kind': 'runtime_command', 'request': {'op': 'freeze'}})
             agent.freeze()
         initial_report = agent.command({'op': 'organism_report'})
         ended = False
         for index, row in itertools.chain([first], rows):
-            if ended or row.get('episode_start', False):
+            if (ended or row.get('episode_start', False)) and not (index == first[0] and attached_at_first_pre):
                 agent.reset(row['pre'], recorded_source_index=index)
             elif row['pre'] != agent.frame:
                 raise ValueError(f'Record {index} breaks PRE/POST continuity; declare episode_start for a real boundary')
             agent.trace.write({'kind': 'recorded_source', 'index': index,
                                'source_metadata': row.get('provenance'),
                                'historical_action_forced': True})
+            if forecast_log:
+                request = {'op': 'world_prediction', 'action': row['action']}
+                response = agent.command(request)
+                agent.trace.write({'kind': 'runtime_command', 'request': request,
+                                   'expected': response, 'recorded_source_index': index})
             available = [a == row['action'] for a in range(16)]
             agent.step(available, 1, lambda action: {
                 'frame': row['post'], 'reward': float(row['reward']), 'cost': 1})
@@ -133,6 +148,8 @@ def ingest(binary, source, output, config, offset=0, limit=256, checkpoint=None,
             'checkpoint_bytes': len(continuing.encode()), 'whole_runtime_instances_at_once': 1,
             'original_physical_experiments_executed': 0,
             'frozen': freeze,
+            'temporal_enabled': initial_world.get('temporal') is not None,
+            'forecast_log': forecast_log,
             'learned_state_unchanged': initial_world['learned_fingerprint'] == report['learned_fingerprint'],
             'new_factual_ingestions': report['factual_updates'] - initial_world['factual_updates'],
             'new_online_updates': report['online_updates'] - initial_world['online_updates'],
@@ -160,9 +177,13 @@ def main():
     p.add_argument('--offset', type=int, default=0)
     p.add_argument('--limit', type=int, default=256)
     p.add_argument('--freeze', action='store_true')
+    p.add_argument('--temporal', action='store_true', help='Enable causal temporal learning in the same runtime')
+    p.add_argument('--temporal-config', help='JSON configuration of rule search and its producer role')
+    p.add_argument('--forecast-log', action='store_true', help='Record the exact prediction before each actual POST')
     a = p.parse_args()
     config = json.loads(Path(a.config).read_text()) if a.config else {}
-    result = ingest(a.binary, a.events, a.output, config, a.offset, a.limit, a.checkpoint, a.freeze)
+    temporal = json.loads(Path(a.temporal_config).read_text()) if a.temporal_config else ({} if a.temporal else None)
+    result = ingest(a.binary, a.events, a.output, config, a.offset, a.limit, a.checkpoint, a.freeze, temporal, a.forecast_log)
     print(json.dumps({k: v for k, v in result.items() if k not in ['initial_report', 'final_report']}, indent=2))
 
 
