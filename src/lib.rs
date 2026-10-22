@@ -15,6 +15,7 @@ pub mod scientific_runtime;
 pub mod trace;
 pub mod construction;
 pub mod learning_world;
+pub mod own_basis;
 
 pub use authority::Authority;
 pub use belief::{BeliefConfig, EvoBeliefState};

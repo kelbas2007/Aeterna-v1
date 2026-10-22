@@ -51,7 +51,10 @@
     "shared_raw_recurrent_world_model_in_joint_checkpoint_opt_in": true,
     "simultaneous_multimodal_observation_learning_opt_in": true,
     "bounded_raw_episodic_replay_and_goal_state_opt_in": true,
-    "v1_to_v2_whole_organism_checkpoint_migration": true
+    "v1_to_v2_whole_organism_checkpoint_migration": true,
+    "own_untrained_constructive_basis_in_joint_checkpoint_opt_in": true,
+    "explicit_labelled_raw_sensor_teaching_opt_in": true,
+    "v3_checkpoint_with_learned_feature_library": true
   },
   "recursive_admission": {
     "new_states": 2,
@@ -162,7 +165,8 @@
     "docs/CONSOLIDATED_MEMORY_PROTOCOL.md",
     "docs/CONSOLIDATED_MEMORY_RESULT.md",
     "docs/LEARNING_ORGANISM.md",
-    "docs/LEARNING_ORGANISM_RESULT.md"
+    "docs/LEARNING_ORGANISM_RESULT.md",
+    "docs/OWN_BASIS.md"
   ],
   "manual_specialized_workflows": [
     "baseline.yml",

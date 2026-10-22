@@ -109,6 +109,31 @@ pub(crate) fn main()->Result<()>{
                     runtime=Some(rt);
                     Ok(json!({"type":"initialized","action_authority":"protected_u1","learner":"one_joint_checkpoint"}))
                 },
+                "organism_enable_own_basis"=>{
+                    let config=serde_json::from_value(request.get("config").cloned().unwrap_or(json!({})))?;
+                    let frame=serde_json::from_value(request["frame"].clone())?;
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_own_basis(config,&frame)?;
+                    Ok(json!({"type":"own_basis_enabled","checkpoint_version":3,"initial_weights":"local_zero_or_seeded","action_authority":"same_u1"}))
+                },
+                "basis_teach"=>{
+                    let skill=request["skill"].as_str().ok_or("missing skill")?;
+                    let label=request["label"].as_str().ok_or("missing teaching label")?;
+                    let source=request["source_id"].as_str().ok_or("missing teaching source_id")?;
+                    let frame=serde_json::from_value(request["frame"].clone())?;
+                    let receipt=runtime.as_mut().ok_or("not loaded")?.teach_own_basis(skill,&frame,label,source)?;
+                    Ok(json!({"type":"basis_taught","receipt":receipt,"feedback":"explicit_supervised_teaching"}))
+                },
+                "basis_predict"=>{
+                    let skill=request["skill"].as_str().ok_or("missing skill")?;
+                    let frame=serde_json::from_value(request["frame"].clone())?;
+                    Ok(json!({"type":"basis_prediction","prediction":runtime.as_mut().ok_or("not loaded")?.predict_own_basis(skill,&frame)?}))
+                },
+                "basis_goal"=>{
+                    let goal=match request.get("goal"){None|Some(Value::Null)=>None,Some(v)=>Some(serde_json::from_value(v.clone())?)};
+                    runtime.as_mut().ok_or("not loaded")?.set_own_basis_goal(goal)?;
+                    Ok(json!({"type":"basis_goal_updated","authority":"explicit_goal_not_current_answer"}))
+                },
+                "basis_report"=>Ok(json!({"type":"basis_report","report":runtime.as_ref().ok_or("not loaded")?.own_basis_report()})),
                 "organism_enable_learning_world"=>{
                     let config=serde_json::from_value(request.get("config").cloned().unwrap_or(json!({})))?;
                     let frame=serde_json::from_value(request["frame"].clone())?;

@@ -1,0 +1,43 @@
+name: Own untrained basis in the unified organism
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/own_basis_organism.rs'
+      - 'scripts/own_basis_lifetime.py'
+      - 'scripts/project_audit.py'
+      - 'docs/evidence/PROJECT_SOURCE_BINDING.json'
+      - '.github/workflows/own-basis.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: own-basis-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CARGO_TERM_COLOR: never
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin Rust
+        shell: bash
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup override set 1.99.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify source, one-body learning, retention and protected answers
+        shell: bash
+        run: |
+          python scripts/project_audit.py
+          cargo test --locked --test own_basis_organism
+          python -m py_compile scripts/own_basis_lifetime.py scripts/replay_learning_world.py

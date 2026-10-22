@@ -36,7 +36,9 @@ def replay(binary, source, output):
                     database.execute('insert or ignore into frame values (?,?)', (event['id'], json.dumps(event['frame'])))
                 elif kind == 'runtime_command':
                     assert pending is None
-                    agent.command(event['request'])
+                    response = agent.command(event['request'])
+                    if 'expected' in event:
+                        assert response == event['expected'], f'Runtime response mismatch after {commits} commits'
                 elif kind == 'restart':
                     assert pending is None
                     agent.reset(frame(event['frame_ref']), **event['metadata'])

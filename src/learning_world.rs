@@ -285,7 +285,7 @@ fn namespace(frame: &SensorFrame) -> i64 {
 
 /// Coordinates describe physical layout, never namespace, class or motor role.
 /// All available pixels/samples reach the trainable encoder, in their order.
-fn raw(frame: &SensorFrame, max: usize) -> Result<Vec<(String, f64)>> {
+pub(crate) fn raw(frame: &SensorFrame, max: usize) -> Result<Vec<(String, f64)>> {
     let mut out = Vec::new();
     match frame {
         SensorFrame::Image { pixels: None, .. } => {}
