@@ -1,0 +1,65 @@
+name: Integral retained knowledge repeat 2026-11-23
+
+on:
+  push:
+    branches:
+      - experiment/integral-retained-knowledge-20261123
+    paths:
+      - .github/workflows/integral-retained-knowledge-20261123.yml
+
+permissions:
+  contents: read
+
+jobs:
+  retained-integral-trial:
+    if: >-
+      github.event.head_commit.message == 'test: execute retained-knowledge integral repeat'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 4
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - name: Verify production and first experiment remain frozen
+        shell: bash
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code 01a35d0c69c3dec0340c753456ada4a7b7f221da HEAD -- src tests Cargo.toml Cargo.lock rust-toolchain.toml
+          git diff --exit-code c889d72c55aa1be586fa01e387f56ddca882b4ff HEAD -- examples/integral_causal_revision_eval.rs scripts/run_integral_causal_revision.py docs/experiments/INTEGRAL_CAUSAL_REVISION_20261123_PROTOCOL.md docs/experiments/evidence/integral_causal_revision_20261123
+          git diff --exit-code
+          printf 'SOURCE=%s\nRUN_ID=%s\nWORLD_SEED=45231338992\nBASE=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" 01a35d0c69c3dec0340c753456ada4a7b7f221da > retained-provenance.txt
+          sha256sum examples/integral_retained_knowledge_eval.rs scripts/run_integral_retained_knowledge.py docs/experiments/INTEGRAL_RETAINED_KNOWLEDGE_20261123_PROTOCOL.md >> retained-provenance.txt
+      - name: Build test-only retained-state evaluator
+        run: cargo build --locked --release --example integral_retained_knowledge_eval
+      - name: Record executable before reconstruction
+        run: sha256sum target/release/examples/integral_retained_knowledge_eval >> retained-provenance.txt
+      - name: Verify all reconstructions then execute retained-state passage
+        shell: bash
+        run: |
+          python3 -u scripts/run_integral_retained_knowledge.py --binary target/release/examples/integral_retained_knowledge_eval --run-id "$GITHUB_RUN_ID" --workers 2 --output retained-evidence | tee retained-run.log
+      - name: Publish complete result
+        if: always()
+        shell: bash
+        run: |
+          if test -f retained-evidence/RESULT.md; then
+            cat retained-evidence/RESULT.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Retained-state test incomplete: no capability verdict is available.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Preserve checkpoints and full evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integral-retained-knowledge-evidence
+          path: |
+            retained-evidence/
+            retained-provenance.txt
+            retained-run.log
+          if-no-files-found: error
+          retention-days: 90
+      - name: Verify tracked source stayed unchanged
+        if: always()
+        run: git diff --exit-code
