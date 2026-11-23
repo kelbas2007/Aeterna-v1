@@ -1,0 +1,112 @@
+name: Autonomous inquiry mechanism 2026-11-23
+
+on:
+  push:
+    branches:
+      - experiment/autonomous-inquiry-20261123
+    paths:
+      - .github/workflows/autonomous-inquiry-20261123.yml
+
+permissions:
+  contents: read
+
+jobs:
+  autonomous-inquiry:
+    if: >-
+      github.event.head_commit.message == 'test: execute frozen autonomous inquiry trial'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 8
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - name: Verify source identity and preserve all earlier experiments
+        shell: bash
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code 48197411f2dc581b3eeba1bec2f47a11ec2ee8aa HEAD -- Cargo.toml Cargo.lock rust-toolchain.toml examples/integral_causal_revision_eval.rs examples/integral_retained_knowledge_eval.rs examples/integral_phase_context_eval.rs scripts/run_integral_causal_revision.py scripts/run_integral_retained_knowledge.py scripts/run_integral_phase_context.py docs/experiments/INTEGRAL_CAUSAL_REVISION_20261123_PROTOCOL.md docs/experiments/INTEGRAL_RETAINED_KNOWLEDGE_20261123_PROTOCOL.md docs/experiments/INTEGRAL_PHASE_CONTEXT_20261123_PROTOCOL.md docs/experiments/evidence
+          git diff --exit-code
+          printf 'SOURCE=%s\nRUN_ID=%s\nBASE=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" 48197411f2dc581b3eeba1bec2f47a11ec2ee8aa > autonomous-inquiry-provenance.txt
+          sha256sum src/construction/inquiry.rs src/construction/causal_memory.rs src/construction/causal_port.rs src/unified_runtime.rs src/bin/aeterna-unified.rs examples/autonomous_inquiry_eval.rs scripts/run_autonomous_inquiry.py scripts/upgrade_autonomous_inquiry.py tests/autonomous_inquiry_contract.rs docs/experiments/AUTONOMOUS_INQUIRY_20261123_PROTOCOL.md >> autonomous-inquiry-provenance.txt
+      - name: Verify factual inference, persistence, transport and motor authority
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked --release --lib inquiry_ -- --nocapture 2>&1 | tee autonomous-inquiry-integrity.log
+          cargo test --locked --release --lib regime_ -- --nocapture 2>&1 | tee -a autonomous-inquiry-integrity.log
+          cargo test --locked --release --test autonomous_inquiry_contract --test causal_jsonl_contract --test unified_self_directed_lifetime -- --nocapture 2>&1 | tee -a autonomous-inquiry-integrity.log
+          cargo test --locked --release --test g19_rival_hypothesis_discrimination g19_goal_relevant_rivals_drive_probe_then_factual_revision -- --exact --nocapture 2>&1 | tee -a autonomous-inquiry-integrity.log
+          cargo test --locked --release --test te5_belief_action te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary -- --exact --nocapture 2>&1 | tee -a autonomous-inquiry-integrity.log
+      - name: Build frozen evaluator
+        run: cargo build --locked --release --example autonomous_inquiry_eval --bin aeterna-v1
+      - name: Record executable before behavioral qualification
+        run: sha256sum target/release/examples/autonomous_inquiry_eval target/release/aeterna-v1 >> autonomous-inquiry-provenance.txt
+      - name: Preserve eight actual historical lives when enabling inquiry
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, subprocess, zipfile
+          output = Path('autonomous-inquiry-upgrade')
+          output.mkdir()
+          archive = Path('docs/experiments/evidence/integral_retained_knowledge_20261123/integral-retained-knowledge-45235768424.zip')
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == 'bf231f8834d9f4b954bf1bcb064931836763dac76d51bbc8d8c73de48cf3c571'
+          reports = []
+          with zipfile.ZipFile(archive) as source:
+              for world in range(8):
+                  member = f'retained-evidence/repeat/checkpoints/world-{world}/continuation-unfrozen.checkpoint.json'
+                  original = output / f'world-{world}.original.checkpoint.json'
+                  original.write_bytes(source.read(member))
+                  upgraded = output / f'world-{world}.inquiry.checkpoint.json'
+                  result = subprocess.run(['python3', 'scripts/upgrade_autonomous_inquiry.py', '--input', str(original), '--output', str(upgraded), '--binary', 'target/release/aeterna-v1'], capture_output=True, text=True, timeout=150, check=True)
+                  report = json.loads(result.stdout)
+                  report.update(world=world, archive_member=member)
+                  reports.append(report)
+          (output / 'preservation.json').write_text(json.dumps({'qualification': 'state_preservation_only_no_behavioral_trial', 'worlds': reports}, indent=2) + '\n')
+          print('Eight historical checkpoints preserved; no actions executed.')
+          PY
+      - name: Execute every registered world and comparison
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 -u scripts/run_autonomous_inquiry.py --binary target/release/examples/autonomous_inquiry_eval --seed "$GITHUB_RUN_ID" --workers 2 --output autonomous-inquiry-evidence | tee autonomous-inquiry-run.log
+      - name: Publish scientific verdict including valid negative outcomes
+        if: always()
+        shell: bash
+        run: |
+          if test -f autonomous-inquiry-evidence/RESULT.md; then
+            cat autonomous-inquiry-evidence/RESULT.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Qualification is incomplete: no capability verdict is available.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Pack complete traces and continuing checkpoints
+        if: always()
+        shell: bash
+        run: |
+          if test -d autonomous-inquiry-evidence; then
+            tar -c -I 'xz -T2 -6' -f autonomous-inquiry-evidence.tar.xz autonomous-inquiry-evidence autonomous-inquiry-upgrade autonomous-inquiry-provenance.txt autonomous-inquiry-run.log autonomous-inquiry-integrity.log
+            sha256sum autonomous-inquiry-evidence.tar.xz > autonomous-inquiry-evidence.tar.xz.sha256
+          fi
+      - name: Preserve complete evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autonomous-inquiry-evidence
+          path: |
+            autonomous-inquiry-evidence.tar.xz
+            autonomous-inquiry-evidence.tar.xz.sha256
+            autonomous-inquiry-evidence/RESULT.md
+            autonomous-inquiry-evidence/verdict.json
+            autonomous-inquiry-provenance.txt
+            autonomous-inquiry-run.log
+            autonomous-inquiry-integrity.log
+            autonomous-inquiry-upgrade/preservation.json
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 90
+      - name: Verify source stayed frozen
+        if: always()
+        run: git diff --exit-code

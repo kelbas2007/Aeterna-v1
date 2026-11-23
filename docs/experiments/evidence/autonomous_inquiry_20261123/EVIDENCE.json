@@ -1,0 +1,119 @@
+{
+  "schema": "aeterna.autonomous-inquiry.evidence-index.v1",
+  "source_commit": "df9257ac2c15be9a843409ad28b25adc5ab3ab86",
+  "base_commit": "48197411f2dc581b3eeba1bec2f47a11ec2ee8aa",
+  "workflow_run_id": 45259082705,
+  "workflow_run_attempt": 1,
+  "job_id": 137988654422,
+  "artifact_id": 14860148175,
+  "workflow_url": "https://github.com/kelbas2007/Aeterna-v1/actions/runs/45259082705",
+  "verdict": "SUPPORTED",
+  "seed": 45259082705,
+  "archive": {
+    "parts_manifest": "archive/manifest.json",
+    "bytes": 51156344,
+    "sha256": "29391217a3bcbd48683ded61c99e39a246cc7f047503da2bb85487407918594d",
+    "members": 650
+  },
+  "downloaded_zip": {
+    "bytes": 52069993,
+    "sha256": "d1ebec600fc0967f046e53476fad025c4dc1d14f45bc29749f64cba019db09f8"
+  },
+  "compiled_binaries_sha256": {
+    "autonomous_inquiry_eval": "b2506d57b5fa41f2c0474d3d1da363ac87255ef4e4a95844a3e44875732febb3",
+    "aeterna-v1": "ef07f303a3ae006bb89e11858b04ef8c9537549aa86a57a9f2253c9ecfb3fb67"
+  },
+  "independent_rescore": {
+    "actors_rerun": false,
+    "verdict_bytes_identical": true,
+    "result_bytes_identical": true,
+    "source_files_checked": 108
+  },
+  "provenance_note": "CI files are copied without changes. Independent audit files are derived after download from the same immutable evidence. Local development is separately labeled and is not the qualifying sample.",
+  "copied_and_derived_files": {
+    "CI_RESULT.md": {
+      "bytes": 2802,
+      "sha256": "86a696caa3a99568517c4a7b288faf98a1b41d5f110b87dbd84e15fe11a6e8a9"
+    },
+    "CI_integrity.log": {
+      "bytes": 41143,
+      "sha256": "3544c3b88fdcc790e7d2e32abfee2bb08303c8eee0033b2bef218138fe35d778"
+    },
+    "CI_run.log": {
+      "bytes": 1664,
+      "sha256": "309bd76edea61f5b52f379c85d0a1d5f1d54f404a7afa8157de6f1ba556219e5"
+    },
+    "README.md": {
+      "bytes": 3205,
+      "sha256": "318bb7c5bbda22c2b7bdda5c9133a8353926869f76b04776dcdf180b9de1b253"
+    },
+    "independent-analysis.json": {
+      "bytes": 23775,
+      "sha256": "519f78cc5ed6d8667da79506010393368323dcf4fafd37ae328d0a0055acbccc"
+    },
+    "independent-integrity-audit.json": {
+      "bytes": 343,
+      "sha256": "67a669210568ba7210e41bbd8500c15b10f0e7cf3234a4e872592b732d62e5a6"
+    },
+    "independent-retention-audit.json": {
+      "bytes": 2550,
+      "sha256": "0cb6644c4ad7b86442a27cdf3814281cfd7a4ccbf4278bb369ad9ce0ac64fe15"
+    },
+    "independent-score.log": {
+      "bytes": 970,
+      "sha256": "c506073a2308b38f49a1ae85c2364bb2246d8b85150c6a816a9453d45783a541"
+    },
+    "local_development/DEVELOPMENT_RESULT.md": {
+      "bytes": 2016,
+      "sha256": "0f1f372c12645946d4907b141a53509bf20de4d7da1e496ef558db767c926276"
+    },
+    "local_development/development-manifest.json": {
+      "bytes": 12115,
+      "sha256": "4d7adbfc561ddf7655ba5d75ad2ebfdc55cc70b6a1a50abf157be23628d22733"
+    },
+    "local_development/development-verdict.json": {
+      "bytes": 46086,
+      "sha256": "af4e47c45d2470b223ebe11270b6649201155f41aaf1db4eee409a80750b1f95"
+    },
+    "local_development/inquiry-core-tests.log": {
+      "bytes": 4811,
+      "sha256": "8969c7521b63df7b074f2b53a216a3a265bcb1bc0d8a871d8ca2e8bb8ba8a842"
+    },
+    "local_development/inquiry-regression-tests.log": {
+      "bytes": 23069,
+      "sha256": "8d47233d064896117e57d8dc1e5a1ab3f36a50251a74f97ac9d94aae9140340d"
+    },
+    "local_development/inquiry-release-build.log": {
+      "bytes": 5157,
+      "sha256": "52368b5de3432d074146cb5d128c85a330a5509c66f1b3ea6758288ce7784cc2"
+    },
+    "local_development/legacy-replay.json": {
+      "bytes": 825,
+      "sha256": "e69525a619833975c42140301c5c0a8343cf1db23a7bd30274e6ce2e3ac41013"
+    },
+    "local_development/local-retention-preservation.json": {
+      "bytes": 19610,
+      "sha256": "6398ea749626f656e44c42fdddb8266c13971b0eb7170b0a1925cb93fc01c36e"
+    },
+    "local_development/manifest.json": {
+      "bytes": 1364,
+      "sha256": "0d84ac5bea0d33a5591e1236b7bfd8ee2f40dcd68a4571708150edf0722dffda"
+    },
+    "provenance.txt": {
+      "bytes": 1325,
+      "sha256": "2478698c3d5eb49ee6d5408bde62a216a58aee7db7a88ffe1bb787ea2aa7ae68"
+    },
+    "representative-chain-world9.json": {
+      "bytes": 25153,
+      "sha256": "3be29299bcc3f755fa17502a9705aed8ea195a32a612ebe4b5032f0e757f63be"
+    },
+    "retention-preservation.json": {
+      "bytes": 19659,
+      "sha256": "1e828b051f84e1892e8c57d81044bb3cc0c2240da261eebd28fbe515208632ad"
+    },
+    "summary.json": {
+      "bytes": 6808,
+      "sha256": "3d0d96de990209f8eeef8d6083bcd3998cc1b691f26d84683b463750f0b09c5c"
+    }
+  }
+}

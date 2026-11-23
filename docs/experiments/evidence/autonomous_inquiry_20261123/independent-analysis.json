@@ -1,0 +1,945 @@
+{
+  "aggregate": {
+    "switching": {
+      "ordinary": {
+        "totals": {
+          "episodes": 16384,
+          "successes": 13049,
+          "failures": 3273,
+          "timeouts": 62,
+          "actions": 40664,
+          "cue_queries": 12771,
+          "diagnostic_queries": 8324,
+          "noise_queries": 3247,
+          "terminal_actions": 16322,
+          "inquiry_source_actions": 0,
+          "readonly_work": 13860204,
+          "predictive_nll": 31235.62354338831
+        },
+        "success_rate": 0.79644775390625,
+        "questions": 0,
+        "resolved": 0,
+        "expired": 0,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      },
+      "active": {
+        "totals": {
+          "episodes": 16384,
+          "successes": 13535,
+          "failures": 2788,
+          "timeouts": 61,
+          "actions": 40725,
+          "cue_queries": 14602,
+          "diagnostic_queries": 6953,
+          "noise_queries": 2847,
+          "terminal_actions": 16323,
+          "inquiry_source_actions": 8351,
+          "readonly_work": 13713498,
+          "predictive_nll": 29987.48896456721
+        },
+        "success_rate": 0.82611083984375,
+        "questions": 649,
+        "resolved": 640,
+        "expired": 6,
+        "selected_inquiries": 8351,
+        "diagnostic_inquiries": 1320,
+        "complete_chains": 434
+      },
+      "observe_only": {
+        "totals": {
+          "episodes": 16384,
+          "successes": 13049,
+          "failures": 3273,
+          "timeouts": 62,
+          "actions": 40664,
+          "cue_queries": 12771,
+          "diagnostic_queries": 8324,
+          "noise_queries": 3247,
+          "terminal_actions": 16322,
+          "inquiry_source_actions": 0,
+          "readonly_work": 13860204,
+          "predictive_nll": 31235.62354338831
+        },
+        "success_rate": 0.79644775390625,
+        "questions": 645,
+        "resolved": 644,
+        "expired": 1,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      }
+    },
+    "stationary": {
+      "ordinary": {
+        "totals": {
+          "episodes": 4096,
+          "successes": 3670,
+          "failures": 422,
+          "timeouts": 4,
+          "actions": 9289,
+          "cue_queries": 3833,
+          "diagnostic_queries": 822,
+          "noise_queries": 542,
+          "terminal_actions": 4092,
+          "inquiry_source_actions": 0,
+          "readonly_work": 2979822,
+          "predictive_nll": 4555.240950817523
+        },
+        "success_rate": 0.89599609375,
+        "questions": 0,
+        "resolved": 0,
+        "expired": 0,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      },
+      "active": {
+        "totals": {
+          "episodes": 4096,
+          "successes": 3717,
+          "failures": 375,
+          "timeouts": 4,
+          "actions": 9333,
+          "cue_queries": 3955,
+          "diagnostic_queries": 664,
+          "noise_queries": 622,
+          "terminal_actions": 4092,
+          "inquiry_source_actions": 1211,
+          "readonly_work": 2985198,
+          "predictive_nll": 4600.2180407326905
+        },
+        "success_rate": 0.907470703125,
+        "questions": 39,
+        "resolved": 30,
+        "expired": 5,
+        "selected_inquiries": 1211,
+        "diagnostic_inquiries": 61,
+        "complete_chains": 21
+      },
+      "observe_only": {
+        "totals": {
+          "episodes": 4096,
+          "successes": 3670,
+          "failures": 422,
+          "timeouts": 4,
+          "actions": 9289,
+          "cue_queries": 3833,
+          "diagnostic_queries": 822,
+          "noise_queries": 542,
+          "terminal_actions": 4092,
+          "inquiry_source_actions": 0,
+          "readonly_work": 2979822,
+          "predictive_nll": 4555.240950817523
+        },
+        "success_rate": 0.89599609375,
+        "questions": 33,
+        "resolved": 27,
+        "expired": 3,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      }
+    }
+  },
+  "comparisons": {
+    "active_vs_observe_only": {
+      "paired_gains": [
+        0.0361328125,
+        0.083984375,
+        0.0703125,
+        -0.060546875,
+        0.01953125,
+        0.0087890625,
+        0.01953125,
+        0.0390625,
+        0.03125,
+        0.017578125,
+        0.044921875,
+        0.0400390625,
+        0.0546875,
+        0.0078125,
+        0.0244140625,
+        0.037109375
+      ],
+      "mean_gain": 0.0296630859375,
+      "positive_worlds": 15,
+      "stationary_mean_gain": 0.011474609375,
+      "switching_action_ratio": 1.001500098367106,
+      "benefit_gate": true,
+      "stationary_guard": true,
+      "action_guard": true
+    },
+    "active_vs_ordinary": {
+      "paired_gains": [
+        0.0361328125,
+        0.083984375,
+        0.0703125,
+        -0.060546875,
+        0.01953125,
+        0.0087890625,
+        0.01953125,
+        0.0390625,
+        0.03125,
+        0.017578125,
+        0.044921875,
+        0.0400390625,
+        0.0546875,
+        0.0078125,
+        0.0244140625,
+        0.037109375
+      ],
+      "mean_gain": 0.0296630859375,
+      "positive_worlds": 15,
+      "stationary_mean_gain": 0.011474609375,
+      "switching_action_ratio": 1.001500098367106,
+      "benefit_gate": true,
+      "stationary_guard": true,
+      "action_guard": true
+    },
+    "observe_only_vs_ordinary": {
+      "paired_gains": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_gain": 0.0,
+      "positive_worlds": 0,
+      "stationary_mean_gain": 0.0,
+      "switching_action_ratio": 1.0,
+      "benefit_gate": false,
+      "stationary_guard": true,
+      "action_guard": true
+    }
+  },
+  "clean_chain_candidates": [
+    {
+      "world": 10,
+      "question": {
+        "id": 4585,
+        "opened_event": 4585,
+        "episode": 1016,
+        "rule": 0,
+        "segment": 31,
+        "support": 43,
+        "prediction_probability": 0.9997988906646436,
+        "observed_probability": 0.01143028542517583
+      },
+      "diagnostic": {
+        "event": 4591,
+        "episode": 1018,
+        "rule": 0,
+        "segment": 31,
+        "expected_information_gain": 0.5462118222438306,
+        "immediate_information_gain": 0.5462118222438306,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 1,
+        "ended_event": 4591,
+        "evidence_events": 4,
+        "factual_experiments": 4,
+        "log_bayes_factor": -2.8756230499471824,
+        "opened_event": 4585,
+        "question_id": 4585,
+        "status": "resolved",
+        "episode": 1018,
+        "rule": 0,
+        "segment": 31
+      },
+      "successful_goal": {
+        "episode": 1018,
+        "rule": 0,
+        "segment": 31,
+        "success": true,
+        "terminal": true,
+        "action": 0,
+        "event": 4593,
+        "step": 2
+      }
+    },
+    {
+      "world": 10,
+      "question": {
+        "id": 4015,
+        "opened_event": 4015,
+        "episode": 795,
+        "rule": 0,
+        "segment": 25,
+        "support": 13,
+        "prediction_probability": 0.9999343841983865,
+        "observed_probability": 0.03454158658075698
+      },
+      "diagnostic": {
+        "event": 4048,
+        "episode": 803,
+        "rule": 0,
+        "segment": 25,
+        "expected_information_gain": 0.5165262756415945,
+        "immediate_information_gain": 0.5165262756415945,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 1,
+        "ended_event": 4048,
+        "evidence_events": 5,
+        "factual_experiments": 25,
+        "log_bayes_factor": -3.2049281423037193,
+        "opened_event": 4015,
+        "question_id": 4015,
+        "status": "resolved",
+        "episode": 803,
+        "rule": 0,
+        "segment": 25
+      },
+      "successful_goal": {
+        "episode": 803,
+        "rule": 0,
+        "segment": 25,
+        "success": true,
+        "terminal": true,
+        "action": 0,
+        "event": 4050,
+        "step": 2
+      }
+    },
+    {
+      "world": 5,
+      "question": {
+        "id": 1914,
+        "opened_event": 1914,
+        "episode": 70,
+        "rule": 0,
+        "segment": 3,
+        "support": 39,
+        "prediction_probability": 0.9990574318438419,
+        "observed_probability": 0.013253337236794175
+      },
+      "diagnostic": {
+        "event": 1919,
+        "episode": 72,
+        "rule": 0,
+        "segment": 3,
+        "expected_information_gain": 0.37881565933910033,
+        "immediate_information_gain": 0.37881565933910033,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 0,
+        "ended_event": 1919,
+        "evidence_events": 4,
+        "factual_experiments": 3,
+        "log_bayes_factor": 5.113625959735528,
+        "opened_event": 1914,
+        "question_id": 1914,
+        "status": "resolved",
+        "episode": 72,
+        "rule": 0,
+        "segment": 3
+      },
+      "successful_goal": {
+        "episode": 72,
+        "rule": 0,
+        "segment": 3,
+        "success": true,
+        "terminal": true,
+        "action": 2,
+        "event": 1921,
+        "step": 2
+      }
+    },
+    {
+      "world": 10,
+      "question": {
+        "id": 2353,
+        "opened_event": 2353,
+        "episode": 227,
+        "rule": 0,
+        "segment": 7,
+        "support": 18,
+        "prediction_probability": 0.9932337842406148,
+        "observed_probability": 0.03188676326507346
+      },
+      "diagnostic": {
+        "event": 2366,
+        "episode": 231,
+        "rule": 0,
+        "segment": 7,
+        "expected_information_gain": 0.29992086467783363,
+        "immediate_information_gain": 0.29992086467783363,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 1,
+        "ended_event": 2366,
+        "evidence_events": 4,
+        "factual_experiments": 11,
+        "log_bayes_factor": -4.277388480296223,
+        "opened_event": 2353,
+        "question_id": 2353,
+        "status": "resolved",
+        "episode": 231,
+        "rule": 0,
+        "segment": 7
+      },
+      "successful_goal": {
+        "episode": 231,
+        "rule": 0,
+        "segment": 7,
+        "success": true,
+        "terminal": true,
+        "action": 0,
+        "event": 2368,
+        "step": 2
+      }
+    },
+    {
+      "world": 13,
+      "question": {
+        "id": 3909,
+        "opened_event": 3909,
+        "episode": 793,
+        "rule": 0,
+        "segment": 25,
+        "support": 235,
+        "prediction_probability": 0.9574468085106386,
+        "observed_probability": 0.044397463002114154
+      },
+      "diagnostic": {
+        "event": 3913,
+        "episode": 794,
+        "rule": 0,
+        "segment": 25,
+        "expected_information_gain": 0.1890767125684489,
+        "immediate_information_gain": 0.1890767125684489,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 0,
+        "ended_event": 3913,
+        "evidence_events": 2,
+        "factual_experiments": 4,
+        "log_bayes_factor": 7.915887141512696,
+        "opened_event": 3909,
+        "question_id": 3909,
+        "status": "resolved",
+        "episode": 794,
+        "rule": 0,
+        "segment": 25
+      },
+      "successful_goal": {
+        "episode": 794,
+        "rule": 0,
+        "segment": 25,
+        "success": true,
+        "terminal": true,
+        "action": 3,
+        "event": 3915,
+        "step": 2
+      }
+    },
+    {
+      "world": 13,
+      "question": {
+        "id": 3415,
+        "opened_event": 3415,
+        "episode": 594,
+        "rule": 0,
+        "segment": 19,
+        "support": 208,
+        "prediction_probability": 0.9567307692307692,
+        "observed_probability": 0.045346062052505964
+      },
+      "diagnostic": {
+        "event": 3419,
+        "episode": 595,
+        "rule": 0,
+        "segment": 19,
+        "expected_information_gain": 0.18709484399648288,
+        "immediate_information_gain": 0.18709484399648288,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 0,
+        "ended_event": 3419,
+        "evidence_events": 2,
+        "factual_experiments": 4,
+        "log_bayes_factor": 7.53456763086338,
+        "opened_event": 3415,
+        "question_id": 3415,
+        "status": "resolved",
+        "episode": 595,
+        "rule": 0,
+        "segment": 19
+      },
+      "successful_goal": {
+        "episode": 595,
+        "rule": 0,
+        "segment": 19,
+        "success": true,
+        "terminal": true,
+        "action": 3,
+        "event": 3421,
+        "step": 2
+      }
+    },
+    {
+      "world": 13,
+      "question": {
+        "id": 2643,
+        "opened_event": 2643,
+        "episode": 326,
+        "rule": 0,
+        "segment": 9,
+        "support": 125,
+        "prediction_probability": 0.9520000000000001,
+        "observed_probability": 0.051383399209486175
+      },
+      "diagnostic": {
+        "event": 2647,
+        "episode": 327,
+        "rule": 0,
+        "segment": 9,
+        "expected_information_gain": 0.1826448130720475,
+        "immediate_information_gain": 0.1826448130720475,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 0,
+        "ended_event": 2647,
+        "evidence_events": 2,
+        "factual_experiments": 4,
+        "log_bayes_factor": 6.914899110566667,
+        "opened_event": 2643,
+        "question_id": 2643,
+        "status": "resolved",
+        "episode": 327,
+        "rule": 0,
+        "segment": 9
+      },
+      "successful_goal": {
+        "episode": 327,
+        "rule": 0,
+        "segment": 9,
+        "success": true,
+        "terminal": true,
+        "action": 3,
+        "event": 2649,
+        "step": 2
+      }
+    },
+    {
+      "world": 14,
+      "question": {
+        "id": 2550,
+        "opened_event": 2550,
+        "episode": 347,
+        "rule": 0,
+        "segment": 11,
+        "support": 137,
+        "prediction_probability": 0.9910715664142633,
+        "observed_probability": 0.012441844052317207
+      },
+      "diagnostic": {
+        "event": 2553,
+        "episode": 348,
+        "rule": 0,
+        "segment": 11,
+        "expected_information_gain": 0.17615285465484906,
+        "immediate_information_gain": 0.17615285465484906,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 0,
+        "ended_event": 2553,
+        "evidence_events": 2,
+        "factual_experiments": 2,
+        "log_bayes_factor": 8.52195279957708,
+        "opened_event": 2550,
+        "question_id": 2550,
+        "status": "resolved",
+        "episode": 348,
+        "rule": 0,
+        "segment": 11
+      },
+      "successful_goal": {
+        "episode": 348,
+        "rule": 0,
+        "segment": 11,
+        "success": true,
+        "terminal": true,
+        "action": 1,
+        "event": 2555,
+        "step": 3
+      }
+    },
+    {
+      "world": 2,
+      "question": {
+        "id": 4113,
+        "opened_event": 4113,
+        "episode": 785,
+        "rule": 0,
+        "segment": 25,
+        "support": 31,
+        "prediction_probability": 0.9999919475458944,
+        "observed_probability": 0.015392296186993188
+      },
+      "diagnostic": {
+        "event": 4115,
+        "episode": 786,
+        "rule": 0,
+        "segment": 25,
+        "expected_information_gain": 0.14099723340091236,
+        "immediate_information_gain": 0.14099723340091236,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 1,
+        "ended_event": 4115,
+        "evidence_events": 2,
+        "factual_experiments": 2,
+        "log_bayes_factor": -3.6596232831306934,
+        "opened_event": 4113,
+        "question_id": 4113,
+        "status": "resolved",
+        "episode": 786,
+        "rule": 0,
+        "segment": 25
+      },
+      "successful_goal": {
+        "episode": 786,
+        "rule": 0,
+        "segment": 25,
+        "success": true,
+        "terminal": true,
+        "action": 0,
+        "event": 4117,
+        "step": 2
+      }
+    },
+    {
+      "world": 9,
+      "question": {
+        "id": 2382,
+        "opened_event": 2382,
+        "episode": 197,
+        "rule": 0,
+        "segment": 7,
+        "support": 145,
+        "prediction_probability": 0.9831173132353845,
+        "observed_probability": 0.020122795773851485
+      },
+      "diagnostic": {
+        "event": 2384,
+        "episode": 198,
+        "rule": 0,
+        "segment": 7,
+        "expected_information_gain": 0.13906079845474112,
+        "immediate_information_gain": 0.13906079845474112,
+        "source": "causal-belief-inquiry"
+      },
+      "resolution": {
+        "bank": 0,
+        "ended_event": 2384,
+        "evidence_events": 2,
+        "factual_experiments": 2,
+        "log_bayes_factor": 8.528685391918355,
+        "opened_event": 2382,
+        "question_id": 2382,
+        "status": "resolved",
+        "episode": 198,
+        "rule": 0,
+        "segment": 7
+      },
+      "successful_goal": {
+        "episode": 198,
+        "rule": 0,
+        "segment": 7,
+        "success": true,
+        "terminal": true,
+        "action": 2,
+        "event": 2386,
+        "step": 2
+      }
+    }
+  ],
+  "resource_totals": {
+    "switching/ordinary": {
+      "work": 1547373226,
+      "wall_seconds": 117.585789636,
+      "peak_bytes": 467712,
+      "peak_entries": 1154
+    },
+    "stationary/ordinary": {
+      "work": 317269155,
+      "wall_seconds": 25.294815216,
+      "peak_bytes": 307520,
+      "peak_entries": 767
+    },
+    "switching/active": {
+      "work": 2056314352,
+      "wall_seconds": 102.202255725,
+      "peak_bytes": 496400,
+      "peak_entries": 1134
+    },
+    "stationary/active": {
+      "work": 432397019,
+      "wall_seconds": 23.895126904999998,
+      "peak_bytes": 361348,
+      "peak_entries": 822
+    },
+    "switching/observe_only": {
+      "work": 1880492714,
+      "wall_seconds": 119.08206966900002,
+      "peak_bytes": 500480,
+      "peak_entries": 1154
+    },
+    "stationary/observe_only": {
+      "work": 393364643,
+      "wall_seconds": 25.632015727000002,
+      "peak_bytes": 340288,
+      "peak_entries": 767
+    }
+  },
+  "pending_midlife_checkpoints": [
+    {
+      "world": 0,
+      "condition": "switching",
+      "question": {
+        "actual_post": [
+          0,
+          617
+        ],
+        "age": 89,
+        "candidate_bank": 1,
+        "candidate_confirmations": 1,
+        "context_fingerprint": 15893410047371565,
+        "evidence_events": 1,
+        "factual_experiments": 85,
+        "id": 3025,
+        "log_bayes_factor": -2.732829497598182,
+        "observed_probability": 0.021678337557752655,
+        "opened_event": 3025,
+        "predicted_post": [
+          0,
+          307
+        ],
+        "prediction_probability": 0.9802858746004969,
+        "prior_bank": 0,
+        "support": 238,
+        "triggering_action": 0,
+        "triggering_pre": [
+          0,
+          503
+        ]
+      }
+    },
+    {
+      "world": 2,
+      "condition": "stationary",
+      "question": {
+        "actual_post": [
+          0,
+          829
+        ],
+        "age": 18,
+        "candidate_bank": 1,
+        "candidate_confirmations": 1,
+        "context_fingerprint": 11558438906592575241,
+        "evidence_events": 1,
+        "factual_experiments": 10,
+        "id": 2142,
+        "log_bayes_factor": -2.330910143577008,
+        "observed_probability": 0.06194690265486725,
+        "opened_event": 2142,
+        "predicted_post": [
+          0,
+          419
+        ],
+        "prediction_probability": 0.9454545454545453,
+        "prior_bank": 1,
+        "support": 55,
+        "triggering_action": 2,
+        "triggering_pre": [
+          0,
+          503
+        ]
+      }
+    },
+    {
+      "world": 3,
+      "condition": "stationary",
+      "question": {
+        "actual_post": [
+          0,
+          307
+        ],
+        "age": 148,
+        "candidate_bank": null,
+        "candidate_confirmations": 0,
+        "context_fingerprint": 12766953087101981121,
+        "evidence_events": 0,
+        "factual_experiments": 115,
+        "id": 1545,
+        "log_bayes_factor": 0.0,
+        "observed_probability": 0.012426374559332062,
+        "opened_event": 1545,
+        "predicted_post": [
+          0,
+          101
+        ],
+        "prediction_probability": 0.9999162007781296,
+        "prior_bank": 0,
+        "support": 39,
+        "triggering_action": 1,
+        "triggering_pre": [
+          0,
+          947
+        ]
+      }
+    },
+    {
+      "world": 5,
+      "condition": "switching",
+      "question": {
+        "actual_post": [
+          0,
+          829
+        ],
+        "age": 13,
+        "candidate_bank": 1,
+        "candidate_confirmations": 1,
+        "context_fingerprint": 443421726443406472,
+        "evidence_events": 1,
+        "factual_experiments": 13,
+        "id": 2937,
+        "log_bayes_factor": -3.3415499490041993,
+        "observed_probability": 0.034890657082736865,
+        "opened_event": 2937,
+        "predicted_post": [
+          0,
+          307
+        ],
+        "prediction_probability": 0.968809045515411,
+        "prior_bank": 0,
+        "support": 121,
+        "triggering_action": 0,
+        "triggering_pre": [
+          0,
+          503
+        ]
+      }
+    },
+    {
+      "world": 6,
+      "condition": "switching",
+      "question": {
+        "actual_post": [
+          0,
+          101
+        ],
+        "age": 81,
+        "candidate_bank": 1,
+        "candidate_confirmations": 3,
+        "context_fingerprint": 16933059006987730505,
+        "evidence_events": 22,
+        "factual_experiments": 65,
+        "id": 3073,
+        "log_bayes_factor": 3.5092288925887405,
+        "observed_probability": 0.21739130434782614,
+        "opened_event": 3073,
+        "predicted_post": [
+          0,
+          617
+        ],
+        "prediction_probability": 0.8000000000000002,
+        "prior_bank": 1,
+        "support": 10,
+        "triggering_action": 4,
+        "triggering_pre": [
+          0,
+          211
+        ]
+      }
+    },
+    {
+      "world": 10,
+      "condition": "stationary",
+      "question": {
+        "actual_post": [
+          0,
+          307
+        ],
+        "age": 25,
+        "candidate_bank": 1,
+        "candidate_confirmations": 1,
+        "context_fingerprint": 5199371358652445420,
+        "evidence_events": 3,
+        "factual_experiments": 18,
+        "id": 2073,
+        "log_bayes_factor": -0.9594851259675232,
+        "observed_probability": 0.042527096005254686,
+        "opened_event": 2073,
+        "predicted_post": [
+          0,
+          101
+        ],
+        "prediction_probability": 0.9971282999940287,
+        "prior_bank": 0,
+        "support": 11,
+        "triggering_action": 0,
+        "triggering_pre": [
+          0,
+          617
+        ]
+      }
+    },
+    {
+      "world": 15,
+      "condition": "switching",
+      "question": {
+        "actual_post": [
+          0,
+          419
+        ],
+        "age": 8,
+        "candidate_bank": 1,
+        "candidate_confirmations": 1,
+        "context_fingerprint": 1988296455525129931,
+        "evidence_events": 1,
+        "factual_experiments": 5,
+        "id": 2955,
+        "log_bayes_factor": -2.6758345985057512,
+        "observed_probability": 0.032902850350960335,
+        "opened_event": 2955,
+        "predicted_post": [
+          0,
+          733
+        ],
+        "prediction_probability": 0.9702266338467725,
+        "prior_bank": 0,
+        "support": 144,
+        "triggering_action": 2,
+        "triggering_pre": [
+          0,
+          211
+        ]
+      }
+    }
+  ]
+}

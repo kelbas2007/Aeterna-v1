@@ -1,0 +1,483 @@
+COMMAND ['/home/agent/.cargo/bin/cargo', 'test', '--offline', '--locked', '--lib', 'regime_', '--', '--nocapture']
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:507:31
+    |
+507 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+519 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib test) generated 9 warnings (run `cargo fix --lib -p aeterna-v1 --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/aeterna_v1-c0ae2f69b918cb41)
+
+running 6 tests
+test construction::causal_memory::tests::regime_common_rotation_preserves_relative_equations_and_readout ... ok
+test construction::causal_memory::tests::regime_frozen_inference_retains_model_and_survives_reset ... ok
+test construction::causal_memory::tests::regime_birth_is_shared_supported_and_factual ... ok
+test construction::causal_memory::tests::regime_enable_preserves_warm_model_and_legacy_encoding ... ok
+test construction::causal_memory::tests::regime_shared_capacity_and_state_validation ... ok
+test scientific_runtime::causal_continuity_credit_tests::regime_live_warm_full_checkpoint_and_frozen_boundary ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 166 filtered out; finished in 0.15s
+
+COMMAND ['/home/agent/.cargo/bin/cargo', 'test', '--offline', '--locked', '--test', 'autonomous_inquiry_contract', '--test', 'causal_jsonl_contract', '--test', 'unified_self_directed_lifetime', '--', '--nocapture']
+   Compiling aeterna-v1 v0.1.0 (/workspace/scratch/8c9f0519c3fa/Aeterna-v1)
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:507:31
+    |
+507 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+519 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `propose` is never used
+    --> src/construction/causal_memory.rs:1049:19
+     |
+ 434 | impl CausalMemory {
+     | ----------------- method in this implementation
+...
+1049 |     pub(crate) fn propose(
+     |                   ^^^^^^^
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib) generated 10 warnings (run `cargo fix --lib -p aeterna-v1` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.03s
+     Running tests/autonomous_inquiry_contract.rs (target/debug/deps/autonomous_inquiry_contract-b905b44ce0f546b9)
+
+running 9 tests
+test inquiry_jsonl_invalid_mode_is_rejected_without_an_action_handshake ... ok
+test inquiry_restore_checks_semantics_after_a_checksum_is_recomputed ... ok
+test inquiry_cannot_turn_an_unavailable_or_unsafe_experiment_into_a_motor_permit ... ok
+test inquiry_frozen_factual_inference_does_not_rewrite_learned_knowledge ... ok
+test inquiry_jsonl_initializes_one_organism_and_roundtrips_after_a_real_post ... ok
+test inquiry_rejected_opt_in_does_not_partially_change_the_live_organism ... ok
+test inquiry_failed_actuation_cannot_resolve_a_question_or_invent_a_factual_post ... ok
+test inquiry_warm_opt_in_preserves_acquired_evidence_and_legacy_checkpoint_bytes ... ok
+test inquiry_question_and_continuation_survive_the_complete_runtime_checkpoint ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running tests/causal_jsonl_contract.rs (target/debug/deps/causal_jsonl_contract-54f2599be9727041)
+
+running 2 tests
+Error: Capacity
+test causal_jsonl_invalid_horizon_fails_closed_before_initialization ... ok
+test causal_jsonl_exposes_wide_inputs_motor_count_and_long_horizon_with_real_post_handshake ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/unified_self_directed_lifetime.rs (target/debug/deps/unified_self_directed_lifetime-5b0ae8adde38395d)
+
+running 8 tests
+test partially_satisfied_goal_stops_direct_learner_and_protected_executor ... ok
+test accomplished_goal_cannot_trigger_unnecessary_factual_action ... ok
+test unknown_outcome_cannot_compete_with_real_u1_proposals ... ok
+test jsonl_multi_domain_keeps_small_sensor_contract ... ok
+U1_UNSCHEDULED world=[3, 1, 1] events=19 sources={"predict"}
+test protection_gate_still_owns_all_action_authority ... ok
+U1_UNSCHEDULED_TRANSFER world=[6, 1, 1] extra=18
+test unscheduled_probe_then_exploit_in_joint_u1_and_restore ... ok
+UNSCHEDULED_ABLATION_32 with=19/24 steps=486 factual=0 without=19/24 steps=486 factual=0
+test fixed_budget_ablation_reports_both_arms_without_relabeling ... ok
+JOINT_OPAQUE_ROLE_PARITY roles=24 enabled=23/24 choices=0 actions=671 baseline=23/24 choices=0 actions=671
+test physical_roles_remain_opaque_under_joint_arbitration ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+
+COMMAND ['/home/agent/.cargo/bin/cargo', 'test', '--offline', '--locked', '--test', 'g19_rival_hypothesis_discrimination', 'g19_goal_relevant_rivals_drive_probe_then_factual_revision', '--', '--nocapture']
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:507:31
+    |
+507 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+519 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `propose` is never used
+    --> src/construction/causal_memory.rs:1049:19
+     |
+ 434 | impl CausalMemory {
+     | ----------------- method in this implementation
+...
+1049 |     pub(crate) fn propose(
+     |                   ^^^^^^^
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib) generated 10 warnings (run `cargo fix --lib -p aeterna-v1` to apply 1 suggestion)
+   Compiling aeterna-v1 v0.1.0 (/workspace/scratch/8c9f0519c3fa/Aeterna-v1)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.53s
+     Running tests/g19_rival_hypothesis_discrimination.rs (target/debug/deps/g19_rival_hypothesis_discrimination-1a23bbc3a46539bf)
+
+running 1 test
+G19_RIVAL full_probe=8/8 suppressed=8/8 good_plan=4/4 dead_plan=4/4 wrong_goal=8/8 novelty=0/8 no_goal=4/8 broken_goal=0/8 broken_relevance=0/8 phase_relevance=0/8 no_revision_dead=0/4 rival_collapse=8/8 restored=8/8 irrelevant=8/8
+test g19_goal_relevant_rivals_drive_probe_then_factual_revision ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 9.58s
+
+COMMAND ['/home/agent/.cargo/bin/cargo', 'test', '--offline', '--locked', '--test', 'te5_belief_action', 'te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary', '--', '--nocapture']
+warning: unused variable: `index`
+   --> src/phase_drive.rs:171:17
+    |
+171 |             let index = drive.weight_synapses[i];
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `state` is never read
+   --> src/unified_runtime.rs:507:31
+    |
+507 |                 let mut state=&self.initial_observation;
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^^^ this value is reassigned later and never used
+...
+519 |                     state=&row.post;
+    |                     --------------- `state` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `learned_work` is never read
+   --> src/construction/search_policy.rs:763:70
+    |
+763 |     let mut candidate=None;let mut candidates=0;let mut learned_work=0;
+    |                                                                      ^ this value is reassigned later and never used
+764 |     match search_result {
+765 |         Ok(r)=>{candidates=r.evaluations as u64;learned_work=r.work;meter.charge(r.work)?;
+    |                                                 ------------------- `learned_work` is overwritten here before the previous value is read
+
+warning: fields `feature_cells` and `drive_cell` are never read
+  --> src/phase_drive.rs:28:5
+   |
+26 | pub(super) struct PhaseDriveState {
+   |                   --------------- fields in this struct
+27 |     config: PhaseDriveConfig,
+28 |     feature_cells: [usize; 2],
+   |     ^^^^^^^^^^^^^
+29 |     drive_cell: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `PhaseDriveState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_native_recursive_synapse` is never used
+  --> src/phase_recursive.rs:85:19
+   |
+24 | impl EvoPhase {
+   | ------------- method in this implementation
+...
+85 |     pub(super) fn is_native_recursive_synapse(&self, index: usize) -> bool {
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `COMPOSITION_CANDIDATE_CAP` is never used
+ --> src/phase_compositional.rs:4:7
+  |
+4 | const COMPOSITION_CANDIDATE_CAP: usize = 16;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `feature_cells` and `utility_cell` are never read
+  --> src/phase_meta_control.rs:47:5
+   |
+45 | pub(super) struct PhaseMetaControlState {
+   |                   --------------------- fields in this struct
+46 |     config: PhaseMetaControlConfig,
+47 |     feature_cells: [usize; META_FIELD_COUNT],
+   |     ^^^^^^^^^^^^^
+48 |     utility_cell: usize,
+   |     ^^^^^^^^^^^^
+   |
+   = note: `PhaseMetaControlState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `social_modality_ready` and `speech_modality_ready` are never read
+  --> src/phase_innate_scaffold.rs:29:5
+   |
+19 | struct PhaseInnateScaffold {
+   |        ------------------- fields in this struct
+...
+29 |     social_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     speech_modality_ready:bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `PhaseInnateScaffold` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `propose` is never used
+    --> src/construction/causal_memory.rs:1049:19
+     |
+ 434 | impl CausalMemory {
+     | ----------------- method in this implementation
+...
+1049 |     pub(crate) fn propose(
+     |                   ^^^^^^^
+
+warning: function `family` is never used
+   --> src/quantity_relations.rs:128:4
+    |
+128 | fn family(e: &Expr) -> usize { match e { Expr::Bin(Op::Add,_,_)=>0,Expr::Bin(Op::Sub,_,_)=>1,Expr::Bin(Op::Mul,_,_)=>2,Expr::Bin(Op...
+    |    ^^^^^^
+
+warning: `aeterna-v1` (lib) generated 10 warnings (run `cargo fix --lib -p aeterna-v1` to apply 1 suggestion)
+   Compiling aeterna-v1 v0.1.0 (/workspace/scratch/8c9f0519c3fa/Aeterna-v1)
+warning: unused variable: `monitor`
+   --> tests/intel2_unified_worlds.rs:199:5
+    |
+199 |     monitor:&mut Monitor,
+    |     ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_monitor`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `aeterna-v1` (test "te5_belief_action") generated 1 warning (run `cargo fix --test "te5_belief_action" -p aeterna-v1` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.71s
+     Running tests/te5_belief_action.rs (target/debug/deps/te5_belief_action-ccec24f81cbe8f27)
+
+running 1 test
+TE5_PHYSICAL_ARM arm=0 cue_classes=[0, 7] first_actions=[4, 3] revised_actions=[3, 4] credited=2/2 lesion=true pi=true checkpoint=true reversal=true
+TE5_PHYSICAL_ARM arm=1 cue_classes=[0, 10] first_actions=[3, 0] revised_actions=[0, 3] credited=2/2 lesion=true pi=true checkpoint=true reversal=true
+TE5_PHYSICAL_ARM arm=2 cue_classes=[15, 8] first_actions=[1, 2] revised_actions=[2, 1] credited=2/2 lesion=true pi=true checkpoint=true reversal=true
+TE5_PHYSICAL_ARM arm=3 cue_classes=[14, 8] first_actions=[4, 1] revised_actions=[1, 4] credited=2/2 lesion=true pi=true checkpoint=true reversal=true
+TE5_PHYSICAL_ARM arm=4 cue_classes=[20, 12] first_actions=[2, 1] revised_actions=[1, 2] credited=2/2 lesion=true pi=true checkpoint=true reversal=true
+TE5_PHYSICAL_ARM arm=5 cue_classes=[17, 20] first_actions=[4, 2] revised_actions=[2, 4] credited=2/2 lesion=true pi=true checkpoint=true reversal=true
+TE5_PHYSICAL_RESULT correct=12/12 causal=true reversed=12/12
+test te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 17.19s
+

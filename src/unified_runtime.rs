@@ -321,6 +321,10 @@ pub struct UnifiedStep {
     /// Exposed meta-decision from real history; not an extra action actor.
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub complexity_need_decision:Option<String>,
+    /// The inquiry witness was committed before this action's real POST.
+    /// Its forecasts are hypotheses, not facts or a second actuator authority.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub inquiry_decision:Option<crate::construction::causal_memory::InquiryDecision>,
 }
 #[derive(Debug,Clone,USerialize,UDeserialize)]
 pub struct UnifiedReport {
@@ -339,6 +343,8 @@ pub struct UnifiedReport {
     pub temporal_options:Option<TemporalOptionReport>,
     #[serde(default,skip_serializing_if="Option::is_none")]
     pub learning_world:Option<crate::learning_world::LearningWorldReport>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub inquiry:Option<crate::construction::causal_memory::InquiryReport>,
 }
 #[derive(USerialize,UDeserialize)]
 #[serde(deny_unknown_fields)]
@@ -837,6 +843,13 @@ impl ScientificRuntime {
         if u.freeze_controller{return Err(UError::Busy)}
         u.current.learner.enable_regime_inference(mode)
     }
+    /// One persistent factual inquiry loop inside the existing learner/U1.
+    /// Warm experience is retained; the mode never supplies a world label.
+    pub fn enable_constructing_autonomous_inquiry(&mut self,mode:crate::construction::causal_memory::InquiryMode)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Busy)}
+        u.current.learner.enable_autonomous_inquiry(mode)
+    }
     pub fn enable_constructing_external_reward_memory(&mut self,enabled:bool,adaptive:bool)->UResult<()> {
         self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.enable_external_reward_memory(enabled,adaptive)
     }
@@ -1283,7 +1296,8 @@ impl ScientificRuntime {
             agency_credit:u.agency_credit.clone(),
             instrumental_credit:u.instrumental_credit.as_ref().map(InstrumentalCredit::report),
             temporal_options:u.temporal_options.as_ref().map(TemporalOptionLane::report),
-            learning_world:u.learning_world.as_ref().map(|w|w.report())})
+            learning_world:u.learning_world.as_ref().map(|w|w.report()),
+            inquiry:u.current.learner.causal_inquiry_report()})
     }
     // A new sensor contract does not reinterpret numeric variables as pixels.
     // U1 weights and complete old-domain cognitive checkpoints remain present.
@@ -1476,6 +1490,7 @@ impl ScientificRuntime {
         let mut base_factual_work=0_u64;
         let mut causal_immediate_goals=vec![0.0_f64;cfg.actions];
         let mut causal_immediate_support=vec![0_u64;cfg.actions];
+        let mut causal_inquiry_decision=None;
         if u.current.learner.self_directed_control_enabled() && !u.current.learner.causal_memory_enabled() &&
             !is_option_continuation {
             // Experimental multi-step search is enabled only when the caller
@@ -1741,13 +1756,14 @@ impl ScientificRuntime {
             base_factual_work=work;
             u.computation_work=u.computation_work.checked_add(work).ok_or(UError::Capacity)?;
             if let Some(p)=proposal {
+                causal_inquiry_decision=p.inquiry;
                 causal_immediate_goals=p.immediate_goals;
                 causal_immediate_support=p.immediate_support;
                 let information=(p.information_gain/std::f64::consts::LN_2).clamp(0.0,1.0) as f32;
                 options.push(UnifiedOption {p:PhaseCognitiveProposal {proposal_id:0xa00+p.action as u64,action:p.action,
                     fields:[p.value as f32,0.0,information,(p.confidence*if goal.is_some(){p.value}else{1.0}) as f32,
                         1.0/(1.0+(offers[p.action].max_cost as f32).ln_1p())]},
-                    kind:3,source:if information>0.0{"causal-belief-experiment"}else{"causal-belief-plan"},output:p.expected});
+                    kind:3,source:if causal_inquiry_decision.is_some(){"causal-belief-inquiry"}else if information>0.0{"causal-belief-experiment"}else{"causal-belief-plan"},output:p.expected});
             }
         }
         if let Some(w)=u.learning_world.as_mut(){
@@ -1941,6 +1957,15 @@ impl ScientificRuntime {
             self.latch_fault("permission fault".into());
             return Err(UError::Blocked)
         }
+        // Commit the already chosen question/forecast only after the SAME
+        // protection gate admits the action, and strictly before its POST.
+        // Denied proposals and imagined branches cannot become experiments.
+        let inquiry_decision=causal_inquiry_decision.filter(|d|
+            option.source=="causal-belief-inquiry" && d.action==a && policy_has_choice && !is_option_continuation);
+        if let Err(error)=u.current.learner.carrier_record_inquiry_decision(a,inquiry_decision.as_ref()) {
+            u.current.learner.carrier_cancel(token)?;
+            return Err(error)
+        }
         let post=match execute(a) {
             Ok(p)=>p,Err(e)=>{
                 if is_option_continuation{
@@ -1971,7 +1996,10 @@ impl ScientificRuntime {
         let verdicts=u.current.learner.promotions().len();u.total_external_cost=u.total_external_cost.saturating_add(post.cost);
         let external_reward=u.current.learner.external_reward_enabled();
         let factual_pre=u.current.learner.current().to_vec();
+        let inquiry_work_before=u.current.learner.carrier_inquiry_inference_work();
         u.current.learner.carrier_commit(token,post.observation.clone(),permission,post.cost)?;
+        let inquiry_work_after=u.current.learner.carrier_inquiry_inference_work();
+        u.computation_work=u.computation_work.saturating_add(inquiry_work_after.saturating_sub(inquiry_work_before));
         self.organism.note_contextual_meta_action();
         if !u.freeze_controller {if let Some(dev)=u.development.as_mut(){
             dev.observe(u.current.learner.factual_event_count(),&factual_pre,a,original_fields,f64::from(post.reward),post.cost,native_credit_eligible);
@@ -1982,7 +2010,7 @@ impl ScientificRuntime {
         u.computation_work=u.computation_work.saturating_add(reward_work);
         let delayed_causal_decision=external_reward || (u.current.learner.causal_memory_enabled() &&
             option.source.starts_with("causal-belief-") &&
-            (option.source=="causal-belief-experiment" ||
+            (option.source=="causal-belief-experiment" || option.source=="causal-belief-inquiry" ||
                 option.p.fields[0]>causal_immediate_goals[a] as f32+0.03));
         // An explicit reward settles this choice now; do not subsequently
         // replace it with zero merely because a different goal was unfinished.
@@ -2219,7 +2247,7 @@ impl ScientificRuntime {
         }
         let _=option.output;
         self.record(LifetimeEventKind::Executed{action:a,suppressed:0,learned:!u.freeze_controller});
-        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.factual_event_count(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,contextual_experiment_proposed,observable_empirical_route_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision})
+        Ok(UnifiedStep{action:a,source:option.source.into(),operations,selected_fields:option.p.fields,native_score:score,factual_utility:value,event:u.current.learner.factual_event_count(),computation_work:u.computation_work,certified_chain_proposed,predictive_history_plan_proposed,active_pair_probe_proposed,contextual_experiment_proposed,observable_empirical_route_proposed,adaptive_suffix_plan_proposed,autobiographical_option_proposed,complexity_need_decision,inquiry_decision})
     }
     pub fn checkpoint_constructing(&self)->UResult<Vec<u8>> {
         let u=self.constructing.as_ref().ok_or(UError::NoEvidence)?;u.current.learner.checkpoint()?;

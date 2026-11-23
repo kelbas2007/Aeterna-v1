@@ -1,0 +1,574 @@
+{
+  "qualification": "state_preservation_only_no_behavioral_trial",
+  "archive_sha256": "bf231f8834d9f4b954bf1bcb064931836763dac76d51bbc8d8c73de48cf3c571",
+  "worlds": [
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-0.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-0.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "7bd6e696404328c50a4370a5574b515c3851ef888b5659ca0b7134c6ed766d95",
+      "output_sha256": "515da1704575826c2e119bbf7df25df0225aa4eace2de28266e939b80bc96d27",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 11595194302156064245,
+          "after": 11595194302156064245
+        },
+        "learned_transitions": {
+          "before": 3230,
+          "after": 3230
+        },
+        "factual_transitions": {
+          "before": 3230,
+          "after": 3230
+        },
+        "native_weights": {
+          "before": [
+            0.9154616594314575,
+            0.0,
+            0.9403223395347595,
+            0.9219352006912231,
+            0.9083676338195801
+          ],
+          "after": [
+            0.9154616594314575,
+            0.0,
+            0.9403223395347595,
+            0.9219352006912231,
+            0.9083676338195801
+          ]
+        },
+        "total_external_cost": {
+          "before": 3230,
+          "after": 3230
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 2692589716558149460,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.102947,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 0,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-0/continuation-unfrozen.checkpoint.json"
+    },
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-1.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-1.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "fb57a3457c6aa9b703ca014b6a4f2dd5801bfe70ff811951e2eef11d027a8132",
+      "output_sha256": "5679fa383d951beba28ea900bedcf16ca177bc131ba95d9462b09936c1d1d7a1",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 8342621286397703345,
+          "after": 8342621286397703345
+        },
+        "learned_transitions": {
+          "before": 4034,
+          "after": 4034
+        },
+        "factual_transitions": {
+          "before": 4034,
+          "after": 4034
+        },
+        "native_weights": {
+          "before": [
+            1.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "after": [
+            1.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "total_external_cost": {
+          "before": 4034,
+          "after": 4034
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 269496951150771217,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.10711,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 1,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-1/continuation-unfrozen.checkpoint.json"
+    },
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-2.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-2.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "0bb746666dbb61b3a1f95efd134cb0b88fd4aa6091477d55c4c1a9f3adaf02b4",
+      "output_sha256": "d364393b76ff4adc2cdc9ea96fdf5d78ce9ebc150a4b72f48dc00aba798bc29e",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 12780352514916139929,
+          "after": 12780352514916139929
+        },
+        "learned_transitions": {
+          "before": 3725,
+          "after": 3725
+        },
+        "factual_transitions": {
+          "before": 3725,
+          "after": 3725
+        },
+        "native_weights": {
+          "before": [
+            1.0,
+            0.0,
+            0.7529775500297546,
+            1.0,
+            1.0
+          ],
+          "after": [
+            1.0,
+            0.0,
+            0.7529775500297546,
+            1.0,
+            1.0
+          ]
+        },
+        "total_external_cost": {
+          "before": 3725,
+          "after": 3725
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 4112855755797247437,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.103805,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 2,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-2/continuation-unfrozen.checkpoint.json"
+    },
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-3.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-3.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "e86f81083e22a3405054ee792f85ef5cb3d765a4275cab7cf0e8b56b70c69ce9",
+      "output_sha256": "3381c35fb2316d8154c22fe8f785a1debe8c8463240a02e6090940ea5e33f1bc",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 17204172489675565590,
+          "after": 17204172489675565590
+        },
+        "learned_transitions": {
+          "before": 3371,
+          "after": 3371
+        },
+        "factual_transitions": {
+          "before": 3371,
+          "after": 3371
+        },
+        "native_weights": {
+          "before": [
+            1.0,
+            0.07574554532766342,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "after": [
+            1.0,
+            0.07574554532766342,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "total_external_cost": {
+          "before": 3371,
+          "after": 3371
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 7758718281406562512,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.101077,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 3,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-3/continuation-unfrozen.checkpoint.json"
+    },
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-4.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-4.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "0b41ae4051baebb28cec84f3053f38dda0c150fddcd6b752b1271360355ca420",
+      "output_sha256": "a97330a6d2e222bed275b2d990d7c8fd78f33e92a14cd15ce54fa77695727752",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 18178362055249603969,
+          "after": 18178362055249603969
+        },
+        "learned_transitions": {
+          "before": 4172,
+          "after": 4172
+        },
+        "factual_transitions": {
+          "before": 4172,
+          "after": 4172
+        },
+        "native_weights": {
+          "before": [
+            1.0,
+            0.0,
+            0.3720303177833557,
+            1.0,
+            1.0
+          ],
+          "after": [
+            1.0,
+            0.0,
+            0.3720303177833557,
+            1.0,
+            1.0
+          ]
+        },
+        "total_external_cost": {
+          "before": 4172,
+          "after": 4172
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 5541365923692448928,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.112708,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 4,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-4/continuation-unfrozen.checkpoint.json"
+    },
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-5.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-5.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "720d7f3fd2f4ef2bb5b4cfe8f1fa137e41787fee907568155805338035bafaad",
+      "output_sha256": "f47185e014e15416a3a691b4bb9d2179c5ce6b66f0401efda33fbf8b1bd177fc",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 8419941193854916632,
+          "after": 8419941193854916632
+        },
+        "learned_transitions": {
+          "before": 3514,
+          "after": 3514
+        },
+        "factual_transitions": {
+          "before": 3514,
+          "after": 3514
+        },
+        "native_weights": {
+          "before": [
+            1.0,
+            0.0,
+            0.9626861810684204,
+            1.0,
+            1.0
+          ],
+          "after": [
+            1.0,
+            0.0,
+            0.9626861810684204,
+            1.0,
+            1.0
+          ]
+        },
+        "total_external_cost": {
+          "before": 3514,
+          "after": 3514
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 10957159006064812235,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.106152,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 5,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-5/continuation-unfrozen.checkpoint.json"
+    },
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-6.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-6.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "6128e9a51e48f3b8a149ed3d14b6a6e17ee6c1fa0973013cbf7a8ee20765690b",
+      "output_sha256": "c9507e03fdd6c2348f43bd2fe49c9c6fc555917fa8734ceceed9168ae0676716",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 14033187081353323532,
+          "after": 14033187081353323532
+        },
+        "learned_transitions": {
+          "before": 4283,
+          "after": 4283
+        },
+        "factual_transitions": {
+          "before": 4283,
+          "after": 4283
+        },
+        "native_weights": {
+          "before": [
+            1.0,
+            0.0,
+            0.6013584733009338,
+            1.0,
+            1.0
+          ],
+          "after": [
+            1.0,
+            0.0,
+            0.6013584733009338,
+            1.0,
+            1.0
+          ]
+        },
+        "total_external_cost": {
+          "before": 4283,
+          "after": 4283
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 8016928487065685085,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.328583,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 6,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-6/continuation-unfrozen.checkpoint.json"
+    },
+    {
+      "status": "upgraded",
+      "mode": "active",
+      "input": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-7.original.checkpoint.json",
+      "output": "/workspace/scratch/8c9f0519c3fa/inquiry-retained-upgrade/world-7.inquiry.checkpoint.json",
+      "binary": "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/aeterna-v1",
+      "input_sha256": "22ff8b43384c0dae2b0d2eddded454dba463f3f15cb27e8c00500e3fb7b376e3",
+      "output_sha256": "6fa905247875fa0a52b198a0b9913e3dfa38fb38a01752c49d07b74f053e014e",
+      "binary_sha256": "52bb920037739a8f6bbba3f1d83137043c4355dec5096e05cfd5717cdf5a17d7",
+      "preservation": {
+        "input_unchanged": true,
+        "full_state_outside_extension_unchanged": true,
+        "causal_evidence_unchanged": true,
+        "native_controller_unchanged": true,
+        "fresh_process_roundtrip_byte_exact": true,
+        "learned_fingerprint": {
+          "before": 10672865154929739799,
+          "after": 10672865154929739799
+        },
+        "learned_transitions": {
+          "before": 4079,
+          "after": 4079
+        },
+        "factual_transitions": {
+          "before": 4079,
+          "after": 4079
+        },
+        "native_weights": {
+          "before": [
+            1.0,
+            0.045214973390102386,
+            0.8984460234642029,
+            1.0,
+            1.0
+          ],
+          "after": [
+            1.0,
+            0.045214973390102386,
+            0.8984460234642029,
+            1.0,
+            1.0
+          ]
+        },
+        "total_external_cost": {
+          "before": 4079,
+          "after": 4079
+        }
+      },
+      "inquiry": {
+        "active": null,
+        "dynamic_fingerprint": 9157293276514284606,
+        "extra_inference_work": 0,
+        "factual_experiments": 0,
+        "last_resolution": null,
+        "mode": "active",
+        "observations": 0,
+        "questions_expired": 0,
+        "questions_opened": 0,
+        "questions_resolved": 0,
+        "selected_experiments": 0,
+        "state_bytes": 32768
+      },
+      "added_model_reservation_bytes": 34816,
+      "actuator_handshakes": 0,
+      "factual_actions_executed": 0,
+      "process_timeout_seconds": 60,
+      "elapsed_seconds": 0.149691,
+      "qualification": "state_preservation_only_no_behavioral_trial",
+      "world": 7,
+      "archive_member": "retained-evidence/repeat/checkpoints/world-7/continuation-unfrozen.checkpoint.json"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "qualification": "local_development_and_compatibility_only",
+  "final_source_commit": "df9257ac2c15be9a843409ad28b25adc5ab3ab86",
+  "development_seed": 7001,
+  "final_difference_from_development_runtime": "One saturating_add malformed-counter guard; no valid behavioral change. Qualification separately rebuilds final frozen source.",
+  "test_invocation_note": "An initial broad TE5 invocation also selected a historical INTEL2 fresh-seed guard, which rejected missing reserved seed; final targeted suites did not repurpose that seed.",
+  "sha256": {
+    "inquiry-release-build.log": "52368b5de3432d074146cb5d128c85a330a5509c66f1b3ea6758288ce7784cc2",
+    "development-verdict.json": "af4e47c45d2470b223ebe11270b6649201155f41aaf1db4eee409a80750b1f95",
+    "DEVELOPMENT_RESULT.md": "0f1f372c12645946d4907b141a53509bf20de4d7da1e496ef558db767c926276",
+    "legacy-replay.json": "e69525a619833975c42140301c5c0a8343cf1db23a7bd30274e6ce2e3ac41013",
+    "inquiry-regression-tests.log": "8d47233d064896117e57d8dc1e5a1ab3f36a50251a74f97ac9d94aae9140340d",
+    "inquiry-core-tests.log": "8969c7521b63df7b074f2b53a216a3a265bcb1bc0d8a871d8ca2e8bb8ba8a842",
+    "development-manifest.json": "4d7adbfc561ddf7655ba5d75ad2ebfdc55cc70b6a1a50abf157be23628d22733",
+    "local-retention-preservation.json": "6398ea749626f656e44c42fdddb8266c13971b0eb7170b0a1925cb93fc01c36e"
+  }
+}

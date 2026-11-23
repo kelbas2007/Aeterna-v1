@@ -1,0 +1,1184 @@
+{
+  "world": 9,
+  "chain": {
+    "question": {
+      "id": 2382,
+      "opened_event": 2382,
+      "episode": 197,
+      "rule": 0,
+      "segment": 7,
+      "support": 145,
+      "prediction_probability": 0.9831173132353845,
+      "observed_probability": 0.020122795773851485
+    },
+    "diagnostic": {
+      "event": 2384,
+      "episode": 198,
+      "rule": 0,
+      "segment": 7,
+      "expected_information_gain": 0.13906079845474112,
+      "immediate_information_gain": 0.13906079845474112,
+      "source": "causal-belief-inquiry"
+    },
+    "resolution": {
+      "bank": 0,
+      "ended_event": 2384,
+      "evidence_events": 2,
+      "factual_experiments": 2,
+      "log_bayes_factor": 8.528685391918355,
+      "opened_event": 2382,
+      "question_id": 2382,
+      "status": "resolved",
+      "episode": 198,
+      "rule": 0,
+      "segment": 7
+    },
+    "successful_goal": {
+      "episode": 198,
+      "rule": 0,
+      "segment": 7,
+      "success": true,
+      "terminal": true,
+      "action": 2,
+      "event": 2386,
+      "step": 2
+    }
+  },
+  "question_row": {
+    "action": 4,
+    "arm": "active",
+    "computation_work": 75200768,
+    "condition": "switching",
+    "cost": 1,
+    "episode": 197,
+    "event": 2383,
+    "factual_after": 2383,
+    "factual_before": 2382,
+    "hidden": 1,
+    "history": [
+      {
+        "action": 0,
+        "post": [
+          0,
+          307
+        ],
+        "pre": [
+          0,
+          419
+        ]
+      }
+    ],
+    "inquiry_after": {
+      "active": {
+        "actual_post": [
+          0,
+          211
+        ],
+        "age": 0,
+        "candidate_bank": 0,
+        "candidate_confirmations": 1,
+        "context_fingerprint": 12570601495632607522,
+        "evidence_events": 1,
+        "factual_experiments": 0,
+        "id": 2382,
+        "log_bayes_factor": 3.8129225004421343,
+        "observed_probability": 0.020122795773851485,
+        "opened_event": 2382,
+        "predicted_post": [
+          0,
+          503
+        ],
+        "prediction_probability": 0.9831173132353845,
+        "prior_bank": 1,
+        "support": 145,
+        "triggering_action": 4,
+        "triggering_pre": [
+          0,
+          307
+        ]
+      },
+      "dynamic_fingerprint": 3606909105346256064,
+      "extra_inference_work": 3915776,
+      "factual_experiments": 83,
+      "last_resolution": {
+        "bank": 1,
+        "ended_event": 2307,
+        "evidence_events": 2,
+        "factual_experiments": 3,
+        "log_bayes_factor": -7.829065150245114,
+        "opened_event": 2303,
+        "question_id": 2303,
+        "status": "resolved"
+      },
+      "mode": "active",
+      "observations": 478,
+      "questions_expired": 0,
+      "questions_opened": 8,
+      "questions_resolved": 7,
+      "selected_experiments": 83,
+      "state_bytes": 32768
+    },
+    "inquiry_before": {
+      "active": null,
+      "dynamic_fingerprint": 2230988178642589459,
+      "extra_inference_work": 3907584,
+      "factual_experiments": 83,
+      "last_resolution": {
+        "bank": 1,
+        "ended_event": 2307,
+        "evidence_events": 2,
+        "factual_experiments": 3,
+        "log_bayes_factor": -7.829065150245114,
+        "opened_event": 2303,
+        "question_id": 2303,
+        "status": "resolved"
+      },
+      "mode": "active",
+      "observations": 477,
+      "questions_expired": 0,
+      "questions_opened": 7,
+      "questions_resolved": 7,
+      "selected_experiments": 83,
+      "state_bytes": 32768
+    },
+    "inquiry_decision": null,
+    "learned_after": 2383,
+    "learned_before": 2382,
+    "learned_fingerprint_after": 9767314737808718293,
+    "learned_fingerprint_before": 531407995461761491,
+    "model_bytes": 185908,
+    "native_score": 0.8280741572380066,
+    "nll": 4.081466633960417,
+    "operations": [
+      "predict"
+    ],
+    "permit_sequence": 2383,
+    "post": [
+      0,
+      211
+    ],
+    "pre": [
+      0,
+      307
+    ],
+    "pre_beliefs": [
+      {
+        "action": 0,
+        "goal_relevance": -0.0,
+        "information_gain": 0.0,
+        "outcomes": [
+          [
+            [
+              0,
+              307
+            ],
+            1.0
+          ]
+        ],
+        "support": 6,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 1,
+        "goal_relevance": -0.0,
+        "information_gain": 0.0,
+        "outcomes": [
+          [
+            [
+              0,
+              101
+            ],
+            1.0
+          ]
+        ],
+        "support": 55,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 2,
+        "goal_relevance": -0.0,
+        "information_gain": 0.0,
+        "outcomes": [
+          [
+            [
+              0,
+              211
+            ],
+            1.0
+          ]
+        ],
+        "support": 1,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 3,
+        "goal_relevance": -0.0,
+        "information_gain": 0.00035765044898283804,
+        "outcomes": [
+          [
+            [
+              0,
+              733
+            ],
+            0.2517549837306009
+          ],
+          [
+            [
+              0,
+              829
+            ],
+            0.7482450162693992
+          ]
+        ],
+        "support": 6,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 4,
+        "goal_relevance": -0.0,
+        "information_gain": 6.586455706600325e-06,
+        "outcomes": [
+          [
+            [
+              0,
+              211
+            ],
+            0.016882686764615466
+          ],
+          [
+            [
+              0,
+              503
+            ],
+            0.9831173132353845
+          ]
+        ],
+        "support": 145,
+        "unknown_probability": 0.0
+      }
+    ],
+    "prequential_probability": 0.016882686764615466,
+    "readonly_work": 330,
+    "regime_after": {
+      "admitted": true,
+      "bank": 1,
+      "birth_surprises": 2,
+      "dynamic_fingerprint": 15688257449670933044,
+      "extra_inference_work": 19521536,
+      "likelihood_ratio": [
+        3.8796794598202577,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "likelihoods": [
+        [
+          0.8260869565217391,
+          0.017064846416382253
+        ],
+        [
+          0.9166666666666666,
+          0.02092050209205021
+        ],
+        [
+          0.9166666666666666,
+          0.02092050209205021
+        ],
+        [
+          0.9166666666666666,
+          0.02092050209205021
+        ]
+      ],
+      "mode": "ordinary",
+      "observations": 2383,
+      "readout": -0.821840938187306,
+      "state": [
+        0.7921315379081507,
+        0.07395487050241624,
+        0.07395487050241624,
+        0.07395487050241624
+      ],
+      "state_bytes": 2048,
+      "supports": [
+        [
+          10,
+          145
+        ],
+        [
+          5,
+          118
+        ],
+        [
+          5,
+          118
+        ],
+        [
+          5,
+          118
+        ]
+      ],
+      "switches": 17,
+      "weights": [
+        0.02105980476721067,
+        0.8335279700193993,
+        0.09866889499053745,
+        0.04674333022285261
+      ]
+    },
+    "regime_before": {
+      "admitted": true,
+      "bank": 1,
+      "birth_surprises": 2,
+      "dynamic_fingerprint": 3028138947117481624,
+      "extra_inference_work": 19513344,
+      "likelihood_ratio": [
+        -0.09736653595359479,
+        -0.09736653595359479,
+        -0.09736653595359479,
+        -0.09736653595359479
+      ],
+      "likelihoods": [
+        [
+          0.46482122260668973,
+          0.5123558484349259
+        ],
+        [
+          0.46482122260668973,
+          0.5123558484349259
+        ],
+        [
+          0.46482122260668973,
+          0.5123558484349259
+        ],
+        [
+          0.46482122260668973,
+          0.5123558484349259
+        ]
+      ],
+      "mode": "ordinary",
+      "observations": 2382,
+      "readout": -0.8695212687515051,
+      "state": [
+        0.0642606274268415,
+        0.06526007194124106,
+        0.06526007194124106,
+        0.06526007194124106
+      ],
+      "state_bytes": 2048,
+      "supports": [
+        [
+          432,
+          302
+        ],
+        [
+          432,
+          302
+        ],
+        [
+          432,
+          302
+        ],
+        [
+          432,
+          302
+        ]
+      ],
+      "switches": 17,
+      "weights": [
+        0.020717825447407023,
+        0.835290367374824,
+        0.09782290944610454,
+        0.046168897731664424
+      ]
+    },
+    "retained_entries": 402,
+    "reward": 0.0,
+    "role": "actuator0",
+    "rule": 0,
+    "schema": "aeterna.autonomous-inquiry.step.v1",
+    "segment": 7,
+    "selected_fields": [
+      0.9831173419952393,
+      0.0,
+      0.0,
+      0.9697415828704834,
+      0.5906161069869995
+    ],
+    "source": "predict",
+    "step": 1,
+    "success": false,
+    "terminal": true,
+    "world": 9
+  },
+  "diagnostic_row": {
+    "action": 1,
+    "arm": "active",
+    "computation_work": 75338373,
+    "condition": "switching",
+    "cost": 1,
+    "episode": 198,
+    "event": 2385,
+    "factual_after": 2385,
+    "factual_before": 2384,
+    "hidden": 1,
+    "history": [
+      {
+        "action": 0,
+        "post": [
+          0,
+          307
+        ],
+        "pre": [
+          0,
+          419
+        ]
+      }
+    ],
+    "inquiry_after": {
+      "active": null,
+      "dynamic_fingerprint": 7065988206301955069,
+      "extra_inference_work": 3932160,
+      "factual_experiments": 85,
+      "last_resolution": {
+        "bank": 0,
+        "ended_event": 2384,
+        "evidence_events": 2,
+        "factual_experiments": 2,
+        "log_bayes_factor": 8.528685391918355,
+        "opened_event": 2382,
+        "question_id": 2382,
+        "status": "resolved"
+      },
+      "mode": "active",
+      "observations": 480,
+      "questions_expired": 0,
+      "questions_opened": 8,
+      "questions_resolved": 8,
+      "selected_experiments": 85,
+      "state_bytes": 32768
+    },
+    "inquiry_before": {
+      "active": {
+        "actual_post": [
+          0,
+          211
+        ],
+        "age": 1,
+        "candidate_bank": 0,
+        "candidate_confirmations": 1,
+        "context_fingerprint": 12570601495632607522,
+        "evidence_events": 1,
+        "factual_experiments": 1,
+        "id": 2382,
+        "log_bayes_factor": 3.8129225004421343,
+        "observed_probability": 0.020122795773851485,
+        "opened_event": 2382,
+        "predicted_post": [
+          0,
+          503
+        ],
+        "prediction_probability": 0.9831173132353845,
+        "prior_bank": 1,
+        "support": 145,
+        "triggering_action": 4,
+        "triggering_pre": [
+          0,
+          307
+        ]
+      },
+      "dynamic_fingerprint": 11293852310496887653,
+      "extra_inference_work": 3923968,
+      "factual_experiments": 84,
+      "last_resolution": {
+        "bank": 1,
+        "ended_event": 2307,
+        "evidence_events": 2,
+        "factual_experiments": 3,
+        "log_bayes_factor": -7.829065150245114,
+        "opened_event": 2303,
+        "question_id": 2303,
+        "status": "resolved"
+      },
+      "mode": "active",
+      "observations": 479,
+      "questions_expired": 0,
+      "questions_opened": 8,
+      "questions_resolved": 7,
+      "selected_experiments": 84,
+      "state_bytes": 32768
+    },
+    "inquiry_decision": {
+      "action": 1,
+      "bank_probability": [
+        0.96875,
+        0.03125
+      ],
+      "event": 2384,
+      "expected_goal_probability": 0.9471935312541592,
+      "expected_information_gain": 0.13906079845474112,
+      "immediate_information_gain": 0.13906079845474112,
+      "predictions": [
+        {
+          "bank": 0,
+          "outcomes": [
+            [
+              [
+                0,
+                947
+              ],
+              1.0
+            ]
+          ],
+          "support": 182,
+          "unknown_probability": 0.0
+        },
+        {
+          "bank": 1,
+          "outcomes": [
+            [
+              [
+                0,
+                101
+              ],
+              1.0
+            ]
+          ],
+          "support": 55,
+          "unknown_probability": 0.0
+        }
+      ],
+      "question_id": 2382
+    },
+    "learned_after": 2385,
+    "learned_before": 2384,
+    "learned_fingerprint_after": 18154576700089610661,
+    "learned_fingerprint_before": 17105351004881544521,
+    "model_bytes": 185908,
+    "native_score": 0.475776344537735,
+    "nll": 27.631021115928547,
+    "operations": [
+      "causal-belief-inquiry"
+    ],
+    "permit_sequence": 2385,
+    "post": [
+      0,
+      947
+    ],
+    "pre": [
+      0,
+      307
+    ],
+    "pre_beliefs": [
+      {
+        "action": 0,
+        "goal_relevance": -0.0,
+        "information_gain": 0.0,
+        "outcomes": [
+          [
+            [
+              0,
+              307
+            ],
+            1.0
+          ]
+        ],
+        "support": 6,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 1,
+        "goal_relevance": -0.0,
+        "information_gain": 0.0,
+        "outcomes": [
+          [
+            [
+              0,
+              101
+            ],
+            1.0
+          ]
+        ],
+        "support": 55,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 2,
+        "goal_relevance": -0.0,
+        "information_gain": 0.0,
+        "outcomes": [
+          [
+            [
+              0,
+              211
+            ],
+            1.0
+          ]
+        ],
+        "support": 1,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 3,
+        "goal_relevance": -0.0,
+        "information_gain": 0.00030392888191999035,
+        "outcomes": [
+          [
+            [
+              0,
+              733
+            ],
+            0.2514861602692047
+          ],
+          [
+            [
+              0,
+              829
+            ],
+            0.7485138397307953
+          ]
+        ],
+        "support": 6,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 4,
+        "goal_relevance": -0.0,
+        "information_gain": 8.268993228588428e-06,
+        "outcomes": [
+          [
+            [
+              0,
+              211
+            ],
+            0.025126939807662774
+          ],
+          [
+            [
+              0,
+              503
+            ],
+            0.9748730601923373
+          ]
+        ],
+        "support": 146,
+        "unknown_probability": 0.0
+      }
+    ],
+    "prequential_probability": -0.0,
+    "readonly_work": 330,
+    "regime_after": {
+      "admitted": true,
+      "bank": 0,
+      "birth_surprises": 2,
+      "dynamic_fingerprint": 1459435109668221291,
+      "extra_inference_work": 19537920,
+      "likelihood_ratio": [
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "likelihoods": [
+        [
+          0.9972677595628415,
+          0.008928571428571428
+        ],
+        [
+          0.996969696969697,
+          0.015151515151515152
+        ],
+        [
+          0.996969696969697,
+          0.015151515151515152
+        ],
+        [
+          0.996969696969697,
+          0.015151515151515152
+        ]
+      ],
+      "mode": "ordinary",
+      "observations": 2385,
+      "readout": 0.6716443766038247,
+      "state": [
+        0.9943598282881134,
+        0.8329435019294904,
+        0.8329435019294904,
+        0.8329435019294904
+      ],
+      "state_bytes": 2048,
+      "supports": [
+        [
+          182,
+          55
+        ],
+        [
+          164,
+          32
+        ],
+        [
+          164,
+          32
+        ],
+        [
+          164,
+          32
+        ]
+      ],
+      "switches": 18,
+      "weights": [
+        0.017833923230455975,
+        0.8333076691713401,
+        0.1007649969850079,
+        0.04809341061319607
+      ]
+    },
+    "regime_before": {
+      "admitted": true,
+      "bank": 1,
+      "birth_surprises": 2,
+      "dynamic_fingerprint": 7664094045390675322,
+      "extra_inference_work": 19529728,
+      "likelihood_ratio": [
+        -0.1004873376641151,
+        -0.1004873376641151,
+        -0.1004873376641151,
+        -0.1004873376641151
+      ],
+      "likelihoods": [
+        [
+          0.46482122260668973,
+          0.5139573070607554
+        ],
+        [
+          0.46482122260668973,
+          0.5139573070607554
+        ],
+        [
+          0.46482122260668973,
+          0.5139573070607554
+        ],
+        [
+          0.46482122260668973,
+          0.5139573070607554
+        ]
+      ],
+      "mode": "ordinary",
+      "observations": 2384,
+      "readout": -0.825311330606807,
+      "state": [
+        0.768918031652388,
+        0.07518362624060641,
+        0.07518362624060641,
+        0.07518362624060641
+      ],
+      "state_bytes": 2048,
+      "supports": [
+        [
+          432,
+          303
+        ],
+        [
+          432,
+          303
+        ],
+        [
+          432,
+          303
+        ],
+        [
+          432,
+          303
+        ]
+      ],
+      "switches": 17,
+      "weights": [
+        0.017529343162347378,
+        0.8350526722885343,
+        0.0999097003775758,
+        0.04750828417154253
+      ]
+    },
+    "retained_entries": 402,
+    "reward": 0.0,
+    "role": "diagnostic_sensor",
+    "rule": 0,
+    "schema": "aeterna.autonomous-inquiry.step.v1",
+    "segment": 7,
+    "selected_fields": [
+      0.9471935033798218,
+      0.0,
+      0.2006223201751709,
+      0.9368979334831238,
+      0.5906161069869995
+    ],
+    "source": "causal-belief-inquiry",
+    "step": 1,
+    "success": false,
+    "terminal": false,
+    "world": 9
+  },
+  "goal_row": {
+    "action": 2,
+    "arm": "active",
+    "computation_work": 75361998,
+    "condition": "switching",
+    "cost": 1,
+    "episode": 198,
+    "event": 2386,
+    "factual_after": 2386,
+    "factual_before": 2385,
+    "hidden": 1,
+    "history": [
+      {
+        "action": 0,
+        "post": [
+          0,
+          307
+        ],
+        "pre": [
+          0,
+          419
+        ]
+      },
+      {
+        "action": 1,
+        "post": [
+          0,
+          947
+        ],
+        "pre": [
+          0,
+          307
+        ]
+      }
+    ],
+    "inquiry_after": {
+      "active": null,
+      "dynamic_fingerprint": 15082914494734171098,
+      "extra_inference_work": 3940352,
+      "factual_experiments": 85,
+      "last_resolution": {
+        "bank": 0,
+        "ended_event": 2384,
+        "evidence_events": 2,
+        "factual_experiments": 2,
+        "log_bayes_factor": 8.528685391918355,
+        "opened_event": 2382,
+        "question_id": 2382,
+        "status": "resolved"
+      },
+      "mode": "active",
+      "observations": 481,
+      "questions_expired": 0,
+      "questions_opened": 8,
+      "questions_resolved": 8,
+      "selected_experiments": 85,
+      "state_bytes": 32768
+    },
+    "inquiry_before": {
+      "active": null,
+      "dynamic_fingerprint": 7065988206301955069,
+      "extra_inference_work": 3932160,
+      "factual_experiments": 85,
+      "last_resolution": {
+        "bank": 0,
+        "ended_event": 2384,
+        "evidence_events": 2,
+        "factual_experiments": 2,
+        "log_bayes_factor": 8.528685391918355,
+        "opened_event": 2382,
+        "question_id": 2382,
+        "status": "resolved"
+      },
+      "mode": "active",
+      "observations": 480,
+      "questions_expired": 0,
+      "questions_opened": 8,
+      "questions_resolved": 8,
+      "selected_experiments": 85,
+      "state_bytes": 32768
+    },
+    "inquiry_decision": null,
+    "learned_after": 2386,
+    "learned_before": 2385,
+    "learned_fingerprint_after": 16655286302220174562,
+    "learned_fingerprint_before": 18154576700089610661,
+    "model_bytes": 185908,
+    "native_score": 0.4899526536464691,
+    "nll": 0.0003780000358613989,
+    "operations": [
+      "causal-belief-plan"
+    ],
+    "permit_sequence": 2386,
+    "post": [
+      0,
+      503
+    ],
+    "pre": [
+      0,
+      947
+    ],
+    "pre_beliefs": [
+      {
+        "action": 0,
+        "goal_relevance": -1.6017132519074588e-16,
+        "information_gain": 0.01693976134939877,
+        "outcomes": [
+          [
+            [
+              0,
+              307
+            ],
+            0.9964096782729381
+          ],
+          [
+            [
+              0,
+              617
+            ],
+            0.003590321727061746
+          ]
+        ],
+        "support": 24,
+        "unknown_probability": 1.1102230246251565e-16
+      },
+      {
+        "action": 1,
+        "goal_relevance": -1.6017132519074588e-16,
+        "information_gain": 0.0,
+        "outcomes": [
+          [
+            [
+              0,
+              947
+            ],
+            1.0
+          ]
+        ],
+        "support": 5,
+        "unknown_probability": 0.0
+      },
+      {
+        "action": 2,
+        "goal_relevance": -1.6017132519074588e-16,
+        "information_gain": 0.0017189949902830241,
+        "outcomes": [
+          [
+            [
+              0,
+              211
+            ],
+            0.00037792860284860483
+          ],
+          [
+            [
+              0,
+              503
+            ],
+            0.9996220713971513
+          ]
+        ],
+        "support": 171,
+        "unknown_probability": 1.1102230246251565e-16
+      },
+      {
+        "action": 3,
+        "goal_relevance": -1.6017132519074588e-16,
+        "information_gain": 0.000603546984318637,
+        "outcomes": [
+          [
+            [
+              0,
+              733
+            ],
+            0.5017951608635308
+          ],
+          [
+            [
+              0,
+              829
+            ],
+            0.49820483913646907
+          ]
+        ],
+        "support": 3,
+        "unknown_probability": 1.1102230246251565e-16
+      },
+      {
+        "action": 4,
+        "goal_relevance": -1.6017132519074588e-16,
+        "information_gain": 0.03242802492470627,
+        "outcomes": [
+          [
+            [
+              0,
+              211
+            ],
+            0.9934177435003867
+          ],
+          [
+            [
+              0,
+              503
+            ],
+            0.006582256499613201
+          ]
+        ],
+        "support": 18,
+        "unknown_probability": 1.1102230246251565e-16
+      }
+    ],
+    "prequential_probability": 0.9996220713971513,
+    "readonly_work": 390,
+    "regime_after": {
+      "admitted": true,
+      "bank": 0,
+      "birth_surprises": 2,
+      "dynamic_fingerprint": 14232331250927698572,
+      "extra_inference_work": 19546112,
+      "likelihood_ratio": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "likelihoods": [
+        [
+          0.9594202898550724,
+          0.5
+        ],
+        [
+          0.9969512195121951,
+          0.5
+        ],
+        [
+          0.9966442953020134,
+          0.5
+        ],
+        [
+          0.9966442953020134,
+          0.5
+        ]
+      ],
+      "mode": "ordinary",
+      "observations": 2386,
+      "readout": 0.6559769386583331,
+      "state": [
+        0.984472631722351,
+        0.8262846318909006,
+        0.8262846318909006,
+        0.8262846318909006
+      ],
+      "state_bytes": 2048,
+      "supports": [
+        [
+          171,
+          0
+        ],
+        [
+          163,
+          0
+        ],
+        [
+          148,
+          0
+        ],
+        [
+          148,
+          0
+        ]
+      ],
+      "switches": 18,
+      "weights": [
+        0.01077096518118524,
+        0.8377981608262343,
+        0.10238378916677172,
+        0.049047084825808905
+      ]
+    },
+    "regime_before": {
+      "admitted": true,
+      "bank": 0,
+      "birth_surprises": 2,
+      "dynamic_fingerprint": 1459435109668221291,
+      "extra_inference_work": 19537920,
+      "likelihood_ratio": [
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "likelihoods": [
+        [
+          0.9972677595628415,
+          0.008928571428571428
+        ],
+        [
+          0.996969696969697,
+          0.015151515151515152
+        ],
+        [
+          0.996969696969697,
+          0.015151515151515152
+        ],
+        [
+          0.996969696969697,
+          0.015151515151515152
+        ]
+      ],
+      "mode": "ordinary",
+      "observations": 2385,
+      "readout": 0.6716443766038247,
+      "state": [
+        0.9943598282881134,
+        0.8329435019294904,
+        0.8329435019294904,
+        0.8329435019294904
+      ],
+      "state_bytes": 2048,
+      "supports": [
+        [
+          182,
+          55
+        ],
+        [
+          164,
+          32
+        ],
+        [
+          164,
+          32
+        ],
+        [
+          164,
+          32
+        ]
+      ],
+      "switches": 18,
+      "weights": [
+        0.017833923230455975,
+        0.8333076691713401,
+        0.1007649969850079,
+        0.04809341061319607
+      ]
+    },
+    "retained_entries": 402,
+    "reward": 1.0,
+    "role": "actuator1",
+    "rule": 0,
+    "schema": "aeterna.autonomous-inquiry.step.v1",
+    "segment": 7,
+    "selected_fields": [
+      0.9996220469474792,
+      0.0,
+      0.0,
+      0.9880657196044922,
+      0.5906161069869995
+    ],
+    "source": "causal-belief-plan",
+    "step": 2,
+    "success": true,
+    "terminal": true,
+    "world": 9
+  }
+}
