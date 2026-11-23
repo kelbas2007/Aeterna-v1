@@ -1,0 +1,33 @@
+name: AETERNA causal-belief revision diagnostic 2026-11-23
+
+on:
+  push:
+    branches:
+      - experiment/causal-belief-check-20261123
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  factual-belief-trial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Source fingerprint
+        run: |
+          echo "AETERNA_TRIAL_SOURCE=$GITHUB_SHA"
+          git log -1 --format=%B
+          git diff --exit-code
+      - name: G19 contradict an acquired prediction, select probe, revise plan
+        run: cargo test --locked --release --test g19_rival_hypothesis_discrimination g19_goal_relevant_rivals_drive_probe_then_factual_revision -- --nocapture
+      - name: TE5 learn and reverse an acquired belief-to-action link
+        run: cargo test --locked --release --test te5_belief_action te5_six_independent_cue_motor_mappings_are_learned_and_physically_necessary -- --nocapture
+      - name: Integrated unscheduled U1 action selection and checkpoint retention
+        run: cargo test --locked --release --test unified_self_directed_lifetime unscheduled_probe_then_exploit_in_joint_u1_and_restore -- --nocapture
+      - name: U1 unsupported causal evidence cannot override action selection
+        run: cargo test --locked --release --test unified_self_directed_lifetime unknown_outcome_cannot_compete_with_real_u1_proposals -- --nocapture
