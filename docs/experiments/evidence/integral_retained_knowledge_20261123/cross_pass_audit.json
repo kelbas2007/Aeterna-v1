@@ -1,0 +1,2508 @@
+{
+  "schema": "aeterna.retained-knowledge.cross-passage-audit.v1",
+  "scope": "Predeclared descriptive forecast comparison; does not replace either strict passage verdict",
+  "thresholds": {
+    "failure_probability": 0.6,
+    "increase": 0.25,
+    "episodes": 3
+  },
+  "worlds": [
+    {
+      "world": 0,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 14,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 0,
+              "phase": "adaptive",
+              "episode": 0,
+              "step": 1,
+              "event": 418,
+              "action": 1,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "pre": [
+              0,
+              101
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  101
+                ],
+                "pre": [
+                  0,
+                  211
+                ]
+              }
+            ],
+            "support": 37,
+            "p_success_before": 1.0,
+            "p_failure_before": 0
+          },
+          "held_episode_count": 26,
+          "held_episodes": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            8,
+            11,
+            13,
+            16,
+            20,
+            21,
+            22,
+            23,
+            25,
+            26,
+            27,
+            30,
+            39,
+            41,
+            43,
+            47,
+            48,
+            50,
+            51,
+            53,
+            55
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 0,
+              "phase": "recovered_held",
+              "episode": 1,
+              "step": 1,
+              "event": 3234,
+              "action": 3,
+              "role": "actuator1",
+              "source": "predict"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.2830124267328855,
+            "shift": 0.2830124267328855,
+            "p_selected_success": 0.9261997016833903,
+            "actual_success": true
+          },
+          "qualifying_episodes": []
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 7,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 0,
+              "phase": "adaptive",
+              "episode": 55,
+              "step": 1,
+              "event": 2281,
+              "action": 1,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "pre": [
+              0,
+              101
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  101
+                ],
+                "pre": [
+                  0,
+                  211
+                ]
+              }
+            ],
+            "support": 134,
+            "p_success_before": 0.8046340305899198,
+            "p_failure_before": 0.19536596941008044
+          },
+          "held_episode_count": 26,
+          "held_episodes": [
+            1,
+            3,
+            4,
+            5,
+            6,
+            8,
+            11,
+            13,
+            16,
+            20,
+            21,
+            22,
+            23,
+            25,
+            26,
+            27,
+            30,
+            39,
+            41,
+            43,
+            47,
+            48,
+            50,
+            51,
+            53,
+            55
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 0,
+              "phase": "recovered_held",
+              "episode": 1,
+              "step": 1,
+              "event": 3234,
+              "action": 3,
+              "role": "actuator1",
+              "source": "predict"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.2830124267328855,
+            "shift": 0.08764645732280507,
+            "p_selected_success": 0.9261997016833903,
+            "actual_success": true
+          },
+          "qualifying_episodes": []
+        }
+      }
+    },
+    {
+      "world": 1,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 12,
+        "matched_contexts": 3,
+        "repeated_contexts": 3,
+        "correction_condition_met": true,
+        "qualifying_contexts": [
+          {
+            "before": {
+              "at": {
+                "world": 1,
+                "phase": "adaptive",
+                "episode": 43,
+                "step": 2,
+                "event": 613,
+                "action": 2,
+                "role": "actuator1",
+                "source": "causal-belief-plan"
+              },
+              "pre": [
+                0,
+                733
+              ],
+              "history": [
+                {
+                  "action": 0,
+                  "post": [
+                    0,
+                    733
+                  ],
+                  "pre": [
+                    0,
+                    307
+                  ]
+                },
+                {
+                  "action": 0,
+                  "post": [
+                    0,
+                    733
+                  ],
+                  "pre": [
+                    0,
+                    733
+                  ]
+                }
+              ],
+              "support": 117,
+              "p_success_before": 0.9998995559584067,
+              "p_failure_before": 0.00010044404159332267
+            },
+            "held_episode_count": 32,
+            "held_episodes": [
+              0,
+              2,
+              3,
+              4,
+              6,
+              7,
+              11,
+              12,
+              13,
+              16,
+              17,
+              18,
+              19,
+              26,
+              31,
+              32,
+              34,
+              35,
+              40,
+              41,
+              42,
+              43,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              56,
+              58,
+              61,
+              62
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 1,
+                "phase": "recovered_held",
+                "episode": 0,
+                "step": 2,
+                "event": 4037,
+                "action": 3,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "old_action": 2,
+              "p_failure_after": 0.6166553138004308,
+              "shift": 0.6165548697588374,
+              "p_selected_success": 0.9551148997206554,
+              "actual_success": true
+            },
+            "qualifying_episodes": [
+              0,
+              2,
+              3,
+              4,
+              6,
+              7,
+              11,
+              12,
+              13,
+              16,
+              17,
+              18,
+              19,
+              26,
+              31,
+              32,
+              34,
+              35,
+              40,
+              41,
+              42,
+              43,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              56,
+              58,
+              61,
+              62
+            ]
+          }
+        ],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 1,
+              "phase": "adaptive",
+              "episode": 43,
+              "step": 2,
+              "event": 613,
+              "action": 2,
+              "role": "actuator1",
+              "source": "causal-belief-plan"
+            },
+            "pre": [
+              0,
+              733
+            ],
+            "history": [
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              },
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  733
+                ]
+              }
+            ],
+            "support": 117,
+            "p_success_before": 0.9998995559584067,
+            "p_failure_before": 0.00010044404159332267
+          },
+          "held_episode_count": 32,
+          "held_episodes": [
+            0,
+            2,
+            3,
+            4,
+            6,
+            7,
+            11,
+            12,
+            13,
+            16,
+            17,
+            18,
+            19,
+            26,
+            31,
+            32,
+            34,
+            35,
+            40,
+            41,
+            42,
+            43,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            56,
+            58,
+            61,
+            62
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 1,
+              "phase": "recovered_held",
+              "episode": 0,
+              "step": 2,
+              "event": 4037,
+              "action": 3,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "old_action": 2,
+            "p_failure_after": 0.6166553138004308,
+            "shift": 0.6165548697588374,
+            "p_selected_success": 0.9551148997206554,
+            "actual_success": true
+          },
+          "qualifying_episodes": [
+            0,
+            2,
+            3,
+            4,
+            6,
+            7,
+            11,
+            12,
+            13,
+            16,
+            17,
+            18,
+            19,
+            26,
+            31,
+            32,
+            34,
+            35,
+            40,
+            41,
+            42,
+            43,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            56,
+            58,
+            61,
+            62
+          ]
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 8,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 1,
+              "phase": "adaptive",
+              "episode": 1,
+              "step": 1,
+              "event": 2556,
+              "action": 3,
+              "role": "actuator0",
+              "source": "causal-belief-plan"
+            },
+            "pre": [
+              0,
+              211
+            ],
+            "history": [
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  211
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              }
+            ],
+            "support": 228,
+            "p_success_before": 0.9076055436656054,
+            "p_failure_before": 0.09239445633439453
+          },
+          "held_episode_count": 32,
+          "held_episodes": [
+            1,
+            5,
+            8,
+            9,
+            10,
+            14,
+            15,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+            29,
+            30,
+            33,
+            36,
+            37,
+            38,
+            39,
+            44,
+            45,
+            46,
+            47,
+            54,
+            55,
+            57,
+            59,
+            60,
+            63
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 1,
+              "phase": "recovered_held",
+              "episode": 1,
+              "step": 1,
+              "event": 4039,
+              "action": 1,
+              "role": "noise_sensor",
+              "source": "causal-belief-plan"
+            },
+            "old_action": 3,
+            "p_failure_after": 0.13073252820446687,
+            "shift": 0.03833807187007235,
+            "p_selected_success": 0,
+            "actual_success": false
+          },
+          "qualifying_episodes": []
+        }
+      }
+    },
+    {
+      "world": 2,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 10,
+        "matched_contexts": 4,
+        "repeated_contexts": 4,
+        "correction_condition_met": true,
+        "qualifying_contexts": [
+          {
+            "before": {
+              "at": {
+                "world": 2,
+                "phase": "adaptive",
+                "episode": 40,
+                "step": 2,
+                "event": 599,
+                "action": 3,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "pre": [
+                0,
+                211
+              ],
+              "history": [
+                {
+                  "action": 2,
+                  "post": [
+                    0,
+                    211
+                  ],
+                  "pre": [
+                    0,
+                    307
+                  ]
+                },
+                {
+                  "action": 2,
+                  "post": [
+                    0,
+                    211
+                  ],
+                  "pre": [
+                    0,
+                    211
+                  ]
+                }
+              ],
+              "support": 131,
+              "p_success_before": 0.9578388296905611,
+              "p_failure_before": 0.04216117030943902
+            },
+            "held_episode_count": 32,
+            "held_episodes": [
+              0,
+              2,
+              4,
+              5,
+              6,
+              8,
+              10,
+              12,
+              14,
+              15,
+              18,
+              21,
+              22,
+              25,
+              31,
+              32,
+              33,
+              34,
+              36,
+              39,
+              40,
+              41,
+              47,
+              48,
+              49,
+              50,
+              54,
+              56,
+              57,
+              58,
+              59,
+              60
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 2,
+                "phase": "recovered_held",
+                "episode": 0,
+                "step": 2,
+                "event": 3728,
+                "action": 1,
+                "role": "actuator1",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.6545983617633729,
+              "shift": 0.6124371914539339,
+              "p_selected_success": 0.9588367545962188,
+              "actual_success": true
+            },
+            "qualifying_episodes": [
+              0,
+              2,
+              4,
+              5,
+              6,
+              8,
+              10,
+              12,
+              14,
+              15,
+              18,
+              21,
+              22,
+              25,
+              31,
+              32,
+              33,
+              34,
+              36,
+              39,
+              40,
+              41,
+              47,
+              48,
+              49,
+              50,
+              54,
+              56,
+              57,
+              58,
+              59,
+              60
+            ]
+          }
+        ],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 2,
+              "phase": "adaptive",
+              "episode": 40,
+              "step": 2,
+              "event": 599,
+              "action": 3,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "pre": [
+              0,
+              211
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  211
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              },
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  211
+                ],
+                "pre": [
+                  0,
+                  211
+                ]
+              }
+            ],
+            "support": 131,
+            "p_success_before": 0.9578388296905611,
+            "p_failure_before": 0.04216117030943902
+          },
+          "held_episode_count": 32,
+          "held_episodes": [
+            0,
+            2,
+            4,
+            5,
+            6,
+            8,
+            10,
+            12,
+            14,
+            15,
+            18,
+            21,
+            22,
+            25,
+            31,
+            32,
+            33,
+            34,
+            36,
+            39,
+            40,
+            41,
+            47,
+            48,
+            49,
+            50,
+            54,
+            56,
+            57,
+            58,
+            59,
+            60
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 2,
+              "phase": "recovered_held",
+              "episode": 0,
+              "step": 2,
+              "event": 3728,
+              "action": 1,
+              "role": "actuator1",
+              "source": "causal-belief-experiment"
+            },
+            "old_action": 3,
+            "p_failure_after": 0.6545983617633729,
+            "shift": 0.6124371914539339,
+            "p_selected_success": 0.9588367545962188,
+            "actual_success": true
+          },
+          "qualifying_episodes": [
+            0,
+            2,
+            4,
+            5,
+            6,
+            8,
+            10,
+            12,
+            14,
+            15,
+            18,
+            21,
+            22,
+            25,
+            31,
+            32,
+            33,
+            34,
+            36,
+            39,
+            40,
+            41,
+            47,
+            48,
+            49,
+            50,
+            54,
+            56,
+            57,
+            58,
+            59,
+            60
+          ]
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 12,
+        "matched_contexts": 0,
+        "repeated_contexts": 0,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": null
+      }
+    },
+    {
+      "world": 3,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 11,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": true,
+        "qualifying_contexts": [
+          {
+            "before": {
+              "at": {
+                "world": 3,
+                "phase": "adaptive",
+                "episode": 0,
+                "step": 1,
+                "event": 301,
+                "action": 1,
+                "role": "actuator1",
+                "source": "predict"
+              },
+              "pre": [
+                0,
+                617
+              ],
+              "history": [
+                {
+                  "action": 3,
+                  "post": [
+                    0,
+                    617
+                  ],
+                  "pre": [
+                    0,
+                    307
+                  ]
+                }
+              ],
+              "support": 11,
+              "p_success_before": 1.0,
+              "p_failure_before": 0
+            },
+            "held_episode_count": 37,
+            "held_episodes": [
+              0,
+              2,
+              3,
+              4,
+              10,
+              11,
+              14,
+              15,
+              16,
+              17,
+              19,
+              22,
+              23,
+              24,
+              26,
+              28,
+              30,
+              31,
+              38,
+              39,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              48,
+              49,
+              50,
+              51,
+              53,
+              54,
+              55,
+              56,
+              58,
+              60,
+              62
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 3,
+                "phase": "recovered_held",
+                "episode": 0,
+                "step": 1,
+                "event": 3373,
+                "action": 0,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.6733428784300916,
+              "shift": 0.6733428784300916,
+              "p_selected_success": 0.9590108367935102,
+              "actual_success": true
+            },
+            "qualifying_episodes": [
+              0,
+              2,
+              3,
+              4,
+              10,
+              11,
+              14,
+              15,
+              16,
+              17,
+              19,
+              22,
+              23,
+              24,
+              26,
+              28,
+              30,
+              31,
+              38,
+              39,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              48,
+              49,
+              50,
+              51,
+              53,
+              54,
+              55,
+              56,
+              58,
+              60,
+              62
+            ]
+          }
+        ],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 3,
+              "phase": "adaptive",
+              "episode": 0,
+              "step": 1,
+              "event": 301,
+              "action": 1,
+              "role": "actuator1",
+              "source": "predict"
+            },
+            "pre": [
+              0,
+              617
+            ],
+            "history": [
+              {
+                "action": 3,
+                "post": [
+                  0,
+                  617
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              }
+            ],
+            "support": 11,
+            "p_success_before": 1.0,
+            "p_failure_before": 0
+          },
+          "held_episode_count": 37,
+          "held_episodes": [
+            0,
+            2,
+            3,
+            4,
+            10,
+            11,
+            14,
+            15,
+            16,
+            17,
+            19,
+            22,
+            23,
+            24,
+            26,
+            28,
+            30,
+            31,
+            38,
+            39,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            48,
+            49,
+            50,
+            51,
+            53,
+            54,
+            55,
+            56,
+            58,
+            60,
+            62
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 3,
+              "phase": "recovered_held",
+              "episode": 0,
+              "step": 1,
+              "event": 3373,
+              "action": 0,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.6733428784300916,
+            "shift": 0.6733428784300916,
+            "p_selected_success": 0.9590108367935102,
+            "actual_success": true
+          },
+          "qualifying_episodes": [
+            0,
+            2,
+            3,
+            4,
+            10,
+            11,
+            14,
+            15,
+            16,
+            17,
+            19,
+            22,
+            23,
+            24,
+            26,
+            28,
+            30,
+            31,
+            38,
+            39,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            48,
+            49,
+            50,
+            51,
+            53,
+            54,
+            55,
+            56,
+            58,
+            60,
+            62
+          ]
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 6,
+        "matched_contexts": 0,
+        "repeated_contexts": 0,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": null
+      }
+    },
+    {
+      "world": 4,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 17,
+        "matched_contexts": 3,
+        "repeated_contexts": 3,
+        "correction_condition_met": true,
+        "qualifying_contexts": [
+          {
+            "before": {
+              "at": {
+                "world": 4,
+                "phase": "adaptive",
+                "episode": 28,
+                "step": 2,
+                "event": 581,
+                "action": 3,
+                "role": "actuator1",
+                "source": "causal-belief-plan"
+              },
+              "pre": [
+                0,
+                617
+              ],
+              "history": [
+                {
+                  "action": 2,
+                  "post": [
+                    0,
+                    307
+                  ],
+                  "pre": [
+                    0,
+                    503
+                  ]
+                },
+                {
+                  "action": 1,
+                  "post": [
+                    0,
+                    617
+                  ],
+                  "pre": [
+                    0,
+                    307
+                  ]
+                }
+              ],
+              "support": 6,
+              "p_success_before": 0.9924896133945897,
+              "p_failure_before": 0.007510386605410275
+            },
+            "held_episode_count": 14,
+            "held_episodes": [
+              8,
+              10,
+              12,
+              24,
+              25,
+              30,
+              32,
+              33,
+              37,
+              51,
+              54,
+              57,
+              62,
+              63
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 4,
+                "phase": "recovered_held",
+                "episode": 8,
+                "step": 2,
+                "event": 4199,
+                "action": 2,
+                "role": "informative_sensor",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.7257984582824217,
+              "shift": 0.7182880716770115,
+              "p_selected_success": 0,
+              "actual_success": false
+            },
+            "qualifying_episodes": [
+              8,
+              10,
+              12,
+              24,
+              25,
+              30,
+              32,
+              33,
+              37,
+              51,
+              54,
+              57,
+              62,
+              63
+            ]
+          }
+        ],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 4,
+              "phase": "adaptive",
+              "episode": 28,
+              "step": 2,
+              "event": 581,
+              "action": 3,
+              "role": "actuator1",
+              "source": "causal-belief-plan"
+            },
+            "pre": [
+              0,
+              617
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  307
+                ],
+                "pre": [
+                  0,
+                  503
+                ]
+              },
+              {
+                "action": 1,
+                "post": [
+                  0,
+                  617
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              }
+            ],
+            "support": 6,
+            "p_success_before": 0.9924896133945897,
+            "p_failure_before": 0.007510386605410275
+          },
+          "held_episode_count": 14,
+          "held_episodes": [
+            8,
+            10,
+            12,
+            24,
+            25,
+            30,
+            32,
+            33,
+            37,
+            51,
+            54,
+            57,
+            62,
+            63
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 4,
+              "phase": "recovered_held",
+              "episode": 8,
+              "step": 2,
+              "event": 4199,
+              "action": 2,
+              "role": "informative_sensor",
+              "source": "causal-belief-experiment"
+            },
+            "old_action": 3,
+            "p_failure_after": 0.7257984582824217,
+            "shift": 0.7182880716770115,
+            "p_selected_success": 0,
+            "actual_success": false
+          },
+          "qualifying_episodes": [
+            8,
+            10,
+            12,
+            24,
+            25,
+            30,
+            32,
+            33,
+            37,
+            51,
+            54,
+            57,
+            62,
+            63
+          ]
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 5,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 4,
+              "phase": "adaptive",
+              "episode": 1,
+              "step": 1,
+              "event": 2593,
+              "action": 0,
+              "role": "actuator0",
+              "source": "causal-belief-plan"
+            },
+            "pre": [
+              0,
+              733
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  503
+                ]
+              }
+            ],
+            "support": 215,
+            "p_success_before": 0.8418889706979827,
+            "p_failure_before": 0.15811102930201718
+          },
+          "held_episode_count": 36,
+          "held_episodes": [
+            0,
+            1,
+            2,
+            5,
+            6,
+            11,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            28,
+            29,
+            31,
+            34,
+            35,
+            36,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            55,
+            56,
+            58
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 4,
+              "phase": "recovered_held",
+              "episode": 0,
+              "step": 1,
+              "event": 4174,
+              "action": 1,
+              "role": "noise_sensor",
+              "source": "causal-belief-plan"
+            },
+            "old_action": 0,
+            "p_failure_after": 0.23262233085423786,
+            "shift": 0.07451130155222069,
+            "p_selected_success": 0,
+            "actual_success": false
+          },
+          "qualifying_episodes": []
+        }
+      }
+    },
+    {
+      "world": 5,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 2,
+        "matched_contexts": 1,
+        "repeated_contexts": 1,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 5,
+              "phase": "adaptive",
+              "episode": 1,
+              "step": 1,
+              "event": 452,
+              "action": 1,
+              "role": "actuator1",
+              "source": "causal-belief-plan"
+            },
+            "pre": [
+              0,
+              419
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  419
+                ],
+                "pre": [
+                  0,
+                  617
+                ]
+              }
+            ],
+            "support": 23,
+            "p_success_before": 1.0,
+            "p_failure_before": 0
+          },
+          "held_episode_count": 28,
+          "held_episodes": [
+            0,
+            1,
+            3,
+            4,
+            6,
+            8,
+            10,
+            12,
+            15,
+            20,
+            21,
+            28,
+            32,
+            33,
+            34,
+            37,
+            39,
+            40,
+            41,
+            44,
+            49,
+            52,
+            53,
+            55,
+            58,
+            60,
+            62,
+            63
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 5,
+              "phase": "recovered_held",
+              "episode": 0,
+              "step": 1,
+              "event": 3516,
+              "action": 0,
+              "role": "noise_sensor",
+              "source": "causal-belief-experiment"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.4800000017663577,
+            "shift": 0.4800000017663577,
+            "p_selected_success": 0,
+            "actual_success": false
+          },
+          "qualifying_episodes": []
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 7,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 5,
+              "phase": "adaptive",
+              "episode": 135,
+              "step": 2,
+              "event": 2474,
+              "action": 1,
+              "role": "actuator1",
+              "source": "predict"
+            },
+            "pre": [
+              0,
+              211
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  419
+                ],
+                "pre": [
+                  0,
+                  617
+                ]
+              },
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  211
+                ],
+                "pre": [
+                  0,
+                  419
+                ]
+              }
+            ],
+            "support": 92,
+            "p_success_before": 0.9332204335755023,
+            "p_failure_before": 0.06677956642449767
+          },
+          "held_episode_count": 16,
+          "held_episodes": [
+            1,
+            3,
+            4,
+            6,
+            8,
+            12,
+            15,
+            21,
+            28,
+            33,
+            40,
+            52,
+            53,
+            55,
+            58,
+            60
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 5,
+              "phase": "recovered_held",
+              "episode": 1,
+              "step": 2,
+              "event": 3521,
+              "action": 3,
+              "role": "actuator0",
+              "source": "causal-belief-plan"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.49999985128602553,
+            "shift": 0.43322028486152786,
+            "p_selected_success": 0.9999997776558358,
+            "actual_success": true
+          },
+          "qualifying_episodes": []
+        }
+      }
+    },
+    {
+      "world": 6,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 21,
+        "matched_contexts": 4,
+        "repeated_contexts": 4,
+        "correction_condition_met": true,
+        "qualifying_contexts": [
+          {
+            "before": {
+              "at": {
+                "world": 6,
+                "phase": "adaptive",
+                "episode": 3,
+                "step": 2,
+                "event": 384,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-plan"
+              },
+              "pre": [
+                0,
+                733
+              ],
+              "history": [
+                {
+                  "action": 0,
+                  "post": [
+                    0,
+                    503
+                  ],
+                  "pre": [
+                    0,
+                    307
+                  ]
+                },
+                {
+                  "action": 2,
+                  "post": [
+                    0,
+                    733
+                  ],
+                  "pre": [
+                    0,
+                    503
+                  ]
+                }
+              ],
+              "support": 13,
+              "p_success_before": 0.8968428781868238,
+              "p_failure_before": 0.10315712181317613
+            },
+            "held_episode_count": 14,
+            "held_episodes": [
+              2,
+              6,
+              7,
+              9,
+              16,
+              26,
+              30,
+              42,
+              45,
+              46,
+              47,
+              55,
+              57,
+              63
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 2,
+                "step": 2,
+                "event": 4292,
+                "action": 0,
+                "role": "noise_sensor",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.6460720327495442,
+              "shift": 0.542914910936368,
+              "p_selected_success": 0,
+              "actual_success": false
+            },
+            "qualifying_episodes": [
+              2,
+              6,
+              7,
+              9,
+              16,
+              26,
+              30,
+              42,
+              45,
+              46,
+              47,
+              55,
+              57,
+              63
+            ]
+          },
+          {
+            "before": {
+              "at": {
+                "world": 6,
+                "phase": "adaptive",
+                "episode": 5,
+                "step": 2,
+                "event": 389,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-plan"
+              },
+              "pre": [
+                0,
+                733
+              ],
+              "history": [
+                {
+                  "action": 0,
+                  "post": [
+                    0,
+                    419
+                  ],
+                  "pre": [
+                    0,
+                    307
+                  ]
+                },
+                {
+                  "action": 2,
+                  "post": [
+                    0,
+                    733
+                  ],
+                  "pre": [
+                    0,
+                    419
+                  ]
+                }
+              ],
+              "support": 14,
+              "p_success_before": 0.8476892617842592,
+              "p_failure_before": 0.15231073821574082
+            },
+            "held_episode_count": 21,
+            "held_episodes": [
+              1,
+              11,
+              13,
+              14,
+              17,
+              19,
+              20,
+              24,
+              29,
+              36,
+              39,
+              40,
+              41,
+              43,
+              44,
+              51,
+              54,
+              56,
+              59,
+              60,
+              62
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 1,
+                "step": 2,
+                "event": 4289,
+                "action": 3,
+                "role": "actuator1",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.6899142281396853,
+              "shift": 0.5376034899239445,
+              "p_selected_success": 0.9997391710892864,
+              "actual_success": true
+            },
+            "qualifying_episodes": [
+              1,
+              11,
+              13,
+              14,
+              17,
+              19,
+              20,
+              24,
+              29,
+              36,
+              39,
+              40,
+              41,
+              43,
+              44,
+              51,
+              54,
+              56,
+              59,
+              60,
+              62
+            ]
+          },
+          {
+            "before": {
+              "at": {
+                "world": 6,
+                "phase": "adaptive",
+                "episode": 28,
+                "step": 2,
+                "event": 466,
+                "action": 3,
+                "role": "actuator1",
+                "source": "predict"
+              },
+              "pre": [
+                0,
+                617
+              ],
+              "history": [
+                {
+                  "action": 0,
+                  "post": [
+                    0,
+                    503
+                  ],
+                  "pre": [
+                    0,
+                    307
+                  ]
+                },
+                {
+                  "action": 2,
+                  "post": [
+                    0,
+                    617
+                  ],
+                  "pre": [
+                    0,
+                    503
+                  ]
+                }
+              ],
+              "support": 11,
+              "p_success_before": 0.9548906661104124,
+              "p_failure_before": 0.04510933388958742
+            },
+            "held_episode_count": 15,
+            "held_episodes": [
+              3,
+              12,
+              23,
+              25,
+              27,
+              28,
+              31,
+              33,
+              38,
+              48,
+              49,
+              50,
+              52,
+              53,
+              58
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 3,
+                "step": 2,
+                "event": 4296,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.8443948526737731,
+              "shift": 0.7992855187841857,
+              "p_selected_success": 0.9999079063798666,
+              "actual_success": true
+            },
+            "qualifying_episodes": [
+              3,
+              12,
+              23,
+              25,
+              27,
+              28,
+              31,
+              33,
+              38,
+              48,
+              49,
+              50,
+              52,
+              53,
+              58
+            ]
+          }
+        ],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 6,
+              "phase": "adaptive",
+              "episode": 28,
+              "step": 2,
+              "event": 466,
+              "action": 3,
+              "role": "actuator1",
+              "source": "predict"
+            },
+            "pre": [
+              0,
+              617
+            ],
+            "history": [
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  503
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              },
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  617
+                ],
+                "pre": [
+                  0,
+                  503
+                ]
+              }
+            ],
+            "support": 11,
+            "p_success_before": 0.9548906661104124,
+            "p_failure_before": 0.04510933388958742
+          },
+          "held_episode_count": 15,
+          "held_episodes": [
+            3,
+            12,
+            23,
+            25,
+            27,
+            28,
+            31,
+            33,
+            38,
+            48,
+            49,
+            50,
+            52,
+            53,
+            58
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 6,
+              "phase": "recovered_held",
+              "episode": 3,
+              "step": 2,
+              "event": 4296,
+              "action": 1,
+              "role": "actuator0",
+              "source": "causal-belief-experiment"
+            },
+            "old_action": 3,
+            "p_failure_after": 0.8443948526737731,
+            "shift": 0.7992855187841857,
+            "p_selected_success": 0.9999079063798666,
+            "actual_success": true
+          },
+          "qualifying_episodes": [
+            3,
+            12,
+            23,
+            25,
+            27,
+            28,
+            31,
+            33,
+            38,
+            48,
+            49,
+            50,
+            52,
+            53,
+            58
+          ]
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 4,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 6,
+              "phase": "adaptive",
+              "episode": 0,
+              "step": 1,
+              "event": 2659,
+              "action": 1,
+              "role": "actuator0",
+              "source": "causal-belief-experiment"
+            },
+            "pre": [
+              0,
+              503
+            ],
+            "history": [
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  503
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              }
+            ],
+            "support": 164,
+            "p_success_before": 0.751868574002906,
+            "p_failure_before": 0.24813142599709398
+          },
+          "held_episode_count": 29,
+          "held_episodes": [
+            2,
+            3,
+            6,
+            7,
+            9,
+            12,
+            16,
+            23,
+            25,
+            26,
+            27,
+            28,
+            30,
+            31,
+            33,
+            38,
+            42,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            52,
+            53,
+            55,
+            57,
+            58,
+            63
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 6,
+              "phase": "recovered_held",
+              "episode": 2,
+              "step": 1,
+              "event": 4291,
+              "action": 2,
+              "role": "informative_sensor",
+              "source": "causal-belief-experiment"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.4987718694899336,
+            "shift": 0.2506404434928396,
+            "p_selected_success": 0,
+            "actual_success": false
+          },
+          "qualifying_episodes": []
+        }
+      }
+    },
+    {
+      "world": 7,
+      "first_errors_at_second_endpoint": {
+        "contradicted_contexts": 13,
+        "matched_contexts": 3,
+        "repeated_contexts": 3,
+        "correction_condition_met": true,
+        "qualifying_contexts": [
+          {
+            "before": {
+              "at": {
+                "world": 7,
+                "phase": "adaptive",
+                "episode": 39,
+                "step": 2,
+                "event": 571,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-experiment"
+              },
+              "pre": [
+                0,
+                733
+              ],
+              "history": [
+                {
+                  "action": 0,
+                  "post": [
+                    0,
+                    733
+                  ],
+                  "pre": [
+                    0,
+                    211
+                  ]
+                },
+                {
+                  "action": 0,
+                  "post": [
+                    0,
+                    733
+                  ],
+                  "pre": [
+                    0,
+                    733
+                  ]
+                }
+              ],
+              "support": 98,
+              "p_success_before": 0.9991343619055744,
+              "p_failure_before": 0.0008656380944258212
+            },
+            "held_episode_count": 35,
+            "held_episodes": [
+              2,
+              3,
+              4,
+              5,
+              7,
+              8,
+              9,
+              10,
+              11,
+              13,
+              15,
+              16,
+              19,
+              20,
+              22,
+              23,
+              24,
+              25,
+              27,
+              28,
+              30,
+              32,
+              35,
+              37,
+              38,
+              42,
+              46,
+              48,
+              50,
+              52,
+              54,
+              55,
+              56,
+              59,
+              60
+            ],
+            "strongest_sample": {
+              "at": {
+                "world": 7,
+                "phase": "recovered_held",
+                "episode": 2,
+                "step": 2,
+                "event": 4088,
+                "action": 2,
+                "role": "actuator1",
+                "source": "causal-belief-plan"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.7157200533531142,
+              "shift": 0.7148544152586883,
+              "p_selected_success": 0.921066211518789,
+              "actual_success": true
+            },
+            "qualifying_episodes": [
+              2,
+              3,
+              4,
+              5,
+              7,
+              8,
+              9,
+              10,
+              11,
+              13,
+              15,
+              16,
+              19,
+              20,
+              22,
+              23,
+              24,
+              25,
+              27,
+              28,
+              30,
+              32,
+              35,
+              37,
+              38,
+              42,
+              46,
+              48,
+              50,
+              52,
+              54,
+              55,
+              56,
+              59,
+              60
+            ]
+          }
+        ],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 7,
+              "phase": "adaptive",
+              "episode": 39,
+              "step": 2,
+              "event": 571,
+              "action": 1,
+              "role": "actuator0",
+              "source": "causal-belief-experiment"
+            },
+            "pre": [
+              0,
+              733
+            ],
+            "history": [
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  211
+                ]
+              },
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  733
+                ]
+              }
+            ],
+            "support": 98,
+            "p_success_before": 0.9991343619055744,
+            "p_failure_before": 0.0008656380944258212
+          },
+          "held_episode_count": 35,
+          "held_episodes": [
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            13,
+            15,
+            16,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+            30,
+            32,
+            35,
+            37,
+            38,
+            42,
+            46,
+            48,
+            50,
+            52,
+            54,
+            55,
+            56,
+            59,
+            60
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 7,
+              "phase": "recovered_held",
+              "episode": 2,
+              "step": 2,
+              "event": 4088,
+              "action": 2,
+              "role": "actuator1",
+              "source": "causal-belief-plan"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.7157200533531142,
+            "shift": 0.7148544152586883,
+            "p_selected_success": 0.921066211518789,
+            "actual_success": true
+          },
+          "qualifying_episodes": [
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            13,
+            15,
+            16,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+            30,
+            32,
+            35,
+            37,
+            38,
+            42,
+            46,
+            48,
+            50,
+            52,
+            54,
+            55,
+            56,
+            59,
+            60
+          ]
+        }
+      },
+      "second_errors_at_second_endpoint": {
+        "contradicted_contexts": 9,
+        "matched_contexts": 2,
+        "repeated_contexts": 2,
+        "correction_condition_met": false,
+        "qualifying_contexts": [],
+        "best_repeated_context": {
+          "before": {
+            "at": {
+              "world": 7,
+              "phase": "adaptive",
+              "episode": 272,
+              "step": 1,
+              "event": 3377,
+              "action": 1,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "pre": [
+              0,
+              733
+            ],
+            "history": [
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  211
+                ]
+              }
+            ],
+            "support": 148,
+            "p_success_before": 0.804970151047405,
+            "p_failure_before": 0.19502984895259518
+          },
+          "held_episode_count": 35,
+          "held_episodes": [
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            13,
+            15,
+            16,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+            30,
+            32,
+            35,
+            37,
+            38,
+            42,
+            46,
+            48,
+            50,
+            52,
+            54,
+            55,
+            56,
+            59,
+            60
+          ],
+          "strongest_sample": {
+            "at": {
+              "world": 7,
+              "phase": "recovered_held",
+              "episode": 2,
+              "step": 1,
+              "event": 4087,
+              "action": 0,
+              "role": "informative_sensor",
+              "source": "causal-belief-plan"
+            },
+            "old_action": 1,
+            "p_failure_after": 0.21653298542988728,
+            "shift": 0.0215031364772921,
+            "p_selected_success": 0,
+            "actual_success": false
+          },
+          "qualifying_episodes": []
+        }
+      }
+    }
+  ],
+  "learning_windows": {
+    "reconstruct": {
+      "acquire": {
+        "first_64_successes": 358,
+        "last_64_successes": 440,
+        "episodes_per_window": 512
+      },
+      "adaptive": {
+        "first_64_successes": 201,
+        "last_64_successes": 480,
+        "episodes_per_window": 512
+      }
+    },
+    "repeat": {
+      "acquire": {
+        "first_64_successes": 150,
+        "last_64_successes": 410,
+        "episodes_per_window": 512
+      },
+      "adaptive": {
+        "first_64_successes": 332,
+        "last_64_successes": 485,
+        "episodes_per_window": 512
+      }
+    }
+  },
+  "original_error_correction_worlds": 6,
+  "second_error_correction_worlds": 0
+}

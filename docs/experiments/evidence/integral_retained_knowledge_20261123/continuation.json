@@ -1,0 +1,3995 @@
+{
+  "schema": "aeterna.integral-retained-knowledge.continuation.v1",
+  "verdict": "FAIL",
+  "strict_repeat_verdict": "FAIL",
+  "scope": "Developmental repetition of the known 0-to-1 scenario with full retained agent state; no fresh qualification",
+  "world_seed": 45231338992,
+  "run_id_is_provenance_only": true,
+  "execution": {
+    "source_commit": "893f211f3685c9b635223966609aa8f59183a8bc",
+    "base_production_commit": "01a35d0c69c3dec0340c753456ada4a7b7f221da",
+    "source_sha256": {
+      ".github/workflows/integral-retained-knowledge-20261123.yml": "520ad431280c97e69e22a4f553b6f5ff9291e483f4a682f07c07fb249475e8f2",
+      "docs/experiments/INTEGRAL_CAUSAL_REVISION_20261123_PROTOCOL.md": "a699624f9748742e25bc051c5fe32f44a3ddb4185f4aa58e516e837e8f77ffb7",
+      "docs/experiments/INTEGRAL_RETAINED_KNOWLEDGE_20261123_PROTOCOL.md": "a773cf5bbdc6ae757d0e0a7ee292ce40bfb0fdcfb15da1fc67f317ba7e6a4fc4",
+      "examples/integral_causal_revision_eval.rs": "f79dc005680a01d4fb011b70f0ac1b127c0d8107b63d8b48f34d0b90d4759c4f",
+      "examples/integral_retained_knowledge_eval.rs": "39a1dd56eb55ef17f2c855441dde65f444bf45916f19c0cc8c066c046b1de507",
+      "scripts/run_integral_causal_revision.py": "7b2081b82c9c9bd529a1c57e128192d36e88cec95ea5cf4cf40de2fd6f0da514",
+      "scripts/run_integral_retained_knowledge.py": "d37467f9f1ea15c63d35d0bc15bf391edadcfa77c092ce5bdc955c3df31fcd5b"
+    },
+    "protected_tree_matches_base": true,
+    "world_seed": 45231338992,
+    "run_id": "45235768424",
+    "binary_sha256": "6f80b274eb05cb841587d2695d64e6cc7bf2d98946036e83505e92d9e642c391",
+    "workers": 2,
+    "archive_sha256": "73c4a3f6d1bb27d62c0fdf963479dbe45b489493ebf87ec5022d63fb3796c21e",
+    "evidence_origin": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence",
+    "started_utc_epoch": 1795457620.1550856
+  },
+  "historical": {
+    "verdict": "FAIL",
+    "complete_loop_worlds": 4,
+    "source_commit": "4b391bf81f1f8203fb3db24e6e1a8fd48f24fc13",
+    "archive_sha256": "73c4a3f6d1bb27d62c0fdf963479dbe45b489493ebf87ec5022d63fb3796c21e",
+    "binary_sha256": "9d2a814b7a33c68742dc94844090d47afb2cbf2d4b4cff87dd61a240ff5b7a29",
+    "verdict_unchanged": true
+  },
+  "replay_integrity": {
+    "valid": true,
+    "errors": [],
+    "worlds": [
+      {
+        "world": 0,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "9b5e27c4833712f72efc31c09d7bd8e630a16063f330255bbc125a51ac81e240",
+        "reconstructed_trace_sha256": "9b5e27c4833712f72efc31c09d7bd8e630a16063f330255bbc125a51ac81e240",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "2c285027e315383c23899003201209cd818f8341f274f83b9778d36e28315e94",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-0/initial.checkpoint.json",
+            "bytes": 18002,
+            "fingerprint": 2173379020051360554,
+            "sha256": "3db9b979e0089cc7d7e2d0ff731b90de75cfcb247ccd8b81629cffd34085da8f"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-0/acquired.checkpoint.json",
+            "bytes": 133788,
+            "fingerprint": 4720682702890233052,
+            "sha256": "0daa6b00f04d958985d184eaf2fcd099c09515edd0a7680cf9046b0ef2cf2ac1"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-0/continuation-unfrozen.checkpoint.json",
+            "bytes": 420277,
+            "fingerprint": 1802339761827316957,
+            "sha256": "e857adafad7f98380caeda9d983fa1e6e5010b63779834685470e944941fc923"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-0/revised-frozen.checkpoint.json",
+            "bytes": 420295,
+            "fingerprint": 7144430304769529417,
+            "sha256": "882d4d40c2e64b6e7d9b989bbcea6b338dccff6aa0e27f0a39276c7b57440a74"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-0/stale-frozen.checkpoint.json",
+            "bytes": 385069,
+            "fingerprint": 11996800767925498640,
+            "sha256": "35673579814cb813593d93de8122403a3bc19dcb87518f8699e188c96b8da388"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      },
+      {
+        "world": 1,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "567fd529cd0b3fc08705d01b143afd2349c3cd8e87ba5c11b05ca0b31950bf8c",
+        "reconstructed_trace_sha256": "567fd529cd0b3fc08705d01b143afd2349c3cd8e87ba5c11b05ca0b31950bf8c",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "2d0518bae03a386ffc44f21260134026b53c3ac305297a56cdc34f88f518bed7",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-1/initial.checkpoint.json",
+            "bytes": 18002,
+            "fingerprint": 9765661216246005471,
+            "sha256": "ed837d716c2fb86d44f99c32951efa84a3b189c7d29bb8aae1551b4a6f6f98ac"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-1/acquired.checkpoint.json",
+            "bytes": 153032,
+            "fingerprint": 572936721713822900,
+            "sha256": "690c635e0bc3123f75a6a5154603c29411260e87db06b2b3d0a3b0ebaf776cdf"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-1/continuation-unfrozen.checkpoint.json",
+            "bytes": 521658,
+            "fingerprint": 1986377116075027123,
+            "sha256": "d8e9c715640e60d3f7bea64ff231a2864b2a381a63243895d7fe2b28ce09734d"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-1/revised-frozen.checkpoint.json",
+            "bytes": 521678,
+            "fingerprint": 16403083620174477136,
+            "sha256": "7af5c8cddfc94214b79784660f077f9c6f8c7ddfd11c9eb5d0aafcd3855ae39d"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-1/stale-frozen.checkpoint.json",
+            "bytes": 404526,
+            "fingerprint": 11301864036145959579,
+            "sha256": "9ec0ae6981078632d7b4d6b22eeb4581db0740d806051e1a7707163e9434f85a"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      },
+      {
+        "world": 2,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "116bd4e51ece01c9f006202af6d0e78ce694e821bb444b72f8112ebf912326df",
+        "reconstructed_trace_sha256": "116bd4e51ece01c9f006202af6d0e78ce694e821bb444b72f8112ebf912326df",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "1f5c980e1d8d96aa3b8018bd328ba52b08156e3a1c2c34096832b416b96d9f92",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-2/initial.checkpoint.json",
+            "bytes": 18002,
+            "fingerprint": 9765661216246005471,
+            "sha256": "ed837d716c2fb86d44f99c32951efa84a3b189c7d29bb8aae1551b4a6f6f98ac"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-2/acquired.checkpoint.json",
+            "bytes": 148882,
+            "fingerprint": 5090334563135929317,
+            "sha256": "a9ac49f20541cac174df544ba28db41b56b11f3904a62ca25ae34c14c31e8fa9"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-2/continuation-unfrozen.checkpoint.json",
+            "bytes": 455366,
+            "fingerprint": 16366535335953163619,
+            "sha256": "3b40c4beface108809162f751096b46a115c0cb167b82e651d57b305b022e094"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-2/revised-frozen.checkpoint.json",
+            "bytes": 455385,
+            "fingerprint": 5610470137219760601,
+            "sha256": "a35f0c43f8eef4128673eb07b24c0d9b48bcaf4bf22fac06f84259a4cf064427"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-2/stale-frozen.checkpoint.json",
+            "bytes": 400355,
+            "fingerprint": 678575139121194069,
+            "sha256": "ea5d7006e260c12b46a2dbf01052b6cd150a7b3c68f0fa1859515b6ce219f291"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      },
+      {
+        "world": 3,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "69d1678493e6b2e28a98428f3fed70de46018cceaf06e9914936993457d839f1",
+        "reconstructed_trace_sha256": "69d1678493e6b2e28a98428f3fed70de46018cceaf06e9914936993457d839f1",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "e92c0c240209555d516ec075cc4f2f4f5c6af6860d73652d3a8ddd77919ef378",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-3/initial.checkpoint.json",
+            "bytes": 18002,
+            "fingerprint": 9765661216246005471,
+            "sha256": "ed837d716c2fb86d44f99c32951efa84a3b189c7d29bb8aae1551b4a6f6f98ac"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-3/acquired.checkpoint.json",
+            "bytes": 96557,
+            "fingerprint": 14704755075412844781,
+            "sha256": "ed26dc9a035a6609b519fc01bf830538d69da91dbef6506627700507773da705"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-3/continuation-unfrozen.checkpoint.json",
+            "bytes": 438017,
+            "fingerprint": 16565116044995033358,
+            "sha256": "39607f695f01a4032379a088f37c57a332e487991969a1f54a65bf17560d74a2"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-3/revised-frozen.checkpoint.json",
+            "bytes": 438036,
+            "fingerprint": 7981182228249788413,
+            "sha256": "e4c19f3d02859e7b20cf52dd492f4e835b03180c0351739b77cf2d336fd160bd"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-3/stale-frozen.checkpoint.json",
+            "bytes": 347636,
+            "fingerprint": 15764865665504618489,
+            "sha256": "722c6bb34a37778e38f03dd04baacd10c5fd4a1bf6a46753df27e1f9fc695893"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      },
+      {
+        "world": 4,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "e192ef21be3ce801074197d78efce34dc7c243e87f876537c03a5f36be5d76a0",
+        "reconstructed_trace_sha256": "e192ef21be3ce801074197d78efce34dc7c243e87f876537c03a5f36be5d76a0",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "af95c6fd448b2a6424f7588542bf996802ed855dafbe562eea9b83df8471f877",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-4/initial.checkpoint.json",
+            "bytes": 18009,
+            "fingerprint": 16191018417850420791,
+            "sha256": "4332a3a13b613501002b54b100648df9832505e06e744b4a9c15d70d32ae589e"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-4/acquired.checkpoint.json",
+            "bytes": 153833,
+            "fingerprint": 14505618588739415779,
+            "sha256": "4d7a39ec097da21b7a87b52c2c0c24b02eb89fceccd1366b0f290157d1523473"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-4/continuation-unfrozen.checkpoint.json",
+            "bytes": 534539,
+            "fingerprint": 3057307005882274906,
+            "sha256": "c247a9f06e34eef57d9af3c2225813e0f296149c6cb7f0e208ecfa64ae7e9486"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-4/revised-frozen.checkpoint.json",
+            "bytes": 534557,
+            "fingerprint": 1429962163326784245,
+            "sha256": "57b9f39e6b7e741e7439b959fe07cf8851b988207505c0c570e057df28d3ce5a"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-4/stale-frozen.checkpoint.json",
+            "bytes": 405323,
+            "fingerprint": 4519559610018514036,
+            "sha256": "1e85b938684c00a510d7e3a4fb1227ed120654ff2054a687da300deeb18ade1b"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      },
+      {
+        "world": 5,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "9b79dafcab27b2fd0e0e1e345bd3fbaf285e70de4d441b9aa63cca4d56c84791",
+        "reconstructed_trace_sha256": "9b79dafcab27b2fd0e0e1e345bd3fbaf285e70de4d441b9aa63cca4d56c84791",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "0078481ce0251425929a8d2e9b65253fe5b21e8799c4983eda8bfcb6ac0d871f",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-5/initial.checkpoint.json",
+            "bytes": 18002,
+            "fingerprint": 7864054013178687760,
+            "sha256": "c0e4efb0f03da365c67d6e6e3d25331a1636e569ab43fb5540a972e1b32c31cb"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-5/acquired.checkpoint.json",
+            "bytes": 139045,
+            "fingerprint": 15501370211443586819,
+            "sha256": "6f6feef62448bcf977ee3dddc1d2134ac57aea84b6f8be203111729ca7ac3bbd"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-5/continuation-unfrozen.checkpoint.json",
+            "bytes": 437674,
+            "fingerprint": 16627425118852109564,
+            "sha256": "750bed56b0a21d7c04711778566ecf93f67782a44adec68e3641c409c4462a0b"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-5/revised-frozen.checkpoint.json",
+            "bytes": 437693,
+            "fingerprint": 2909098917383436524,
+            "sha256": "5778b71b88ec65b5da47a7ca7aac4ec49562f22aa60a7db5caadd49790e9ff88"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-5/stale-frozen.checkpoint.json",
+            "bytes": 478541,
+            "fingerprint": 2644275545623562899,
+            "sha256": "8b0a130f2c38bfc8b0cd76ecbf45454651f6034ad8e7123e97aae98b8baa2f02"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      },
+      {
+        "world": 6,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "03378b7683f7ac1c0f3dbd9a3f7dcacfaff9baa390defd6ec8dd6a5c3f359bba",
+        "reconstructed_trace_sha256": "03378b7683f7ac1c0f3dbd9a3f7dcacfaff9baa390defd6ec8dd6a5c3f359bba",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "e1b506ff56adf337bab94a0842c3f5fa2dbb3cb861e2c1afed4e0c9b524778cf",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-6/initial.checkpoint.json",
+            "bytes": 18002,
+            "fingerprint": 9765661216246005471,
+            "sha256": "ed837d716c2fb86d44f99c32951efa84a3b189c7d29bb8aae1551b4a6f6f98ac"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-6/acquired.checkpoint.json",
+            "bytes": 125296,
+            "fingerprint": 14443324258163090462,
+            "sha256": "f61c5cdf2bb88b8c008406da7630212bf2ac8fa36149d1c42595401d23f88bf0"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-6/continuation-unfrozen.checkpoint.json",
+            "bytes": 567468,
+            "fingerprint": 6004173180430591720,
+            "sha256": "4ce28bd10bd0835438aa39eb4732d6c0bf785f411bdb64884d0f6f1bdd95ea7e"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-6/revised-frozen.checkpoint.json",
+            "bytes": 567487,
+            "fingerprint": 15386061647076333475,
+            "sha256": "01e6d0f15a046d8d8b0024096f6898e2c60d0e2a72f0fdd3e005c6326b1a20ee"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-6/stale-frozen.checkpoint.json",
+            "bytes": 376502,
+            "fingerprint": 16469268062498979101,
+            "sha256": "e490aaae7c70996a96326a4cad4b9d508a3af9752bc47b64c85e9c2a00cecbf6"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      },
+      {
+        "world": 7,
+        "valid": true,
+        "errors": [],
+        "original_trace_sha256": "8dfb3392030e59c8103762e394b8c7eb364e88ff98b56d500569f4ea8eefcc36",
+        "reconstructed_trace_sha256": "8dfb3392030e59c8103762e394b8c7eb364e88ff98b56d500569f4ea8eefcc36",
+        "trace_matches": true,
+        "parsed_summary_matches": true,
+        "metadata_sha256": "223af54ee8f1e4eb8891e3c5228ffbe1989db5e2e8f9c81ce69544f525ec3ae2",
+        "checkpoints": {
+          "initial": {
+            "path": "reconstruct/checkpoints/world-7/initial.checkpoint.json",
+            "bytes": 18002,
+            "fingerprint": 2173379020051360554,
+            "sha256": "3db9b979e0089cc7d7e2d0ff731b90de75cfcb247ccd8b81629cffd34085da8f"
+          },
+          "acquired": {
+            "path": "reconstruct/checkpoints/world-7/acquired.checkpoint.json",
+            "bytes": 145073,
+            "fingerprint": 10898279650494108207,
+            "sha256": "134457ae92e2b97cc712ecfbfcc67c5e737540133fdf0b3f1624c9ca9892b00a"
+          },
+          "continuation_unfrozen": {
+            "path": "reconstruct/checkpoints/world-7/continuation-unfrozen.checkpoint.json",
+            "bytes": 516801,
+            "fingerprint": 4825087863451964073,
+            "sha256": "eacadf1c6fc6113b206c607ab65c6d020b323e2f237c370b7f6bcdaa22c3cb29"
+          },
+          "revised_frozen": {
+            "path": "reconstruct/checkpoints/world-7/revised-frozen.checkpoint.json",
+            "bytes": 516821,
+            "fingerprint": 12143960583382121872,
+            "sha256": "9ecf624c1a9859839f85e2cf89f9a1d642c085d6cc6f6639d99b03cec95c7f3f"
+          },
+          "stale_frozen": {
+            "path": "reconstruct/checkpoints/world-7/stale-frozen.checkpoint.json",
+            "bytes": 396440,
+            "fingerprint": 3432566207815783238,
+            "sha256": "c45acfb4df4d65d0fe9e7b1550126bd796a6642576b5bb21ebec70e4717190b5"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 0
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 0,
+            "delayed_experiment_credits": 0,
+            "evicted_entries": 0,
+            "factual_transitions": 0,
+            "failed_goal_episodes": 0,
+            "hypothesis_weights": [
+              0.45505423392341127,
+              0.27600434470659363,
+              0.16740509727844333,
+              0.1015363240915518
+            ],
+            "learned_fingerprint": 15817670333275358193,
+            "learned_transitions": 0,
+            "model_bytes": 0,
+            "retained_entries": 0,
+            "useful_experiments": 0
+          },
+          "controller_frozen": false,
+          "factual_events": 0,
+          "native_meta_observations": 0,
+          "native_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "total_external_cost": 0
+        },
+        "input_checkpoint": null
+      }
+    ],
+    "historical_reconstruction_only": true,
+    "counts_as_fresh_qualification": false
+  },
+  "retained_state_integrity": {
+    "valid": true,
+    "errors": [],
+    "worlds": [
+      {
+        "world": 0,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "33f8e8107cfca20d63ba7785838c56b3f921008e4dcb1065af8ed4c74e9811d6",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-0/initial.checkpoint.json",
+            "bytes": 420277,
+            "fingerprint": 1802339761827316957,
+            "sha256": "e857adafad7f98380caeda9d983fa1e6e5010b63779834685470e944941fc923"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-0/acquired.checkpoint.json",
+            "bytes": 577768,
+            "fingerprint": 5964557991204389695,
+            "sha256": "f47c19e4f2f1b144f2b330811be52794aea9d5c29f01ad97ade7163e6415687f"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-0/continuation-unfrozen.checkpoint.json",
+            "bytes": 463159,
+            "fingerprint": 1140301608048268590,
+            "sha256": "7bd6e696404328c50a4370a5574b515c3851ef888b5659ca0b7134c6ed766d95"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-0/revised-frozen.checkpoint.json",
+            "bytes": 463177,
+            "fingerprint": 7867447468450147807,
+            "sha256": "f14e11445f0fedc5896c0302189cca0c6cc6179140d9e31c46ba5fe70d7c8a9f"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-0/stale-frozen.checkpoint.json",
+            "bytes": 510915,
+            "fingerprint": 11637878304697520680,
+            "sha256": "e37bd19f957d98d3244b552d8134fb5e9b86039ab7aba6b34b652404a72dbf0e"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 1543
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 629,
+            "delayed_experiment_credits": 596,
+            "evicted_entries": 0,
+            "factual_transitions": 1543,
+            "failed_goal_episodes": 139,
+            "hypothesis_weights": [
+              0.11954143630182415,
+              0.3348730365011408,
+              0.2728226027482098,
+              0.2727629244488252
+            ],
+            "learned_fingerprint": 15128155088418200388,
+            "learned_transitions": 1543,
+            "model_bytes": 62600,
+            "retained_entries": 160,
+            "useful_experiments": 673
+          },
+          "controller_frozen": false,
+          "factual_events": 1543,
+          "native_meta_observations": 1640,
+          "native_weights": [
+            1.0,
+            0.0,
+            0.8373225331306458,
+            1.0,
+            0.9959039688110352
+          ],
+          "total_external_cost": 1543
+        },
+        "input_checkpoint": {
+          "bytes": 420277,
+          "fingerprint": 1802339761827316957,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-0/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 1543,
+        "retained_learned_transitions": 1543,
+        "input_checkpoint_sha256": "e857adafad7f98380caeda9d983fa1e6e5010b63779834685470e944941fc923"
+      },
+      {
+        "world": 1,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "b59f295f6e2836ea620736c77b3f64be32179ac50d91f2ae4665e735cbef8e75",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-1/initial.checkpoint.json",
+            "bytes": 521658,
+            "fingerprint": 1986377116075027123,
+            "sha256": "d8e9c715640e60d3f7bea64ff231a2864b2a381a63243895d7fe2b28ce09734d"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-1/acquired.checkpoint.json",
+            "bytes": 672502,
+            "fingerprint": 14821060347745258322,
+            "sha256": "f3a260768aa637cfeece5bf57b1a16283d5ad2a18e6cdb14ae959b055f1f62d5"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-1/continuation-unfrozen.checkpoint.json",
+            "bytes": 659109,
+            "fingerprint": 5744570273796741987,
+            "sha256": "fb57a3457c6aa9b703ca014b6a4f2dd5801bfe70ff811951e2eef11d027a8132"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-1/revised-frozen.checkpoint.json",
+            "bytes": 659128,
+            "fingerprint": 1478020152842264052,
+            "sha256": "a9412fecfec5d08ca1a588ece97903003f6f53e43fbab41be0fdd16be813266e"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-1/stale-frozen.checkpoint.json",
+            "bytes": 542244,
+            "fingerprint": 8155272684904154911,
+            "sha256": "c54d7f2952ab9cd0fad5b13542c932e9829a85b598a5ede85eef439108e2080d"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 1963
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 671,
+            "delayed_experiment_credits": 752,
+            "evicted_entries": 0,
+            "factual_transitions": 1963,
+            "failed_goal_episodes": 97,
+            "hypothesis_weights": [
+              0.06552951557619013,
+              0.6249170995670431,
+              0.15477875473423525,
+              0.1547746301225315
+            ],
+            "learned_fingerprint": 2761859704316823588,
+            "learned_transitions": 1963,
+            "model_bytes": 56082,
+            "retained_entries": 146,
+            "useful_experiments": 813
+          },
+          "controller_frozen": false,
+          "factual_events": 1963,
+          "native_meta_observations": 2074,
+          "native_weights": [
+            0.9005285501480103,
+            0.0,
+            0.13381606340408325,
+            0.9013147354125977,
+            0.9335417747497559
+          ],
+          "total_external_cost": 1963
+        },
+        "input_checkpoint": {
+          "bytes": 521658,
+          "fingerprint": 1986377116075027123,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-1/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 1963,
+        "retained_learned_transitions": 1963,
+        "input_checkpoint_sha256": "d8e9c715640e60d3f7bea64ff231a2864b2a381a63243895d7fe2b28ce09734d"
+      },
+      {
+        "world": 2,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "be3b131955f807e42bf7e522b283ba49783c44f0e69794c5e32189d869b9407f",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-2/initial.checkpoint.json",
+            "bytes": 455366,
+            "fingerprint": 16366535335953163619,
+            "sha256": "3b40c4beface108809162f751096b46a115c0cb167b82e651d57b305b022e094"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-2/acquired.checkpoint.json",
+            "bytes": 650779,
+            "fingerprint": 2038827486514505025,
+            "sha256": "d453b8227847e7e54543b623bd1074f7f85c49a82f10469814292ea1d768904f"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-2/continuation-unfrozen.checkpoint.json",
+            "bytes": 584827,
+            "fingerprint": 7545756781606055198,
+            "sha256": "0bb746666dbb61b3a1f95efd134cb0b88fd4aa6091477d55c4c1a9f3adaf02b4"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-2/revised-frozen.checkpoint.json",
+            "bytes": 584845,
+            "fingerprint": 3000079573936229784,
+            "sha256": "a884a6a897a0a287b32daafc145e6e22125615f96302a6ba6a2ed8f6c071607b"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-2/stale-frozen.checkpoint.json",
+            "bytes": 647058,
+            "fingerprint": 13964260648339512889,
+            "sha256": "450fb78ba04f12c8482cee145b604c6595037092e3c7375fd31bc1f98b872ef7"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 1724
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 641,
+            "delayed_experiment_credits": 561,
+            "evicted_entries": 0,
+            "factual_transitions": 1724,
+            "failed_goal_episodes": 127,
+            "hypothesis_weights": [
+              0.06592313328857594,
+              0.37397642602160697,
+              0.28006258457654554,
+              0.2800378561132715
+            ],
+            "learned_fingerprint": 3748249035766137326,
+            "learned_transitions": 1724,
+            "model_bytes": 37304,
+            "retained_entries": 99,
+            "useful_experiments": 621
+          },
+          "controller_frozen": false,
+          "factual_events": 1724,
+          "native_meta_observations": 1802,
+          "native_weights": [
+            0.9690524339675903,
+            0.025886816903948784,
+            0.3591350317001343,
+            0.9658931493759155,
+            0.9635702967643738
+          ],
+          "total_external_cost": 1724
+        },
+        "input_checkpoint": {
+          "bytes": 455366,
+          "fingerprint": 16366535335953163619,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-2/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 1724,
+        "retained_learned_transitions": 1724,
+        "input_checkpoint_sha256": "3b40c4beface108809162f751096b46a115c0cb167b82e651d57b305b022e094"
+      },
+      {
+        "world": 3,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "a6fca056c322fe60931a0f9524fef92728277484483823de4ef617eed699013a",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-3/initial.checkpoint.json",
+            "bytes": 438017,
+            "fingerprint": 16565116044995033358,
+            "sha256": "39607f695f01a4032379a088f37c57a332e487991969a1f54a65bf17560d74a2"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-3/acquired.checkpoint.json",
+            "bytes": 618774,
+            "fingerprint": 5389861399327337513,
+            "sha256": "55d981f6059ffd6930d194fb17d32be56ac378087a7031660a3712efdcf88050"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-3/continuation-unfrozen.checkpoint.json",
+            "bytes": 497579,
+            "fingerprint": 7666212169585207618,
+            "sha256": "e86f81083e22a3405054ee792f85ef5cb3d765a4275cab7cf0e8b56b70c69ce9"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-3/revised-frozen.checkpoint.json",
+            "bytes": 497598,
+            "fingerprint": 5651744484991236594,
+            "sha256": "1014b9642f211ef4d815184db3b61f0237f4e60831945c23f4b63381a1a574b8"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-3/stale-frozen.checkpoint.json",
+            "bytes": 615341,
+            "fingerprint": 12249988100179290301,
+            "sha256": "f46ff8028806ba0d48051c5bfb366763346a63d6b966dd05479879323692ab76"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 1621
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 577,
+            "delayed_experiment_credits": 572,
+            "evicted_entries": 0,
+            "factual_transitions": 1621,
+            "failed_goal_episodes": 191,
+            "hypothesis_weights": [
+              0.6904155766179321,
+              0.16761499711819058,
+              0.07098996505951129,
+              0.07097946120436602
+            ],
+            "learned_fingerprint": 15576073433412929012,
+            "learned_transitions": 1621,
+            "model_bytes": 58608,
+            "retained_entries": 147,
+            "useful_experiments": 692
+          },
+          "controller_frozen": false,
+          "factual_events": 1621,
+          "native_meta_observations": 1734,
+          "native_weights": [
+            1.0,
+            0.03597289323806763,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "total_external_cost": 1621
+        },
+        "input_checkpoint": {
+          "bytes": 438017,
+          "fingerprint": 16565116044995033358,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-3/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 1621,
+        "retained_learned_transitions": 1621,
+        "input_checkpoint_sha256": "39607f695f01a4032379a088f37c57a332e487991969a1f54a65bf17560d74a2"
+      },
+      {
+        "world": 4,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "05f9f5621f07761fa27f143a51abe76acd068f7dcc6249a3795c6a5c3701555a",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-4/initial.checkpoint.json",
+            "bytes": 534539,
+            "fingerprint": 3057307005882274906,
+            "sha256": "c247a9f06e34eef57d9af3c2225813e0f296149c6cb7f0e208ecfa64ae7e9486"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-4/acquired.checkpoint.json",
+            "bytes": 689059,
+            "fingerprint": 18428261132984979115,
+            "sha256": "9c2dc7206d88bbcc55f29b7949963b6c9d5ccc096639575793f24cafbc7dc545"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-4/continuation-unfrozen.checkpoint.json",
+            "bytes": 700521,
+            "fingerprint": 10989105306333672050,
+            "sha256": "0b41ae4051baebb28cec84f3053f38dda0c150fddcd6b752b1271360355ca420"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-4/revised-frozen.checkpoint.json",
+            "bytes": 700539,
+            "fingerprint": 8580747748618540842,
+            "sha256": "4f399d26ab678783f0b7fafe6bddc80392fec4583911f91c5d9a3056c514f152"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-4/stale-frozen.checkpoint.json",
+            "bytes": 559035,
+            "fingerprint": 11844430315679656950,
+            "sha256": "1b0801ab6cabd3d615556d015e8ced95519cb92ecd86df778272a9c6789a316c"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 1989
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 643,
+            "delayed_experiment_credits": 641,
+            "evicted_entries": 0,
+            "factual_transitions": 1989,
+            "failed_goal_episodes": 125,
+            "hypothesis_weights": [
+              0.008650672586997914,
+              0.4153565620622903,
+              0.2879997511605658,
+              0.287993014190146
+            ],
+            "learned_fingerprint": 16840802083213877156,
+            "learned_transitions": 1989,
+            "model_bytes": 72262,
+            "retained_entries": 186,
+            "useful_experiments": 750
+          },
+          "controller_frozen": false,
+          "factual_events": 1989,
+          "native_meta_observations": 2139,
+          "native_weights": [
+            0.9071143865585327,
+            0.008784612640738487,
+            0.088956817984581,
+            0.9075673222541809,
+            0.9346269369125366
+          ],
+          "total_external_cost": 1989
+        },
+        "input_checkpoint": {
+          "bytes": 534539,
+          "fingerprint": 3057307005882274906,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-4/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 1989,
+        "retained_learned_transitions": 1989,
+        "input_checkpoint_sha256": "c247a9f06e34eef57d9af3c2225813e0f296149c6cb7f0e208ecfa64ae7e9486"
+      },
+      {
+        "world": 5,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "dbb559648366d3a0dbfb7679f533982a74827bb8eca0aad7f044d5384090d36b",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-5/initial.checkpoint.json",
+            "bytes": 437674,
+            "fingerprint": 16627425118852109564,
+            "sha256": "750bed56b0a21d7c04711778566ecf93f67782a44adec68e3641c409c4462a0b"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-5/acquired.checkpoint.json",
+            "bytes": 584734,
+            "fingerprint": 5515510716375770052,
+            "sha256": "9d5d411b4d2c9d6e59e6b5236497585de8bffed50476e25038c24bf1e21bc87d"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-5/continuation-unfrozen.checkpoint.json",
+            "bytes": 534981,
+            "fingerprint": 8313479020300052702,
+            "sha256": "720d7f3fd2f4ef2bb5b4cfe8f1fa137e41787fee907568155805338035bafaad"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-5/revised-frozen.checkpoint.json",
+            "bytes": 535000,
+            "fingerprint": 10992932801286220578,
+            "sha256": "8d045647e4655dc78f58751a4c5fb05feaab9873c46a15ebffb60e5621f0701e"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-5/stale-frozen.checkpoint.json",
+            "bytes": 454586,
+            "fingerprint": 11179871650833254798,
+            "sha256": "6e3e1d35716155cdb3d8605ad16c5e3593d70a186cd8b8a9781ed6543664ed44"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 1623
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 600,
+            "delayed_experiment_credits": 614,
+            "evicted_entries": 0,
+            "factual_transitions": 1623,
+            "failed_goal_episodes": 168,
+            "hypothesis_weights": [
+              0.055552944705611146,
+              0.3327442729629073,
+              0.3058737943895972,
+              0.30582898794188446
+            ],
+            "learned_fingerprint": 3884314701502341592,
+            "learned_transitions": 1623,
+            "model_bytes": 56566,
+            "retained_entries": 143,
+            "useful_experiments": 762
+          },
+          "controller_frozen": false,
+          "factual_events": 1623,
+          "native_meta_observations": 1711,
+          "native_weights": [
+            1.0,
+            0.004040345549583435,
+            0.9464461803436279,
+            1.0,
+            1.0
+          ],
+          "total_external_cost": 1623
+        },
+        "input_checkpoint": {
+          "bytes": 437674,
+          "fingerprint": 16627425118852109564,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-5/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 1623,
+        "retained_learned_transitions": 1623,
+        "input_checkpoint_sha256": "750bed56b0a21d7c04711778566ecf93f67782a44adec68e3641c409c4462a0b"
+      },
+      {
+        "world": 6,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "ca41904541d6439523c07f668b07ff40b18f885be6bcd712f692a090ceab9b5c",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-6/initial.checkpoint.json",
+            "bytes": 567468,
+            "fingerprint": 6004173180430591720,
+            "sha256": "4ce28bd10bd0835438aa39eb4732d6c0bf785f411bdb64884d0f6f1bdd95ea7e"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-6/acquired.checkpoint.json",
+            "bytes": 711295,
+            "fingerprint": 15201613776363323985,
+            "sha256": "5812b3b947db67e3df36587fa41237f69c2d4bc05eeab6f6ca8d268c59ddbfa1"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-6/continuation-unfrozen.checkpoint.json",
+            "bytes": 735558,
+            "fingerprint": 15540979849491723020,
+            "sha256": "6128e9a51e48f3b8a149ed3d14b6a6e17ee6c1fa0973013cbf7a8ee20765690b"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-6/revised-frozen.checkpoint.json",
+            "bytes": 735577,
+            "fingerprint": 13445479837664515647,
+            "sha256": "8143baec2616d39b9c55541e25989fcac30eb2cdb7a0e3475d785aac2e944feb"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-6/stale-frozen.checkpoint.json",
+            "bytes": 581019,
+            "fingerprint": 18277210234950455013,
+            "sha256": "e95519fae87866bd1e31a9d1939b8bb17de58f647335ad9db76681762a69b04d"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 2088
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 560,
+            "delayed_experiment_credits": 652,
+            "evicted_entries": 0,
+            "factual_transitions": 2088,
+            "failed_goal_episodes": 208,
+            "hypothesis_weights": [
+              0.0003662777270310801,
+              0.4171462158506115,
+              0.2912458271179274,
+              0.2912416793044299
+            ],
+            "learned_fingerprint": 7211343768369073512,
+            "learned_transitions": 2088,
+            "model_bytes": 94528,
+            "retained_entries": 232,
+            "useful_experiments": 795
+          },
+          "controller_frozen": false,
+          "factual_events": 2088,
+          "native_meta_observations": 2189,
+          "native_weights": [
+            0.7491864562034607,
+            0.0,
+            0.008622397668659687,
+            0.7508953809738159,
+            0.8111920356750488
+          ],
+          "total_external_cost": 2088
+        },
+        "input_checkpoint": {
+          "bytes": 567468,
+          "fingerprint": 6004173180430591720,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-6/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 2088,
+        "retained_learned_transitions": 2088,
+        "input_checkpoint_sha256": "4ce28bd10bd0835438aa39eb4732d6c0bf785f411bdb64884d0f6f1bdd95ea7e"
+      },
+      {
+        "world": 7,
+        "valid": true,
+        "errors": [],
+        "metadata_sha256": "530065df1e96822320100c1baa141579380eb65cc7f0288f8640f6a5a9152dd7",
+        "checkpoints": {
+          "initial": {
+            "path": "repeat/checkpoints/world-7/initial.checkpoint.json",
+            "bytes": 516801,
+            "fingerprint": 4825087863451964073,
+            "sha256": "eacadf1c6fc6113b206c607ab65c6d020b323e2f237c370b7f6bcdaa22c3cb29"
+          },
+          "acquired": {
+            "path": "repeat/checkpoints/world-7/acquired.checkpoint.json",
+            "bytes": 691479,
+            "fingerprint": 12864530559403688511,
+            "sha256": "fc155d62ea0532fc5587bccb86a01dfd648cffe0ef847655344093a44574e598"
+          },
+          "continuation_unfrozen": {
+            "path": "repeat/checkpoints/world-7/continuation-unfrozen.checkpoint.json",
+            "bytes": 676074,
+            "fingerprint": 707413568412525881,
+            "sha256": "22ff8b43384c0dae2b0d2eddded454dba463f3f15cb27e8c00500e3fb7b376e3"
+          },
+          "revised_frozen": {
+            "path": "repeat/checkpoints/world-7/revised-frozen.checkpoint.json",
+            "bytes": 676093,
+            "fingerprint": 16407948960888129335,
+            "sha256": "0e688142842a56756777197c6c161f863f572527f7d06b5ed6b860e7ec506e04"
+          },
+          "stale_frozen": {
+            "path": "repeat/checkpoints/world-7/stale-frozen.checkpoint.json",
+            "bytes": 691154,
+            "fingerprint": 11799441938685200005,
+            "sha256": "e853ee758a3cc1ca497470ddc8d26b8a85cd13f593f5ef5ae6766e8b9945cea1"
+          }
+        },
+        "before_reacquisition": {
+          "agency_credit": {
+            "externally_forced_actions": 0,
+            "self_selected_actions": 1934
+          },
+          "causal_report": {
+            "compacted_external_cost": 0,
+            "compacted_journal_digest": 0,
+            "compacted_transitions": 0,
+            "compactions": 0,
+            "completed_goal_episodes": 655,
+            "delayed_experiment_credits": 651,
+            "evicted_entries": 0,
+            "factual_transitions": 1934,
+            "failed_goal_episodes": 113,
+            "hypothesis_weights": [
+              0.047259357248338824,
+              0.6858421779197341,
+              0.13345128875277934,
+              0.1334471760791478
+            ],
+            "learned_fingerprint": 1452072956381450132,
+            "learned_transitions": 1934,
+            "model_bytes": 61920,
+            "retained_entries": 160,
+            "useful_experiments": 721
+          },
+          "controller_frozen": false,
+          "factual_events": 1934,
+          "native_meta_observations": 2060,
+          "native_weights": [
+            1.0,
+            0.0,
+            0.1621076762676239,
+            1.0,
+            1.0
+          ],
+          "total_external_cost": 1934
+        },
+        "input_checkpoint": {
+          "bytes": 516801,
+          "fingerprint": 4825087863451964073,
+          "path": "/home/runner/work/Aeterna-v1/Aeterna-v1/retained-evidence/reconstruct/checkpoints/world-7/continuation-unfrozen.checkpoint.json"
+        },
+        "retained_factual_events": 1934,
+        "retained_learned_transitions": 1934,
+        "input_checkpoint_sha256": "eacadf1c6fc6113b206c607ab65c6d020b323e2f237c370b7f6bcdaa22c3cb29"
+      }
+    ]
+  },
+  "repeat": {
+    "verdict": "FAIL",
+    "complete_loop_worlds": 0,
+    "checks": {
+      "all_eight_worlds_valid": true,
+      "acquisition_at_least_80_percent": true,
+      "recovery_at_least_80_percent": true,
+      "complete_loop_in_at_least_six_worlds": false,
+      "recovery_exceeds_frozen_by_20_points": true,
+      "recovery_exceeds_shuffled_cue_by_20_points": true,
+      "recovery_exceeds_random_by_20_points": true
+    },
+    "thresholds": {
+      "aggregate_original_success": 0.8,
+      "aggregate_recovered_success": 0.8,
+      "per_world_original_success": 0.75,
+      "per_world_recovered_success": 0.75,
+      "minimum_complete_worlds": 6,
+      "minimum_control_gap": 0.2,
+      "contradiction_min_support": 3,
+      "contradiction_min_predicted_success": 0.75,
+      "revised_min_failure_probability": 0.6,
+      "minimum_prediction_shift": 0.25,
+      "minimum_matched_held_episodes": 3
+    },
+    "invalid_worlds": []
+  },
+  "comparison": {
+    "aggregate": {
+      "acquire": {
+        "cold": {
+          "actions": 3583,
+          "successes": 1557,
+          "sensor_queries": 1177,
+          "noise_queries": 373,
+          "episodes": 2048,
+          "observed_episodes": 2048,
+          "success_rate": 0.76025390625
+        },
+        "repeat": {
+          "actions": 5028,
+          "successes": 1160,
+          "sensor_queries": 2083,
+          "noise_queries": 936,
+          "episodes": 2048,
+          "observed_episodes": 2048,
+          "success_rate": 0.56640625
+        },
+        "repeat_minus_cold": {
+          "successes": -397,
+          "actions": 1445,
+          "sensor_queries": 906,
+          "noise_queries": 563,
+          "success_rate": -0.19384765625
+        }
+      },
+      "original_held": {
+        "cold": {
+          "actions": 1069,
+          "successes": 504,
+          "sensor_queries": 512,
+          "noise_queries": 45,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.984375
+        },
+        "repeat": {
+          "actions": 1247,
+          "successes": 447,
+          "sensor_queries": 607,
+          "noise_queries": 128,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.873046875
+        },
+        "repeat_minus_cold": {
+          "successes": -57,
+          "actions": 178,
+          "sensor_queries": 95,
+          "noise_queries": 83,
+          "success_rate": -0.111328125
+        }
+      },
+      "adaptive": {
+        "cold": {
+          "actions": 10902,
+          "successes": 3419,
+          "sensor_queries": 4842,
+          "noise_queries": 2007,
+          "episodes": 4096,
+          "observed_episodes": 4096,
+          "success_rate": 0.834716796875
+        },
+        "repeat": {
+          "actions": 10895,
+          "successes": 3687,
+          "sensor_queries": 4904,
+          "noise_queries": 1922,
+          "episodes": 4096,
+          "observed_episodes": 4096,
+          "success_rate": 0.900146484375
+        },
+        "repeat_minus_cold": {
+          "successes": 268,
+          "actions": -7,
+          "sensor_queries": 62,
+          "noise_queries": -85,
+          "success_rate": 0.0654296875
+        }
+      },
+      "frozen": {
+        "cold": {
+          "actions": 8549,
+          "successes": 56,
+          "sensor_queries": 4096,
+          "noise_queries": 357,
+          "episodes": 4096,
+          "observed_episodes": 4096,
+          "success_rate": 0.013671875
+        },
+        "repeat": {
+          "actions": 9997,
+          "successes": 538,
+          "sensor_queries": 4877,
+          "noise_queries": 1024,
+          "episodes": 4096,
+          "observed_episodes": 4096,
+          "success_rate": 0.13134765625
+        },
+        "repeat_minus_cold": {
+          "successes": 482,
+          "actions": 1448,
+          "sensor_queries": 781,
+          "noise_queries": 667,
+          "success_rate": 0.11767578125
+        }
+      },
+      "recovered_held": {
+        "cold": {
+          "actions": 1347,
+          "successes": 512,
+          "sensor_queries": 674,
+          "noise_queries": 161,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 1.0
+        },
+        "repeat": {
+          "actions": 1380,
+          "successes": 512,
+          "sensor_queries": 637,
+          "noise_queries": 231,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 1.0
+        },
+        "repeat_minus_cold": {
+          "successes": 0,
+          "actions": 33,
+          "sensor_queries": -37,
+          "noise_queries": 70,
+          "success_rate": 0.0
+        }
+      },
+      "shuffled_cue_held": {
+        "cold": {
+          "actions": 1347,
+          "successes": 270,
+          "sensor_queries": 674,
+          "noise_queries": 161,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.52734375
+        },
+        "repeat": {
+          "actions": 1385,
+          "successes": 270,
+          "sensor_queries": 641,
+          "noise_queries": 232,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.52734375
+        },
+        "repeat_minus_cold": {
+          "successes": 0,
+          "actions": 38,
+          "sensor_queries": -33,
+          "noise_queries": 71,
+          "success_rate": 0.0
+        }
+      },
+      "stale_held": {
+        "cold": {
+          "actions": 1079,
+          "successes": 10,
+          "sensor_queries": 512,
+          "noise_queries": 55,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.01953125
+        },
+        "repeat": {
+          "actions": 1248,
+          "successes": 64,
+          "sensor_queries": 608,
+          "noise_queries": 128,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.125
+        },
+        "repeat_minus_cold": {
+          "successes": 54,
+          "actions": 169,
+          "sensor_queries": 96,
+          "noise_queries": 73,
+          "success_rate": 0.10546875
+        }
+      },
+      "random_held": {
+        "cold": {
+          "actions": 937,
+          "successes": 240,
+          "sensor_queries": 227,
+          "noise_queries": 219,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.46875
+        },
+        "repeat": {
+          "actions": 937,
+          "successes": 240,
+          "sensor_queries": 227,
+          "noise_queries": 219,
+          "episodes": 512,
+          "observed_episodes": 512,
+          "success_rate": 0.46875
+        },
+        "repeat_minus_cold": {
+          "successes": 0,
+          "actions": 0,
+          "sensor_queries": 0,
+          "noise_queries": 0,
+          "success_rate": 0.0
+        }
+      }
+    },
+    "worlds": [
+      {
+        "world": 0,
+        "cold_complete_loop": false,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.64453125,
+          "original_held": 1.0,
+          "adaptive": 0.90625,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.53125,
+          "stale_held": 0.0,
+          "random_held": 0.53125
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 416,
+            "successes": 165,
+            "sensor_queries": 88,
+            "noise_queries": 76,
+            "terminal_failures": 87,
+            "timeouts": 4
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1127,
+            "successes": 464,
+            "sensor_queries": 532,
+            "noise_queries": 84,
+            "terminal_failures": 47,
+            "timeouts": 1
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 128,
+            "successes": 34,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 30,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 119,
+            "successes": 34,
+            "sensor_queries": 33,
+            "noise_queries": 25,
+            "terminal_failures": 27,
+            "timeouts": 3
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 38,
+            "actions": 174
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 162
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 134
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 63,
+            "actions": 133
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 132
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 132
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 64,
+            "actions": 132
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 128
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.51171875,
+          "original_held": 1.0,
+          "adaptive": 0.908203125,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.53125,
+          "stale_held": 0.0,
+          "random_held": 0.53125
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 618,
+            "successes": 131,
+            "sensor_queries": 315,
+            "noise_queries": 52,
+            "terminal_failures": 120,
+            "timeouts": 5
+          },
+          "original_held": {
+            "actions": 159,
+            "successes": 64,
+            "sensor_queries": 95,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1069,
+            "successes": 465,
+            "sensor_queries": 514,
+            "noise_queries": 46,
+            "terminal_failures": 44,
+            "timeouts": 3
+          },
+          "frozen": {
+            "actions": 1279,
+            "successes": 0,
+            "sensor_queries": 767,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 128,
+            "successes": 34,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 30,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 154,
+            "successes": 0,
+            "sensor_queries": 90,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 119,
+            "successes": 34,
+            "sensor_queries": 33,
+            "noise_queries": 25,
+            "terminal_failures": 27,
+            "timeouts": 3
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 42,
+            "actions": 137
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 130
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 132
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 139
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 134
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 131
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 132
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 134
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": -0.1328125,
+          "original_held": 0.0,
+          "adaptive": 0.001953125,
+          "frozen": 0.0,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.0,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      },
+      {
+        "world": 1,
+        "cold_complete_loop": false,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.93359375,
+          "original_held": 1.0,
+          "adaptive": 0.84375,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.5,
+          "stale_held": 0.0,
+          "random_held": 0.421875
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 523,
+            "successes": 239,
+            "sensor_queries": 245,
+            "noise_queries": 23,
+            "terminal_failures": 16,
+            "timeouts": 1
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1440,
+            "successes": 432,
+            "sensor_queries": 657,
+            "noise_queries": 273,
+            "terminal_failures": 78,
+            "timeouts": 2
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 96,
+            "noise_queries": 32,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 192,
+            "successes": 32,
+            "sensor_queries": 96,
+            "noise_queries": 32,
+            "terminal_failures": 32,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 106,
+            "successes": 27,
+            "sensor_queries": 17,
+            "noise_queries": 25,
+            "terminal_failures": 37,
+            "timeouts": 0
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 19,
+            "actions": 130
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 53,
+            "actions": 184
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 188
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 187
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 189
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 191
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 192
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 179
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.71484375,
+          "original_held": 1.0,
+          "adaptive": 0.896484375,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.5,
+          "stale_held": 0.0,
+          "random_held": 0.421875
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 589,
+            "successes": 183,
+            "sensor_queries": 260,
+            "noise_queries": 75,
+            "terminal_failures": 71,
+            "timeouts": 2
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1482,
+            "successes": 459,
+            "sensor_queries": 694,
+            "noise_queries": 280,
+            "terminal_failures": 49,
+            "timeouts": 4
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 96,
+            "noise_queries": 32,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 192,
+            "successes": 32,
+            "sensor_queries": 96,
+            "noise_queries": 32,
+            "terminal_failures": 32,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 106,
+            "successes": 27,
+            "sensor_queries": 17,
+            "noise_queries": 25,
+            "terminal_failures": 37,
+            "timeouts": 0
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 33,
+            "actions": 171
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 190
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 63,
+            "actions": 186
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 190
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 185
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 63,
+            "actions": 187
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 187
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 186
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": -0.21875,
+          "original_held": 0.0,
+          "adaptive": 0.052734375,
+          "frozen": 0.0,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.0,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      },
+      {
+        "world": 2,
+        "cold_complete_loop": true,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": true,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.9609375,
+          "original_held": 1.0,
+          "adaptive": 0.771484375,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.375,
+          "stale_held": 0.0,
+          "random_held": 0.46875
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 513,
+            "successes": 246,
+            "sensor_queries": 244,
+            "noise_queries": 13,
+            "terminal_failures": 10,
+            "timeouts": 0
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1211,
+            "successes": 395,
+            "sensor_queries": 660,
+            "noise_queries": 40,
+            "terminal_failures": 116,
+            "timeouts": 1
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 160,
+            "successes": 64,
+            "sensor_queries": 96,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 160,
+            "successes": 24,
+            "sensor_queries": 96,
+            "noise_queries": 0,
+            "terminal_failures": 40,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 115,
+            "successes": 30,
+            "sensor_queries": 33,
+            "noise_queries": 20,
+            "terminal_failures": 32,
+            "timeouts": 2
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 26,
+            "actions": 133
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 28,
+            "actions": 130
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 46,
+            "actions": 154
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 163
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 158
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 159
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 57,
+            "actions": 157
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 157
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.6875,
+          "original_held": 1.0,
+          "adaptive": 0.890625,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.375,
+          "stale_held": 0.0,
+          "random_held": 0.46875
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 729,
+            "successes": 176,
+            "sensor_queries": 261,
+            "noise_queries": 216,
+            "terminal_failures": 76,
+            "timeouts": 4
+          },
+          "original_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 64,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1272,
+            "successes": 456,
+            "sensor_queries": 717,
+            "noise_queries": 47,
+            "terminal_failures": 52,
+            "timeouts": 4
+          },
+          "frozen": {
+            "actions": 1536,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 512,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 160,
+            "successes": 64,
+            "sensor_queries": 96,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 160,
+            "successes": 24,
+            "sensor_queries": 96,
+            "noise_queries": 0,
+            "terminal_failures": 40,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 192,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 64,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 115,
+            "successes": 30,
+            "sensor_queries": 33,
+            "noise_queries": 20,
+            "terminal_failures": 32,
+            "timeouts": 2
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 39,
+            "actions": 159
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 57,
+            "actions": 162
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 165
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 162
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 154
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 158
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 154
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 158
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": -0.2734375,
+          "original_held": 0.0,
+          "adaptive": 0.119140625,
+          "frozen": 0.0,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.0,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      },
+      {
+        "world": 3,
+        "cold_complete_loop": true,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": true,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.5703125,
+          "original_held": 1.0,
+          "adaptive": 0.841796875,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.46875,
+          "stale_held": 0.0,
+          "random_held": 0.515625
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 299,
+            "successes": 146,
+            "sensor_queries": 37,
+            "noise_queries": 7,
+            "terminal_failures": 109,
+            "timeouts": 1
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1322,
+            "successes": 431,
+            "sensor_queries": 455,
+            "noise_queries": 360,
+            "terminal_failures": 76,
+            "timeouts": 5
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 128,
+            "successes": 30,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 34,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 109,
+            "successes": 33,
+            "sensor_queries": 20,
+            "noise_queries": 28,
+            "terminal_failures": 28,
+            "timeouts": 3
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 22,
+            "actions": 169
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 50,
+            "actions": 207
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 50,
+            "actions": 208
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 63,
+            "actions": 192
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 152
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 63,
+            "actions": 132
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 131
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 131
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.7265625,
+          "original_held": 1.0,
+          "adaptive": 0.91796875,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.46875,
+          "stale_held": 0.0,
+          "random_held": 0.515625
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 698,
+            "successes": 186,
+            "sensor_queries": 401,
+            "noise_queries": 44,
+            "terminal_failures": 67,
+            "timeouts": 3
+          },
+          "original_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 128,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1052,
+            "successes": 470,
+            "sensor_queries": 514,
+            "noise_queries": 27,
+            "terminal_failures": 41,
+            "timeouts": 1
+          },
+          "frozen": {
+            "actions": 1536,
+            "successes": 0,
+            "sensor_queries": 1024,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 128,
+            "successes": 30,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 34,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 192,
+            "successes": 0,
+            "sensor_queries": 128,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 109,
+            "successes": 33,
+            "sensor_queries": 20,
+            "noise_queries": 28,
+            "terminal_failures": 28,
+            "timeouts": 3
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 47,
+            "actions": 145
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 129
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 132
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 125
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 129
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 63,
+            "actions": 129
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 57,
+            "actions": 128
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 135
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": 0.15625,
+          "original_held": 0.0,
+          "adaptive": 0.076171875,
+          "frozen": 0.0,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.0,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      },
+      {
+        "world": 4,
+        "cold_complete_loop": false,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.9375,
+          "original_held": 1.0,
+          "adaptive": 0.787109375,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.59375,
+          "stale_held": 0.0,
+          "random_held": 0.4375
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 524,
+            "successes": 240,
+            "sensor_queries": 255,
+            "noise_queries": 15,
+            "terminal_failures": 14,
+            "timeouts": 2
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1465,
+            "successes": 403,
+            "sensor_queries": 656,
+            "noise_queries": 307,
+            "terminal_failures": 99,
+            "timeouts": 10
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 92,
+            "noise_queries": 36,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 192,
+            "successes": 38,
+            "sensor_queries": 92,
+            "noise_queries": 36,
+            "terminal_failures": 26,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 123,
+            "successes": 28,
+            "sensor_queries": 30,
+            "noise_queries": 32,
+            "terminal_failures": 33,
+            "timeouts": 3
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 24,
+            "actions": 137
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 26,
+            "actions": 176
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 52,
+            "actions": 207
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 190
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 57,
+            "actions": 189
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 191
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 189
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 186
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.62109375,
+          "original_held": 1.0,
+          "adaptive": 0.8671875,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.59375,
+          "stale_held": 0.0,
+          "random_held": 0.4375
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 600,
+            "successes": 159,
+            "sensor_queries": 264,
+            "noise_queries": 84,
+            "terminal_failures": 93,
+            "timeouts": 4
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1583,
+            "successes": 444,
+            "sensor_queries": 623,
+            "noise_queries": 454,
+            "terminal_failures": 62,
+            "timeouts": 6
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 206,
+            "successes": 64,
+            "sensor_queries": 78,
+            "noise_queries": 64,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 206,
+            "successes": 38,
+            "sensor_queries": 78,
+            "noise_queries": 64,
+            "terminal_failures": 26,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 123,
+            "successes": 28,
+            "sensor_queries": 30,
+            "noise_queries": 32,
+            "terminal_failures": 33,
+            "timeouts": 3
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 28,
+            "actions": 153
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 206
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 201
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 200
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 203
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 212
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 52,
+            "actions": 206
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 202
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": -0.31640625,
+          "original_held": 0.0,
+          "adaptive": 0.080078125,
+          "frozen": 0.0,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.0,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      },
+      {
+        "world": 5,
+        "cold_complete_loop": false,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.5859375,
+          "original_held": 0.875,
+          "adaptive": 0.87890625,
+          "frozen": 0.109375,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.5625,
+          "stale_held": 0.15625,
+          "random_held": 0.375
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 447,
+            "successes": 150,
+            "sensor_queries": 47,
+            "noise_queries": 147,
+            "terminal_failures": 103,
+            "timeouts": 3
+          },
+          "original_held": {
+            "actions": 173,
+            "successes": 56,
+            "sensor_queries": 64,
+            "noise_queries": 45,
+            "terminal_failures": 8,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1176,
+            "successes": 450,
+            "sensor_queries": 506,
+            "noise_queries": 161,
+            "terminal_failures": 59,
+            "timeouts": 3
+          },
+          "frozen": {
+            "actions": 1381,
+            "successes": 56,
+            "sensor_queries": 512,
+            "noise_queries": 357,
+            "terminal_failures": 456,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 128,
+            "successes": 36,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 28,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 183,
+            "successes": 10,
+            "sensor_queries": 64,
+            "noise_queries": 55,
+            "terminal_failures": 54,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 128,
+            "successes": 24,
+            "sensor_queries": 30,
+            "noise_queries": 40,
+            "terminal_failures": 34,
+            "timeouts": 6
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 23,
+            "actions": 160
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 171
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 156
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 63,
+            "actions": 160
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 136
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 134
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 64,
+            "actions": 132
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 127
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": false,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.23828125,
+          "original_held": 0.46875,
+          "adaptive": 0.9140625,
+          "frozen": 0.52734375,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.5625,
+          "stale_held": 0.4375,
+          "random_held": 0.375
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 559,
+            "successes": 61,
+            "sensor_queries": 214,
+            "noise_queries": 96,
+            "terminal_failures": 188,
+            "timeouts": 7
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 30,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 34,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1332,
+            "successes": 468,
+            "sensor_queries": 610,
+            "noise_queries": 214,
+            "terminal_failures": 40,
+            "timeouts": 4
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 270,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 242,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 168,
+            "successes": 64,
+            "sensor_queries": 76,
+            "noise_queries": 28,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 172,
+            "successes": 36,
+            "sensor_queries": 80,
+            "noise_queries": 28,
+            "terminal_failures": 28,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 28,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 36,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 128,
+            "successes": 24,
+            "sensor_queries": 30,
+            "noise_queries": 40,
+            "terminal_failures": 34,
+            "timeouts": 6
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 51,
+            "actions": 144
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 131
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 56,
+            "actions": 160
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 181
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 186
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 177
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 173
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 180
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": -0.34765625,
+          "original_held": -0.40625,
+          "adaptive": 0.03515625,
+          "frozen": 0.41796875,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.28125,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "acquired",
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      },
+      {
+        "world": 6,
+        "cold_complete_loop": true,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": true,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.5390625,
+          "original_held": 1.0,
+          "adaptive": 0.82421875,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.5,
+          "stale_held": 0.0,
+          "random_held": 0.421875
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 375,
+            "successes": 138,
+            "sensor_queries": 42,
+            "noise_queries": 81,
+            "terminal_failures": 114,
+            "timeouts": 4
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1713,
+            "successes": 422,
+            "sensor_queries": 673,
+            "noise_queries": 544,
+            "terminal_failures": 74,
+            "timeouts": 16
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 227,
+            "successes": 64,
+            "sensor_queries": 99,
+            "noise_queries": 64,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 227,
+            "successes": 32,
+            "sensor_queries": 99,
+            "noise_queries": 64,
+            "terminal_failures": 32,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 110,
+            "successes": 27,
+            "sensor_queries": 24,
+            "noise_queries": 23,
+            "terminal_failures": 36,
+            "timeouts": 1
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 29,
+            "actions": 211
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 40,
+            "actions": 208
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 220
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 216
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 55,
+            "actions": 213
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 218
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 56,
+            "actions": 211
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 216
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": false,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.48828125,
+          "original_held": 0.515625,
+          "adaptive": 0.931640625,
+          "frozen": 0.5234375,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.5,
+          "stale_held": 0.5625,
+          "random_held": 0.421875
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 569,
+            "successes": 125,
+            "sensor_queries": 62,
+            "noise_queries": 254,
+            "terminal_failures": 128,
+            "timeouts": 3
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 33,
+            "sensor_queries": 0,
+            "noise_queries": 64,
+            "terminal_failures": 31,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1626,
+            "successes": 477,
+            "sensor_queries": 507,
+            "noise_queries": 611,
+            "terminal_failures": 31,
+            "timeouts": 4
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 268,
+            "sensor_queries": 0,
+            "noise_queries": 512,
+            "terminal_failures": 244,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 206,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 78,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 207,
+            "successes": 32,
+            "sensor_queries": 64,
+            "noise_queries": 79,
+            "terminal_failures": 32,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 36,
+            "sensor_queries": 0,
+            "noise_queries": 64,
+            "terminal_failures": 28,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 110,
+            "successes": 27,
+            "sensor_queries": 24,
+            "noise_queries": 23,
+            "terminal_failures": 36,
+            "timeouts": 1
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 55,
+            "actions": 209
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 200
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 206
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 205
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 194
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 201
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 55,
+            "actions": 204
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 207
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": -0.05078125,
+          "original_held": -0.484375,
+          "adaptive": 0.107421875,
+          "frozen": 0.5234375,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.5625,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "acquired",
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      },
+      {
+        "world": 7,
+        "cold_complete_loop": true,
+        "cold_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": true,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "cold_rates": {
+          "acquire": 0.91015625,
+          "original_held": 1.0,
+          "adaptive": 0.82421875,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.6875,
+          "stale_held": 0.0,
+          "random_held": 0.578125
+        },
+        "cold_phase_totals": {
+          "acquire": {
+            "actions": 486,
+            "successes": 233,
+            "sensor_queries": 219,
+            "noise_queries": 11,
+            "terminal_failures": 23,
+            "timeouts": 0
+          },
+          "original_held": {
+            "actions": 128,
+            "successes": 64,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1448,
+            "successes": 422,
+            "sensor_queries": 703,
+            "noise_queries": 238,
+            "terminal_failures": 85,
+            "timeouts": 5
+          },
+          "frozen": {
+            "actions": 1024,
+            "successes": 0,
+            "sensor_queries": 512,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 99,
+            "noise_queries": 29,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 192,
+            "successes": 44,
+            "sensor_queries": 99,
+            "noise_queries": 29,
+            "terminal_failures": 20,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 128,
+            "successes": 0,
+            "sensor_queries": 64,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 127,
+            "successes": 37,
+            "sensor_queries": 40,
+            "noise_queries": 26,
+            "terminal_failures": 24,
+            "timeouts": 3
+          }
+        },
+        "cold_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 20,
+            "actions": 144
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 42,
+            "actions": 172
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 62,
+            "actions": 195
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 59,
+            "actions": 195
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 188
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 57,
+            "actions": 175
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 186
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 193
+          }
+        ],
+        "repeat_present": true,
+        "repeat_complete_loop": false,
+        "repeat_stages": {
+          "acquired": true,
+          "supported_expectation_contradicted": true,
+          "self_selected_information_after_contradiction": true,
+          "same_context_prediction_corrected": false,
+          "recovered_goal_performance": true,
+          "information_used_in_successful_held_episodes": true,
+          "integrity": true
+        },
+        "repeat_rates": {
+          "acquire": 0.54296875,
+          "original_held": 1.0,
+          "adaptive": 0.875,
+          "frozen": 0.0,
+          "recovered_held": 1.0,
+          "shuffled_cue_held": 0.6875,
+          "stale_held": 0.0,
+          "random_held": 0.578125
+        },
+        "repeat_phase_totals": {
+          "acquire": {
+            "actions": 666,
+            "successes": 139,
+            "sensor_queries": 306,
+            "noise_queries": 115,
+            "terminal_failures": 106,
+            "timeouts": 11
+          },
+          "original_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 128,
+            "noise_queries": 0,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "adaptive": {
+            "actions": 1479,
+            "successes": 448,
+            "sensor_queries": 725,
+            "noise_queries": 243,
+            "terminal_failures": 63,
+            "timeouts": 1
+          },
+          "frozen": {
+            "actions": 1550,
+            "successes": 0,
+            "sensor_queries": 1038,
+            "noise_queries": 0,
+            "terminal_failures": 512,
+            "timeouts": 0
+          },
+          "recovered_held": {
+            "actions": 192,
+            "successes": 64,
+            "sensor_queries": 99,
+            "noise_queries": 29,
+            "terminal_failures": 0,
+            "timeouts": 0
+          },
+          "shuffled_cue_held": {
+            "actions": 192,
+            "successes": 44,
+            "sensor_queries": 99,
+            "noise_queries": 29,
+            "terminal_failures": 20,
+            "timeouts": 0
+          },
+          "stale_held": {
+            "actions": 198,
+            "successes": 0,
+            "sensor_queries": 134,
+            "noise_queries": 0,
+            "terminal_failures": 64,
+            "timeouts": 0
+          },
+          "random_held": {
+            "actions": 127,
+            "successes": 37,
+            "sensor_queries": 40,
+            "noise_queries": 26,
+            "terminal_failures": 24,
+            "timeouts": 3
+          }
+        },
+        "repeat_adaptive_windows": [
+          {
+            "first_episode": 0,
+            "episodes": 64,
+            "successes": 37,
+            "actions": 151
+          },
+          {
+            "first_episode": 64,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 191
+          },
+          {
+            "first_episode": 128,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 193
+          },
+          {
+            "first_episode": 192,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 192
+          },
+          {
+            "first_episode": 256,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 185
+          },
+          {
+            "first_episode": 320,
+            "episodes": 64,
+            "successes": 60,
+            "actions": 189
+          },
+          {
+            "first_episode": 384,
+            "episodes": 64,
+            "successes": 58,
+            "actions": 188
+          },
+          {
+            "first_episode": 448,
+            "episodes": 64,
+            "successes": 61,
+            "actions": 190
+          }
+        ],
+        "repeat_minus_cold_rates": {
+          "acquire": -0.3671875,
+          "original_held": 0.0,
+          "adaptive": 0.05078125,
+          "frozen": 0.0,
+          "recovered_held": 0.0,
+          "shuffled_cue_held": 0.0,
+          "stale_held": 0.0,
+          "random_held": 0.0
+        },
+        "repeat_failed_stages": [
+          "same_context_prediction_corrected"
+        ],
+        "repeat_errors": []
+      }
+    ]
+  },
+  "costs": {
+    "historical_first_pass": {
+      "episodes": 12800,
+      "observed_episodes": 12800,
+      "all_actions": 28813,
+      "runtime_actions": 27876,
+      "random_actions": 937,
+      "learning_actions": 14485
+    },
+    "reconstruction_this_run": {
+      "episodes": 12800,
+      "observed_episodes": 12800,
+      "all_actions": 28813,
+      "runtime_actions": 27876,
+      "random_actions": 937,
+      "learning_actions": 14485
+    },
+    "repeat_this_run": {
+      "episodes": 12800,
+      "observed_episodes": 12800,
+      "all_actions": 32117,
+      "runtime_actions": 31180,
+      "random_actions": 937,
+      "learning_actions": 15923
+    }
+  },
+  "errors": [],
+  "interpretation": [
+    "The first FAIL and its 4/8 complete chains remain unchanged.",
+    "All eight historical traces and parsed summaries must match before any repeat actor starts.",
+    "Reconstruction restores a historical state; it is not a new successful trial.",
+    "The repeat preserves motor/symbol meanings, the original episode schedule and all capability thresholds.",
+    "The retained endpoint knows rule 1; returning to rule 0 is itself an unannounced change.",
+    "Retained state includes RNG/counters/model/policy; this does not isolate causal memory alone.",
+    "No fresh schedule or unrelated-task transfer is measured.",
+    "Goal improvement and stricter forecast correction are reported separately."
+  ]
+}
