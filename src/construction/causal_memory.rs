@@ -133,6 +133,214 @@ pub struct ActionBelief {
     pub support: u64,
     pub unknown_probability: f64,
 }
+
+/// Experimental, default-off inference of applicability from factual POSTs.
+/// This selects no motor and receives no evaluator regime/switch labels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RegimeMode {
+    Ordinary,
+    Phase,
+    PhaseScrambled,
+    PhaseUncoupled,
+}
+
+const REGIME_INITIAL: [f64; 4] = [0.15, 0.25, 0.35, 0.45];
+const REGIME_OMEGA: [f64; 4] = [-0.03, -0.01, 0.01, 0.03];
+// Conservative fixed accounting includes the 32-byte four-channel core,
+// diagnostic state, counters, and their checkpoint encoding. Both banks still
+// share the single original table's entry and byte caps.
+const REGIME_STATE_BYTES: usize = 2048;
+// Fixed conservative work envelope, not an elapsed-time estimate. The update
+// has eight count reads and at most eight four-channel integration substeps.
+const REGIME_UPDATE_WORK: u64 = 8192;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegimeReport {
+    pub mode: RegimeMode,
+    pub bank: usize,
+    pub admitted: bool,
+    pub observations: u64,
+    pub switches: u64,
+    pub birth_surprises: u8,
+    pub state: [f64; 4],
+    pub likelihood_ratio: [f64; 4],
+    pub likelihoods: [[f64; 2]; 4],
+    pub supports: [[u64; 2]; 4],
+    pub weights: [f64; 4],
+    pub readout: f64,
+    /// Charged conservative envelope (8192 per factual inference update),
+    /// not measured CPU operations or elapsed time.
+    pub extra_inference_work: u64,
+    pub state_bytes: usize,
+    pub dynamic_fingerprint: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RegimeState {
+    mode: RegimeMode,
+    enabled_at: u64,
+    bank: usize,
+    admitted: bool,
+    observations: u64,
+    switches: u64,
+    birth_surprises: u8,
+    state: [f64; 4],
+    likelihood_ratio: [f64; 4],
+    likelihoods: [[f64; 2]; 4],
+    supports: [[u64; 2]; 4],
+    weights: [f64; 4],
+    readout: f64,
+    extra_inference_work: u64,
+    innovation: u64,
+}
+
+fn regime_wrap(angle: f64) -> f64 {
+    angle.rem_euclid(std::f64::consts::TAU)
+}
+
+// Angles are relative to a common reference. A common rotation of all
+// physical phases AND that reference therefore leaves these equations intact.
+fn regime_phase_velocity(state: [f64; 4], evidence: [f64; 4], coupling: f64) -> [f64; 4] {
+    std::array::from_fn(|i| {
+        let interaction = (0..4)
+            .filter(|&j| j != i)
+            .map(|j| (state[j] - state[i]).sin())
+            .sum::<f64>()
+            / 3.0;
+        REGIME_OMEGA[i] + coupling * interaction - 2.0 * evidence[i] * state[i].sin()
+    })
+}
+
+impl RegimeState {
+    fn initial(mode: RegimeMode, bank: usize) -> [f64; 4] {
+        REGIME_INITIAL.map(|angle| {
+            let angle = if bank == 0 { angle } else { std::f64::consts::PI - angle };
+            if mode == RegimeMode::Ordinary { (1.0 + angle.cos()) / 2.0 } else { angle }
+        })
+    }
+    fn new(mode: RegimeMode, enabled_at: u64, weights: [f64; 4]) -> Self {
+        let mut state = Self {
+            mode, enabled_at, bank: 0, admitted: false, observations: 0,
+            switches: 0, birth_surprises: 0, state: Self::initial(mode, 0),
+            likelihood_ratio: [0.0; 4], likelihoods: [[0.5; 2]; 4],
+            supports: [[0; 2]; 4], weights, readout: 0.0,
+            extra_inference_work: 0, innovation: 0xa72e_4b19_d038_65cf,
+        };
+        state.refresh_readout();
+        state
+    }
+    fn refresh_readout(&mut self) {
+        self.readout = (0..4).map(|i| {
+            self.weights[i] * if self.mode == RegimeMode::Ordinary {
+                2.0 * self.state[i] - 1.0
+            } else { self.state[i].cos() }
+        }).sum::<f64>().clamp(-1.0, 1.0);
+    }
+    fn report(&self) -> RegimeReport {
+        RegimeReport {
+            mode: self.mode, bank: self.bank, admitted: self.admitted,
+            observations: self.observations, switches: self.switches,
+            birth_surprises: self.birth_surprises, state: self.state,
+            likelihood_ratio: self.likelihood_ratio, likelihoods: self.likelihoods,
+            supports: self.supports, weights: self.weights, readout: self.readout,
+            extra_inference_work: self.extra_inference_work,
+            state_bytes: REGIME_STATE_BYTES,
+            dynamic_fingerprint: super::vm::fingerprint(&serde_json::to_vec(self).unwrap()),
+        }
+    }
+    fn update(&mut self, likelihoods: [[f64; 2]; 4], supports: [[u64; 2]; 4], weights: [f64; 4], learning: bool) {
+        self.likelihoods = likelihoods;
+        self.supports = supports;
+        self.weights = weights;
+        self.observations = self.observations.saturating_add(1);
+        self.extra_inference_work = self.extra_inference_work.saturating_add(REGIME_UPDATE_WORK);
+        let prior_bank = self.bank;
+        let pooled = (0..4).map(|i| weights[i] * likelihoods[i][prior_bank]).sum::<f64>();
+        let support = supports.iter().map(|s| s[prior_bank]).max().unwrap_or(0);
+        let mut born = false;
+        if !self.admitted && learning && support >= 8 {
+            if pooled < 0.25 {
+                self.birth_surprises = self.birth_surprises.saturating_add(1);
+            } else if pooled >= 0.5 {
+                self.birth_surprises = 0;
+            }
+            if self.birth_surprises >= 2 {
+                self.admitted = true;
+                self.bank = 1;
+                self.state = Self::initial(self.mode, 1);
+                born = true;
+            }
+        }
+        self.likelihood_ratio = std::array::from_fn(|i| {
+            let [n0, n1] = supports[i];
+            let [p0, p1] = likelihoods[i];
+            // Knowledge of common sensors is not evidence against an empty
+            // bank. A supported surprising consequence may compare to 0.5.
+            let informative = (n0 >= 8 && n1 >= 8)
+                || (n0 >= 8 && n1 == 0 && p0 < 0.25)
+                || (n1 >= 8 && n0 == 0 && p1 < 0.25);
+            if informative { (p0.max(1e-12) / p1.max(1e-12)).ln().clamp(-4.0, 4.0) }
+            else { 0.0 }
+        });
+        if !born {
+            if self.mode == RegimeMode::Ordinary {
+                for i in 0..4 {
+                    let prior = (0.98 * self.state[i] + 0.01).clamp(1e-12, 1.0 - 1e-12);
+                    let odds = (prior / (1.0 - prior)).ln() + self.likelihood_ratio[i];
+                    self.state[i] = 1.0 / (1.0 + (-odds).exp());
+                }
+            } else {
+                let evidence = self.likelihood_ratio.map(|r| r / 4.0);
+                let coupling = if self.mode == RegimeMode::PhaseUncoupled { 0.0 } else { 0.35 };
+                for _ in 0..8 {
+                    let velocity = regime_phase_velocity(self.state, evidence, coupling);
+                    self.state = std::array::from_fn(|i| regime_wrap(self.state[i] + 0.125 * velocity[i]));
+                }
+            }
+        }
+        // Outcome-independent deterministic innovations preserve unit
+        // magnitude and bank labels, while destroying relative-phase memory.
+        // All arms advance the same innovation state for paired diagnostics.
+        let mut innovations = [0.0; 4];
+        for value in &mut innovations {
+            self.innovation ^= self.innovation << 13;
+            self.innovation ^= self.innovation >> 7;
+            self.innovation ^= self.innovation << 17;
+            *value = ((self.innovation >> 11) as f64 / ((1_u64 << 53) as f64)) * std::f64::consts::TAU;
+        }
+        if self.mode == RegimeMode::PhaseScrambled && !born {
+            self.state = std::array::from_fn(|i| regime_wrap(self.state[i] + innovations[i]));
+        }
+        self.refresh_readout();
+        if self.admitted && !born {
+            if self.readout > 0.2 { self.bank = 0; }
+            else if self.readout < -0.2 { self.bank = 1; }
+        }
+        if self.bank != prior_bank { self.switches = self.switches.saturating_add(1); }
+    }
+    fn validate(&self, events: u64) -> Result<()> {
+        if self.bank > 1 || (!self.admitted && self.bank != 0)
+            || self.birth_surprises > 2 || self.enabled_at.checked_add(self.observations) != Some(events)
+            || self.switches > self.observations
+            || self.extra_inference_work != self.observations.saturating_mul(REGIME_UPDATE_WORK)
+            || self.state.iter().any(|x| !x.is_finite() || if self.mode == RegimeMode::Ordinary {
+                !(0.0..=1.0).contains(x)
+            } else { !(0.0..std::f64::consts::TAU).contains(x) })
+            || self.likelihood_ratio.iter().any(|x| !x.is_finite() || !(-4.0..=4.0).contains(x))
+            || self.likelihoods.iter().flatten().any(|p| !p.is_finite() || !(0.0..=1.0).contains(p))
+            || self.supports.iter().flatten().any(|&n| n > events)
+            || self.weights.iter().any(|w| !w.is_finite() || !(0.0..=1.0).contains(w))
+            || (self.weights.iter().sum::<f64>() - 1.0).abs() > 1e-9
+            || !self.readout.is_finite() || !(-1.0..=1.0).contains(&self.readout)
+        { return Err(Error::InvalidData); }
+        let mut check = self.clone();
+        check.refresh_readout();
+        if (check.readout - self.readout).abs() > 1e-12 { return Err(Error::InvalidData); }
+        Ok(())
+    }
+}
 #[derive(Debug, Clone)]
 pub(crate) struct CausalProposal {
     pub action: usize,
@@ -173,11 +381,18 @@ pub(crate) struct CausalMemory {
     failures: u64,
     experiments: u64,
     rewarded_experiments: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    regime: Option<RegimeState>,
 }
 
 fn key(pre: &[i64], action: usize, context: &[ContextStep], depth: usize) -> String {
     // Exact, canonical keys: no collision can merge physical contexts.
     serde_json::to_string(&(pre, action, &context[context.len().saturating_sub(depth)..])).unwrap()
+}
+
+fn regime_key(pre: &[i64], action: usize, context: &[ContextStep], depth: usize, bank: usize) -> String {
+    let original = key(pre, action, context, depth);
+    if bank == 0 { original } else { format!("r1:{original}") }
 }
 fn entropy(p: impl Iterator<Item = f64>) -> f64 {
     p.filter(|&v| v > 0.0).map(|v| -v * v.ln()).sum()
@@ -240,7 +455,40 @@ impl CausalMemory {
             failures: 0,
             experiments: 0,
             rewarded_experiments: 0,
+            regime: None,
         })
+    }
+    pub(crate) fn enable_regime_inference(&mut self, mode: RegimeMode) -> Result<()> {
+        if self.regime.is_some() || self.config.history_depth != 3 { return Err(Error::Busy); }
+        let bytes = self.bytes.checked_add(REGIME_STATE_BYTES).ok_or(Error::Capacity)?;
+        if bytes > self.config.model_bytes { return Err(Error::Capacity); }
+        let weights: [f64; 4] = self.weights().try_into().map_err(|_| Error::InvalidData)?;
+        // Existing evidence keeps its byte-identical bank-zero keys. No
+        // experience is copied, relabeled, discarded, or replayed here.
+        self.regime = Some(RegimeState::new(mode, self.events, weights));
+        self.bytes = bytes;
+        Ok(())
+    }
+    pub fn regime_report(&self) -> Option<RegimeReport> {
+        self.regime.as_ref().map(RegimeState::report)
+    }
+    fn active_key(&self, pre: &[i64], action: usize, context: &[ContextStep], depth: usize) -> String {
+        regime_key(pre, action, context, depth, self.regime.as_ref().map_or(0, |r| r.bank))
+    }
+    fn infer_regime(&mut self, t: &Transition, learning: bool) -> Option<Vec<f64>> {
+        let bank = self.regime.as_ref()?.bank;
+        let weights: [f64; 4] = self.weights().try_into().expect("four-channel opt-in validated");
+        let samples: [[(f64, u64); 2]; 4] = std::array::from_fn(|i| {
+            std::array::from_fn(|candidate| {
+                self.counts.get(&regime_key(&t.pre, t.action, &self.context, i.min(self.context.len()), candidate))
+                    .map_or((0.5, 0), |c| (c.probability(&t.post), c.total()))
+            })
+        });
+        let probabilities = samples.iter().map(|s| s[bank].0).collect();
+        let likelihoods = samples.map(|s| s.map(|v| v.0));
+        let supports = samples.map(|s| s.map(|v| v.1));
+        self.regime.as_mut().unwrap().update(likelihoods, supports, weights, learning);
+        Some(probabilities)
     }
     pub fn weights(&self) -> Vec<f64> {
         let high = self
@@ -368,6 +616,10 @@ impl CausalMemory {
         if t.restart {
             self.context.clear()
         }
+        // Routing observes the factual POST only after execution. All values
+        // used here were read before updating ANY learned table or score.
+        // Inference remains live when learning is frozen, like context history.
+        let regime_probabilities = self.infer_regime(t, learning);
         if !learning {
             self.context.push(ContextStep {
                 pre: t.pre.clone(),
@@ -383,14 +635,14 @@ impl CausalMemory {
         let depths = (0..=self.config.history_depth)
             .map(|d| d.min(self.context.len()))
             .collect::<Vec<_>>();
-        let probabilities = depths
+        let probabilities = regime_probabilities.unwrap_or_else(|| depths
             .iter()
             .map(|&d| {
                 self.counts
                     .get(&key(&t.pre, t.action, &self.context, d))
                     .map_or(0.5, |c| c.probability(&t.post))
             })
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>());
         for (score, p) in self.scores.iter_mut().zip(probabilities) {
             *score = (0.995 * *score + p.max(1e-12).ln()).max(-1e9)
         }
@@ -403,7 +655,7 @@ impl CausalMemory {
             *score -= high
         }
         for depth in 0..=self.config.history_depth.min(self.context.len()) {
-            let k = key(&t.pre, t.action, &self.context, depth);
+            let k = self.active_key(&t.pre, t.action, &self.context, depth);
             let c = self.counts.entry(k.clone()).or_insert(Counts {
                 outcomes: Vec::new(),
                 other: 0,
@@ -449,7 +701,7 @@ impl CausalMemory {
             .counts
             .iter()
             .map(|(k, c)| 2 * k.len() + c.bytes())
-            .sum();
+            .sum::<usize>() + self.regime.as_ref().map_or(0, |_| REGIME_STATE_BYTES);
         while self.counts.len() > self.config.model_entries || self.bytes > self.config.model_bytes
         {
             // Keep frequent evidence and counterexamples; expire least useful
@@ -534,7 +786,7 @@ impl CausalMemory {
             for (a, offer) in offers.iter().enumerate().filter(|(_, o)| o.available) {
                 let _ = offer;
                 meter.charge((pre.len().saturating_mul(d + 1) + d + 4) as u64)?;
-                if let Some(c) = self.counts.get(&key(pre, a, context, d)) {
+                if let Some(c) = self.counts.get(&self.active_key(pre, a, context, d)) {
                     let value = c
                         .distribution()
                         .iter()
@@ -561,7 +813,7 @@ impl CausalMemory {
                 let mut d = depth.min(context.len());
                 let c = loop {
                     meter.charge((pre.len().saturating_mul(d + 1) + d + 4) as u64)?;
-                    if let Some(c) = self.counts.get(&key(pre, action, context, d)) {
+                    if let Some(c) = self.counts.get(&self.active_key(pre, action, context, d)) {
                         break Some(c);
                     }
                     if d == 0 {
@@ -791,7 +1043,7 @@ impl CausalMemory {
                     while depth > 0
                         && !(0..offers.len()).any(|a| {
                             self.counts
-                                .contains_key(&key(post, a, &next_context, depth))
+                                .contains_key(&self.active_key(post, a, &next_context, depth))
                         })
                     {
                         depth -= 1
@@ -926,6 +1178,10 @@ impl CausalMemory {
         cells: usize,
     ) -> Result<()> {
         self.config.validate()?;
+        if let Some(regime) = &self.regime {
+            if self.config.history_depth != 3 { return Err(Error::InvalidData); }
+            regime.validate(self.events)?;
+        }
         if self.scores.len() != self.config.history_depth + 1
             || self
                 .scores
@@ -949,12 +1205,16 @@ impl CausalMemory {
         {
             return Err(Error::InvalidData);
         }
-        let mut bytes = 0;
+        let mut bytes = self.regime.as_ref().map_or(0, |_| REGIME_STATE_BYTES);
         for (k, c) in &self.counts {
+            let (bank, original) = if let Some(original) = k.strip_prefix("r1:") {
+                if !self.regime.as_ref().is_some_and(|r| r.admitted) { return Err(Error::InvalidData); }
+                (1, original)
+            } else { (0, k.as_str()) };
             let (pre, action, context): (Vec<i64>, usize, Vec<ContextStep>) =
-                serde_json::from_str(k).map_err(|_| Error::InvalidData)?;
+                serde_json::from_str(original).map_err(|_| Error::InvalidData)?;
             if c.depth != context.len()
-                || key(&pre, action, &context, context.len()) != *k
+                || regime_key(&pre, action, &context, context.len(), bank) != *k
                 || pre.len() != width
                 || action >= actions
                 || context.len() > self.config.history_depth
@@ -1010,6 +1270,149 @@ impl CausalMemory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn regime_fixture() -> CausalMemory {
+        let mut memory = CausalMemory::new(CausalConfig { history_depth: 3, ..Default::default() }, 0, vec![]).unwrap();
+        for _ in 0..32 { fact(&mut memory, 0, 0, 1, true); }
+        memory
+    }
+    const REGIME_MODES: [RegimeMode; 4] = [RegimeMode::Ordinary, RegimeMode::Phase,
+        RegimeMode::PhaseScrambled, RegimeMode::PhaseUncoupled];
+
+    #[test]
+    fn regime_enable_preserves_warm_model_and_legacy_encoding() {
+        let legacy = regime_fixture();
+        let bytes = serde_json::to_vec(&legacy).unwrap();
+        assert!(!serde_json::from_slice::<serde_json::Value>(&bytes).unwrap().as_object().unwrap().contains_key("regime"));
+        let restored: CausalMemory = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(serde_json::to_vec(&restored).unwrap(), bytes);
+        for mode in REGIME_MODES {
+            let mut memory = legacy.clone();
+            let counts = serde_json::to_vec(&memory.counts).unwrap();
+            let before = memory.report();
+            memory.enable_regime_inference(mode).unwrap();
+            assert_eq!(serde_json::to_vec(&memory.counts).unwrap(), counts);
+            assert_eq!(memory.scores, legacy.scores);
+            assert_eq!(memory.events, legacy.events);
+            assert_eq!(memory.learned_events, legacy.learned_events);
+            assert_eq!(memory.report().learned_fingerprint, before.learned_fingerprint);
+            assert_eq!(memory.report().model_bytes, before.model_bytes + REGIME_STATE_BYTES);
+            assert_eq!(memory.enable_regime_inference(mode), Err(Error::Busy));
+            memory.validate(1, 1, memory.events, 0, 0).unwrap();
+            let encoded = serde_json::to_vec(&memory).unwrap();
+            let restored: CausalMemory = serde_json::from_slice(&encoded).unwrap();
+            restored.validate(1, 1, restored.events, 0, 0).unwrap();
+            assert_eq!(serde_json::to_vec(&restored).unwrap(), encoded);
+        }
+    }
+
+    #[test]
+    fn regime_birth_is_shared_supported_and_factual() {
+        let mut fingerprints = Vec::new();
+        for mode in REGIME_MODES {
+            let mut memory = regime_fixture();
+            memory.enable_regime_inference(mode).unwrap();
+            fact(&mut memory, 0, 0, 2, true);
+            assert!(!memory.regime.as_ref().unwrap().admitted);
+            assert_eq!(memory.regime.as_ref().unwrap().birth_surprises, 1);
+            // A diagnostic read is not new evidence and cannot admit a bank.
+            let before = serde_json::to_vec(&memory).unwrap();
+            memory.beliefs(&[0], &[ActionOffer { available: true, max_cost: 1 }], None, 100_000).unwrap();
+            assert_eq!(serde_json::to_vec(&memory).unwrap(), before);
+            fact(&mut memory, 0, 0, 2, true);
+            let regime = memory.regime.as_ref().unwrap();
+            assert!(regime.admitted);
+            assert_eq!(regime.bank, 1);
+            assert_eq!(regime.switches, 1);
+            assert_eq!(regime.extra_inference_work, 2 * REGIME_UPDATE_WORK);
+            assert_eq!(memory.counts[&regime_key(&[0], 0, &[], 0, 1)].total(), 1);
+            // The forecast scored on the triggering POST came from bank zero;
+            // only its subsequent learning assignment uses the admitted bank.
+            assert!(regime.likelihoods.iter().all(|p| p[0] < 0.25 && p[1] == 0.5));
+            assert!(regime.supports.iter().all(|n| n[0] == 33 && n[1] == 0));
+            fingerprints.push(memory.report().learned_fingerprint);
+            memory.validate(1, 1, memory.events, 0, 0).unwrap();
+        }
+        assert!(fingerprints.iter().all(|f| *f == fingerprints[0]));
+
+        let mut memory = regime_fixture();
+        memory.enable_regime_inference(RegimeMode::Ordinary).unwrap();
+        fact(&mut memory, 0, 0, 2, true);
+        fact(&mut memory, 0, 0, 1, true);
+        assert_eq!(memory.regime.as_ref().unwrap().birth_surprises, 0);
+        fact(&mut memory, 0, 0, 2, true);
+        assert!(!memory.regime.as_ref().unwrap().admitted);
+    }
+
+    #[test]
+    fn regime_frozen_inference_retains_model_and_survives_reset() {
+        for mode in REGIME_MODES {
+            let mut memory = regime_fixture();
+            memory.enable_regime_inference(mode).unwrap();
+            fact(&mut memory, 0, 0, 2, true);
+            fact(&mut memory, 0, 0, 2, true);
+            let model = memory.report();
+            let before = memory.regime_report().unwrap();
+            let transition = Transition { id: memory.events, restart: true,
+                pre: vec![0], action: 0, post: vec![1] };
+            memory.observe(&transition, false);
+            assert_eq!(memory.report().learned_fingerprint, model.learned_fingerprint);
+            assert_eq!(memory.report().learned_transitions, model.learned_transitions);
+            assert_eq!(memory.regime_report().unwrap().observations, before.observations + 1);
+            assert_ne!(memory.regime_report().unwrap().dynamic_fingerprint, before.dynamic_fingerprint);
+            let dynamic = memory.regime_report().unwrap().dynamic_fingerprint;
+            memory.reset(false);
+            assert_eq!(memory.regime_report().unwrap().dynamic_fingerprint, dynamic);
+            memory.validate(1, 1, memory.events, 0, 0).unwrap();
+            let encoded = serde_json::to_vec(&memory).unwrap();
+            let restored: CausalMemory = serde_json::from_slice(&encoded).unwrap();
+            assert_eq!(serde_json::to_vec(&restored).unwrap(), encoded);
+            restored.validate(1, 1, restored.events, 0, 0).unwrap();
+        }
+    }
+
+    #[test]
+    fn regime_shared_capacity_and_state_validation() {
+        let mut memory = regime_fixture();
+        memory.config.model_entries = 32;
+        memory.config.model_bytes = 16_384;
+        memory.enable_regime_inference(RegimeMode::Phase).unwrap();
+        fact(&mut memory, 0, 0, 2, true);
+        fact(&mut memory, 0, 0, 2, true);
+        for i in 0..192 {
+            fact(&mut memory, i % 40, 0, i % 7, true);
+            assert!(memory.counts.len() <= 32);
+            assert!(memory.bytes <= 16_384);
+            assert!(serde_json::to_vec(memory.regime.as_ref().unwrap()).unwrap().len() <= REGIME_STATE_BYTES);
+        }
+        assert!(memory.evicted > 0);
+        memory.validate(1, 1, memory.events, 0, 0).unwrap();
+        let mut corrupted = memory.clone();
+        corrupted.regime.as_mut().unwrap().observations += 1;
+        assert_eq!(corrupted.validate(1, 1, corrupted.events, 0, 0), Err(Error::InvalidData));
+        let mut corrupted = memory.clone();
+        corrupted.regime.as_mut().unwrap().state[0] = f64::NAN;
+        assert_eq!(corrupted.validate(1, 1, corrupted.events, 0, 0), Err(Error::InvalidData));
+        let mut corrupted = memory.clone();
+        corrupted.bytes -= REGIME_STATE_BYTES;
+        assert_eq!(corrupted.validate(1, 1, corrupted.events, 0, 0), Err(Error::InvalidData));
+    }
+
+    #[test]
+    fn regime_common_rotation_preserves_relative_equations_and_readout() {
+        let reference = 0.7;
+        let rotation = 2.3;
+        let relative = REGIME_INITIAL;
+        let rotated_relative = relative.map(|angle| regime_wrap(regime_wrap(angle + reference + rotation)
+            - regime_wrap(reference + rotation)));
+        let evidence = [-0.8, 0.2, 0.9, -0.3];
+        let before = regime_phase_velocity(relative, evidence, 0.35);
+        let after = regime_phase_velocity(rotated_relative, evidence, 0.35);
+        for i in 0..4 {
+            assert!((before[i] - after[i]).abs() < 1e-12);
+            assert!((relative[i].cos() - rotated_relative[i].cos()).abs() < 1e-12);
+        }
+    }
+
     #[test]
     fn a_full_outcome_set_can_learn_a_new_stable_law_and_later_drift() {
         let mut m = CausalMemory::new(CausalConfig::default(), 0, vec![]).unwrap();

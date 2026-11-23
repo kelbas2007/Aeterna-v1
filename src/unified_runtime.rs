@@ -830,6 +830,13 @@ impl ScientificRuntime {
         if u.freeze_controller{return Err(UError::Busy)}
         u.current.learner.enable_causal_memory(config)
     }
+    /// Default-off contextual inference inside the existing causal loop.
+    /// The caller selects a mechanism, never a context, motor, or switch time.
+    pub fn enable_constructing_regime_inference(&mut self,mode:crate::construction::causal_memory::RegimeMode)->UResult<()> {
+        let u=self.constructing.as_mut().ok_or(UError::NoEvidence)?;
+        if u.freeze_controller{return Err(UError::Busy)}
+        u.current.learner.enable_regime_inference(mode)
+    }
     pub fn enable_constructing_external_reward_memory(&mut self,enabled:bool,adaptive:bool)->UResult<()> {
         self.constructing.as_mut().ok_or(UError::NoEvidence)?.current.learner.enable_external_reward_memory(enabled,adaptive)
     }
@@ -2411,6 +2418,37 @@ mod causal_continuity_credit_tests {
         rt.step_constructing(None,&[UOffer{available:true,max_cost:1},UOffer{available:choice,max_cost:1}],safe,|_|{
             *physical+=1;Ok(UnifiedPost{observation:vec![*physical],reward:0.0,cost:1})
         }).unwrap();
+    }
+    #[test]
+    fn regime_live_warm_full_checkpoint_and_frozen_boundary(){
+        use crate::construction::causal_memory::{CausalConfig,RegimeMode};
+        let mut legacy=runtime_for(false);
+        legacy.enable_constructing_causal_memory(CausalConfig{history_depth:3,..Default::default()}).unwrap();
+        let mut physical=0;
+        for _ in 0..4 {step(&mut legacy,&mut physical,false);}
+        let original=legacy.checkpoint_constructing().unwrap();
+        let loaded=ScientificRuntime::from_constructing_checkpoint(&original).unwrap();
+        assert_eq!(loaded.checkpoint_constructing().unwrap(),original);
+        assert!(loaded.construction_learner().unwrap().causal_regime_report().is_none());
+        for mode in [RegimeMode::Ordinary,RegimeMode::Phase,RegimeMode::PhaseScrambled,RegimeMode::PhaseUncoupled]{
+            let mut rt=ScientificRuntime::from_constructing_checkpoint(&original).unwrap();
+            let before=rt.construction_learner().unwrap().causal_report().unwrap();
+            rt.enable_constructing_regime_inference(mode).unwrap();
+            assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().learned_fingerprint,before.learned_fingerprint);
+            let configured=rt.checkpoint_constructing().unwrap();
+            let mut rt=ScientificRuntime::from_constructing_checkpoint(&configured).unwrap();
+            assert_eq!(rt.checkpoint_constructing().unwrap(),configured);
+            rt.observe_constructing_external_restart(vec![physical]).unwrap();
+            rt.freeze_constructing().unwrap();
+            let model=rt.construction_learner().unwrap().causal_report().unwrap();
+            let mut position=physical;
+            step(&mut rt,&mut position,false);
+            assert_eq!(rt.construction_learner().unwrap().causal_report().unwrap().learned_fingerprint,model.learned_fingerprint);
+            assert_eq!(rt.construction_learner().unwrap().causal_regime_report().unwrap().observations,1);
+            assert!(rt.enable_constructing_regime_inference(mode).is_err());
+            let final_state=rt.checkpoint_constructing().unwrap();
+            assert_eq!(ScientificRuntime::from_constructing_checkpoint(&final_state).unwrap().checkpoint_constructing().unwrap(),final_state);
+        }
     }
     #[test]
     fn changing_goals_closes_old_credit_even_when_no_new_action_is_possible(){

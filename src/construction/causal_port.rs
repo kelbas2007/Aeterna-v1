@@ -24,6 +24,15 @@ impl Learner {
     pub fn causal_report(&self) -> Option<super::causal_memory::CausalReport> {
         self.causal_memory.as_ref().map(|m| m.report())
     }
+    /// Research opt-in on one existing live organism. No learned evidence or
+    /// policy is copied/reset, and no environment-specific label is accepted.
+    pub fn enable_regime_inference(&mut self, mode: super::causal_memory::RegimeMode) -> Result<()> {
+        if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
+        self.causal_memory.as_mut().ok_or(Error::NoEvidence)?.enable_regime_inference(mode)
+    }
+    pub fn causal_regime_report(&self) -> Option<super::causal_memory::RegimeReport> {
+        self.causal_memory.as_ref().and_then(|m| m.regime_report())
+    }
     pub fn causal_memory_enabled(&self) -> bool {
         self.causal_memory.is_some()
     }

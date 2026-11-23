@@ -1,0 +1,103 @@
+name: Integral phase context comparison 2026-11-23
+
+on:
+  push:
+    branches:
+      - experiment/integral-phase-context-20261123
+    paths:
+      - .github/workflows/integral-phase-context-20261123.yml
+
+permissions:
+  contents: read
+
+jobs:
+  phase-context-comparison:
+    if: >-
+      github.event.head_commit.message == 'test: execute frozen phase-context comparison'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 8
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - name: Verify isolated source scope and frozen previous experiments
+        shell: bash
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import subprocess
+          base = 'b714f40c83bb6ba2a9c383d67f3687a67b748ab9'
+          allowed = {
+              'src/construction/causal_memory.rs',
+              'src/construction/causal_port.rs',
+              'src/unified_runtime.rs',
+              'examples/integral_phase_context_eval.rs',
+              'scripts/run_integral_phase_context.py',
+              'docs/experiments/INTEGRAL_PHASE_CONTEXT_20261123_PROTOCOL.md',
+              '.github/workflows/integral-phase-context-20261123.yml',
+          }
+          changed = set(subprocess.check_output(
+              ['git', 'diff', '--name-only', base, 'HEAD'], text=True).splitlines())
+          assert changed == allowed, (changed - allowed, allowed - changed)
+          subprocess.run(['git', 'diff', '--exit-code', base, 'HEAD', '--',
+              'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'tests',
+              'examples/integral_causal_revision_eval.rs',
+              'examples/integral_retained_knowledge_eval.rs',
+              'scripts/run_integral_causal_revision.py',
+              'scripts/run_integral_retained_knowledge.py',
+              'docs/experiments/evidence/integral_causal_revision_20261123',
+              'docs/experiments/evidence/integral_retained_knowledge_20261123'], check=True)
+          PY
+          git diff --exit-code
+          printf 'SOURCE=%s\nRUN_ID=%s\nBASE=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" b714f40c83bb6ba2a9c383d67f3687a67b748ab9 > phase-context-provenance.txt
+          sha256sum src/construction/causal_memory.rs src/construction/causal_port.rs src/unified_runtime.rs examples/integral_phase_context_eval.rs scripts/run_integral_phase_context.py docs/experiments/INTEGRAL_PHASE_CONTEXT_20261123_PROTOCOL.md .github/workflows/integral-phase-context-20261123.yml >> phase-context-provenance.txt
+      - name: Verify focused inference and persistence invariants
+        shell: bash
+        run: cargo test --locked --release --lib regime_ -- --nocapture 2>&1 | tee phase-context-integrity-tests.log
+      - name: Build frozen comparison and original compatibility evaluator
+        run: cargo build --locked --release --example integral_phase_context_eval --example integral_causal_revision_eval
+      - name: Record executables before any behavioral evaluation
+        run: sha256sum target/release/examples/integral_phase_context_eval target/release/examples/integral_causal_revision_eval >> phase-context-provenance.txt
+      - name: Verify unchanged baseline then execute all preregistered arms
+        shell: bash
+        run: |
+          python3 -u scripts/run_integral_phase_context.py --binary target/release/examples/integral_phase_context_eval --legacy-binary target/release/examples/integral_causal_revision_eval --run-id "$GITHUB_RUN_ID" --workers 2 --output phase-context-evidence | tee phase-context-run.log
+      - name: Publish complete comparisons including negative results
+        if: always()
+        shell: bash
+        run: |
+          if test -f phase-context-evidence/RESULT.md; then
+            cat phase-context-evidence/RESULT.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Phase-context comparison incomplete; no capability conclusion is available.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Pack complete evidence without discarding duplicate-state proofs
+        if: always()
+        shell: bash
+        run: |
+          if test -d phase-context-evidence; then
+            tar -c -I 'xz -T2 -6' -f integral-phase-context-evidence.tar.xz phase-context-evidence phase-context-provenance.txt phase-context-run.log phase-context-integrity-tests.log
+            sha256sum integral-phase-context-evidence.tar.xz > integral-phase-context-evidence.tar.xz.sha256
+          fi
+      - name: Preserve all trajectories and checkpoints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integral-phase-context-evidence
+          path: |
+            integral-phase-context-evidence.tar.xz
+            integral-phase-context-evidence.tar.xz.sha256
+            phase-context-evidence/RESULT.md
+            phase-context-evidence/verdict.json
+            phase-context-provenance.txt
+            phase-context-run.log
+            phase-context-integrity-tests.log
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 90
+      - name: Verify tracked source stayed frozen
+        if: always()
+        run: git diff --exit-code
