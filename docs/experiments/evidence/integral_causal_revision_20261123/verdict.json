@@ -1,0 +1,2774 @@
+{
+  "schema": "aeterna.integral-causal-revision.verdict.v1",
+  "verdict": "FAIL",
+  "scope": "Bounded synthetic engineering trial, not general scientific cognition or new causal-theory invention",
+  "base_production_commit": "01a35d0c69c3dec0340c753456ada4a7b7f221da",
+  "seed": 45231338992,
+  "binary_sha256": "9d2a814b7a33c68742dc94844090d47afb2cbf2d4b4cff87dd61a240ff5b7a29",
+  "worlds_expected": 8,
+  "worlds_completed": 8,
+  "complete_loop_worlds": 4,
+  "thresholds": {
+    "aggregate_original_success": 0.8,
+    "aggregate_recovered_success": 0.8,
+    "per_world_original_success": 0.75,
+    "per_world_recovered_success": 0.75,
+    "minimum_complete_worlds": 6,
+    "minimum_control_gap": 0.2,
+    "contradiction_min_support": 3,
+    "contradiction_min_predicted_success": 0.75,
+    "revised_min_failure_probability": 0.6,
+    "minimum_prediction_shift": 0.25,
+    "minimum_matched_held_episodes": 3
+  },
+  "checks": {
+    "all_eight_worlds_valid": true,
+    "acquisition_at_least_80_percent": true,
+    "recovery_at_least_80_percent": true,
+    "complete_loop_in_at_least_six_worlds": false,
+    "recovery_exceeds_frozen_by_20_points": true,
+    "recovery_exceeds_shuffled_cue_by_20_points": true,
+    "recovery_exceeds_random_by_20_points": true
+  },
+  "aggregate": {
+    "acquire": {
+      "actions": 3583,
+      "successes": 1557,
+      "sensor_queries": 1177,
+      "noise_queries": 373,
+      "episodes": 2048,
+      "observed_episodes": 2048,
+      "success_rate": 0.76025390625
+    },
+    "original_held": {
+      "actions": 1069,
+      "successes": 504,
+      "sensor_queries": 512,
+      "noise_queries": 45,
+      "episodes": 512,
+      "observed_episodes": 512,
+      "success_rate": 0.984375
+    },
+    "adaptive": {
+      "actions": 10902,
+      "successes": 3419,
+      "sensor_queries": 4842,
+      "noise_queries": 2007,
+      "episodes": 4096,
+      "observed_episodes": 4096,
+      "success_rate": 0.834716796875
+    },
+    "frozen": {
+      "actions": 8549,
+      "successes": 56,
+      "sensor_queries": 4096,
+      "noise_queries": 357,
+      "episodes": 4096,
+      "observed_episodes": 4096,
+      "success_rate": 0.013671875
+    },
+    "recovered_held": {
+      "actions": 1347,
+      "successes": 512,
+      "sensor_queries": 674,
+      "noise_queries": 161,
+      "episodes": 512,
+      "observed_episodes": 512,
+      "success_rate": 1.0
+    },
+    "shuffled_cue_held": {
+      "actions": 1347,
+      "successes": 270,
+      "sensor_queries": 674,
+      "noise_queries": 161,
+      "episodes": 512,
+      "observed_episodes": 512,
+      "success_rate": 0.52734375
+    },
+    "stale_held": {
+      "actions": 1079,
+      "successes": 10,
+      "sensor_queries": 512,
+      "noise_queries": 55,
+      "episodes": 512,
+      "observed_episodes": 512,
+      "success_rate": 0.01953125
+    },
+    "random_held": {
+      "actions": 937,
+      "successes": 240,
+      "sensor_queries": 227,
+      "noise_queries": 219,
+      "episodes": 512,
+      "observed_episodes": 512,
+      "success_rate": 0.46875
+    }
+  },
+  "worlds": [
+    {
+      "world": 0,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.64453125,
+        "original_held": 1.0,
+        "adaptive": 0.90625,
+        "frozen": 0.0,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.53125,
+        "stale_held": 0.0,
+        "random_held": 0.53125
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 416,
+          "successes": 165,
+          "sensor_queries": 88,
+          "noise_queries": 76,
+          "terminal_failures": 87,
+          "timeouts": 4
+        },
+        "original_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1127,
+          "successes": 464,
+          "sensor_queries": 532,
+          "noise_queries": 84,
+          "terminal_failures": 47,
+          "timeouts": 1
+        },
+        "frozen": {
+          "actions": 1024,
+          "successes": 0,
+          "sensor_queries": 512,
+          "noise_queries": 0,
+          "terminal_failures": 512,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 128,
+          "successes": 34,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 30,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 128,
+          "successes": 0,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 64,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 119,
+          "successes": 34,
+          "sensor_queries": 33,
+          "noise_queries": 25,
+          "terminal_failures": 27,
+          "timeouts": 3
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": false,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": false,
+      "chronological_information_revision_chains": 0,
+      "contradiction_count": 31,
+      "first_contradiction": {
+        "at": {
+          "world": 0,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 1,
+          "event": 418,
+          "action": 1,
+          "role": "actuator0",
+          "source": "predict"
+        },
+        "support": 37,
+        "p_success_before": 1.0,
+        "p_failure_before": 0,
+        "pre": [
+          0,
+          101
+        ],
+        "history": [
+          {
+            "action": 2,
+            "post": [
+              0,
+              101
+            ],
+            "pre": [
+              0,
+              211
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 531,
+      "first_information_action_after_contradiction": {
+        "world": 0,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 419,
+        "action": 2,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 38,
+          "actions": 174
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 59,
+          "actions": 162
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 134
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 63,
+          "actions": 133
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 132
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 61,
+          "actions": 132
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 64,
+          "actions": 132
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 59,
+          "actions": 128
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 146,
+          "recall": 10,
+          "causal-belief-plan": 126,
+          "plan": 11,
+          "causal-belief-experiment": 123
+        },
+        "original_held": {
+          "causal-belief-experiment": 64,
+          "predict": 29,
+          "causal-belief-plan": 35
+        },
+        "adaptive": {
+          "causal-belief-experiment": 599,
+          "predict": 316,
+          "causal-belief-plan": 192,
+          "recall": 15,
+          "plan": 5
+        },
+        "frozen": {
+          "causal-belief-experiment": 512,
+          "predict": 259,
+          "causal-belief-plan": 253
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 64,
+          "predict": 37,
+          "causal-belief-plan": 27
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 64,
+          "predict": 36,
+          "causal-belief-plan": 28
+        },
+        "stale_held": {
+          "causal-belief-experiment": 64,
+          "predict": 27,
+          "causal-belief-plan": 37
+        },
+        "random_held": {
+          "uniform-random": 119
+        }
+      }
+    },
+    {
+      "world": 1,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.93359375,
+        "original_held": 1.0,
+        "adaptive": 0.84375,
+        "frozen": 0.0,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.5,
+        "stale_held": 0.0,
+        "random_held": 0.421875
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 523,
+          "successes": 239,
+          "sensor_queries": 245,
+          "noise_queries": 23,
+          "terminal_failures": 16,
+          "timeouts": 1
+        },
+        "original_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1440,
+          "successes": 432,
+          "sensor_queries": 657,
+          "noise_queries": 273,
+          "terminal_failures": 78,
+          "timeouts": 2
+        },
+        "frozen": {
+          "actions": 1024,
+          "successes": 0,
+          "sensor_queries": 512,
+          "noise_queries": 0,
+          "terminal_failures": 512,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 192,
+          "successes": 64,
+          "sensor_queries": 96,
+          "noise_queries": 32,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 192,
+          "successes": 32,
+          "sensor_queries": 96,
+          "noise_queries": 32,
+          "terminal_failures": 32,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 128,
+          "successes": 0,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 64,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 106,
+          "successes": 27,
+          "sensor_queries": 17,
+          "noise_queries": 25,
+          "terminal_failures": 37,
+          "timeouts": 0
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": false,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": false,
+      "chronological_information_revision_chains": 0,
+      "contradiction_count": 44,
+      "first_contradiction": {
+        "at": {
+          "world": 1,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 1,
+          "event": 525,
+          "action": 2,
+          "role": "actuator1",
+          "source": "causal-belief-plan"
+        },
+        "support": 109,
+        "p_success_before": 1.0,
+        "p_failure_before": 0,
+        "pre": [
+          0,
+          733
+        ],
+        "history": [
+          {
+            "action": 0,
+            "post": [
+              0,
+              733
+            ],
+            "pre": [
+              0,
+              307
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 656,
+      "first_information_action_after_contradiction": {
+        "world": 1,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 526,
+        "action": 0,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 19,
+          "actions": 130
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 53,
+          "actions": 184
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 188
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 187
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 61,
+          "actions": 189
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 59,
+          "actions": 191
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 192
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 58,
+          "actions": 179
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 151,
+          "recall": 5,
+          "causal-belief-experiment": 237,
+          "plan": 4,
+          "causal-belief-plan": 126
+        },
+        "original_held": {
+          "causal-belief-experiment": 64,
+          "predict": 27,
+          "causal-belief-plan": 37
+        },
+        "adaptive": {
+          "causal-belief-experiment": 630,
+          "causal-belief-plan": 463,
+          "predict": 318,
+          "recall": 22,
+          "plan": 7
+        },
+        "frozen": {
+          "causal-belief-experiment": 512,
+          "causal-belief-plan": 269,
+          "predict": 243
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 96,
+          "causal-belief-plan": 58,
+          "predict": 38
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 96,
+          "causal-belief-plan": 63,
+          "predict": 33
+        },
+        "stale_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 28,
+          "predict": 36
+        },
+        "random_held": {
+          "uniform-random": 106
+        }
+      }
+    },
+    {
+      "world": 2,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.9609375,
+        "original_held": 1.0,
+        "adaptive": 0.771484375,
+        "frozen": 0.0,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.375,
+        "stale_held": 0.0,
+        "random_held": 0.46875
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 513,
+          "successes": 246,
+          "sensor_queries": 244,
+          "noise_queries": 13,
+          "terminal_failures": 10,
+          "timeouts": 0
+        },
+        "original_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1211,
+          "successes": 395,
+          "sensor_queries": 660,
+          "noise_queries": 40,
+          "terminal_failures": 116,
+          "timeouts": 1
+        },
+        "frozen": {
+          "actions": 1024,
+          "successes": 0,
+          "sensor_queries": 512,
+          "noise_queries": 0,
+          "terminal_failures": 512,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 160,
+          "successes": 64,
+          "sensor_queries": 96,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 160,
+          "successes": 24,
+          "sensor_queries": 96,
+          "noise_queries": 0,
+          "terminal_failures": 40,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 128,
+          "successes": 0,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 64,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 115,
+          "successes": 30,
+          "sensor_queries": 33,
+          "noise_queries": 20,
+          "terminal_failures": 32,
+          "timeouts": 2
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": true,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": true,
+      "chronological_information_revision_chains": 1,
+      "contradiction_count": 68,
+      "first_contradiction": {
+        "at": {
+          "world": 2,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 1,
+          "event": 515,
+          "action": 1,
+          "role": "actuator1",
+          "source": "causal-belief-plan"
+        },
+        "support": 108,
+        "p_success_before": 1.0,
+        "p_failure_before": 0,
+        "pre": [
+          0,
+          419
+        ],
+        "history": [
+          {
+            "action": 2,
+            "post": [
+              0,
+              419
+            ],
+            "pre": [
+              0,
+              307
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 659,
+      "first_information_action_after_contradiction": {
+        "world": 2,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 516,
+        "action": 2,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [
+        {
+          "before": {
+            "at": {
+              "world": 2,
+              "phase": "adaptive",
+              "episode": 40,
+              "step": 2,
+              "event": 599,
+              "action": 3,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "support": 131,
+            "p_success_before": 0.9578388296905611,
+            "p_failure_before": 0.04216117030943902,
+            "pre": [
+              0,
+              211
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  211
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              },
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  211
+                ],
+                "pre": [
+                  0,
+                  211
+                ]
+              }
+            ]
+          },
+          "samples": [
+            {
+              "at": {
+                "world": 2,
+                "phase": "recovered_held",
+                "episode": 0,
+                "step": 2,
+                "event": 1727,
+                "action": 1,
+                "role": "actuator1",
+                "source": "predict"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.6696706192406019,
+              "shift": 0.6275094489311629
+            },
+            {
+              "at": {
+                "world": 2,
+                "phase": "recovered_held",
+                "episode": 2,
+                "step": 2,
+                "event": 1732,
+                "action": 1,
+                "role": "actuator1",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.6696706192406019,
+              "shift": 0.6275094489311629
+            },
+            {
+              "at": {
+                "world": 2,
+                "phase": "recovered_held",
+                "episode": 4,
+                "step": 2,
+                "event": 1737,
+                "action": 1,
+                "role": "actuator1",
+                "source": "predict"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.6696706192406019,
+              "shift": 0.6275094489311629
+            }
+          ],
+          "matched_episodes": [
+            0,
+            2,
+            4,
+            5,
+            6,
+            8,
+            10,
+            12,
+            14,
+            15,
+            18,
+            21,
+            22,
+            25,
+            31,
+            32,
+            33,
+            34,
+            36,
+            39,
+            40,
+            41,
+            47,
+            48,
+            49,
+            50,
+            54,
+            56,
+            57,
+            58,
+            59,
+            60
+          ],
+          "information_after_this_contradiction": {
+            "world": 2,
+            "phase": "adaptive",
+            "episode": 41,
+            "step": 0,
+            "event": 600,
+            "action": 2,
+            "role": "informative_sensor",
+            "source": "causal-belief-plan"
+          }
+        }
+      ],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 26,
+          "actions": 133
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 28,
+          "actions": 130
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 46,
+          "actions": 154
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 163
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 58,
+          "actions": 158
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 59,
+          "actions": 159
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 57,
+          "actions": 157
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 59,
+          "actions": 157
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 153,
+          "recall": 2,
+          "causal-belief-plan": 119,
+          "plan": 4,
+          "causal-belief-experiment": 235
+        },
+        "original_held": {
+          "causal-belief-experiment": 64,
+          "predict": 32,
+          "causal-belief-plan": 32
+        },
+        "adaptive": {
+          "predict": 305,
+          "causal-belief-plan": 472,
+          "causal-belief-experiment": 407,
+          "recall": 13,
+          "plan": 14
+        },
+        "frozen": {
+          "causal-belief-experiment": 512,
+          "causal-belief-plan": 246,
+          "predict": 266
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 85,
+          "causal-belief-plan": 48,
+          "predict": 27
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 80,
+          "causal-belief-plan": 44,
+          "predict": 36
+        },
+        "stale_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 30,
+          "predict": 34
+        },
+        "random_held": {
+          "uniform-random": 115
+        }
+      }
+    },
+    {
+      "world": 3,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.5703125,
+        "original_held": 1.0,
+        "adaptive": 0.841796875,
+        "frozen": 0.0,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.46875,
+        "stale_held": 0.0,
+        "random_held": 0.515625
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 299,
+          "successes": 146,
+          "sensor_queries": 37,
+          "noise_queries": 7,
+          "terminal_failures": 109,
+          "timeouts": 1
+        },
+        "original_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1322,
+          "successes": 431,
+          "sensor_queries": 455,
+          "noise_queries": 360,
+          "terminal_failures": 76,
+          "timeouts": 5
+        },
+        "frozen": {
+          "actions": 1024,
+          "successes": 0,
+          "sensor_queries": 512,
+          "noise_queries": 0,
+          "terminal_failures": 512,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 128,
+          "successes": 30,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 34,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 128,
+          "successes": 0,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 64,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 109,
+          "successes": 33,
+          "sensor_queries": 20,
+          "noise_queries": 28,
+          "terminal_failures": 28,
+          "timeouts": 3
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": true,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": true,
+      "chronological_information_revision_chains": 1,
+      "contradiction_count": 18,
+      "first_contradiction": {
+        "at": {
+          "world": 3,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 1,
+          "event": 301,
+          "action": 1,
+          "role": "actuator1",
+          "source": "predict"
+        },
+        "support": 11,
+        "p_success_before": 1.0,
+        "p_failure_before": 0,
+        "pre": [
+          0,
+          617
+        ],
+        "history": [
+          {
+            "action": 3,
+            "post": [
+              0,
+              617
+            ],
+            "pre": [
+              0,
+              307
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 454,
+      "first_information_action_after_contradiction": {
+        "world": 3,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 302,
+        "action": 3,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [
+        {
+          "before": {
+            "at": {
+              "world": 3,
+              "phase": "adaptive",
+              "episode": 0,
+              "step": 1,
+              "event": 301,
+              "action": 1,
+              "role": "actuator1",
+              "source": "predict"
+            },
+            "support": 11,
+            "p_success_before": 1.0,
+            "p_failure_before": 0,
+            "pre": [
+              0,
+              617
+            ],
+            "history": [
+              {
+                "action": 3,
+                "post": [
+                  0,
+                  617
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              }
+            ]
+          },
+          "samples": [
+            {
+              "at": {
+                "world": 3,
+                "phase": "recovered_held",
+                "episode": 0,
+                "step": 1,
+                "event": 1623,
+                "action": 0,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.689173741895825,
+              "shift": 0.689173741895825
+            },
+            {
+              "at": {
+                "world": 3,
+                "phase": "recovered_held",
+                "episode": 2,
+                "step": 1,
+                "event": 1627,
+                "action": 0,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.689173741895825,
+              "shift": 0.689173741895825
+            },
+            {
+              "at": {
+                "world": 3,
+                "phase": "recovered_held",
+                "episode": 3,
+                "step": 1,
+                "event": 1629,
+                "action": 0,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.689173741895825,
+              "shift": 0.689173741895825
+            }
+          ],
+          "matched_episodes": [
+            0,
+            2,
+            3,
+            4,
+            10,
+            11,
+            14,
+            15,
+            16,
+            17,
+            19,
+            22,
+            23,
+            24,
+            26,
+            28,
+            30,
+            31,
+            38,
+            39,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            48,
+            49,
+            50,
+            51,
+            53,
+            54,
+            55,
+            56,
+            58,
+            60,
+            62
+          ],
+          "information_after_this_contradiction": {
+            "world": 3,
+            "phase": "adaptive",
+            "episode": 1,
+            "step": 0,
+            "event": 302,
+            "action": 3,
+            "role": "informative_sensor",
+            "source": "causal-belief-experiment"
+          }
+        }
+      ],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 22,
+          "actions": 169
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 50,
+          "actions": 207
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 50,
+          "actions": 208
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 63,
+          "actions": 192
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 61,
+          "actions": 152
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 63,
+          "actions": 132
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 131
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 131
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 132,
+          "recall": 6,
+          "causal-belief-plan": 126,
+          "causal-belief-experiment": 30,
+          "plan": 5
+        },
+        "original_held": {
+          "causal-belief-experiment": 64,
+          "predict": 20,
+          "causal-belief-plan": 44
+        },
+        "adaptive": {
+          "causal-belief-experiment": 745,
+          "predict": 313,
+          "causal-belief-plan": 234,
+          "recall": 17,
+          "plan": 13
+        },
+        "frozen": {
+          "causal-belief-experiment": 512,
+          "predict": 257,
+          "causal-belief-plan": 255
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 64,
+          "predict": 31,
+          "causal-belief-plan": 33
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 33,
+          "predict": 31
+        },
+        "stale_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 30,
+          "predict": 34
+        },
+        "random_held": {
+          "uniform-random": 109
+        }
+      }
+    },
+    {
+      "world": 4,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.9375,
+        "original_held": 1.0,
+        "adaptive": 0.787109375,
+        "frozen": 0.0,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.59375,
+        "stale_held": 0.0,
+        "random_held": 0.4375
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 524,
+          "successes": 240,
+          "sensor_queries": 255,
+          "noise_queries": 15,
+          "terminal_failures": 14,
+          "timeouts": 2
+        },
+        "original_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1465,
+          "successes": 403,
+          "sensor_queries": 656,
+          "noise_queries": 307,
+          "terminal_failures": 99,
+          "timeouts": 10
+        },
+        "frozen": {
+          "actions": 1024,
+          "successes": 0,
+          "sensor_queries": 512,
+          "noise_queries": 0,
+          "terminal_failures": 512,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 192,
+          "successes": 64,
+          "sensor_queries": 92,
+          "noise_queries": 36,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 192,
+          "successes": 38,
+          "sensor_queries": 92,
+          "noise_queries": 36,
+          "terminal_failures": 26,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 128,
+          "successes": 0,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 64,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 123,
+          "successes": 28,
+          "sensor_queries": 30,
+          "noise_queries": 32,
+          "terminal_failures": 33,
+          "timeouts": 3
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": false,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": false,
+      "chronological_information_revision_chains": 0,
+      "contradiction_count": 66,
+      "first_contradiction": {
+        "at": {
+          "world": 4,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 1,
+          "event": 526,
+          "action": 3,
+          "role": "actuator1",
+          "source": "causal-belief-plan"
+        },
+        "support": 117,
+        "p_success_before": 1.0,
+        "p_failure_before": 0,
+        "pre": [
+          0,
+          307
+        ],
+        "history": [
+          {
+            "action": 2,
+            "post": [
+              0,
+              307
+            ],
+            "pre": [
+              0,
+              503
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 655,
+      "first_information_action_after_contradiction": {
+        "world": 4,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 527,
+        "action": 2,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 24,
+          "actions": 137
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 26,
+          "actions": 176
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 52,
+          "actions": 207
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 190
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 57,
+          "actions": 189
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 191
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 189
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 186
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 153,
+          "causal-belief-experiment": 238,
+          "plan": 1,
+          "recall": 6,
+          "causal-belief-plan": 126
+        },
+        "original_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 29,
+          "predict": 35
+        },
+        "adaptive": {
+          "causal-belief-experiment": 569,
+          "causal-belief-plan": 507,
+          "predict": 342,
+          "recall": 39,
+          "plan": 8
+        },
+        "frozen": {
+          "causal-belief-experiment": 512,
+          "causal-belief-plan": 261,
+          "predict": 251
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 100,
+          "predict": 39,
+          "causal-belief-plan": 53
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 100,
+          "predict": 32,
+          "causal-belief-plan": 60
+        },
+        "stale_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 41,
+          "predict": 23
+        },
+        "random_held": {
+          "uniform-random": 123
+        }
+      }
+    },
+    {
+      "world": 5,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.5859375,
+        "original_held": 0.875,
+        "adaptive": 0.87890625,
+        "frozen": 0.109375,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.5625,
+        "stale_held": 0.15625,
+        "random_held": 0.375
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 447,
+          "successes": 150,
+          "sensor_queries": 47,
+          "noise_queries": 147,
+          "terminal_failures": 103,
+          "timeouts": 3
+        },
+        "original_held": {
+          "actions": 173,
+          "successes": 56,
+          "sensor_queries": 64,
+          "noise_queries": 45,
+          "terminal_failures": 8,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1176,
+          "successes": 450,
+          "sensor_queries": 506,
+          "noise_queries": 161,
+          "terminal_failures": 59,
+          "timeouts": 3
+        },
+        "frozen": {
+          "actions": 1381,
+          "successes": 56,
+          "sensor_queries": 512,
+          "noise_queries": 357,
+          "terminal_failures": 456,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 128,
+          "successes": 36,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 28,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 183,
+          "successes": 10,
+          "sensor_queries": 64,
+          "noise_queries": 55,
+          "terminal_failures": 54,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 128,
+          "successes": 24,
+          "sensor_queries": 30,
+          "noise_queries": 40,
+          "terminal_failures": 34,
+          "timeouts": 6
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": false,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": false,
+      "chronological_information_revision_chains": 0,
+      "contradiction_count": 9,
+      "first_contradiction": {
+        "at": {
+          "world": 5,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 2,
+          "event": 450,
+          "action": 3,
+          "role": "actuator0",
+          "source": "predict"
+        },
+        "support": 47,
+        "p_success_before": 0.8804134381562707,
+        "p_failure_before": 0.11958656184372947,
+        "pre": [
+          0,
+          211
+        ],
+        "history": [
+          {
+            "action": 2,
+            "post": [
+              0,
+              101
+            ],
+            "pre": [
+              0,
+              617
+            ]
+          },
+          {
+            "action": 0,
+            "post": [
+              0,
+              211
+            ],
+            "pre": [
+              0,
+              101
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 505,
+      "first_information_action_after_contradiction": {
+        "world": 5,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 451,
+        "action": 2,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 23,
+          "actions": 160
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 58,
+          "actions": 171
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 59,
+          "actions": 156
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 63,
+          "actions": 160
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 136
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 134
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 64,
+          "actions": 132
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 61,
+          "actions": 127
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 142,
+          "recall": 6,
+          "causal-belief-plan": 134,
+          "plan": 4,
+          "causal-belief-experiment": 161
+        },
+        "original_held": {
+          "causal-belief-experiment": 117,
+          "predict": 31,
+          "causal-belief-plan": 25
+        },
+        "adaptive": {
+          "causal-belief-experiment": 635,
+          "predict": 296,
+          "causal-belief-plan": 221,
+          "plan": 10,
+          "recall": 14
+        },
+        "frozen": {
+          "causal-belief-experiment": 925,
+          "predict": 225,
+          "causal-belief-plan": 231
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 27,
+          "predict": 37
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 36,
+          "predict": 28
+        },
+        "stale_held": {
+          "causal-belief-experiment": 129,
+          "causal-belief-plan": 22,
+          "predict": 32
+        },
+        "random_held": {
+          "uniform-random": 128
+        }
+      }
+    },
+    {
+      "world": 6,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.5390625,
+        "original_held": 1.0,
+        "adaptive": 0.82421875,
+        "frozen": 0.0,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.5,
+        "stale_held": 0.0,
+        "random_held": 0.421875
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 375,
+          "successes": 138,
+          "sensor_queries": 42,
+          "noise_queries": 81,
+          "terminal_failures": 114,
+          "timeouts": 4
+        },
+        "original_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1713,
+          "successes": 422,
+          "sensor_queries": 673,
+          "noise_queries": 544,
+          "terminal_failures": 74,
+          "timeouts": 16
+        },
+        "frozen": {
+          "actions": 1024,
+          "successes": 0,
+          "sensor_queries": 512,
+          "noise_queries": 0,
+          "terminal_failures": 512,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 227,
+          "successes": 64,
+          "sensor_queries": 99,
+          "noise_queries": 64,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 227,
+          "successes": 32,
+          "sensor_queries": 99,
+          "noise_queries": 64,
+          "terminal_failures": 32,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 128,
+          "successes": 0,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 64,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 110,
+          "successes": 27,
+          "sensor_queries": 24,
+          "noise_queries": 23,
+          "terminal_failures": 36,
+          "timeouts": 1
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": true,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": true,
+      "chronological_information_revision_chains": 3,
+      "contradiction_count": 23,
+      "first_contradiction": {
+        "at": {
+          "world": 6,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 1,
+          "event": 377,
+          "action": 1,
+          "role": "actuator0",
+          "source": "predict"
+        },
+        "support": 11,
+        "p_success_before": 1.0,
+        "p_failure_before": 0,
+        "pre": [
+          0,
+          733
+        ],
+        "history": [
+          {
+            "action": 2,
+            "post": [
+              0,
+              733
+            ],
+            "pre": [
+              0,
+              307
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 672,
+      "first_information_action_after_contradiction": {
+        "world": 6,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 378,
+        "action": 2,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [
+        {
+          "before": {
+            "at": {
+              "world": 6,
+              "phase": "adaptive",
+              "episode": 7,
+              "step": 2,
+              "event": 396,
+              "action": 3,
+              "role": "actuator1",
+              "source": "causal-belief-experiment"
+            },
+            "support": 7,
+            "p_success_before": 0.827425099731776,
+            "p_failure_before": 0.17257490026822392,
+            "pre": [
+              0,
+              419
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  617
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              },
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  419
+                ],
+                "pre": [
+                  0,
+                  617
+                ]
+              }
+            ]
+          },
+          "samples": [
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 0,
+                "step": 2,
+                "event": 2091,
+                "action": 1,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.8432436424001403,
+              "shift": 0.6706687421319164
+            },
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 3,
+                "step": 2,
+                "event": 2102,
+                "action": 1,
+                "role": "actuator0",
+                "source": "predict"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.8432436424001403,
+              "shift": 0.6706687421319164
+            },
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 5,
+                "step": 2,
+                "event": 2108,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.8432436424001403,
+              "shift": 0.6706687421319164
+            }
+          ],
+          "matched_episodes": [
+            0,
+            3,
+            5,
+            8,
+            12,
+            18,
+            21,
+            25,
+            33,
+            35,
+            49,
+            52,
+            53,
+            58
+          ],
+          "information_after_this_contradiction": {
+            "world": 6,
+            "phase": "adaptive",
+            "episode": 8,
+            "step": 0,
+            "event": 397,
+            "action": 2,
+            "role": "informative_sensor",
+            "source": "causal-belief-experiment"
+          }
+        },
+        {
+          "before": {
+            "at": {
+              "world": 6,
+              "phase": "adaptive",
+              "episode": 385,
+              "step": 3,
+              "event": 1667,
+              "action": 1,
+              "role": "actuator0",
+              "source": "predict"
+            },
+            "support": 79,
+            "p_success_before": 0.8860759493670886,
+            "p_failure_before": 0.11392405063291139,
+            "pre": [
+              0,
+              419
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              },
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  733
+                ]
+              },
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  419
+                ],
+                "pre": [
+                  0,
+                  733
+                ]
+              }
+            ]
+          },
+          "samples": [
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 1,
+                "step": 3,
+                "event": 2095,
+                "action": 3,
+                "role": "actuator1",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.9996740464264036,
+              "shift": 0.8857499957934922
+            },
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 2,
+                "step": 3,
+                "event": 2099,
+                "action": 3,
+                "role": "actuator1",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.9996740464264036,
+              "shift": 0.8857499957934922
+            },
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 11,
+                "step": 3,
+                "event": 2130,
+                "action": 3,
+                "role": "actuator1",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.9996740464264036,
+              "shift": 0.8857499957934922
+            }
+          ],
+          "matched_episodes": [
+            1,
+            2,
+            11,
+            13,
+            14,
+            17,
+            19,
+            26,
+            39,
+            42,
+            43,
+            44,
+            45,
+            51,
+            54,
+            55,
+            59,
+            62,
+            63
+          ],
+          "information_after_this_contradiction": {
+            "world": 6,
+            "phase": "adaptive",
+            "episode": 386,
+            "step": 0,
+            "event": 1668,
+            "action": 2,
+            "role": "informative_sensor",
+            "source": "causal-belief-experiment"
+          }
+        },
+        {
+          "before": {
+            "at": {
+              "world": 6,
+              "phase": "adaptive",
+              "episode": 10,
+              "step": 2,
+              "event": 407,
+              "action": 3,
+              "role": "actuator1",
+              "source": "causal-belief-experiment"
+            },
+            "support": 15,
+            "p_success_before": 0.9453134727695938,
+            "p_failure_before": 0.05468652723040629,
+            "pre": [
+              0,
+              503
+            ],
+            "history": [
+              {
+                "action": 2,
+                "post": [
+                  0,
+                  617
+                ],
+                "pre": [
+                  0,
+                  307
+                ]
+              },
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  503
+                ],
+                "pre": [
+                  0,
+                  617
+                ]
+              }
+            ]
+          },
+          "samples": [
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 4,
+                "step": 2,
+                "event": 2105,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.7296825768139997,
+              "shift": 0.6749960495835934
+            },
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 10,
+                "step": 2,
+                "event": 2126,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.7296825768139997,
+              "shift": 0.6749960495835934
+            },
+            {
+              "at": {
+                "world": 6,
+                "phase": "recovered_held",
+                "episode": 15,
+                "step": 2,
+                "event": 2144,
+                "action": 1,
+                "role": "actuator0",
+                "source": "causal-belief-experiment"
+              },
+              "old_action": 3,
+              "p_failure_after": 0.7296825768139997,
+              "shift": 0.6749960495835934
+            }
+          ],
+          "matched_episodes": [
+            4,
+            10,
+            15,
+            22,
+            23,
+            27,
+            28,
+            31,
+            32,
+            34,
+            37,
+            38,
+            48,
+            50,
+            61
+          ],
+          "information_after_this_contradiction": {
+            "world": 6,
+            "phase": "adaptive",
+            "episode": 11,
+            "step": 0,
+            "event": 408,
+            "action": 2,
+            "role": "informative_sensor",
+            "source": "causal-belief-plan"
+          }
+        }
+      ],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 29,
+          "actions": 211
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 40,
+          "actions": 208
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 220
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 216
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 55,
+          "actions": 213
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 218
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 56,
+          "actions": 211
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 216
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 150,
+          "plan": 6,
+          "recall": 15,
+          "causal-belief-experiment": 77,
+          "causal-belief-plan": 127
+        },
+        "original_held": {
+          "causal-belief-experiment": 64,
+          "predict": 37,
+          "causal-belief-plan": 27
+        },
+        "adaptive": {
+          "causal-belief-experiment": 868,
+          "predict": 309,
+          "causal-belief-plan": 520,
+          "plan": 9,
+          "recall": 7
+        },
+        "frozen": {
+          "causal-belief-experiment": 512,
+          "predict": 285,
+          "causal-belief-plan": 227
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 163,
+          "predict": 29,
+          "causal-belief-plan": 35
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 169,
+          "predict": 23,
+          "causal-belief-plan": 35
+        },
+        "stale_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 33,
+          "predict": 31
+        },
+        "random_held": {
+          "uniform-random": 110
+        }
+      }
+    },
+    {
+      "world": 7,
+      "seed": 45231338992,
+      "rates": {
+        "acquire": 0.91015625,
+        "original_held": 1.0,
+        "adaptive": 0.82421875,
+        "frozen": 0.0,
+        "recovered_held": 1.0,
+        "shuffled_cue_held": 0.6875,
+        "stale_held": 0.0,
+        "random_held": 0.578125
+      },
+      "phase_totals": {
+        "acquire": {
+          "actions": 486,
+          "successes": 233,
+          "sensor_queries": 219,
+          "noise_queries": 11,
+          "terminal_failures": 23,
+          "timeouts": 0
+        },
+        "original_held": {
+          "actions": 128,
+          "successes": 64,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "adaptive": {
+          "actions": 1448,
+          "successes": 422,
+          "sensor_queries": 703,
+          "noise_queries": 238,
+          "terminal_failures": 85,
+          "timeouts": 5
+        },
+        "frozen": {
+          "actions": 1024,
+          "successes": 0,
+          "sensor_queries": 512,
+          "noise_queries": 0,
+          "terminal_failures": 512,
+          "timeouts": 0
+        },
+        "recovered_held": {
+          "actions": 192,
+          "successes": 64,
+          "sensor_queries": 99,
+          "noise_queries": 29,
+          "terminal_failures": 0,
+          "timeouts": 0
+        },
+        "shuffled_cue_held": {
+          "actions": 192,
+          "successes": 44,
+          "sensor_queries": 99,
+          "noise_queries": 29,
+          "terminal_failures": 20,
+          "timeouts": 0
+        },
+        "stale_held": {
+          "actions": 128,
+          "successes": 0,
+          "sensor_queries": 64,
+          "noise_queries": 0,
+          "terminal_failures": 64,
+          "timeouts": 0
+        },
+        "random_held": {
+          "actions": 127,
+          "successes": 37,
+          "sensor_queries": 40,
+          "noise_queries": 26,
+          "terminal_failures": 24,
+          "timeouts": 3
+        }
+      },
+      "stages": {
+        "acquired": true,
+        "supported_expectation_contradicted": true,
+        "self_selected_information_after_contradiction": true,
+        "same_context_prediction_corrected": true,
+        "recovered_goal_performance": true,
+        "information_used_in_successful_held_episodes": true,
+        "integrity": true
+      },
+      "complete_loop": true,
+      "chronological_information_revision_chains": 1,
+      "contradiction_count": 52,
+      "first_contradiction": {
+        "at": {
+          "world": 7,
+          "phase": "adaptive",
+          "episode": 0,
+          "step": 1,
+          "event": 488,
+          "action": 1,
+          "role": "actuator0",
+          "source": "predict"
+        },
+        "support": 87,
+        "p_success_before": 1.0,
+        "p_failure_before": 0,
+        "pre": [
+          0,
+          733
+        ],
+        "history": [
+          {
+            "action": 0,
+            "post": [
+              0,
+              733
+            ],
+            "pre": [
+              0,
+              211
+            ]
+          }
+        ]
+      },
+      "informative_actions_after_contradiction": 702,
+      "first_information_action_after_contradiction": {
+        "world": 7,
+        "phase": "adaptive",
+        "episode": 1,
+        "step": 0,
+        "event": 489,
+        "action": 0,
+        "role": "informative_sensor",
+        "source": "causal-belief-experiment"
+      },
+      "corrected_contexts": [
+        {
+          "before": {
+            "at": {
+              "world": 7,
+              "phase": "adaptive",
+              "episode": 39,
+              "step": 2,
+              "event": 571,
+              "action": 1,
+              "role": "actuator0",
+              "source": "causal-belief-experiment"
+            },
+            "support": 98,
+            "p_success_before": 0.9991343619055744,
+            "p_failure_before": 0.0008656380944258212,
+            "pre": [
+              0,
+              733
+            ],
+            "history": [
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  211
+                ]
+              },
+              {
+                "action": 0,
+                "post": [
+                  0,
+                  733
+                ],
+                "pre": [
+                  0,
+                  733
+                ]
+              }
+            ]
+          },
+          "samples": [
+            {
+              "at": {
+                "world": 7,
+                "phase": "recovered_held",
+                "episode": 2,
+                "step": 2,
+                "event": 1943,
+                "action": 2,
+                "role": "actuator1",
+                "source": "predict"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.7543447518169611,
+              "shift": 0.7534791137225353
+            },
+            {
+              "at": {
+                "world": 7,
+                "phase": "recovered_held",
+                "episode": 3,
+                "step": 2,
+                "event": 1946,
+                "action": 2,
+                "role": "actuator1",
+                "source": "causal-belief-plan"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.7543447518169611,
+              "shift": 0.7534791137225353
+            },
+            {
+              "at": {
+                "world": 7,
+                "phase": "recovered_held",
+                "episode": 4,
+                "step": 2,
+                "event": 1949,
+                "action": 2,
+                "role": "actuator1",
+                "source": "predict"
+              },
+              "old_action": 1,
+              "p_failure_after": 0.7543447518169611,
+              "shift": 0.7534791137225353
+            }
+          ],
+          "matched_episodes": [
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            13,
+            15,
+            16,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+            30,
+            32,
+            35,
+            37,
+            38,
+            42,
+            46,
+            48,
+            50,
+            52,
+            54,
+            55,
+            56,
+            59,
+            60
+          ],
+          "information_after_this_contradiction": {
+            "world": 7,
+            "phase": "adaptive",
+            "episode": 43,
+            "step": 0,
+            "event": 579,
+            "action": 0,
+            "role": "informative_sensor",
+            "source": "recall"
+          }
+        }
+      ],
+      "successful_held_episodes_after_sensing": 64,
+      "adaptive_windows": [
+        {
+          "first_episode": 0,
+          "episodes": 64,
+          "successes": 20,
+          "actions": 144
+        },
+        {
+          "first_episode": 64,
+          "episodes": 64,
+          "successes": 42,
+          "actions": 172
+        },
+        {
+          "first_episode": 128,
+          "episodes": 64,
+          "successes": 62,
+          "actions": 195
+        },
+        {
+          "first_episode": 192,
+          "episodes": 64,
+          "successes": 59,
+          "actions": 195
+        },
+        {
+          "first_episode": 256,
+          "episodes": 64,
+          "successes": 61,
+          "actions": 188
+        },
+        {
+          "first_episode": 320,
+          "episodes": 64,
+          "successes": 57,
+          "actions": 175
+        },
+        {
+          "first_episode": 384,
+          "episodes": 64,
+          "successes": 60,
+          "actions": 186
+        },
+        {
+          "first_episode": 448,
+          "episodes": 64,
+          "successes": 61,
+          "actions": 193
+        }
+      ],
+      "errors": [],
+      "source_counts": {
+        "acquire": {
+          "predict": 151,
+          "recall": 4,
+          "causal-belief-plan": 121,
+          "plan": 5,
+          "causal-belief-experiment": 205
+        },
+        "original_held": {
+          "causal-belief-experiment": 64,
+          "predict": 32,
+          "causal-belief-plan": 32
+        },
+        "adaptive": {
+          "causal-belief-experiment": 559,
+          "predict": 342,
+          "plan": 10,
+          "causal-belief-plan": 507,
+          "recall": 30
+        },
+        "frozen": {
+          "causal-belief-experiment": 512,
+          "predict": 237,
+          "causal-belief-plan": 275
+        },
+        "recovered_held": {
+          "causal-belief-experiment": 93,
+          "predict": 33,
+          "causal-belief-plan": 66
+        },
+        "shuffled_cue_held": {
+          "causal-belief-experiment": 93,
+          "predict": 32,
+          "causal-belief-plan": 67
+        },
+        "stale_held": {
+          "causal-belief-experiment": 64,
+          "causal-belief-plan": 31,
+          "predict": 33
+        },
+        "random_held": {
+          "uniform-random": 127
+        }
+      }
+    }
+  ],
+  "invalid_worlds": [],
+  "trace_sha256": {
+    "world-0.jsonl": "9b5e27c4833712f72efc31c09d7bd8e630a16063f330255bbc125a51ac81e240",
+    "world-1.jsonl": "567fd529cd0b3fc08705d01b143afd2349c3cd8e87ba5c11b05ca0b31950bf8c",
+    "world-2.jsonl": "116bd4e51ece01c9f006202af6d0e78ce694e821bb444b72f8112ebf912326df",
+    "world-3.jsonl": "69d1678493e6b2e28a98428f3fed70de46018cceaf06e9914936993457d839f1",
+    "world-4.jsonl": "e192ef21be3ce801074197d78efce34dc7c243e87f876537c03a5f36be5d76a0",
+    "world-5.jsonl": "9b79dafcab27b2fd0e0e1e345bd3fbaf285e70de4d441b9aa63cca4d56c84791",
+    "world-6.jsonl": "03378b7683f7ac1c0f3dbd9a3f7dcacfaff9baa390defd6ec8dd6a5c3f359bba",
+    "world-7.jsonl": "8dfb3392030e59c8103762e394b8c7eb364e88ff98b56d500569f4ea8eefcc36"
+  },
+  "interpretation": [
+    "Every non-random action belongs to the existing protected unified runtime.",
+    "Source labels and useful_experiments counters alone do not establish research usefulness.",
+    "Freeze controls causal/model/policy learning broadly, not one isolated mechanism.",
+    "History-depth weights are not arbitrary self-invented causal hypotheses.",
+    "All worlds, failed prerequisites and contradictory results remain in the denominator."
+  ]
+}
