@@ -1,0 +1,55 @@
+{
+  "schema": "aeterna-archive-chunks-v1",
+  "archive_name": "autonomous-inquiry-evidence.tar.xz",
+  "archive_bytes": 51156344,
+  "archive_sha256": "29391217a3bcbd48683ded61c99e39a246cc7f047503da2bb85487407918594d",
+  "maximum_chunk_bytes": 8388608,
+  "source_commit": "df9257ac2c15be9a843409ad28b25adc5ab3ab86",
+  "workflow_run_id": 45259082705,
+  "original_artifact_zip_bytes": 52069993,
+  "original_artifact_zip_sha256": "d1ebec600fc0967f046e53476fad025c4dc1d14f45bc29749f64cba019db09f8",
+  "chunks": [
+    {
+      "name": "autonomous-inquiry-evidence.tar.xz.part-001",
+      "bytes": 8388608,
+      "sha256": "d947ecedc7195691ddb96e17dadfc8e699ff03d7a037a6a92439ea7efd690813",
+      "git_blob_sha1": "876244de855b1a7eacdfe4456fed8a71b6e5f8dc"
+    },
+    {
+      "name": "autonomous-inquiry-evidence.tar.xz.part-002",
+      "bytes": 8388608,
+      "sha256": "f2ae0ba0aefbc26f3ab9116970ef0b66ce87d24cf081322f84d580b65dee6dac",
+      "git_blob_sha1": "59b0f6feda9d13c1e525e1ef7f200936b89526f6"
+    },
+    {
+      "name": "autonomous-inquiry-evidence.tar.xz.part-003",
+      "bytes": 8388608,
+      "sha256": "74b31a6bc1b3b6545d82b32579f807046a45d12547ad1f952651355bf6f10977",
+      "git_blob_sha1": "58277224dcddfd2663e893a4507b9c0208968752"
+    },
+    {
+      "name": "autonomous-inquiry-evidence.tar.xz.part-004",
+      "bytes": 8388608,
+      "sha256": "9d5bc0d01098235d517c2b21eb81f2e63195a4d1984ec59742c2cfb2cb082c31",
+      "git_blob_sha1": "7e26e05d2939ca8225f5ab26e56274e02727e212"
+    },
+    {
+      "name": "autonomous-inquiry-evidence.tar.xz.part-005",
+      "bytes": 8388608,
+      "sha256": "3b64be73818f7e2fad5cab732cd11eae712cf34f66c59c8c3547f72eea4de393",
+      "git_blob_sha1": "9dad0464bad08764d6ea7bc92eb3ec5fd2bf9734"
+    },
+    {
+      "name": "autonomous-inquiry-evidence.tar.xz.part-006",
+      "bytes": 8388608,
+      "sha256": "c78930c6fab9e6d9e9093cbb9c75707eea79707b60ab739ea4d552dda08d50dc",
+      "git_blob_sha1": "2af62a7e3fa37f57fa932cf14c46ca5b7ca968db"
+    },
+    {
+      "name": "autonomous-inquiry-evidence.tar.xz.part-007",
+      "bytes": 824696,
+      "sha256": "7b9c054f29adb09ae304f24ef39b1f9edad52c4a77805452617dc864c9314a27",
+      "git_blob_sha1": "7c32d8581fe321cbf5de1981afa88a0f614d6d52"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+INQUIRY_WORLD world=1 exit=0 seconds=27.02
+INQUIRY_WORLD world=0 exit=0 seconds=31.52
+INQUIRY_WORLD world=2 exit=0 seconds=30.97
+INQUIRY_WORLD world=3 exit=0 seconds=29.87
+INQUIRY_WORLD world=5 exit=0 seconds=29.27
+INQUIRY_WORLD world=4 exit=0 seconds=38.74
+INQUIRY_WORLD world=7 exit=0 seconds=26.71
+INQUIRY_WORLD world=6 exit=0 seconds=35.53
+INQUIRY_WORLD world=8 exit=0 seconds=26.51
+INQUIRY_WORLD world=9 exit=0 seconds=28.52
+INQUIRY_WORLD world=11 exit=0 seconds=23.11
+INQUIRY_WORLD world=10 exit=0 seconds=35.58
+INQUIRY_WORLD world=12 exit=0 seconds=25.66
+INQUIRY_WORLD world=13 exit=0 seconds=28.92
+INQUIRY_WORLD world=14 exit=0 seconds=21.85
+INQUIRY_WORLD world=15 exit=0 seconds=25.47
+INQUIRY_AUDIT world=0 valid=True chains=25
+INQUIRY_AUDIT world=1 valid=True chains=3
+INQUIRY_AUDIT world=2 valid=True chains=63
+INQUIRY_AUDIT world=3 valid=True chains=32
+INQUIRY_AUDIT world=4 valid=True chains=25
+INQUIRY_AUDIT world=5 valid=True chains=44
+INQUIRY_AUDIT world=6 valid=True chains=19
+INQUIRY_AUDIT world=7 valid=True chains=2
+INQUIRY_AUDIT world=8 valid=True chains=24
+INQUIRY_AUDIT world=9 valid=True chains=28
+INQUIRY_AUDIT world=10 valid=True chains=51
+INQUIRY_AUDIT world=11 valid=True chains=28
+INQUIRY_AUDIT world=12 valid=True chains=10
+INQUIRY_AUDIT world=13 valid=True chains=38
+INQUIRY_AUDIT world=14 valid=True chains=31
+INQUIRY_AUDIT world=15 valid=True chains=11
+{
+  "verdict": "SUPPORTED",
+  "valid": true,
+  "valid_worlds": 16,
+  "conclusions": {
+    "directed_inquiry_benefit": {
+      "supported": true
+    },
+    "integrated_factual_chain": {
+      "supported": true,
+      "worlds": 16,
+      "chains": 434
+    }
+  },
+  "errors": []
+}

@@ -1,0 +1,27 @@
+{
+  "valid": true,
+  "errors": [],
+  "details": {
+    "expected_trace_sha256": "9b5e27c4833712f72efc31c09d7bd8e630a16063f330255bbc125a51ac81e240",
+    "actual_trace_sha256": "9b5e27c4833712f72efc31c09d7bd8e630a16063f330255bbc125a51ac81e240",
+    "parsed_summary_equal": true,
+    "process": {
+      "command": [
+        "/workspace/scratch/8c9f0519c3fa/Aeterna-v1/target/release/examples/integral_causal_revision_eval",
+        "--seed",
+        "45231338992",
+        "--world",
+        "0",
+        "--trace",
+        "/workspace/scratch/8c9f0519c3fa/inquiry-legacy-replay/legacy-baseline/world-0.jsonl"
+      ],
+      "world": 0,
+      "seed": 45231338992,
+      "timeout_seconds": 2400,
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 2.5315040290006436
+    }
+  },
+  "counts_as_new_ability_evidence": false
+}

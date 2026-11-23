@@ -1,0 +1,258 @@
+{
+  "schema": "aeterna.autonomous-inquiry.verdict.v1",
+  "verdict": "SUPPORTED",
+  "valid": true,
+  "qualifying": true,
+  "seed": 45259082705,
+  "fixed_gates": {
+    "worlds": 16,
+    "mean_gain_minimum": 0.02,
+    "positive_worlds_minimum": 12,
+    "stationary_gain_minimum": -0.02,
+    "maximum_action_ratio": 1.15,
+    "chain_worlds_minimum": 12,
+    "goal_followup_episodes": 8
+  },
+  "valid_worlds": 16,
+  "errors": [],
+  "conclusions": {
+    "directed_inquiry_benefit": {
+      "supported": true
+    },
+    "integrated_factual_chain": {
+      "supported": true,
+      "worlds": 16,
+      "chains": 434
+    }
+  },
+  "comparisons": {
+    "active_vs_observe_only": {
+      "paired_gains": [
+        0.0361328125,
+        0.083984375,
+        0.0703125,
+        -0.060546875,
+        0.01953125,
+        0.0087890625,
+        0.01953125,
+        0.0390625,
+        0.03125,
+        0.017578125,
+        0.044921875,
+        0.0400390625,
+        0.0546875,
+        0.0078125,
+        0.0244140625,
+        0.037109375
+      ],
+      "mean_gain": 0.0296630859375,
+      "positive_worlds": 15,
+      "stationary_mean_gain": 0.011474609375,
+      "switching_action_ratio": 1.001500098367106,
+      "benefit_gate": true,
+      "stationary_guard": true,
+      "action_guard": true
+    },
+    "active_vs_ordinary": {
+      "paired_gains": [
+        0.0361328125,
+        0.083984375,
+        0.0703125,
+        -0.060546875,
+        0.01953125,
+        0.0087890625,
+        0.01953125,
+        0.0390625,
+        0.03125,
+        0.017578125,
+        0.044921875,
+        0.0400390625,
+        0.0546875,
+        0.0078125,
+        0.0244140625,
+        0.037109375
+      ],
+      "mean_gain": 0.0296630859375,
+      "positive_worlds": 15,
+      "stationary_mean_gain": 0.011474609375,
+      "switching_action_ratio": 1.001500098367106,
+      "benefit_gate": true,
+      "stationary_guard": true,
+      "action_guard": true
+    },
+    "observe_only_vs_ordinary": {
+      "paired_gains": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean_gain": 0.0,
+      "positive_worlds": 0,
+      "stationary_mean_gain": 0.0,
+      "switching_action_ratio": 1.0,
+      "benefit_gate": false,
+      "stationary_guard": true,
+      "action_guard": true
+    }
+  },
+  "aggregate": {
+    "switching": {
+      "ordinary": {
+        "totals": {
+          "episodes": 16384,
+          "successes": 13049,
+          "failures": 3273,
+          "timeouts": 62,
+          "actions": 40664,
+          "cue_queries": 12771,
+          "diagnostic_queries": 8324,
+          "noise_queries": 3247,
+          "terminal_actions": 16322,
+          "inquiry_source_actions": 0,
+          "readonly_work": 13860204,
+          "predictive_nll": 31235.62354338831
+        },
+        "success_rate": 0.79644775390625,
+        "questions": 0,
+        "resolved": 0,
+        "expired": 0,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      },
+      "active": {
+        "totals": {
+          "episodes": 16384,
+          "successes": 13535,
+          "failures": 2788,
+          "timeouts": 61,
+          "actions": 40725,
+          "cue_queries": 14602,
+          "diagnostic_queries": 6953,
+          "noise_queries": 2847,
+          "terminal_actions": 16323,
+          "inquiry_source_actions": 8351,
+          "readonly_work": 13713498,
+          "predictive_nll": 29987.48896456721
+        },
+        "success_rate": 0.82611083984375,
+        "questions": 649,
+        "resolved": 640,
+        "expired": 6,
+        "selected_inquiries": 8351,
+        "diagnostic_inquiries": 1320,
+        "complete_chains": 434
+      },
+      "observe_only": {
+        "totals": {
+          "episodes": 16384,
+          "successes": 13049,
+          "failures": 3273,
+          "timeouts": 62,
+          "actions": 40664,
+          "cue_queries": 12771,
+          "diagnostic_queries": 8324,
+          "noise_queries": 3247,
+          "terminal_actions": 16322,
+          "inquiry_source_actions": 0,
+          "readonly_work": 13860204,
+          "predictive_nll": 31235.62354338831
+        },
+        "success_rate": 0.79644775390625,
+        "questions": 645,
+        "resolved": 644,
+        "expired": 1,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      }
+    },
+    "stationary": {
+      "ordinary": {
+        "totals": {
+          "episodes": 4096,
+          "successes": 3670,
+          "failures": 422,
+          "timeouts": 4,
+          "actions": 9289,
+          "cue_queries": 3833,
+          "diagnostic_queries": 822,
+          "noise_queries": 542,
+          "terminal_actions": 4092,
+          "inquiry_source_actions": 0,
+          "readonly_work": 2979822,
+          "predictive_nll": 4555.240950817523
+        },
+        "success_rate": 0.89599609375,
+        "questions": 0,
+        "resolved": 0,
+        "expired": 0,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      },
+      "active": {
+        "totals": {
+          "episodes": 4096,
+          "successes": 3717,
+          "failures": 375,
+          "timeouts": 4,
+          "actions": 9333,
+          "cue_queries": 3955,
+          "diagnostic_queries": 664,
+          "noise_queries": 622,
+          "terminal_actions": 4092,
+          "inquiry_source_actions": 1211,
+          "readonly_work": 2985198,
+          "predictive_nll": 4600.2180407326905
+        },
+        "success_rate": 0.907470703125,
+        "questions": 39,
+        "resolved": 30,
+        "expired": 5,
+        "selected_inquiries": 1211,
+        "diagnostic_inquiries": 61,
+        "complete_chains": 21
+      },
+      "observe_only": {
+        "totals": {
+          "episodes": 4096,
+          "successes": 3670,
+          "failures": 422,
+          "timeouts": 4,
+          "actions": 9289,
+          "cue_queries": 3833,
+          "diagnostic_queries": 822,
+          "noise_queries": 542,
+          "terminal_actions": 4092,
+          "inquiry_source_actions": 0,
+          "readonly_work": 2979822,
+          "predictive_nll": 4555.240950817523
+        },
+        "success_rate": 0.89599609375,
+        "questions": 33,
+        "resolved": 27,
+        "expired": 3,
+        "selected_inquiries": 0,
+        "diagnostic_inquiries": 0,
+        "complete_chains": 0
+      }
+    }
+  },
+  "source_commit": "df9257ac2c15be9a843409ad28b25adc5ab3ab86",
+  "scope": "Bounded two-bank autonomous inquiry with an externally supplied symbolic goal; sixteen recodings of one small two-rule family.",
+  "raw_verdict_in_preserved_archive": "autonomous-inquiry-evidence/verdict.json"
+}

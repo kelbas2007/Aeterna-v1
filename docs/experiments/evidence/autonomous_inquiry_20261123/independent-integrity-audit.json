@@ -1,0 +1,11 @@
+{
+  "rescored_verdict_bytes_identical": true,
+  "sha256_after": {
+    "verdict.json": "58b364e98bce4ade6b9a851f442af9caa6163cdf5126042eaa36a7be77245ec1",
+    "RESULT.md": "86a696caa3a99568517c4a7b288faf98a1b41d5f110b87dbd84e15fe11a6e8a9"
+  },
+  "frozen_source_mismatches": [],
+  "source_files": 108,
+  "valid_worlds": 16,
+  "scorer_exit": 0
+}

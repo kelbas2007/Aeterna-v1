@@ -1,0 +1,86 @@
+{
+  "all_eight_preserved": true,
+  "checks": [
+    {
+      "world": 0,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 3230
+    },
+    {
+      "world": 1,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 4034
+    },
+    {
+      "world": 2,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 3725
+    },
+    {
+      "world": 3,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 3371
+    },
+    {
+      "world": 4,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 4172
+    },
+    {
+      "world": 5,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 3514
+    },
+    {
+      "world": 6,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 4283
+    },
+    {
+      "world": 7,
+      "historical_archive_bytes_exact": true,
+      "input_sha256_matches": true,
+      "output_sha256_matches": true,
+      "entire_original_state_preserved": true,
+      "new_inquiry_empty_active": true,
+      "new_regime_ordinary": true,
+      "preserved_transitions": 4079
+    }
+  ],
+  "preserved_transitions": 30408
+}
