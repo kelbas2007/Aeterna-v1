@@ -6,6 +6,8 @@ use super::synthesis::Transition;
 use super::vm::{Error, Meter, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+pub use super::inquiry::{InquiryDecision, InquiryMode, InquiryPrediction, InquiryQuestion, InquiryReport, InquiryResolution};
+use super::inquiry::{InquiryState, MAX_FORECAST_OUTCOMES};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
@@ -350,6 +352,7 @@ pub(crate) struct CausalProposal {
     pub expected: Option<Vec<i64>>,
     pub immediate_goals: Vec<f64>,
     pub immediate_support: Vec<u64>,
+    pub inquiry: Option<InquiryDecision>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ExperimentCredit {
@@ -383,6 +386,8 @@ pub(crate) struct CausalMemory {
     rewarded_experiments: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     regime: Option<RegimeState>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    inquiry: Option<InquiryState>,
 }
 
 fn key(pre: &[i64], action: usize, context: &[ContextStep], depth: usize) -> String {
@@ -456,6 +461,7 @@ impl CausalMemory {
             experiments: 0,
             rewarded_experiments: 0,
             regime: None,
+            inquiry: None,
         })
     }
     pub(crate) fn enable_regime_inference(&mut self, mode: RegimeMode) -> Result<()> {
@@ -471,6 +477,78 @@ impl CausalMemory {
     }
     pub fn regime_report(&self) -> Option<RegimeReport> {
         self.regime.as_ref().map(RegimeState::report)
+    }
+    /// Enable a factual inquiry agenda on the same live model. Allocation is
+    /// checked before ordinary routing is enabled, so failure is atomic.
+    pub(crate) fn enable_autonomous_inquiry(&mut self, mode: InquiryMode) -> Result<()> {
+        if self.inquiry.is_some() || self.config.history_depth != 3
+            || self.regime.as_ref().is_some_and(|r| r.mode != RegimeMode::Ordinary)
+        { return Err(Error::Busy); }
+        let required = super::inquiry::STATE_BYTES + if self.regime.is_none() { REGIME_STATE_BYTES } else { 0 };
+        if self.bytes.checked_add(required).is_none_or(|n| n > self.config.model_bytes) {
+            return Err(Error::Capacity);
+        }
+        if self.regime.is_none() { self.enable_regime_inference(RegimeMode::Ordinary)?; }
+        self.inquiry = Some(InquiryState::new(mode, self.events));
+        self.bytes += super::inquiry::STATE_BYTES;
+        Ok(())
+    }
+    pub fn inquiry_report(&self) -> Option<InquiryReport> { self.inquiry.as_ref().map(InquiryState::report) }
+    pub(crate) fn inquiry_inference_work(&self) -> u64 {
+        self.inquiry.as_ref().map_or(0, InquiryState::inference_work)
+    }
+    pub(crate) fn record_inquiry_decision(&mut self, action: usize, decision: Option<&InquiryDecision>) -> Result<()> {
+        let Some(state) = self.inquiry.as_mut() else {
+            return if decision.is_none() { Ok(()) } else { Err(Error::NoEvidence) };
+        };
+        if let Some(d) = decision {
+            let width = state.active.as_ref().ok_or(Error::Stale)?.triggering_pre.len();
+            d.validate(width, 16, self.events)?;
+        }
+        state.record(action, decision, self.events)
+    }
+    fn active_inquiry(&self) -> Option<&InquiryQuestion> {
+        self.inquiry.as_ref().filter(|s| s.mode == InquiryMode::Active).and_then(|s| s.active.as_ref())
+    }
+    fn bank_forecast(&self, pre: &[i64], action: usize, context: &[ContextStep], bank: usize,
+        meter: &mut Meter) -> Result<InquiryPrediction> {
+        let mut mixture = BTreeMap::<Vec<i64>, f64>::new();
+        let mut mass = 0.0;
+        let mut support = 0;
+        for (depth, weight) in self.weights().into_iter().enumerate() {
+            let mut d = depth.min(context.len());
+            loop {
+                meter.charge((pre.len().saturating_mul(d + 1) + d + 4) as u64)?;
+                if let Some(c) = self.counts.get(&regime_key(pre, action, context, d, bank)) {
+                    // Large, noisy supports are deliberately not compressed
+                    // into falsely sharp rival forecasts.
+                    if c.outcomes.len() > MAX_FORECAST_OUTCOMES {
+                        return Ok(InquiryPrediction {bank, support: 0, outcomes: Vec::new(), unknown_probability: 1.0});
+                    }
+                    support = support.max(c.total());
+                    mass += weight;
+                    for (post, p) in c.distribution() {
+                        meter.charge((post.len() + 4) as u64)?;
+                        *mixture.entry(post).or_default() += weight * p;
+                    }
+                    break;
+                }
+                if d == 0 { break; }
+                d -= 1;
+            }
+        }
+        if mass == 0.0 || mixture.len() > MAX_FORECAST_OUTCOMES {
+            return Ok(InquiryPrediction {bank, support: 0, outcomes: Vec::new(), unknown_probability: 1.0});
+        }
+        for p in mixture.values_mut() { *p /= mass; }
+        let unknown_probability = (1.0 - mixture.values().sum::<f64>()).clamp(0.0, 1.0);
+        Ok(InquiryPrediction {bank, support, outcomes: mixture.into_iter().collect(), unknown_probability})
+    }
+    fn inquiry_factual_forecasts(&self, t: &Transition) -> Option<Vec<InquiryPrediction>> {
+        self.inquiry.as_ref()?;
+        let mut meter = Meter::new(super::inquiry::UPDATE_WORK);
+        Some((0..2).map(|bank| self.bank_forecast(&t.pre, t.action, &self.context, bank, &mut meter)
+            .unwrap_or(InquiryPrediction {bank, support: 0, outcomes: Vec::new(), unknown_probability: 1.0})).collect())
     }
     fn active_key(&self, pre: &[i64], action: usize, context: &[ContextStep], depth: usize) -> String {
         regime_key(pre, action, context, depth, self.regime.as_ref().map_or(0, |r| r.bank))
@@ -619,7 +697,24 @@ impl CausalMemory {
         // Routing observes the factual POST only after execution. All values
         // used here were read before updating ANY learned table or score.
         // Inference remains live when learning is frozen, like context history.
+        let inquiry_forecasts = self.inquiry_factual_forecasts(t);
+        let trigger = inquiry_forecasts.as_ref().and_then(|forecasts| {
+            let bank = self.regime.as_ref().map_or(0, |r| r.bank);
+            let forecast = &forecasts[bank];
+            let (predicted_post, probability) = forecast.outcomes.iter().max_by(|a,b| a.1.total_cmp(&b.1))?;
+            let observed = forecast.probability(&t.post);
+            if forecast.support < 8 || *probability < 0.75 || observed >= 0.25 || *predicted_post == t.post { return None; }
+            Some(InquiryQuestion {id: t.id, opened_event: t.id, triggering_action: t.action,
+                triggering_pre: t.pre.clone(), predicted_post: predicted_post.clone(), actual_post: t.post.clone(),
+                prior_bank: bank, prediction_probability: *probability, observed_probability: observed,
+                support: forecast.support, context_fingerprint: super::vm::fingerprint(&serde_json::to_vec(&self.context).unwrap()),
+                age: 0, evidence_events: 0, factual_experiments: 0, log_bayes_factor: 0.0,
+                candidate_bank: None, candidate_confirmations: 0})
+        });
         let regime_probabilities = self.infer_regime(t, learning);
+        if let (Some(state), Some(forecasts), Some(regime)) = (self.inquiry.as_mut(), inquiry_forecasts, self.regime.as_ref()) {
+            state.observe(t.id, t.action, &t.post, &forecasts, regime.bank, (1.0 + regime.readout.abs()) / 2.0, trigger);
+        }
         if !learning {
             self.context.push(ContextStep {
                 pre: t.pre.clone(),
@@ -701,7 +796,8 @@ impl CausalMemory {
             .counts
             .iter()
             .map(|(k, c)| 2 * k.len() + c.bytes())
-            .sum::<usize>() + self.regime.as_ref().map_or(0, |_| REGIME_STATE_BYTES);
+            .sum::<usize>() + self.regime.as_ref().map_or(0, |_| REGIME_STATE_BYTES)
+                + self.inquiry.as_ref().map_or(0, |_| super::inquiry::STATE_BYTES);
         while self.counts.len() > self.config.model_entries || self.bytes > self.config.model_bytes
         {
             // Keep frequent evidence and counterexamples; expire least useful
@@ -768,12 +864,19 @@ impl CausalMemory {
         }
     }
     fn beliefs_at(
+        &self, pre: &[i64], context: &[ContextStep], offers: &[ActionOffer],
+        goal: Option<&[Option<i64>]>, meter: &mut Meter,
+    ) -> Result<Vec<ActionBelief>> {
+        self.beliefs_at_bank(pre, context, offers, goal, meter, self.regime.as_ref().map_or(0, |r| r.bank))
+    }
+    fn beliefs_at_bank(
         &self,
         pre: &[i64],
         context: &[ContextStep],
         offers: &[ActionOffer],
         goal: Option<&[Option<i64>]>,
         meter: &mut Meter,
+        bank: usize,
     ) -> Result<Vec<ActionBelief>> {
         let weights = self.weights();
         let mut all = Vec::new();
@@ -786,7 +889,7 @@ impl CausalMemory {
             for (a, offer) in offers.iter().enumerate().filter(|(_, o)| o.available) {
                 let _ = offer;
                 meter.charge((pre.len().saturating_mul(d + 1) + d + 4) as u64)?;
-                if let Some(c) = self.counts.get(&self.active_key(pre, a, context, d)) {
+                if let Some(c) = self.counts.get(&regime_key(pre, a, context, d, bank)) {
                     let value = c
                         .distribution()
                         .iter()
@@ -813,7 +916,7 @@ impl CausalMemory {
                 let mut d = depth.min(context.len());
                 let c = loop {
                     meter.charge((pre.len().saturating_mul(d + 1) + d + 4) as u64)?;
-                    if let Some(c) = self.counts.get(&self.active_key(pre, action, context, d)) {
+                    if let Some(c) = self.counts.get(&regime_key(pre, action, context, d, bank)) {
                         break Some(c);
                     }
                     if d == 0 {
@@ -885,6 +988,64 @@ impl CausalMemory {
         let b = self.beliefs_at(pre, &self.context, offers, goal, &mut meter)?;
         Ok((b, meter.spent))
     }
+    fn planning_beliefs_at(&self, pre: &[i64], context: &[ContextStep], offers: &[ActionOffer],
+        goal: Option<&[Option<i64>]>, prior: [f64; 2], meter: &mut Meter,
+    ) -> Result<(Vec<ActionBelief>, Vec<f64>, Vec<Vec<InquiryPrediction>>)> {
+        let mut diagnostic = vec![0.0; offers.len()];
+        let mut forecasts = vec![Vec::new(); offers.len()];
+        if self.active_inquiry().is_none() {
+            return Ok((self.beliefs_at(pre, context, offers, goal, meter)?, diagnostic, forecasts));
+        }
+        let zero = self.beliefs_at_bank(pre, context, offers, goal, meter, 0)?;
+        let one = self.beliefs_at_bank(pre, context, offers, goal, meter, 1)?;
+        let goal_value = |b: &ActionBelief| b.outcomes.iter()
+            .filter(|(p, _)| goal.is_some_and(|g| matches_goal(p,g))).map(|(_,p)| p).sum::<f64>();
+        let best = |beliefs: &[ActionBelief]| beliefs.iter().filter(|b| b.support >= 8)
+            .map(|b| (b.action, goal_value(b))).filter(|(_,q)| *q > 0.05)
+            .max_by(|a,b| a.1.total_cmp(&b.1)).map(|(a,_)| a);
+        // Evidence about an unrelated random sensor is not a goal-relevant
+        // experiment. Later graph states can still expose a useful contrast.
+        let relevant = goal.is_none() || best(&zero) != best(&one)
+            || zero.iter().zip(&one).any(|(a,b)| (goal_value(a)-goal_value(b)).abs() >= 0.1);
+        let mut all = Vec::new();
+        for (a,b) in zero.into_iter().zip(one) {
+            meter.charge(((a.outcomes.len()+b.outcomes.len()) * (pre.len()+4) + 32) as u64)?;
+            let action = a.action;
+            let mut mixture = BTreeMap::<Vec<i64>,f64>::new();
+            for (belief,p) in [(&a,prior[0]),(&b,prior[1])] {
+                for (post,probability) in &belief.outcomes {
+                    *mixture.entry(post.clone()).or_default() += p * probability;
+                }
+            }
+            let unknown = (prior[0]*a.unknown_probability + prior[1]*b.unknown_probability).clamp(0.0,1.0);
+            let forecast = |bank:usize, b:&ActionBelief| {
+                if b.outcomes.len() > MAX_FORECAST_OUTCOMES || b.support == 0 {
+                    InquiryPrediction {bank,support:0,outcomes:Vec::new(),unknown_probability:1.0}
+                } else { InquiryPrediction {bank,support:b.support,outcomes:b.outcomes.clone(),unknown_probability:b.unknown_probability} }
+            };
+            forecasts[action] = vec![forecast(0,&a),forecast(1,&b)];
+            if relevant && forecasts[action].iter().all(|p|p.support>=8 && p.unknown_probability<0.05) {
+                let conditional = prior[0]*entropy(a.outcomes.iter().map(|(_,p)|*p).chain(std::iter::once(a.unknown_probability)))
+                    + prior[1]*entropy(b.outcomes.iter().map(|(_,p)|*p).chain(std::iter::once(b.unknown_probability)));
+                diagnostic[action] = (entropy(mixture.values().copied().chain(std::iter::once(unknown))) - conditional)
+                    .clamp(0.0,std::f64::consts::LN_2);
+            }
+            all.push(ActionBelief {action,outcomes:mixture.into_iter().collect(),
+                information_gain:prior[0]*a.information_gain+prior[1]*b.information_gain,
+                goal_relevance:prior[0]*a.goal_relevance+prior[1]*b.goal_relevance,
+                support:a.support.max(b.support),unknown_probability:unknown});
+        }
+        Ok((all,diagnostic,forecasts))
+    }
+    fn inquiry_decision(&self, action:usize, direct:f64, expected:f64, value:f64,
+        prior:[f64;2], forecasts:&[Vec<InquiryPrediction>]) -> Option<InquiryDecision> {
+        let question = self.active_inquiry()?;
+        if expected <= 1e-12 || forecasts.get(action)?.len() != 2 { return None; }
+        Some(InquiryDecision {question_id:question.id,event:self.events,action,
+            immediate_information_gain:direct,expected_information_gain:expected,
+            expected_goal_probability:value.clamp(0.0,1.0),bank_probability:prior,
+            predictions:forecasts[action].clone()})
+    }
     pub(crate) fn propose(
         &self,
         pre: &[i64],
@@ -929,9 +1090,11 @@ impl CausalMemory {
             })
             .collect::<Vec<_>>();
         let offers = affordable_offers.as_slice();
-        let initial = self
-            .beliefs_at(pre, &self.context, offers, goal, meter)
-            .ok()?;
+        let inquiry_active = self.active_inquiry().is_some();
+        let quantize = |p:f64| { let p=(p.clamp(0.025,0.975)*64.0).round()/64.0; [p,1.0-p] };
+        let prior = self.active_inquiry().map_or([1.0,0.0], |q| quantize(q.bank_probability()[0]));
+        let (initial, initial_diagnostic, initial_forecasts) = self
+            .planning_beliefs_at(pre, &self.context, offers, goal, prior, meter).ok()?;
         if initial.iter().all(|b| b.support == 0) {
             return None;
         }
@@ -950,17 +1113,19 @@ impl CausalMemory {
         }
         if goal.is_none() {
             let b = initial.iter().filter(|b| b.support > 0).max_by(|a, b| {
-                (a.information_gain / (1.0 + offers[a.action].max_cost as f64))
-                    .total_cmp(&(b.information_gain / (1.0 + offers[b.action].max_cost as f64)))
+                ((a.information_gain + initial_diagnostic[a.action]) / (1.0 + offers[a.action].max_cost as f64))
+                    .total_cmp(&((b.information_gain + initial_diagnostic[b.action]) / (1.0 + offers[b.action].max_cost as f64)))
             })?;
             return Some(CausalProposal {
                 action: b.action,
                 value: 0.0,
-                information_gain: b.information_gain,
+                information_gain: b.information_gain + initial_diagnostic[b.action],
                 confidence: b.support as f64 / (b.support as f64 + 2.0),
                 expected: None,
                 immediate_goals,
                 immediate_support,
+                inquiry:self.inquiry_decision(b.action,initial_diagnostic[b.action],initial_diagnostic[b.action],
+                    0.0,prior,&initial_forecasts),
             });
         }
         let credible_depth = self
@@ -984,25 +1149,39 @@ impl CausalMemory {
             .unwrap_or(0)
             .checked_mul(horizon as u64)
             .is_some_and(|cost| cost <= remaining_cost);
-        let graph_key = |state: &[i64], context: &[ContextStep], left: u64| {
+        let graph_key = |state: &[i64], context: &[ContextStep], left: u64, belief:[f64;2]| {
             let k = key(state, 0, context, context.len());
-            if cost_bound {
+            let k = if cost_bound {
                 format!("{k}:{left}")
             } else {
                 k
-            }
+            };
+            if inquiry_active { format!("{k}:b{}",(belief[0]*64.0).round() as u32) } else { k }
         };
-        let mut states = vec![(pre.to_vec(), self.context.clone(), remaining_cost)];
+        let mut states = vec![(pre.to_vec(), self.context.clone(), remaining_cost, prior)];
         let mut edges = Vec::new();
         let mut keys = BTreeMap::new();
-        keys.insert(graph_key(pre, &self.context, remaining_cost), 0usize);
+        keys.insert(graph_key(pre, &self.context, remaining_cost, prior), 0usize);
         let mut pos = 0;
         let mut layers = vec![0usize];
-        while pos < states.len() {
+        // Reserve the actual backup/readout work for every admitted graph row.
+        // An exhausted speculative expansion must not erase the root forecast.
+        // The legacy route keeps its original meter and byte-identical choices.
+        let full_limit = meter.limit;
+        let backup_work = |n:usize| (3*n + 8) as u64;
+        let mut reserved = if inquiry_active { initial.iter().map(|b|
+            backup_work(b.outcomes.len()).saturating_mul(horizon.saturating_sub(1) as u64)
+                + (b.outcomes.len()*(pre.len()+3)+64) as u64).sum::<u64>() } else {0};
+        if inquiry_active {
+            let limit = full_limit.saturating_sub(reserved);
+            if meter.spent > limit { return None; }
+            meter.limit = limit;
+        }
+        'expansion: while pos < states.len() {
             if meter.remaining() < 512 {
                 break;
             }
-            let (state, context, left) = states[pos].clone();
+            let (state, context, left, belief_prior) = states[pos].clone();
             let local_offers = offers
                 .iter()
                 .map(|o| ActionOffer {
@@ -1010,14 +1189,22 @@ impl CausalMemory {
                     max_cost: o.max_cost,
                 })
                 .collect::<Vec<_>>();
-            let b = if pos == 0 {
-                initial.clone()
+            let (b, diagnostic, forecasts) = if pos == 0 {
+                (initial.clone(),initial_diagnostic.clone(),initial_forecasts.clone())
             } else {
-                match self.beliefs_at(&state, &context, &local_offers, goal, meter) {
+                match self.planning_beliefs_at(&state, &context, &local_offers, goal, belief_prior, meter) {
                     Ok(v) => v,
                     Err(_) => break,
                 }
             };
+            if inquiry_active && pos > 0 {
+                let extra = b.iter().map(|b| backup_work(b.outcomes.len())
+                    .saturating_mul(horizon.saturating_sub(1) as u64)).sum::<u64>();
+                let limit = full_limit.saturating_sub(reserved.saturating_add(extra));
+                if meter.spent > limit { break; }
+                reserved = reserved.saturating_add(extra);
+                meter.limit = limit;
+            }
             let mut row = Vec::new();
             for belief in b {
                 if !local_offers[belief.action].available {
@@ -1027,7 +1214,7 @@ impl CausalMemory {
                 let mut outcomes = Vec::new();
                 for (post, p) in &belief.outcomes {
                     if meter.charge((post.len() + 4) as u64).is_err() {
-                        return None;
+                        if inquiry_active { break 'expansion; } else { return None; }
                     }
                     let reached = goal.is_some_and(|g| matches_goal(post, g));
                     let mut next_context = context.clone();
@@ -1040,18 +1227,40 @@ impl CausalMemory {
                     }
                     // Only distinguish histories which have acquired support.
                     let mut depth = next_context.len().min(credible_depth);
-                    while depth > 0
-                        && !(0..offers.len()).any(|a| {
-                            self.counts
-                                .contains_key(&self.active_key(post, a, &next_context, depth))
-                        })
-                    {
-                        depth -= 1
+                    if inquiry_active {
+                        while depth > 0 {
+                            let mut supported = false;
+                            'support: for action in 0..offers.len() { for bank in 0..2 {
+                                if meter.charge((post.len()*(depth+1)+depth+4) as u64).is_err() { break 'expansion; }
+                                if self.counts.contains_key(&regime_key(post,action,&next_context,depth,bank)) {
+                                    supported=true; break 'support;
+                                }
+                            }}
+                            if supported { break; }
+                            depth -= 1;
+                        }
+                    } else {
+                        while depth > 0 && !(0..offers.len()).any(|a|
+                            self.counts.contains_key(&self.active_key(post,a,&next_context,depth))) {
+                            depth -= 1;
+                        }
                     }
                     if depth < next_context.len() {
                         next_context = next_context[next_context.len() - depth..].to_vec()
                     }
-                    let k = graph_key(post, &next_context, next_left);
+                    if inquiry_active {
+                        let work = forecasts[belief.action].iter().map(|f| f.outcomes.len()*(post.len()+4)+8)
+                            .sum::<usize>() + post.len()*(next_context.len()+1)+next_context.len()+8;
+                        if meter.charge(work as u64).is_err() { break 'expansion; }
+                    }
+                    let next_belief = if inquiry_active && forecasts[belief.action].iter()
+                        .all(|f| f.support >= 8 && f.unknown_probability < 0.05) {
+                        let f = &forecasts[belief.action];
+                        let p0 = belief_prior[0] * f[0].probability(post);
+                        let p1 = belief_prior[1] * f[1].probability(post);
+                        quantize(p0 / (p0+p1).max(1e-12))
+                    } else { belief_prior };
+                    let k = graph_key(post, &next_context, next_left, next_belief);
                     let target = if reached {
                         None
                     } else if let Some(&id) = keys.get(&k) {
@@ -1061,7 +1270,7 @@ impl CausalMemory {
                     {
                         let id = states.len();
                         keys.insert(k, id);
-                        states.push((post.clone(), next_context, next_left));
+                        states.push((post.clone(), next_context, next_left, next_belief));
                         layers.push(layers[pos] + 1);
                         Some(id)
                     } else {
@@ -1069,23 +1278,27 @@ impl CausalMemory {
                     };
                     outcomes.push((target, *p, reached));
                 }
-                row.push((belief, outcomes));
+                let direct = diagnostic[belief.action];
+                row.push((belief, outcomes, direct));
             }
             edges.push(row);
             pos += 1;
         }
+        meter.limit = full_limit;
         let mut values = vec![0.0_f64; states.len()];
+        let mut information_values = vec![0.0_f64; states.len()];
         let mut policies = vec![None; states.len()];
         // The root action below consumes one step of the stated horizon.
         for _ in 1..horizon {
             let mut next = values.clone();
+            let mut next_information = information_values.clone();
             for (i, row) in edges.iter().enumerate() {
                 let mut best = 0.0_f64;
-                for (b, outcomes) in row {
-                    if meter.charge((outcomes.len() + 2) as u64).is_err() {
+                for (b, outcomes, direct) in row {
+                    if meter.charge(if inquiry_active {backup_work(outcomes.len())} else {(outcomes.len()+2) as u64}).is_err() {
                         break;
                     }
-                    let q = outcomes
+                    let goal_value = outcomes
                         .iter()
                         .map(|(id, p, goal)| {
                             p * if *goal {
@@ -1094,21 +1307,30 @@ impl CausalMemory {
                                 id.map_or(0.0, |j| 0.98 * values[j])
                             }
                         })
-                        .sum::<f64>()
-                        - 0.01 * offers[b.action].max_cost as f64;
+                        .sum::<f64>();
+                    let diagnostic = if inquiry_active { (*direct).max(outcomes.iter().map(|(id,p,terminal)|
+                        if *terminal {0.0} else {p*id.map_or(0.0,|j|0.98*information_values[j])}).sum::<f64>()) } else {0.0};
+                    let q = goal_value - 0.01 * offers[b.action].max_cost as f64
+                        + if inquiry_active {0.2*diagnostic/(1.0+offers[b.action].max_cost as f64)} else {0.0};
                     if q > best {
                         best = q;
-                        policies[i] = Some(b.action)
+                        policies[i] = Some(b.action);
+                        if inquiry_active {
+                            next[i] = goal_value;
+                            next_information[i] = diagnostic;
+                        }
                     }
                 }
-                next[i] = best;
+                if !inquiry_active { next[i] = best; }
             }
             values = next;
+            information_values = next_information;
         }
-        let mut best = None::<(f64, &ActionBelief, f64, f64, f64)>;
-        for (b, outcomes) in edges.first()? {
+        let mut best = None::<(f64, &ActionBelief, f64, f64, f64, f64)>;
+        for (b, outcomes, direct) in edges.first()? {
             meter
-                .charge((outcomes.len() * pre.len() + 48) as u64)
+                .charge((outcomes.len() * pre.len() + 48
+                    + if inquiry_active {3*outcomes.len()+16} else {0}) as u64)
                 .ok()?;
             let q = outcomes
                 .iter()
@@ -1129,7 +1351,9 @@ impl CausalMemory {
             } else {
                 0.0
             };
-            let raw_information = b.information_gain * b.goal_relevance + frontier;
+            let diagnostic = if inquiry_active { (*direct).max(outcomes.iter().map(|(id,p,terminal)|
+                if *terminal {0.0} else {p*id.map_or(0.0,|j|0.98*information_values[j])}).sum::<f64>()) } else {0.0};
+            let raw_information = b.information_gain * b.goal_relevance + frontier + diagnostic;
             let info = raw_information / (1.0 + offers[b.action].max_cost as f64);
             let score = q + 0.2 * info - 0.01 * offers[b.action].max_cost as f64;
             let mut decisions = BTreeMap::<usize, f64>::new();
@@ -1150,11 +1374,11 @@ impl CausalMemory {
             } else {
                 0.0
             };
-            if best.is_none_or(|(v, _, _, _, _)| score > v) {
-                best = Some((score, b, decision_information, q, raw_information))
+            if best.is_none_or(|(v, _, _, _, _, _)| score > v) {
+                best = Some((score, b, decision_information, q, raw_information, diagnostic))
             }
         }
-        let (_, b, decision_information, goal_value, raw_information) = best?;
+        let (_, b, decision_information, goal_value, raw_information, diagnostic) = best?;
         Some(CausalProposal {
             action: b.action,
             value: goal_value.clamp(0.0, 1.0),
@@ -1167,6 +1391,8 @@ impl CausalMemory {
                 .map(|(p, _)| p.clone()),
             immediate_goals,
             immediate_support,
+            inquiry:self.inquiry_decision(b.action,initial_diagnostic[b.action],diagnostic,
+                goal_value,prior,&initial_forecasts),
         })
     }
     pub fn validate(
@@ -1181,6 +1407,12 @@ impl CausalMemory {
         if let Some(regime) = &self.regime {
             if self.config.history_depth != 3 { return Err(Error::InvalidData); }
             regime.validate(self.events)?;
+        }
+        if let Some(inquiry) = &self.inquiry {
+            if !self.regime.as_ref().is_some_and(|r| r.mode == RegimeMode::Ordinary) {
+                return Err(Error::InvalidData);
+            }
+            inquiry.validate(width, actions, self.events)?;
         }
         if self.scores.len() != self.config.history_depth + 1
             || self
@@ -1205,7 +1437,8 @@ impl CausalMemory {
         {
             return Err(Error::InvalidData);
         }
-        let mut bytes = self.regime.as_ref().map_or(0, |_| REGIME_STATE_BYTES);
+        let mut bytes = self.regime.as_ref().map_or(0, |_| REGIME_STATE_BYTES)
+            + self.inquiry.as_ref().map_or(0, |_| super::inquiry::STATE_BYTES);
         for (k, c) in &self.counts {
             let (bank, original) = if let Some(original) = k.strip_prefix("r1:") {
                 if !self.regime.as_ref().is_some_and(|r| r.admitted) { return Err(Error::InvalidData); }
@@ -1270,6 +1503,110 @@ impl CausalMemory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn inquiry_broad_noise_is_not_a_confident_contradiction() {
+        let mut m=CausalMemory::new(CausalConfig{history_depth:3,..Default::default()},0,vec![]).unwrap();
+        for i in 0..64 { fact(&mut m,0,0,10+i%8,true); }
+        m.enable_autonomous_inquiry(InquiryMode::Active).unwrap();
+        for i in 0..64 { fact(&mut m,0,0,10+i%8,true); }
+        assert_eq!(m.inquiry_report().unwrap().questions_opened,0,
+            "low probability in a broad distribution is not a violated confident forecast");
+        m.validate(1,1,m.events,0,0).unwrap();
+    }
+    #[test]
+    fn inquiry_observe_only_has_exact_ordinary_decisions_and_learning() {
+        let base=regime_fixture();
+        let mut ordinary=base.clone();
+        ordinary.enable_regime_inference(RegimeMode::Ordinary).unwrap();
+        let mut observer=base;
+        observer.enable_autonomous_inquiry(InquiryMode::ObserveOnly).unwrap();
+        let offers=[ActionOffer{available:true,max_cost:1};2];
+        for post in [2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1] {
+            let (a,wa)=ordinary.propose(&[0],&offers,Some(&[Some(1)]),3,100_000);
+            let (b,wb)=observer.propose(&[0],&offers,Some(&[Some(1)]),3,100_000);
+            assert_eq!(format!("{a:?}"),format!("{b:?}"));
+            assert_eq!(wa,wb);
+            fact(&mut ordinary,0,0,post,true); fact(&mut observer,0,0,post,true);
+            assert_eq!(ordinary.report().learned_fingerprint,observer.report().learned_fingerprint);
+            assert_eq!(ordinary.regime_report().unwrap().dynamic_fingerprint,
+                observer.regime_report().unwrap().dynamic_fingerprint);
+        }
+        assert!(observer.inquiry_report().unwrap().questions_opened>0);
+        assert_eq!(observer.inquiry_report().unwrap().selected_experiments,0);
+    }
+    #[test]
+    fn inquiry_unresolved_question_persists_across_restart_and_expires_honestly() {
+        let mut m=regime_fixture();
+        m.enable_autonomous_inquiry(InquiryMode::Active).unwrap();
+        let model=m.report().learned_fingerprint;
+        let t=Transition{id:m.events,restart:true,pre:vec![0],action:0,post:vec![2]};
+        m.observe(&t,false);
+        let id=m.inquiry_report().unwrap().active.unwrap().id;
+        m.reset(false);
+        assert_eq!(m.inquiry_report().unwrap().active.unwrap().id,id);
+        for _ in 0..super::super::inquiry::MAX_AGE {
+            let t=Transition{id:m.events,restart:true,pre:vec![0],action:0,post:vec![1]};
+            m.observe(&t,false);
+        }
+        let r=m.inquiry_report().unwrap();
+        assert!(r.active.is_none()); assert_eq!(r.questions_resolved,0); assert_eq!(r.questions_expired,1);
+        let ended=r.last_resolution.unwrap(); assert_eq!(ended.status,"expired"); assert_eq!(ended.bank,None);
+        assert_eq!(m.report().learned_fingerprint,model);
+        m.validate(1,1,m.events,0,0).unwrap();
+    }
+    #[test]
+    fn inquiry_partial_planning_keeps_a_readout_without_exceeding_budget() {
+        let mut m=regime_fixture();
+        m.enable_autonomous_inquiry(InquiryMode::Active).unwrap();
+        fact(&mut m,0,0,2,true); m.reset(false);
+        let before=serde_json::to_vec(&m).unwrap();
+        let offers=[ActionOffer{available:true,max_cost:1};2];
+        for budget in [1200,2400,4800] {
+            let (p,work)=m.propose(&[0],&offers,Some(&[Some(1)]),4,budget);
+            assert!(p.is_some(),"root readout vanished at budget {budget}, work {work}");
+            assert!(work<=budget);
+            assert!(p.unwrap().value<=0.5,"unknown context cannot inherit a certain old success");
+        }
+        assert_eq!(serde_json::to_vec(&m).unwrap(),before,"imagined branches are never factual inquiry evidence");
+    }
+    #[test]
+    fn inquiry_prospectively_discriminates_factual_rivals_and_resolves_after_execution() {
+        let mut m=CausalMemory::new(CausalConfig{history_depth:3,..Default::default()},0,vec![]).unwrap();
+        for i in 0..32 {
+            fact(&mut m,0,0,1,true); fact(&mut m,0,1,2,true); fact(&mut m,0,2,3+i%2,true);
+        }
+        m.enable_autonomous_inquiry(InquiryMode::Active).unwrap();
+        for i in 0..32 {
+            fact(&mut m,0,0,2,true); fact(&mut m,0,1,1,true); fact(&mut m,0,2,3+i%2,true);
+        }
+        assert_eq!(m.regime_report().unwrap().bank,1);
+        assert!(m.inquiry_report().unwrap().active.is_none());
+        fact(&mut m,0,0,1,true); m.reset(false);
+        let question=m.inquiry_report().unwrap().active.unwrap();
+        let offers=[ActionOffer{available:true,max_cost:1};3];
+        let before=serde_json::to_vec(&m).unwrap();
+        let (p,work)=m.propose(&[0],&offers,Some(&[Some(1)]),3,100_000);
+        let p=p.unwrap(); let decision=p.inquiry.unwrap();
+        assert_ne!(p.action,2,"balanced noise cannot discriminate the factual contexts");
+        assert!(decision.immediate_information_gain>0.01);
+        assert_eq!(decision.question_id,question.id);
+        assert!(decision.predictions.iter().all(|p|p.support>=8));
+        assert!(work<=100_000);
+        assert_eq!(serde_json::to_vec(&m).unwrap(),before);
+        m.record_inquiry_decision(p.action,Some(&decision)).unwrap();
+        assert_eq!(m.inquiry_report().unwrap().factual_experiments,0);
+        fact(&mut m,0,p.action,if p.action==0{1}else{2},true);
+        let r=m.inquiry_report().unwrap();
+        assert_eq!(r.selected_experiments,1); assert_eq!(r.factual_experiments,1);
+        let resolution=r.last_resolution.unwrap();
+        assert_eq!(resolution.question_id,question.id); assert_eq!(resolution.status,"resolved");
+        assert_eq!(resolution.bank,Some(0)); assert_eq!(resolution.factual_experiments,1);
+        m.validate(1,3,m.events,0,0).unwrap();
+        let encoded=serde_json::to_vec(&m).unwrap();
+        let restored:CausalMemory=serde_json::from_slice(&encoded).unwrap();
+        restored.validate(1,3,restored.events,0,0).unwrap();
+        assert_eq!(serde_json::to_vec(&restored).unwrap(),encoded);
+    }
     fn regime_fixture() -> CausalMemory {
         let mut memory = CausalMemory::new(CausalConfig { history_depth: 3, ..Default::default() }, 0, vec![]).unwrap();
         for _ in 0..32 { fact(&mut memory, 0, 0, 1, true); }

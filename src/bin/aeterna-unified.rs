@@ -163,6 +163,7 @@ pub(crate) fn main()->Result<()>{
                     let rt=runtime.as_ref().ok_or("not loaded")?;
                     Ok(json!({"type":"organism_report","organism":rt.unified_report(),
                         "development":rt.organism_development_report(),
+                        "inquiry":rt.construction_learner().and_then(|l|l.causal_inquiry_report()),
                         "reward_memory":rt.construction_learner().ok_or("not constructing")?.external_reward_report()}))
                 },
                 "external_step"=>{
@@ -179,9 +180,11 @@ pub(crate) fn main()->Result<()>{
                     })?;
                     Ok(json!({"type":"committed","step":step}))
                 },
-                "init"=>{
+                "init"|"autonomous_init"=>{
                     if runtime.is_some(){return Err("already initialized".into());}
+                    let autonomous=request["op"]=="autonomous_init";
                     let (mut cfg,mut policy)=configuration();
+                    if autonomous { cfg.planning_depth=4;cfg.planning_work=120_000; }
                     // Backward-compatible opt-in sensor width. The ordinary
                     // JSONL interface still defaults to 32 channels; a
                     // virtual world may expose 1..32 factual sensor values for
@@ -201,8 +204,22 @@ pub(crate) fn main()->Result<()>{
                     let initial=if let Some(v)=request.get("observation"){
                         serde_json::from_value::<Vec<i64>>(v.clone())?
                     }else{vec![0;cfg.width]};
-                    runtime=Some(ScientificRuntime::new_constructing(cfg,policy,initial,"interactive-v1")?);
-                    Ok(json!({"type":"initialized"}))
+                    let mut rt=ScientificRuntime::new_constructing(cfg,policy,initial,"interactive-v1")?;
+                    if autonomous {
+                        use aeterna_v1::construction::causal_memory::{CausalConfig,InquiryMode};
+                        let causal=match request.get("causal_config") {
+                            Some(value)=>serde_json::from_value::<CausalConfig>(value.clone())?,
+                            None=>CausalConfig{history_depth:3,..CausalConfig::default()},
+                        };
+                        let mode=serde_json::from_value::<InquiryMode>(request.get("inquiry_mode").cloned().unwrap_or(json!("active")))?;
+                        rt.enable_constructing_self_directed_control()?;
+                        rt.enable_constructing_agency_aware_credit()?;
+                        rt.enable_constructing_causal_memory(causal)?;
+                        rt.enable_constructing_autonomous_inquiry(mode)?;
+                    }
+                    runtime=Some(rt);
+                    if autonomous {Ok(json!({"type":"initialized","inquiry":"enabled","action_authority":"protected_u1"}))}
+                    else {Ok(json!({"type":"initialized"}))}
                 },
                 "enable_self_directed_control"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_self_directed_control()?;
@@ -215,6 +232,19 @@ pub(crate) fn main()->Result<()>{
                 },
                 "causal_report"=>Ok(json!({"type":"causal_report","report":runtime.as_ref().ok_or("not loaded")?
                     .construction_learner().ok_or("not constructing")?.causal_report()})),
+                "enable_autonomous_inquiry"=>{
+                    let mode=serde_json::from_value(request.get("mode").cloned().unwrap_or(json!("active")))?;
+                    runtime.as_mut().ok_or("not loaded")?.enable_constructing_autonomous_inquiry(mode)?;
+                    Ok(json!({"type":"autonomous_inquiry_enabled","action_authority":"same_protected_u1",
+                        "evidence":"factual_post_only","experience":"preserved"}))
+                },
+                "inquiry_report"=>Ok(json!({"type":"inquiry_report","report":runtime.as_ref().ok_or("not loaded")?
+                    .construction_learner().ok_or("not constructing")?.causal_inquiry_report()})),
+                "observe_restart"=>{
+                    let observation=serde_json::from_value(request["observation"].clone())?;
+                    runtime.as_mut().ok_or("not loaded")?.observe_constructing_external_restart(observation)?;
+                    Ok(json!({"type":"restarted","experience":"preserved","new_factual_transitions":0}))
+                },
                 "enable_agency_aware_credit"=>{
                     runtime.as_mut().ok_or("not loaded")?.enable_constructing_agency_aware_credit()?;
                     Ok(json!({"type":"agency_aware_credit_enabled",
@@ -566,6 +596,15 @@ only after later REAL POST shows goal progress.
 Optional predictive history states
 (planning_work>=32000): enable_predictive_history_states.
 Optional unforced causal pair experiments: enable_active_causal_probes.
+Autonomous applicability inquiry: autonomous_init(width,actions,observation),
+then step(goal,offers), observe_restart(observation), inquiry_report, checkpoint.
+Uses one persistent question,
+factual rival forecasts and the same protected U1. A real environment adapter
+must answer each selected action with its actual POST. The goal is supplied;
+no hidden rules, switch labels or experiment schedule are accepted.
+For an existing causal-memory checkpoint (history_depth=3), use
+enable_autonomous_inquiry(mode=active). observe_only is the diagnostic control.
+This bounded two-context mechanism does not establish general intelligence.
 Additional conditional past-length inference (opt-in): enable_adaptive_history_suffix.
 For a certified two-action-suffix route, opt into persisted multi-step
 native choice with enable_temporal_options; each physical step remains protected.

@@ -688,6 +688,7 @@ impl ExternalMemory {
                     expected,
                     immediate_goals: calibrated.clone(),
                     immediate_support: support.clone(),
+                    inquiry: None,
                 });
             }
         }

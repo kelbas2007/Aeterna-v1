@@ -33,6 +33,29 @@ impl Learner {
     pub fn causal_regime_report(&self) -> Option<super::causal_memory::RegimeReport> {
         self.causal_memory.as_ref().and_then(|m| m.regime_report())
     }
+    /// Attach bounded autonomous inquiry to this learner's own factual memory.
+    /// A question can propose an experiment, but never execute a motor.
+    pub fn enable_autonomous_inquiry(&mut self, mode: super::causal_memory::InquiryMode) -> Result<()> {
+        if self.pending || self.poisoned || self.frozen_at.is_some() { return Err(Error::Busy); }
+        self.causal_memory.as_mut().ok_or(Error::NoEvidence)?.enable_autonomous_inquiry(mode)
+    }
+    pub fn causal_inquiry_report(&self) -> Option<super::causal_memory::InquiryReport> {
+        self.causal_memory.as_ref().and_then(|m| m.inquiry_report())
+    }
+    pub(crate) fn carrier_inquiry_inference_work(&self) -> u64 {
+        self.causal_memory.as_ref().map_or(0, |m| m.inquiry_inference_work())
+    }
+    pub(crate) fn carrier_record_inquiry_decision(
+        &mut self,
+        action: usize,
+        decision: Option<&super::causal_memory::InquiryDecision>,
+    ) -> Result<()> {
+        match self.causal_memory.as_mut() {
+            Some(memory) => memory.record_inquiry_decision(action, decision),
+            None if decision.is_none() => Ok(()),
+            None => Err(Error::NoEvidence),
+        }
+    }
     pub fn causal_memory_enabled(&self) -> bool {
         self.causal_memory.is_some()
     }

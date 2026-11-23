@@ -20,5 +20,6 @@ pub mod experiential;
 
 pub mod requirements;
 pub mod causal_memory;
+pub mod inquiry;
 pub mod sensors;
 pub mod external_reward;
