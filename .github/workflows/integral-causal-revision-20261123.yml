@@ -1,0 +1,64 @@
+name: Integral autonomous causal revision 2026-11-23
+
+on:
+  push:
+    branches:
+      - experiment/integral-causal-revision-20261123
+    paths:
+      - .github/workflows/integral-causal-revision-20261123.yml
+
+permissions:
+  contents: read
+
+jobs:
+  frozen-integral-trial:
+    if: >-
+      github.event.head_commit.message == 'test: execute frozen integral causal revision trial'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - name: Verify frozen production and first attempt
+        shell: bash
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code 01a35d0c69c3dec0340c753456ada4a7b7f221da HEAD -- src tests Cargo.toml Cargo.lock rust-toolchain.toml
+          git diff --exit-code
+          printf 'SOURCE=%s\nSEED=%s\nBASE=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" 01a35d0c69c3dec0340c753456ada4a7b7f221da > integral-provenance.txt
+          sha256sum examples/integral_causal_revision_eval.rs scripts/run_integral_causal_revision.py docs/experiments/INTEGRAL_CAUSAL_REVISION_20261123_PROTOCOL.md >> integral-provenance.txt
+      - name: Build unchanged runtime with test-only evaluator
+        run: cargo build --locked --release --example integral_causal_revision_eval
+      - name: Record executable before world generation
+        run: sha256sum target/release/examples/integral_causal_revision_eval >> integral-provenance.txt
+      - name: Execute all eight worlds and frozen capability gates
+        shell: bash
+        run: |
+          python3 -u scripts/run_integral_causal_revision.py --binary target/release/examples/integral_causal_revision_eval --seed "$GITHUB_RUN_ID" --workers 2 --output integral-evidence | tee integral-run.log
+      - name: Publish full verdict in job summary
+        if: always()
+        shell: bash
+        run: |
+          if test -f integral-evidence/RESULT.md; then
+            cat integral-evidence/RESULT.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Integral trial incomplete: no capability verdict is available.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Preserve successes failures and prospective trajectories
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integral-causal-evidence
+          path: |
+            integral-evidence/
+            integral-provenance.txt
+            integral-run.log
+          if-no-files-found: error
+          retention-days: 90
+      - name: Verify tracked source was not rewritten
+        if: always()
+        run: git diff --exit-code
